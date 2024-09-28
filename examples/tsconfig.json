@@ -2,8 +2,8 @@
   "compilerOptions": {
     "allowJs": true,
     "target": "es2020",
-    "lib": [
-      "ES2020"
-    ]
+    "checkJs": true,
+    "noEmit": true,
+    "lib": ["es2020"]
   }
 }

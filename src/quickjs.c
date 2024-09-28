@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <quickjs.h>
-//#include <quickjs-libc.h>
+#include <quickjs-libc.h>
 #include <external/glad.h>
 #include <GLFW/glfw3.h>
 #include <raylib.h>
@@ -59,32 +59,6 @@ static void js_dump_obj(JSContext *ctx, FILE *f, JSValueConst val)
     }
 }
 
-static void js_std_dump_error1(JSContext *ctx, JSValueConst exception_val)
-{
-    JSValue val;
-    bool is_error;
-    
-    is_error = JS_IsError(ctx, exception_val);
-    js_dump_obj(ctx, stderr, exception_val);
-    if (is_error) {
-        val = JS_GetPropertyStr(ctx, exception_val, "stack");
-        if (!JS_IsUndefined(val)) {
-            js_dump_obj(ctx, stderr, val);
-        }
-        JS_FreeValue(ctx, val);
-    }
-}
-
-
-static void js_std_dump_error(JSContext *ctx)
-{
-    JSValue exception_val;
-    
-    exception_val = JS_GetException(ctx);
-    js_std_dump_error1(ctx, exception_val);
-    JS_FreeValue(ctx, exception_val);
-}
-
 int app_update_quickjs(){
     JSContext *ctx1;
     int err;
@@ -108,213 +82,10 @@ int app_update_quickjs(){
     return 0;
 }
 
-static int js_module_set_import_meta(JSContext *ctx, JSValueConst func_val,
-                              JS_BOOL use_realpath, JS_BOOL is_main)
-{
-    JSModuleDef *m;
-    char buf[1024 + 16];
-    JSValue meta_obj;
-    JSAtom module_name_atom;
-    const char *module_name;
-    
-    assert(JS_VALUE_GET_TAG(func_val) == JS_TAG_MODULE);
-    m = JS_VALUE_GET_PTR(func_val);
-
-    module_name_atom = JS_GetModuleName(ctx, m);
-    module_name = JS_AtomToCString(ctx, module_name_atom);
-    JS_FreeAtom(ctx, module_name_atom);
-    if (!module_name)
-        return -1;
-    if (!strchr(module_name, ':')) {
-        strcpy(buf, "file://");
-#if !defined(_WIN32)
-        /* realpath() cannot be used with modules compiled with qjsc
-           because the corresponding module source code is not
-           necessarily present */
-        if (use_realpath) {
-            char *res = realpath(module_name, buf + strlen(buf));
-            if (!res) {
-                JS_ThrowTypeError(ctx, "realpath failure");
-                JS_FreeCString(ctx, module_name);
-                return -1;
-            }
-        } else
-#endif
-        {
-            pstrcat(buf, sizeof(buf), module_name);
-        }
-    } else {
-        pstrcpy(buf, sizeof(buf), module_name);
-    }
-    JS_FreeCString(ctx, module_name);
-    
-    meta_obj = JS_GetImportMeta(ctx, m);
-    if (JS_IsException(meta_obj))
-        return -1;
-    JS_DefinePropertyValueStr(ctx, meta_obj, "url",
-                              JS_NewString(ctx, buf),
-                              JS_PROP_C_W_E);
-    JS_DefinePropertyValueStr(ctx, meta_obj, "main",
-                              JS_NewBool(ctx, is_main),
-                              JS_PROP_C_W_E);
-    JS_FreeValue(ctx, meta_obj);
-    return 0;
-}
-
-static uint8_t *js_load_file(JSContext *ctx, size_t *pbuf_len, const char *filename)
-{
-    FILE *f;
-    uint8_t *buf;
-    size_t buf_len;
-    long lret;
-    
-    f = fopen(filename, "rb");
-    if (!f)
-        return NULL;
-    if (fseek(f, 0, SEEK_END) < 0)
-        goto fail;
-    lret = ftell(f);
-    if (lret < 0)
-        goto fail;
-    /* XXX: on Linux, ftell() return LONG_MAX for directories */
-    if (lret == LONG_MAX) {
-        errno = EISDIR;
-        goto fail;
-    }
-    buf_len = lret;
-    if (fseek(f, 0, SEEK_SET) < 0)
-        goto fail;
-    if (ctx)
-        buf = js_malloc(ctx, buf_len + 1);
-    else
-        buf = malloc(buf_len + 1);
-    if (!buf)
-        goto fail;
-    if (fread(buf, 1, buf_len, f) != buf_len) {
-        errno = EIO;
-        if (ctx)
-            js_free(ctx, buf);
-        else
-            free(buf);
-    fail:
-        fclose(f);
-        return NULL;
-    }
-    buf[buf_len] = '\0';
-    fclose(f);
-    *pbuf_len = buf_len;
-    return buf;
-}
-
 #define REXTENSIONS_IMPLEMENTATION
 #include "rextensions.h"
 
 #include "bindings/js_raylib_core.h"
-
-JSModuleDef *js_module_loader(JSContext *ctx,
-                              const char *module_name, void *opaque)
-{
-    JSModuleDef *m;
-
-    size_t buf_len;
-    uint8_t *buf;
-    JSValue func_val;
-
-    buf = js_load_file(ctx, &buf_len, module_name);
-    if (!buf) {
-        JS_ThrowReferenceError(ctx, "could not load module filename '%s'", module_name);
-        return NULL;
-    }
-    
-    /* compile the module */
-    func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
-                        JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
-    js_free(ctx, buf);
-    if (JS_IsException(func_val))
-        return NULL;
-    /* XXX: could propagate the exception */
-    js_module_set_import_meta(ctx, func_val, true, false);
-    /* the module is already referenced, so we must free it */
-    m = JS_VALUE_GET_PTR(func_val);
-    JS_FreeValue(ctx, func_val);
-
-    return m;
-}
-
-/* load and evaluate a file */
-static JSValue js_loadScript(JSContext *ctx, JSValueConst this_val,
-                             int argc, JSValueConst *argv)
-{
-    uint8_t *buf;
-    const char *filename;
-    JSValue ret;
-    size_t buf_len;
-    
-    filename = JS_ToCString(ctx, argv[0]);
-    if (!filename)
-        return JS_EXCEPTION;
-    buf = js_load_file(ctx, &buf_len, filename);
-    if (!buf) {
-        JS_ThrowReferenceError(ctx, "could not load '%s'", filename);
-        JS_FreeCString(ctx, filename);
-        return JS_EXCEPTION;
-    }
-    ret = JS_Eval(ctx, (char *)buf, buf_len, filename,
-                  JS_EVAL_TYPE_GLOBAL);
-    js_free(ctx, buf);
-    JS_FreeCString(ctx, filename);
-    return ret;
-}
-
-static JSValue js_print(JSContext *ctx, JSValueConst this_val,
-                              int argc, JSValueConst *argv)
-{
-    int i;
-    const char *str;
-    size_t len;
-
-    for(i = 0; i < argc; i++) {
-        if (i != 0)
-            putchar(' ');
-        str = JS_ToCStringLen(ctx, &len, argv[i]);
-        if (!str)
-            return JS_EXCEPTION;
-        fwrite(str, 1, len, stdout);
-        JS_FreeCString(ctx, str);
-    }
-    putchar('\n');
-    return JS_UNDEFINED;
-}
-
-void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
-{
-    JSValue global_obj, console, args;
-    int i;
-
-    /* XXX: should these global definitions be enumerable? */
-    global_obj = JS_GetGlobalObject(ctx);
-
-    console = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, console, "log",
-                      JS_NewCFunction(ctx, js_print, "log", 1));
-    JS_SetPropertyStr(ctx, global_obj, "console", console);
-
-    /* same methods as the mozilla JS shell */
-    if (argc >= 0) {
-        args = JS_NewArray(ctx);
-        for(i = 0; i < argc; i++) {
-            JS_SetPropertyUint32(ctx, args, i, JS_NewString(ctx, argv[i]));
-        }
-        JS_SetPropertyStr(ctx, global_obj, "scriptArgs", args);
-    }
-    
-    JS_SetPropertyStr(ctx, global_obj, "print",
-                      JS_NewCFunction(ctx, js_print, "print", 1));
-    JS_SetPropertyStr(ctx, global_obj, "__loadScript",
-                      JS_NewCFunction(ctx, js_loadScript, "__loadScript", 1));
-    
-    JS_FreeValue(ctx, global_obj);
-}
 
 static int js_run(int argc, char** argv){
     TraceLog(LOG_INFO, "Starting QuickJS");
