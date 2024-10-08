@@ -33,7 +33,8 @@ export class HeaderParser {
             returnType: groups[1].trim(),
             name: groups[2],
             params: this.parseFunctionArgs(groups[3]),
-            description: groups[4] || ""
+            description: groups[4] || "",
+            binding:{}
         }));
     }
     parseFunctions(input, noPrefix = false) {
@@ -44,16 +45,17 @@ export class HeaderParser {
             returnType: groups[2].trim(),
             name: groups[3],
             params: this.parseFunctionArgs(groups[4]),
-            description: groups[1] ? this.parseComments(groups[1]) : ""
+            description: groups[1] ? this.parseComments(groups[1]) : "",
+            binding:{}
         }));
     }
     parseFunctionArgs(input) {
         return input.split(',').filter(x => x !== 'void').map(arg => {
-            arg = arg.trim().replace(" *", "* ");
+            arg = arg.trim().replaceAll(" *", "* ");
             const frags = arg.split(' ');
             const name = frags.pop();
-            const type = frags.join(' ').replace("*", " *");
-            return { name: name || "", type: type.trim() };
+            const type = frags.join(' ').replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ');
+            return { name: name || "", type: type.trim(), binding:{} };
         });
     }
     parseStructs(input) {

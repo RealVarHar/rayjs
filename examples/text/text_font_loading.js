@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 /*******************************************************************************************
 *
 *   raylib [text] example - Font loading
@@ -16,7 +19,7 @@
 *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software
 *
-*   Copyright (c) 2016-2023 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2016-2024 Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 // Initialization
@@ -37,9 +40,11 @@ const fontBm = loadFont("resources/pixantiqua.fnt");
 
 // TTF font : Font data and atlas are generated directly from TTF
 // NOTE: We define a font base size of 32 pixels tall and up-to 250 characters
-const fontTtf = loadFontEx("resources/pixantiqua.ttf", 32, 0, 250);
+const fontTtf = loadFontEx("resources/pixantiqua.ttf", 32, null, 250);
 
 let useTtf = false;
+
+setTextLineSpacing(16);         // Set line spacing for multiline text (when line breaks are included '\n')
 
 setTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
@@ -63,7 +68,6 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
         if (!useTtf)
         {
-            traceLog(LOG_INFO, fontBm.baseSize)
             drawTextEx(fontBm, msg, new Vector2(20.0, 100.0), fontBm.baseSize/2, 2, MAROON);
             drawText("Using BMFont (Angelcode) imported", 20, getScreenHeight() - 30, 20, GRAY);
         }

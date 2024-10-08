@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 // Initialization
 //---------------------------------------------------------------------------------------
 let screenWidth = 690;

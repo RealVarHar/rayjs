@@ -16,32 +16,96 @@ export class RayLibHeader extends QuickJsHeader {
         const fun = this.functions.jsBindingFunction(jName);
         if (options.body) {
             options.body(fun);
-        }
-        else {
+        } else {
             if (options.before)
                 options.before(fun);
             // read parameters
             api.params = api.params || [];
-            const activeParams = api.params.filter(x => !x.binding?.ignore);
-            for (let i = 0; i < activeParams.length; i++) {
-                const para = activeParams[i];
-                if (para.binding?.customConverter)
-                    para.binding.customConverter(fun, "argv[" + i + "]");
-                else
-                    fun.jsToC(para.type, para.name, "argv[" + i + "]", this.structLookup, false, para.binding?.typeAlias);
+            const activeParams = api.params.filter(x => !x.binding.ignore);
+            let len = activeParams.length;
+            for(let param of api.params){
+                param.spread='';
+            }
+            let hasspread=false;
+            if (len>0 && activeParams[len - 1].type == '...') {
+                //if using spread operator, adnotate it correctly
+                hasspread=true;
+                const last = activeParams[len - 2];
+                last.spread = '...';
+                api.params.pop();
+                len--;
+            }
+            //if we have arrays in arrays, use dynamic de-allocation
+            let dynamicAlloc=false;
+            for(let i=0;i<len;i++){
+                const param=activeParams[i];
+                let match= param.type.match(/\*/g);
+                if(match==null)continue;
+                let len=match.length;
+                if(param.spread=='...')len++;
+                if(len<2)continue;
+                //it is common to expect a struct pointer
+                if(this.structLookup[param.type.split(' ')[0]]!=undefined){
+                    len--;
+                }
+                if(len>=2){
+                    dynamicAlloc=true;
+                    break;
+                }
+            }
+            if(dynamicAlloc){
+                console.log('dynamicAlloc',dynamicAlloc,JSON.stringify(
+                    activeParams.map(param=>param.spread+param.type)
+                    )
+                );
+                fun.declare('memoryHead','memoryNode *',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+                fun.declare('memoryCurrent','memoryNode *',false,'memoryHead;');
+            }
+            for (let i = 0; i < len; i++) {
+                const param = activeParams[i];
+                if (param.binding.customConverter) {
+                    param.binding.customConverter(fun, "argv[" + i + "]");
+                } else {
+                    //do not pass the dynamicAlloc flag, unless we want to autodealloc everything
+                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup, {allowNull:param.binding.allowNull});
+                }
             }
             // call c function
-            if (options.customizeCall)
+            if (options.customizeCall){
                 fun.line(options.customizeCall);
-            else
-                fun.call(api.name, api.params.map(x => x.name), api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
+            }else{
+                for(let param of api.params){
+                    param.cast=param.type.includes('const ')?'('+param.type+')':'';
+                }
+                let params=api.params.map(x => x.cast+x.name);
+                if(hasspread){
+                    //functions with bigger spread use more memory, but are less likely that user will run into limitations
+                    //Min 2, Max 127
+                    let spreadsize=4;
+                    fun.declare("returnVal",api.returnType);
+                    const siz=api.params.length-1;
+                    let last=api.params.pop();
+                    let sw =fun.switch('size_'+last.name);
+                    for(let i=siz;i<siz+spreadsize;i++){
+                        params[params.length]=last.cast+last.name+'['+i+']';
+                        let s1=sw.caseBreak(i);
+                        s1.call(api.name, params, api.returnType === "void" ? null : { type: '', name: "returnVal" });
+                    }
+                }else{
+                    fun.call(api.name, params, api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
+                }
+            }
+
             // clean up parameters
-            for (let i = 0; i < activeParams.length; i++) {
+            if(dynamicAlloc){
+                fun.call('memoryClear',['memoryHead']);
+            }
+            for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
-                if (param.binding?.customCleanup)
+                if (param.binding.customCleanup)
                     param.binding.customCleanup(fun, "argv[" + i + "]");
                 else
-                    fun.jsCleanUpParameter(param.type, param.name);
+                    fun.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup,{allowNull:param.binding.allowNull});
             }
             // return result
             if (api.returnType === "void") {
@@ -57,7 +121,7 @@ export class RayLibHeader extends QuickJsHeader {
             }
         }
         // add binding to function declaration
-        this.moduleFunctionList.jsFuncDef(jName, (api.params || []).filter(x => !x.binding?.ignore).length, fun.getTag("_name"));
+        this.moduleFunctionList.jsFuncDef(jName, (api.params || []).filter(x => !x.binding.ignore).length, fun.getTag("_name"));
         this.typings.addFunction(jName, api);
     }
     addEnum(renum) {

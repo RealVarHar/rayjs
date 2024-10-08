@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 cmake_policy(SET CMP0063 NEW)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
-#raylib will not build in Release use: "Debug" "MinSizeRel" "RelWithDebInfo" or research why
-set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build." FORCE)
 
 # Workaround for windows to prevent static linking of pthread
 IF (WIN32)

@@ -4,11 +4,11 @@
 [submodule "thirdparty/raylib"]
 	path = thirdparty/raylib
 	url = https://github.com/raysan5/raylib.git
-	branch = main
+	branch = master
 [submodule "thirdparty/raygui"]
 	path = thirdparty/raygui
 	url = https://github.com/raysan5/raygui.git
-	branch = main
+	branch = master
 [submodule "thirdparty/lightmapper"]
 	path = thirdparty/lightmapper
 	url = https://github.com/ands/lightmapper.git

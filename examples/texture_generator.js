@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 // This is a texture generator that creates placeholder textures
 // An example how to use rayjs for quick tool-scripts
 

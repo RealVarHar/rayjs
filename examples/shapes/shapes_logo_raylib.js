@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 /*******************************************************************************************
 *
 *   raylib [shapes] example - Draw raylib logo using basic shapes

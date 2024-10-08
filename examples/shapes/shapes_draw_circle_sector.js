@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 /*******************************************************************************************
 *
 *   raylib [shapes] example - draw circle sector (with gui options)
@@ -52,16 +55,19 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
         // Draw GUI controls
         //------------------------------------------------------------------------------
+		try{
         startAngle = guiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", startAngle, startAngle, 0, 720);
         endAngle = guiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", endAngle, endAngle, 0, 720);
 
-        outerRadius = guiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", Math.round(outerRadius), outerRadius, 0, 200);
-        segments = guiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", Math.floor(segments), segments, 0, 100);
+        //outerRadius = guiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", Math.round(outerRadius), outerRadius, 0, 200);
+        //segments = guiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", Math.floor(segments), segments, 0, 100);
         //------------------------------------------------------------------------------
 
-        minSegments = Math.ceil((endAngle - startAngle) / 90);
-        drawText("MODE: " + (segments >= minSegments) ? "MANUAL" : "AUTO", 600, 200, 10, (segments >= minSegments)? MAROON : DARKGRAY);
-
+        //minSegments = Math.ceil((endAngle - startAngle) / 90);
+        //drawText("MODE: " + (segments >= minSegments) ? "MANUAL" : "AUTO", 600, 200, 10, (segments >= minSegments)? MAROON : DARKGRAY);
+		}catch(e){
+			console.log(e);
+		}
         drawFPS(10, 10);
 
     endDrawing();

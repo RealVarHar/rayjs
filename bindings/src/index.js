@@ -17,6 +17,22 @@ function ignore(name) {
 function main() {
     // Load the pre-generated raylib api
     api = JSON.parse((0, fs.readFileSync)("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
+    //make sure json structure is as expected
+    api.functions=api.functions.map(fn=>{
+        return {
+            returnType: fn.returnType,
+            name: fn.name,
+            params: (fn.params||[]).map( parm =>{
+                return {
+                    name: parm.name || "",
+                    type: parm.type.trim().replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' '),
+                    binding:{}
+                }
+            }),
+            description: fn.description || "",
+            binding:{}
+        };
+    });
     const parser = new header_parser.HeaderParser();
     const rmathHeader = (0, fs.readFileSync)("thirdparty/raylib/src/raymath.h", "utf8");
     const mathApi = parser.parseFunctions(rmathHeader);
@@ -76,7 +92,6 @@ function main() {
     };
     const rextensionsHeader = (0, fs.readFileSync)("src/rextensions.h", "utf8");
     const rextensionsFunctions = parser.parseFunctionDefinitions(rextensionsHeader);
-    console.log(rextensionsFunctions);
     rextensionsFunctions.forEach(x => api.functions.push(x));
     // Define a new header
     const core = new raylib_header.RayLibHeader("raylib_core");
@@ -351,7 +366,7 @@ function main() {
             b.jsToC("Vector4 *", "valueV4", "argv[2]", core.structLookup);
             b.statement("value = (void*)valueV4");
             b = sw.caseBreak("SHADER_UNIFORM_INT");
-            b.jsToC("int", "valueInt", "argv[2]", core.structLookup, true);
+            b.jsToC("int", "valueInt", "argv[2]", core.structLookup, {supressDeclaration:true});
             b.statement("value = (void*)&valueInt");
             b = sw.defaultBreak();
             b.returnExp("JS_EXCEPTION");
@@ -361,11 +376,11 @@ function main() {
     ignore("SetShaderValueV");
     const traceLog = getFunction(api.functions, "TraceLog");
     traceLog.params?.pop();
-    // Memory functions not supported on JS, just use ArrayBuffer
+    // JS User has no need to raw allocate memory
     ignore("MemAlloc");
     ignore("MemRealloc");
     ignore("MemFree");
-    // Callbacks not supported on JS
+    // Callbacks not yet implemented, qjs has calls, eval, interrupt needed for this
     ignore("SetTraceLogCallback");
     ignore("SetLoadFileDataCallback");
     ignore("SetSaveFileDataCallback");
@@ -381,7 +396,7 @@ function main() {
             gen.call("LoadFileData", ["fileName", "&bytesRead"], { type: "unsigned char *", name: "retVal" });
             gen.statement("JSValue buffer = JS_NewArrayBufferCopy(ctx, (const uint8_t*)retVal, bytesRead)");
             gen.call("UnloadFileData", ["retVal"]);
-            gen.jsCleanUpParameter("const char*", "fileName");
+            gen.statement(`JS_FreeCString(ctx, fileName)`);
             gen.returnExp("buffer");
         }
     };
@@ -390,12 +405,11 @@ function main() {
     getFunction(api.functions, "SaveFileData").binding = {};
     ignore("ExportDataAsCode");
     getFunction(api.functions, "LoadFileText").binding = { after: gen => gen.call("UnloadFileText", ["returnVal"]) };
-    getFunction(api.functions, "SaveFileText").params[1].binding = { typeAlias: "const char *" };
     ignore("UnloadFileText");
     const createFileList = (gen, loadName, unloadName, args) => {
         gen.call(loadName, args, { type: "FilePathList", name: "files" });
         gen.call("JS_NewArray", ["ctx"], { type: "JSValue", name: "ret" });
-        const f = gen.for("i=0", "files.count");
+        const f = gen.for("0", "files.count");
         f.call("JS_SetPropertyUint32", ["ctx", "ret", "i", "JS_NewString(ctx,files.paths[i])"]);
         gen.call(unloadName, ["files"]);
     };
@@ -404,7 +418,7 @@ function main() {
         body: gen => {
             gen.jsToC("const char *", "dirPath", "argv[0]");
             createFileList(gen, "LoadDirectoryFiles", "UnloadDirectoryFiles", ["dirPath"]);
-            gen.jsCleanUpParameter("const char *", "dirPath");
+            gen.statement(`JS_FreeCString(ctx, dirPath)`);
             gen.returnExp("ret");
         }
     };
@@ -415,8 +429,8 @@ function main() {
             gen.jsToC("const char *", "filter", "argv[1]");
             gen.jsToC("bool", "scanSubdirs", "argv[2]");
             createFileList(gen, "LoadDirectoryFilesEx", "UnloadDirectoryFiles", ["basePath", "filter", "scanSubdirs"]);
-            gen.jsCleanUpParameter("const char *", "basePath");
-            gen.jsCleanUpParameter("const char *", "filter");
+            gen.statement(`JS_FreeCString(ctx, basePath)`);
+            gen.statement(`JS_FreeCString(ctx, filter)`);
             gen.returnExp("ret");
         }
     };
@@ -456,10 +470,15 @@ function main() {
     ignore("UnloadImagePalette");
     ignore("GetPixelColor");
     ignore("SetPixelColor");
+    let applyffix=false;
     const lfx = getFunction(api.functions, "LoadFontEx");
-    lfx.params[2].binding = { ignore: true };
-    lfx.params[3].binding = { ignore: true };
-    lfx.binding = { customizeCall: "Font returnVal = LoadFontEx(fileName, fontSize, NULL, 0);" };
+    if(applyffix){
+        lfx.params[2].binding = { ignore: true };
+        lfx.params[3].binding = { ignore: true };
+        lfx.binding = { customizeCall: "Font returnVal = LoadFontEx(fileName, fontSize, NULL, 0);" };
+    }else{
+        lfx.params[2].binding = { allowNull: true };
+    }
     ignore("LoadFontFromMemory");
     ignore("LoadFontData");
     ignore("GenImageFontAtlas");
@@ -476,8 +495,9 @@ function main() {
     ignore("GetCodepointNext");
     ignore("GetCodepointPrevious");
     ignore("CodepointToUTF8");
-    // Not supported, use JS Stdlib instead
-    api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
+    // use JS Stdlib instead
+    // Allow until we get polyfills ready
+    //api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
     ignore("DrawTriangleStrip3D");
     ignore("LoadMaterials");
     ignore("LoadModelAnimations");
@@ -521,7 +541,6 @@ function main() {
             jsType: `{ ${param.name}: number }`,
             customConverter: (gen, src) => {
                 gen.declare(param.name, param.type, false, "NULL");
-                console.log(param,param.type.replace(" *", ""));
                 const subtype=param.type.replace(" *", "");
                 gen.declare(param.name + "_out", subtype);
                 const body = gen.if("!JS_IsNull(" + src + ")");
@@ -573,7 +592,7 @@ function main() {
                 gen.declare(lenParam.name, lenParam.type, false, "4096");
             },
             customCleanup: (gen, src) => {
-                gen.jsCleanUpParameter("const char *", param.name + "_val");
+                gen.statement(`JS_FreeCString(ctx, ${param.name}_val)`);
                 gen.call("JS_SetPropertyStr", ["ctx", src, `"${param.name}"`, "JS_NewString(ctx," + param.name + ")"]);
             }
         };
@@ -621,7 +640,7 @@ function main() {
     core.exportGlobalInt("MATERIAL_MAP_SPECULAR", "Metalness material (same as: MATERIAL_MAP_SPECULAR)");
     core.writeTo("src/bindings/js_raylib_core.h");
     core.typings.writeTo("examples/lib.raylib.d.ts");
-    const ignored = api.functions.filter(x => x.binding?.ignore).length;
+    const ignored = api.functions.filter(x => x.binding.ignore).length;
     console.log(`Converted ${api.functions.length - ignored} function. ${ignored} ignored`);
     console.log("Success!");
     // TODO: Expose PLatform defines

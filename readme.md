@@ -14,7 +14,7 @@ rayjs is not a binding for NodeJS nor is it running in the browser (yet). It's c
 * In-depth auto-complete with definitions for the whole API
 
 ## Getting started
-1. Download the binary for your platform from the [release section](https://github.com/mode777/rayjs/releases).
+1. Download the binary for your platform from the [release section](https://github.com/RealVarHar/rayjs/releases).
 2. Unzip the executable to a folder and create a new text file in the same folder. Rename the file to `main.js`
 3. Open the file with a text-editor (e.g. Notepad) and add the following code
     ```javascript
@@ -155,13 +155,19 @@ QuickJS is one of the [faster JS interpreters](https://bellard.org/quickjs/bench
 
 ## Building
 Here are some basic steps if you want to compile rayjs yourself.
-You should use CMake for building. **Please note that QuickJS needs Mingw in order to compile correctly on Windows**
 
 ### Check out required files
 ```bash
-git clone https://github.com/mode777/rayjs.git
+git clone https://github.com/RealVarHar/rayjs.git
 git submodule update --init --recursive
 ```
+### Build bindings
+Rayjs builds bindings from sources, to refresh those, run
+```bash
+cd rayjs
+qjs.exe bindings/src/index.js
+```
+qjs.exe can be aquired from https://github.com/quickjs-ng/quickjs
 
 ### Build with cmake
 Make sure you have cmake installed and in your path.
@@ -171,6 +177,14 @@ mkdir build
 cd build
 cmake ..
 make
+```
+For windows mingw is recommended, builds are tested with https://winlibs.com
+```bash
+cd rayjs
+mkdir build
+cd build
+cmake ..
+mingw32-make
 ```
 
 

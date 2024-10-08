@@ -1,3 +1,6 @@
+import * as rl from 'raylib';
+for (const key in rl) { globalThis[key] = rl[key] };
+
 function drawScene(scene){
 	drawModel(scene.raylib_model, new Vector3(0,0,0), 1, WHITE);
 }

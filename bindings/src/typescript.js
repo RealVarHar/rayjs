@@ -10,7 +10,7 @@ export class TypeScriptDeclaration {
     }
     addFunction(name, api) {
         const options = api.binding || {};
-        const para = (api.params || []).filter(x => !x.binding?.ignore).map(x => ({ name: x.name, type: x.binding?.jsType ?? this.toJsType(x.type) }));
+        const para = (api.params || []).filter(x => !x.binding.ignore).map(x => ({ name: x.name, type: x.binding.jsType ?? this.toJsType(x.type) }));
         const returnType = options.jsReturns ?? this.toJsType(api.returnType);
         this.functions.tsDeclareFunction(name, para, returnType, api.description);
     }

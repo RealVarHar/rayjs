@@ -766,9 +766,9 @@ declare function setShapesTexture(texture: Texture, source: Rectangle): void;
 declare function getShapesTexture(): Texture;
 /** Get texture source rectangle that is used for shapes drawing */
 declare function getShapesTextureRectangle(): Rectangle;
-/** Draw a pixel */
+/** Draw a pixel using geometry [Can be slow, use with care] */
 declare function drawPixel(posX: number, posY: number, color: Color): void;
-/** Draw a pixel (Vector version) */
+/** Draw a pixel using geometry (Vector version) [Can be slow, use with care] */
 declare function drawPixelV(position: Vector2, color: Color): void;
 /** Draw a line */
 declare function drawLine(startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
@@ -1105,7 +1105,7 @@ declare function getFontDefault(): Font;
 /** Load font from file into GPU memory (VRAM) */
 declare function loadFont(fileName: string | undefined | null): Font;
 /** Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character set, font size is provided in pixels height */
-declare function loadFontEx(fileName: string | undefined | null, fontSize: number): Font;
+declare function loadFontEx(fileName: string | undefined | null, fontSize: number, codepoints: int, codepointCount: number): Font;
 /** Load font from Image (XNA style) */
 declare function loadFontFromImage(image: Image, key: Color, firstChar: number): Font;
 /** Check if a font is ready */
@@ -1132,6 +1132,42 @@ declare function measureTextEx(font: Font, text: string | undefined | null, font
 declare function getGlyphIndex(font: Font, codepoint: number): number;
 /** Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found */
 declare function getGlyphAtlasRec(font: Font, codepoint: number): Rectangle;
+/** Copy one string to another, returns bytes copied */
+declare function textCopy(dst: string | undefined | null, src: string | undefined | null): number;
+/** Check if two text string are equal */
+declare function textIsEqual(text1: string | undefined | null, text2: string | undefined | null): boolean;
+/** Get text length, checks for '\0' ending */
+declare function textLength(text: string | undefined | null): number;
+/** Text formatting with variables (sprintf() style) */
+declare function textFormat(): string | undefined | null;
+/** Get a piece of a text string */
+declare function textSubtext(text: string | undefined | null, position: number, length: number): string | undefined | null;
+/** Replace text string (WARNING: memory must be freed!) */
+declare function textReplace(text: string | undefined | null, replace: string | undefined | null, by: string | undefined | null): string | undefined | null;
+/** Insert text in a position (WARNING: memory must be freed!) */
+declare function textInsert(text: string | undefined | null, insert: string | undefined | null, position: number): string | undefined | null;
+/** Join text strings with delimiter */
+declare function textJoin(textList: char *, count: number, delimiter: string | undefined | null): string | undefined | null;
+/** Split text into multiple strings */
+declare function textSplit(text: string | undefined | null, delimiter: char, count: int): char*;
+/** Append text at specific position and move cursor! */
+declare function textAppend(text: string | undefined | null, append: string | undefined | null, position: int): void;
+/** Find first text occurrence within a string */
+declare function textFindIndex(text: string | undefined | null, find: string | undefined | null): number;
+/** Get upper case version of provided string */
+declare function textToUpper(text: string | undefined | null): string | undefined | null;
+/** Get lower case version of provided string */
+declare function textToLower(text: string | undefined | null): string | undefined | null;
+/** Get Pascal case notation version of provided string */
+declare function textToPascal(text: string | undefined | null): string | undefined | null;
+/** Get Snake case notation version of provided string */
+declare function textToSnake(text: string | undefined | null): string | undefined | null;
+/** Get Camel case notation version of provided string */
+declare function textToCamel(text: string | undefined | null): string | undefined | null;
+/** Get integer value from text (negative values not supported) */
+declare function textToInteger(text: string | undefined | null): number;
+/** Get float value from text (negative values not supported) */
+declare function textToFloat(text: string | undefined | null): number;
 /** Draw a line in 3D world space */
 declare function drawLine3D(startPos: Vector3, endPos: Vector3, color: Color): void;
 /** Draw a point in 3D space, actually a small line */

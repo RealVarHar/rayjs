@@ -20,6 +20,108 @@
 #ifndef countof
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 #endif
+#ifndef dynamidMemoryAlloc
+#define dynamidMemoryAlloc
+typedef struct memoryNode{
+    int length;
+    void * pointers[6];
+    struct memoryNode * next;
+} memoryNode;
+memoryNode* memoryStore(memoryNode *current, void * clarfunc, void * memoryptr) {
+   // Saves memory fo de-allocation
+   if(current->length < 6) {
+        current->pointers[current->length] = clarfunc;
+        current->pointers[current->length + 1] = memoryptr;
+        current->length += 2;
+        return current;
+   } else {
+        // This one is full, write to a new one
+        memoryNode *new_node = (memoryNode *)malloc(sizeof(memoryNode));
+        new_node->length = 2;
+        new_node->pointers[0] = clarfunc;
+        new_node->pointers[1] = memoryptr;
+        new_node->next = NULL;
+        current->next = new_node;
+        return new_node;
+   }
+}
+void memoryClear(memoryNode *head) {
+    memoryNode * prev_node;
+    while (head != NULL) {
+        for (int i = 0; i < head->length; i += 2) {
+            void (*free_func) (void *) = head->pointers[i];
+            void * ptr_to_free = head->pointers[i + 1];
+            free_func(ptr_to_free);
+        prev_node = head;
+        head = head->next;
+        free(prev_node);
+        }
+    }
+}
+enum {
+    /* classid tag        */    /* union usage   | properties */
+    JS_CLASS_OBJECT = 1,        /* must be first */
+    JS_CLASS_ARRAY,             /* u.array       | length */
+    JS_CLASS_ERROR,
+    JS_CLASS_NUMBER,            /* u.object_data */
+    JS_CLASS_STRING,            /* u.object_data */
+    JS_CLASS_BOOLEAN,           /* u.object_data */
+    JS_CLASS_SYMBOL,            /* u.object_data */
+    JS_CLASS_ARGUMENTS,         /* u.array       | length */
+    JS_CLASS_MAPPED_ARGUMENTS,  /*               | length */
+    JS_CLASS_DATE,              /* u.object_data */
+    JS_CLASS_MODULE_NS,
+    JS_CLASS_C_FUNCTION,        /* u.cfunc */
+    JS_CLASS_BYTECODE_FUNCTION, /* u.func */
+    JS_CLASS_BOUND_FUNCTION,    /* u.bound_function */
+    JS_CLASS_C_FUNCTION_DATA,   /* u.c_function_data_record */
+    JS_CLASS_GENERATOR_FUNCTION, /* u.func */
+    JS_CLASS_FOR_IN_ITERATOR,   /* u.for_in_iterator */
+    JS_CLASS_REGEXP,            /* u.regexp */
+    JS_CLASS_ARRAY_BUFFER,      /* u.array_buffer */
+    JS_CLASS_SHARED_ARRAY_BUFFER, /* u.array_buffer */
+    JS_CLASS_UINT8C_ARRAY,      /* u.array (typed_array) */
+    JS_CLASS_INT8_ARRAY,        /* u.array (typed_array) */
+    JS_CLASS_UINT8_ARRAY,       /* u.array (typed_array) */
+    JS_CLASS_INT16_ARRAY,       /* u.array (typed_array) */
+    JS_CLASS_UINT16_ARRAY,      /* u.array (typed_array) */
+    JS_CLASS_INT32_ARRAY,       /* u.array (typed_array) */
+    JS_CLASS_UINT32_ARRAY,      /* u.array (typed_array) */
+    JS_CLASS_BIG_INT64_ARRAY,   /* u.array (typed_array) */
+    JS_CLASS_BIG_UINT64_ARRAY,  /* u.array (typed_array) */
+    JS_CLASS_FLOAT16_ARRAY,     /* u.array (typed_array) */
+    JS_CLASS_FLOAT32_ARRAY,     /* u.array (typed_array) */
+    JS_CLASS_FLOAT64_ARRAY,     /* u.array (typed_array) */
+    JS_CLASS_DATAVIEW,          /* u.typed_array */
+    JS_CLASS_BIG_INT,           /* u.object_data */
+    JS_CLASS_MAP,               /* u.map_state */
+    JS_CLASS_SET,               /* u.map_state */
+    JS_CLASS_WEAKMAP,           /* u.map_state */
+    JS_CLASS_WEAKSET,           /* u.map_state */
+    JS_CLASS_ITERATOR,
+    JS_CLASS_MAP_ITERATOR,      /* u.map_iterator_data */
+    JS_CLASS_SET_ITERATOR,      /* u.map_iterator_data */
+    JS_CLASS_ARRAY_ITERATOR,    /* u.array_iterator_data */
+    JS_CLASS_STRING_ITERATOR,   /* u.array_iterator_data */
+    JS_CLASS_REGEXP_STRING_ITERATOR,   /* u.regexp_string_iterator_data */
+    JS_CLASS_GENERATOR,         /* u.generator_data */
+    JS_CLASS_PROXY,             /* u.proxy_data */
+    JS_CLASS_PROMISE,           /* u.promise_data */
+    JS_CLASS_PROMISE_RESOLVE_FUNCTION,  /* u.promise_function_data */
+    JS_CLASS_PROMISE_REJECT_FUNCTION,   /* u.promise_function_data */
+    JS_CLASS_ASYNC_FUNCTION,            /* u.func */
+    JS_CLASS_ASYNC_FUNCTION_RESOLVE,    /* u.async_function_data */
+    JS_CLASS_ASYNC_FUNCTION_REJECT,     /* u.async_function_data */
+    JS_CLASS_ASYNC_FROM_SYNC_ITERATOR,  /* u.async_from_sync_iterator_data */
+    JS_CLASS_ASYNC_GENERATOR_FUNCTION,  /* u.func */
+    JS_CLASS_ASYNC_GENERATOR,   /* u.async_generator_data */
+    JS_CLASS_WEAK_REF,
+    JS_CLASS_FINALIZATION_REGISTRY,
+    JS_CLASS_CALL_SITE,
+
+    JS_CLASS_INIT_COUNT, /* last entry for predefined classes */
+};
+#endif
 
 static char textbuffer[4096];
 static JSClassID js_Vector2_class_id;
@@ -67,34 +169,34 @@ static void js_Vector2_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Vector2_get_x(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector2_get_x(JSContext* ctx, JSValue this_val) {
     Vector2* ptr = JS_GetOpaque2(ctx, this_val, js_Vector2_class_id);
     float x = ptr->x;
     JSValue ret = JS_NewFloat64(ctx, x);
     return ret;
 }
 
-static JSValue js_Vector2_set_x(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector2_set_x(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector2* ptr = JS_GetOpaque2(ctx, this_val, js_Vector2_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->x = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector2_get_y(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector2_get_y(JSContext* ctx, JSValue this_val) {
     Vector2* ptr = JS_GetOpaque2(ctx, this_val, js_Vector2_class_id);
     float y = ptr->y;
     JSValue ret = JS_NewFloat64(ctx, y);
     return ret;
 }
 
-static JSValue js_Vector2_set_y(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector2_set_y(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector2* ptr = JS_GetOpaque2(ctx, this_val, js_Vector2_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->y = value;
     return JS_UNDEFINED;
 }
@@ -123,50 +225,50 @@ static void js_Vector3_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Vector3_get_x(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector3_get_x(JSContext* ctx, JSValue this_val) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
     float x = ptr->x;
     JSValue ret = JS_NewFloat64(ctx, x);
     return ret;
 }
 
-static JSValue js_Vector3_set_x(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector3_set_x(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->x = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector3_get_y(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector3_get_y(JSContext* ctx, JSValue this_val) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
     float y = ptr->y;
     JSValue ret = JS_NewFloat64(ctx, y);
     return ret;
 }
 
-static JSValue js_Vector3_set_y(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector3_set_y(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->y = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector3_get_z(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector3_get_z(JSContext* ctx, JSValue this_val) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
     float z = ptr->z;
     JSValue ret = JS_NewFloat64(ctx, z);
     return ret;
 }
 
-static JSValue js_Vector3_set_z(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector3_set_z(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector3* ptr = JS_GetOpaque2(ctx, this_val, js_Vector3_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->z = value;
     return JS_UNDEFINED;
 }
@@ -196,66 +298,66 @@ static void js_Vector4_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Vector4_get_x(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector4_get_x(JSContext* ctx, JSValue this_val) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
     float x = ptr->x;
     JSValue ret = JS_NewFloat64(ctx, x);
     return ret;
 }
 
-static JSValue js_Vector4_set_x(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector4_set_x(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->x = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector4_get_y(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector4_get_y(JSContext* ctx, JSValue this_val) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
     float y = ptr->y;
     JSValue ret = JS_NewFloat64(ctx, y);
     return ret;
 }
 
-static JSValue js_Vector4_set_y(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector4_set_y(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->y = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector4_get_z(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector4_get_z(JSContext* ctx, JSValue this_val) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
     float z = ptr->z;
     JSValue ret = JS_NewFloat64(ctx, z);
     return ret;
 }
 
-static JSValue js_Vector4_set_z(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector4_set_z(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->z = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Vector4_get_w(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Vector4_get_w(JSContext* ctx, JSValue this_val) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
     float w = ptr->w;
     JSValue ret = JS_NewFloat64(ctx, w);
     return ret;
 }
 
-static JSValue js_Vector4_set_w(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Vector4_set_w(JSContext* ctx, JSValue this_val, JSValue v) {
     Vector4* ptr = JS_GetOpaque2(ctx, this_val, js_Vector4_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->w = value;
     return JS_UNDEFINED;
 }
@@ -308,14 +410,14 @@ static void js_Color_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Color_get_r(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Color_get_r(JSContext* ctx, JSValue this_val) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned char r = ptr->r;
     JSValue ret = JS_NewUint32(ctx, r);
     return ret;
 }
 
-static JSValue js_Color_set_r(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Color_set_r(JSContext* ctx, JSValue this_val, JSValue v) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned int _int_value;
     JS_ToUint32(ctx, &_int_value, v);
@@ -324,14 +426,14 @@ static JSValue js_Color_set_r(JSContext* ctx, JSValueConst this_val, JSValueCons
     return JS_UNDEFINED;
 }
 
-static JSValue js_Color_get_g(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Color_get_g(JSContext* ctx, JSValue this_val) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned char g = ptr->g;
     JSValue ret = JS_NewUint32(ctx, g);
     return ret;
 }
 
-static JSValue js_Color_set_g(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Color_set_g(JSContext* ctx, JSValue this_val, JSValue v) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned int _int_value;
     JS_ToUint32(ctx, &_int_value, v);
@@ -340,14 +442,14 @@ static JSValue js_Color_set_g(JSContext* ctx, JSValueConst this_val, JSValueCons
     return JS_UNDEFINED;
 }
 
-static JSValue js_Color_get_b(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Color_get_b(JSContext* ctx, JSValue this_val) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned char b = ptr->b;
     JSValue ret = JS_NewUint32(ctx, b);
     return ret;
 }
 
-static JSValue js_Color_set_b(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Color_set_b(JSContext* ctx, JSValue this_val, JSValue v) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned int _int_value;
     JS_ToUint32(ctx, &_int_value, v);
@@ -356,14 +458,14 @@ static JSValue js_Color_set_b(JSContext* ctx, JSValueConst this_val, JSValueCons
     return JS_UNDEFINED;
 }
 
-static JSValue js_Color_get_a(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Color_get_a(JSContext* ctx, JSValue this_val) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned char a = ptr->a;
     JSValue ret = JS_NewUint32(ctx, a);
     return ret;
 }
 
-static JSValue js_Color_set_a(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Color_set_a(JSContext* ctx, JSValue this_val, JSValue v) {
     Color* ptr = JS_GetOpaque2(ctx, this_val, js_Color_class_id);
     unsigned int _int_value;
     JS_ToUint32(ctx, &_int_value, v);
@@ -398,66 +500,66 @@ static void js_Rectangle_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Rectangle_get_x(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Rectangle_get_x(JSContext* ctx, JSValue this_val) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
     float x = ptr->x;
     JSValue ret = JS_NewFloat64(ctx, x);
     return ret;
 }
 
-static JSValue js_Rectangle_set_x(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Rectangle_set_x(JSContext* ctx, JSValue this_val, JSValue v) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->x = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Rectangle_get_y(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Rectangle_get_y(JSContext* ctx, JSValue this_val) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
     float y = ptr->y;
     JSValue ret = JS_NewFloat64(ctx, y);
     return ret;
 }
 
-static JSValue js_Rectangle_set_y(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Rectangle_set_y(JSContext* ctx, JSValue this_val, JSValue v) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->y = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Rectangle_get_width(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Rectangle_get_width(JSContext* ctx, JSValue this_val) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
     float width = ptr->width;
     JSValue ret = JS_NewFloat64(ctx, width);
     return ret;
 }
 
-static JSValue js_Rectangle_set_width(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Rectangle_set_width(JSContext* ctx, JSValue this_val, JSValue v) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->width = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Rectangle_get_height(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Rectangle_get_height(JSContext* ctx, JSValue this_val) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
     float height = ptr->height;
     JSValue ret = JS_NewFloat64(ctx, height);
     return ret;
 }
 
-static JSValue js_Rectangle_set_height(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Rectangle_set_height(JSContext* ctx, JSValue this_val, JSValue v) {
     Rectangle* ptr = JS_GetOpaque2(ctx, this_val, js_Rectangle_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->height = value;
     return JS_UNDEFINED;
 }
@@ -488,27 +590,30 @@ static void js_Image_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Image_set_data(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Image_set_data(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
+    void * value;
+    JSValue js_value;
+    if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (void *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    void * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
     ptr->data = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Image_get_width(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Image_get_width(JSContext* ctx, JSValue this_val) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int width = ptr->width;
     JSValue ret = JS_NewInt32(ctx, width);
     return ret;
 }
 
-static JSValue js_Image_set_width(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Image_set_width(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -516,14 +621,14 @@ static JSValue js_Image_set_width(JSContext* ctx, JSValueConst this_val, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_Image_get_height(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Image_get_height(JSContext* ctx, JSValue this_val) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int height = ptr->height;
     JSValue ret = JS_NewInt32(ctx, height);
     return ret;
 }
 
-static JSValue js_Image_set_height(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Image_set_height(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -531,14 +636,14 @@ static JSValue js_Image_set_height(JSContext* ctx, JSValueConst this_val, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_Image_get_mipmaps(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Image_get_mipmaps(JSContext* ctx, JSValue this_val) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int mipmaps = ptr->mipmaps;
     JSValue ret = JS_NewInt32(ctx, mipmaps);
     return ret;
 }
 
-static JSValue js_Image_set_mipmaps(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Image_set_mipmaps(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -546,14 +651,14 @@ static JSValue js_Image_set_mipmaps(JSContext* ctx, JSValueConst this_val, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_Image_get_format(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Image_get_format(JSContext* ctx, JSValue this_val) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int format = ptr->format;
     JSValue ret = JS_NewInt32(ctx, format);
     return ret;
 }
 
-static JSValue js_Image_set_format(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Image_set_format(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -588,28 +693,28 @@ static void js_Texture_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Texture_get_width(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Texture_get_width(JSContext* ctx, JSValue this_val) {
     Texture* ptr = JS_GetOpaque2(ctx, this_val, js_Texture_class_id);
     int width = ptr->width;
     JSValue ret = JS_NewInt32(ctx, width);
     return ret;
 }
 
-static JSValue js_Texture_get_height(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Texture_get_height(JSContext* ctx, JSValue this_val) {
     Texture* ptr = JS_GetOpaque2(ctx, this_val, js_Texture_class_id);
     int height = ptr->height;
     JSValue ret = JS_NewInt32(ctx, height);
     return ret;
 }
 
-static JSValue js_Texture_get_mipmaps(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Texture_get_mipmaps(JSContext* ctx, JSValue this_val) {
     Texture* ptr = JS_GetOpaque2(ctx, this_val, js_Texture_class_id);
     int mipmaps = ptr->mipmaps;
     JSValue ret = JS_NewInt32(ctx, mipmaps);
     return ret;
 }
 
-static JSValue js_Texture_get_format(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Texture_get_format(JSContext* ctx, JSValue this_val) {
     Texture* ptr = JS_GetOpaque2(ctx, this_val, js_Texture_class_id);
     int format = ptr->format;
     JSValue ret = JS_NewInt32(ctx, format);
@@ -642,14 +747,14 @@ static void js_RenderTexture_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_RenderTexture_get_id(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RenderTexture_get_id(JSContext* ctx, JSValue this_val) {
     RenderTexture* ptr = JS_GetOpaque2(ctx, this_val, js_RenderTexture_class_id);
     unsigned int id = ptr->id;
     JSValue ret = JS_NewUint32(ctx, id);
     return ret;
 }
 
-static JSValue js_RenderTexture_get_texture(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RenderTexture_get_texture(JSContext* ctx, JSValue this_val) {
     RenderTexture* ptr = JS_GetOpaque2(ctx, this_val, js_RenderTexture_class_id);
     Texture texture = ptr->texture;
     Texture* ret_ptr = (Texture*)js_malloc(ctx, sizeof(Texture));
@@ -659,7 +764,7 @@ static JSValue js_RenderTexture_get_texture(JSContext* ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_RenderTexture_get_depth(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RenderTexture_get_depth(JSContext* ctx, JSValue this_val) {
     RenderTexture* ptr = JS_GetOpaque2(ctx, this_val, js_RenderTexture_class_id);
     Texture depth = ptr->depth;
     Texture* ret_ptr = (Texture*)js_malloc(ctx, sizeof(Texture));
@@ -694,7 +799,7 @@ static void js_NPatchInfo_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_NPatchInfo_get_source(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_source(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     Rectangle source = ptr->source;
     Rectangle* ret_ptr = (Rectangle*)js_malloc(ctx, sizeof(Rectangle));
@@ -704,7 +809,7 @@ static JSValue js_NPatchInfo_get_source(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_source(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_source(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     Rectangle* value_ptr = (Rectangle*)JS_GetOpaque2(ctx, v, js_Rectangle_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -713,14 +818,14 @@ static JSValue js_NPatchInfo_set_source(JSContext* ctx, JSValueConst this_val, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_NPatchInfo_get_left(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_left(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int left = ptr->left;
     JSValue ret = JS_NewInt32(ctx, left);
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_left(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_left(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -728,14 +833,14 @@ static JSValue js_NPatchInfo_set_left(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_NPatchInfo_get_top(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_top(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int top = ptr->top;
     JSValue ret = JS_NewInt32(ctx, top);
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_top(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_top(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -743,14 +848,14 @@ static JSValue js_NPatchInfo_set_top(JSContext* ctx, JSValueConst this_val, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_NPatchInfo_get_right(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_right(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int right = ptr->right;
     JSValue ret = JS_NewInt32(ctx, right);
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_right(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_right(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -758,14 +863,14 @@ static JSValue js_NPatchInfo_set_right(JSContext* ctx, JSValueConst this_val, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_NPatchInfo_get_bottom(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_bottom(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int bottom = ptr->bottom;
     JSValue ret = JS_NewInt32(ctx, bottom);
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_bottom(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_bottom(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -773,14 +878,14 @@ static JSValue js_NPatchInfo_set_bottom(JSContext* ctx, JSValueConst this_val, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_NPatchInfo_get_layout(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_NPatchInfo_get_layout(JSContext* ctx, JSValue this_val) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int layout = ptr->layout;
     JSValue ret = JS_NewInt32(ctx, layout);
     return ret;
 }
 
-static JSValue js_NPatchInfo_set_layout(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_NPatchInfo_set_layout(JSContext* ctx, JSValue this_val, JSValue v) {
     NPatchInfo* ptr = JS_GetOpaque2(ctx, this_val, js_NPatchInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -838,28 +943,28 @@ static void js_Font_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Font_get_baseSize(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Font_get_baseSize(JSContext* ctx, JSValue this_val) {
     Font* ptr = JS_GetOpaque2(ctx, this_val, js_Font_class_id);
     int baseSize = ptr->baseSize;
     JSValue ret = JS_NewInt32(ctx, baseSize);
     return ret;
 }
 
-static JSValue js_Font_get_glyphCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Font_get_glyphCount(JSContext* ctx, JSValue this_val) {
     Font* ptr = JS_GetOpaque2(ctx, this_val, js_Font_class_id);
     int glyphCount = ptr->glyphCount;
     JSValue ret = JS_NewInt32(ctx, glyphCount);
     return ret;
 }
 
-static JSValue js_Font_get_glyphPadding(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Font_get_glyphPadding(JSContext* ctx, JSValue this_val) {
     Font* ptr = JS_GetOpaque2(ctx, this_val, js_Font_class_id);
     int glyphPadding = ptr->glyphPadding;
     JSValue ret = JS_NewInt32(ctx, glyphPadding);
     return ret;
 }
 
-static JSValue js_Font_get_texture(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Font_get_texture(JSContext* ctx, JSValue this_val) {
     Font* ptr = JS_GetOpaque2(ctx, this_val, js_Font_class_id);
     Texture2D texture = ptr->texture;
     Texture2D* ret_ptr = (Texture2D*)js_malloc(ctx, sizeof(Texture2D));
@@ -895,7 +1000,7 @@ static void js_Camera3D_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Camera3D_get_position(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera3D_get_position(JSContext* ctx, JSValue this_val) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     Vector3 position = ptr->position;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -905,7 +1010,7 @@ static JSValue js_Camera3D_get_position(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Camera3D_set_position(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera3D_set_position(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -914,7 +1019,7 @@ static JSValue js_Camera3D_set_position(JSContext* ctx, JSValueConst this_val, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera3D_get_target(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera3D_get_target(JSContext* ctx, JSValue this_val) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     Vector3 target = ptr->target;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -924,7 +1029,7 @@ static JSValue js_Camera3D_get_target(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Camera3D_set_target(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera3D_set_target(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -933,7 +1038,7 @@ static JSValue js_Camera3D_set_target(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera3D_set_up(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera3D_set_up(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -942,30 +1047,30 @@ static JSValue js_Camera3D_set_up(JSContext* ctx, JSValueConst this_val, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera3D_get_fovy(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera3D_get_fovy(JSContext* ctx, JSValue this_val) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     float fovy = ptr->fovy;
     JSValue ret = JS_NewFloat64(ctx, fovy);
     return ret;
 }
 
-static JSValue js_Camera3D_set_fovy(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera3D_set_fovy(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->fovy = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera3D_get_projection(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera3D_get_projection(JSContext* ctx, JSValue this_val) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     int projection = ptr->projection;
     JSValue ret = JS_NewInt32(ctx, projection);
     return ret;
 }
 
-static JSValue js_Camera3D_set_projection(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera3D_set_projection(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera3D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera3D_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -1000,7 +1105,7 @@ static void js_Camera2D_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Camera2D_get_offset(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera2D_get_offset(JSContext* ctx, JSValue this_val) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     Vector2 offset = ptr->offset;
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
@@ -1010,7 +1115,7 @@ static JSValue js_Camera2D_get_offset(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Camera2D_set_offset(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera2D_set_offset(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     Vector2* value_ptr = (Vector2*)JS_GetOpaque2(ctx, v, js_Vector2_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1019,7 +1124,7 @@ static JSValue js_Camera2D_set_offset(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera2D_get_target(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera2D_get_target(JSContext* ctx, JSValue this_val) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     Vector2 target = ptr->target;
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
@@ -1029,7 +1134,7 @@ static JSValue js_Camera2D_get_target(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Camera2D_set_target(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera2D_set_target(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     Vector2* value_ptr = (Vector2*)JS_GetOpaque2(ctx, v, js_Vector2_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1038,34 +1143,34 @@ static JSValue js_Camera2D_set_target(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera2D_get_rotation(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera2D_get_rotation(JSContext* ctx, JSValue this_val) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     float rotation = ptr->rotation;
     JSValue ret = JS_NewFloat64(ctx, rotation);
     return ret;
 }
 
-static JSValue js_Camera2D_set_rotation(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera2D_set_rotation(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->rotation = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Camera2D_get_zoom(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Camera2D_get_zoom(JSContext* ctx, JSValue this_val) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
     float zoom = ptr->zoom;
     JSValue ret = JS_NewFloat64(ctx, zoom);
     return ret;
 }
 
-static JSValue js_Camera2D_set_zoom(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Camera2D_set_zoom(JSContext* ctx, JSValue this_val, JSValue v) {
     Camera2D* ptr = JS_GetOpaque2(ctx, this_val, js_Camera2D_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->zoom = value;
     return JS_UNDEFINED;
 }
@@ -1096,14 +1201,14 @@ static void js_Mesh_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Mesh_get_vertexCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Mesh_get_vertexCount(JSContext* ctx, JSValue this_val) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     int vertexCount = ptr->vertexCount;
     JSValue ret = JS_NewInt32(ctx, vertexCount);
     return ret;
 }
 
-static JSValue js_Mesh_set_vertexCount(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_vertexCount(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -1111,14 +1216,14 @@ static JSValue js_Mesh_set_vertexCount(JSContext* ctx, JSValueConst this_val, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_get_triangleCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Mesh_get_triangleCount(JSContext* ctx, JSValue this_val) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     int triangleCount = ptr->triangleCount;
     JSValue ret = JS_NewInt32(ctx, triangleCount);
     return ret;
 }
 
-static JSValue js_Mesh_set_triangleCount(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_triangleCount(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -1126,145 +1231,420 @@ static JSValue js_Mesh_set_triangleCount(JSContext* ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->vertices = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->texcoords = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->texcoords2 = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_normals(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->normals = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->tangents = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_colors(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    unsigned char * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(unsigned char));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            unsigned int _int_value[i0];
+            JS_ToUint32(ctx, &_int_value[i0], js_value);
+            value[i0] = (unsigned char)_int_value[i0];
+        }
     }
-    unsigned char * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_UINT8_ARRAY && classid_value==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->colors = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_indices(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    unsigned short * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(unsigned short));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            unsigned int _int_value[i0];
+            JS_ToUint32(ctx, &_int_value[i0], js_value);
+            value[i0] = (unsigned short)_int_value[i0];
+        }
     }
-    unsigned short * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (unsigned short *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (unsigned short *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->indices = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->animVertices = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->animNormals = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    unsigned char * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(unsigned char));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            unsigned int _int_value[i0];
+            JS_ToUint32(ctx, &_int_value[i0], js_value);
+            value[i0] = (unsigned char)_int_value[i0];
+        }
     }
-    unsigned char * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_UINT8_ARRAY && classid_value==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->boneIds = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, v);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,v) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsArrayBuffer(v) == 1) {
+        js_value = JS_DupValue(ctx,v);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     ptr->boneWeights = value;
     return JS_UNDEFINED;
 }
@@ -1304,7 +1684,7 @@ static void js_Shader_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Shader_get_id(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Shader_get_id(JSContext* ctx, JSValue this_val) {
     Shader* ptr = JS_GetOpaque2(ctx, this_val, js_Shader_class_id);
     unsigned int id = ptr->id;
     JSValue ret = JS_NewUint32(ctx, id);
@@ -1334,7 +1714,7 @@ static void js_MaterialMap_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_MaterialMap_set_texture(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_MaterialMap_set_texture(JSContext* ctx, JSValue this_val, JSValue v) {
     MaterialMap* ptr = JS_GetOpaque2(ctx, this_val, js_MaterialMap_class_id);
     Texture2D* value_ptr = (Texture2D*)JS_GetOpaque2(ctx, v, js_Texture_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1343,7 +1723,7 @@ static JSValue js_MaterialMap_set_texture(JSContext* ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_MaterialMap_get_color(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_MaterialMap_get_color(JSContext* ctx, JSValue this_val) {
     MaterialMap* ptr = JS_GetOpaque2(ctx, this_val, js_MaterialMap_class_id);
     Color color = ptr->color;
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
@@ -1353,7 +1733,7 @@ static JSValue js_MaterialMap_get_color(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_MaterialMap_set_color(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_MaterialMap_set_color(JSContext* ctx, JSValue this_val, JSValue v) {
     MaterialMap* ptr = JS_GetOpaque2(ctx, this_val, js_MaterialMap_class_id);
     Color* value_ptr = (Color*)JS_GetOpaque2(ctx, v, js_Color_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1362,18 +1742,18 @@ static JSValue js_MaterialMap_set_color(JSContext* ctx, JSValueConst this_val, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_MaterialMap_get_value(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_MaterialMap_get_value(JSContext* ctx, JSValue this_val) {
     MaterialMap* ptr = JS_GetOpaque2(ctx, this_val, js_MaterialMap_class_id);
     float value = ptr->value;
     JSValue ret = JS_NewFloat64(ctx, value);
     return ret;
 }
 
-static JSValue js_MaterialMap_set_value(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_MaterialMap_set_value(JSContext* ctx, JSValue this_val, JSValue v) {
     MaterialMap* ptr = JS_GetOpaque2(ctx, this_val, js_MaterialMap_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->value = value;
     return JS_UNDEFINED;
 }
@@ -1403,7 +1783,7 @@ static void js_Material_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Material_get_shader(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Material_get_shader(JSContext* ctx, JSValue this_val) {
     Material* ptr = JS_GetOpaque2(ctx, this_val, js_Material_class_id);
     Shader shader = ptr->shader;
     Shader* ret_ptr = (Shader*)js_malloc(ctx, sizeof(Shader));
@@ -1413,7 +1793,7 @@ static JSValue js_Material_get_shader(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Material_set_shader(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Material_set_shader(JSContext* ctx, JSValue this_val, JSValue v) {
     Material* ptr = JS_GetOpaque2(ctx, this_val, js_Material_class_id);
     Shader* value_ptr = (Shader*)JS_GetOpaque2(ctx, v, js_Shader_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1489,7 +1869,7 @@ static void js_Model_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Model_get_transform(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Model_get_transform(JSContext* ctx, JSValue this_val) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     Matrix transform = ptr->transform;
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
@@ -1499,7 +1879,7 @@ static JSValue js_Model_get_transform(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Model_set_transform(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Model_set_transform(JSContext* ctx, JSValue this_val, JSValue v) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     Matrix* value_ptr = (Matrix*)JS_GetOpaque2(ctx, v, js_Matrix_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1508,21 +1888,21 @@ static JSValue js_Model_set_transform(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_Model_get_meshCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Model_get_meshCount(JSContext* ctx, JSValue this_val) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     int meshCount = ptr->meshCount;
     JSValue ret = JS_NewInt32(ctx, meshCount);
     return ret;
 }
 
-static JSValue js_Model_get_materialCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Model_get_materialCount(JSContext* ctx, JSValue this_val) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     int materialCount = ptr->materialCount;
     JSValue ret = JS_NewInt32(ctx, materialCount);
     return ret;
 }
 
-static JSValue js_Model_get_boneCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Model_get_boneCount(JSContext* ctx, JSValue this_val) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     int boneCount = ptr->boneCount;
     JSValue ret = JS_NewInt32(ctx, boneCount);
@@ -1577,7 +1957,7 @@ static void js_Ray_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Ray_set_position(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Ray_set_position(JSContext* ctx, JSValue this_val, JSValue v) {
     Ray* ptr = JS_GetOpaque2(ctx, this_val, js_Ray_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1586,7 +1966,7 @@ static JSValue js_Ray_set_position(JSContext* ctx, JSValueConst this_val, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_Ray_set_direction(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Ray_set_direction(JSContext* ctx, JSValue this_val, JSValue v) {
     Ray* ptr = JS_GetOpaque2(ctx, this_val, js_Ray_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1619,21 +1999,21 @@ static void js_RayCollision_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_RayCollision_get_hit(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RayCollision_get_hit(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     bool hit = ptr->hit;
     JSValue ret = JS_NewBool(ctx, hit);
     return ret;
 }
 
-static JSValue js_RayCollision_get_distance(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RayCollision_get_distance(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     float distance = ptr->distance;
     JSValue ret = JS_NewFloat64(ctx, distance);
     return ret;
 }
 
-static JSValue js_RayCollision_get_point(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RayCollision_get_point(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     Vector3 point = ptr->point;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -1643,7 +2023,7 @@ static JSValue js_RayCollision_get_point(JSContext* ctx, JSValueConst this_val) 
     return ret;
 }
 
-static JSValue js_RayCollision_get_normal(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_RayCollision_get_normal(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     Vector3 normal = ptr->normal;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -1679,7 +2059,7 @@ static void js_BoundingBox_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_BoundingBox_get_min(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_BoundingBox_get_min(JSContext* ctx, JSValue this_val) {
     BoundingBox* ptr = JS_GetOpaque2(ctx, this_val, js_BoundingBox_class_id);
     Vector3 min = ptr->min;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -1689,7 +2069,7 @@ static JSValue js_BoundingBox_get_min(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_BoundingBox_set_min(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_BoundingBox_set_min(JSContext* ctx, JSValue this_val, JSValue v) {
     BoundingBox* ptr = JS_GetOpaque2(ctx, this_val, js_BoundingBox_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1698,7 +2078,7 @@ static JSValue js_BoundingBox_set_min(JSContext* ctx, JSValueConst this_val, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_BoundingBox_get_max(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_BoundingBox_get_max(JSContext* ctx, JSValue this_val) {
     BoundingBox* ptr = JS_GetOpaque2(ctx, this_val, js_BoundingBox_class_id);
     Vector3 max = ptr->max;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -1708,7 +2088,7 @@ static JSValue js_BoundingBox_get_max(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_BoundingBox_set_max(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_BoundingBox_set_max(JSContext* ctx, JSValue this_val, JSValue v) {
     BoundingBox* ptr = JS_GetOpaque2(ctx, this_val, js_BoundingBox_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -1741,28 +2121,28 @@ static void js_Wave_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Wave_get_frameCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Wave_get_frameCount(JSContext* ctx, JSValue this_val) {
     Wave* ptr = JS_GetOpaque2(ctx, this_val, js_Wave_class_id);
     unsigned int frameCount = ptr->frameCount;
     JSValue ret = JS_NewUint32(ctx, frameCount);
     return ret;
 }
 
-static JSValue js_Wave_get_sampleRate(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Wave_get_sampleRate(JSContext* ctx, JSValue this_val) {
     Wave* ptr = JS_GetOpaque2(ctx, this_val, js_Wave_class_id);
     unsigned int sampleRate = ptr->sampleRate;
     JSValue ret = JS_NewUint32(ctx, sampleRate);
     return ret;
 }
 
-static JSValue js_Wave_get_sampleSize(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Wave_get_sampleSize(JSContext* ctx, JSValue this_val) {
     Wave* ptr = JS_GetOpaque2(ctx, this_val, js_Wave_class_id);
     unsigned int sampleSize = ptr->sampleSize;
     JSValue ret = JS_NewUint32(ctx, sampleSize);
     return ret;
 }
 
-static JSValue js_Wave_get_channels(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Wave_get_channels(JSContext* ctx, JSValue this_val) {
     Wave* ptr = JS_GetOpaque2(ctx, this_val, js_Wave_class_id);
     unsigned int channels = ptr->channels;
     JSValue ret = JS_NewUint32(ctx, channels);
@@ -1817,7 +2197,7 @@ static void js_Sound_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Sound_get_frameCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Sound_get_frameCount(JSContext* ctx, JSValue this_val) {
     Sound* ptr = JS_GetOpaque2(ctx, this_val, js_Sound_class_id);
     unsigned int frameCount = ptr->frameCount;
     JSValue ret = JS_NewUint32(ctx, frameCount);
@@ -1847,28 +2227,28 @@ static void js_Music_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Music_get_frameCount(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Music_get_frameCount(JSContext* ctx, JSValue this_val) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
     unsigned int frameCount = ptr->frameCount;
     JSValue ret = JS_NewUint32(ctx, frameCount);
     return ret;
 }
 
-static JSValue js_Music_get_looping(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Music_get_looping(JSContext* ctx, JSValue this_val) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
     bool looping = ptr->looping;
     JSValue ret = JS_NewBool(ctx, looping);
     return ret;
 }
 
-static JSValue js_Music_set_looping(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Music_set_looping(JSContext* ctx, JSValue this_val, JSValue v) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
     bool value = JS_ToBool(ctx, v);
     ptr->looping = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Music_get_ctxType(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Music_get_ctxType(JSContext* ctx, JSValue this_val) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
     int ctxType = ptr->ctxType;
     JSValue ret = JS_NewInt32(ctx, ctxType);
@@ -1900,14 +2280,14 @@ static void js_VrDeviceInfo_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_VrDeviceInfo_get_hResolution(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_hResolution(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     int hResolution = ptr->hResolution;
     JSValue ret = JS_NewInt32(ctx, hResolution);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_hResolution(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_hResolution(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -1915,14 +2295,14 @@ static JSValue js_VrDeviceInfo_set_hResolution(JSContext* ctx, JSValueConst this
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_vResolution(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_vResolution(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     int vResolution = ptr->vResolution;
     JSValue ret = JS_NewInt32(ctx, vResolution);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_vResolution(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_vResolution(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -1930,82 +2310,82 @@ static JSValue js_VrDeviceInfo_set_vResolution(JSContext* ctx, JSValueConst this
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_hScreenSize(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_hScreenSize(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float hScreenSize = ptr->hScreenSize;
     JSValue ret = JS_NewFloat64(ctx, hScreenSize);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_hScreenSize(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_hScreenSize(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->hScreenSize = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_vScreenSize(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_vScreenSize(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float vScreenSize = ptr->vScreenSize;
     JSValue ret = JS_NewFloat64(ctx, vScreenSize);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_vScreenSize(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_vScreenSize(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->vScreenSize = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_eyeToScreenDistance(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_eyeToScreenDistance(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float eyeToScreenDistance = ptr->eyeToScreenDistance;
     JSValue ret = JS_NewFloat64(ctx, eyeToScreenDistance);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_eyeToScreenDistance(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_eyeToScreenDistance(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->eyeToScreenDistance = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_lensSeparationDistance(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_lensSeparationDistance(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float lensSeparationDistance = ptr->lensSeparationDistance;
     JSValue ret = JS_NewFloat64(ctx, lensSeparationDistance);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_lensSeparationDistance(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_lensSeparationDistance(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->lensSeparationDistance = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_interpupillaryDistance(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_VrDeviceInfo_get_interpupillaryDistance(JSContext* ctx, JSValue this_val) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float interpupillaryDistance = ptr->interpupillaryDistance;
     JSValue ret = JS_NewFloat64(ctx, interpupillaryDistance);
     return ret;
 }
 
-static JSValue js_VrDeviceInfo_set_interpupillaryDistance(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_VrDeviceInfo_set_interpupillaryDistance(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->interpupillaryDistance = value;
     return JS_UNDEFINED;
 }
@@ -2127,14 +2507,14 @@ static void js_Light_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Light_get_type(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_type(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     int type = ptr->type;
     JSValue ret = JS_NewInt32(ctx, type);
     return ret;
 }
 
-static JSValue js_Light_set_type(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_type(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -2142,21 +2522,21 @@ static JSValue js_Light_set_type(JSContext* ctx, JSValueConst this_val, JSValueC
     return JS_UNDEFINED;
 }
 
-static JSValue js_Light_get_enabled(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_enabled(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     bool enabled = ptr->enabled;
     JSValue ret = JS_NewBool(ctx, enabled);
     return ret;
 }
 
-static JSValue js_Light_set_enabled(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_enabled(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     bool value = JS_ToBool(ctx, v);
     ptr->enabled = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Light_get_position(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_position(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Vector3 position = ptr->position;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -2166,7 +2546,7 @@ static JSValue js_Light_get_position(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Light_set_position(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_position(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -2175,7 +2555,7 @@ static JSValue js_Light_set_position(JSContext* ctx, JSValueConst this_val, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_Light_get_target(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_target(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Vector3 target = ptr->target;
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
@@ -2185,7 +2565,7 @@ static JSValue js_Light_get_target(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Light_set_target(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_target(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Vector3* value_ptr = (Vector3*)JS_GetOpaque2(ctx, v, js_Vector3_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -2194,7 +2574,7 @@ static JSValue js_Light_set_target(JSContext* ctx, JSValueConst this_val, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_Light_get_color(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_color(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Color color = ptr->color;
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
@@ -2204,7 +2584,7 @@ static JSValue js_Light_get_color(JSContext* ctx, JSValueConst this_val) {
     return ret;
 }
 
-static JSValue js_Light_set_color(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_color(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     Color* value_ptr = (Color*)JS_GetOpaque2(ctx, v, js_Color_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -2213,18 +2593,18 @@ static JSValue js_Light_set_color(JSContext* ctx, JSValueConst this_val, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_Light_get_attenuation(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Light_get_attenuation(JSContext* ctx, JSValue this_val) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
     float attenuation = ptr->attenuation;
     JSValue ret = JS_NewFloat64(ctx, attenuation);
     return ret;
 }
 
-static JSValue js_Light_set_attenuation(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_Light_set_attenuation(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->attenuation = value;
     return JS_UNDEFINED;
 }
@@ -2257,21 +2637,21 @@ static void js_Lightmapper_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_Lightmapper_get_w(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Lightmapper_get_w(JSContext* ctx, JSValue this_val) {
     Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
     int w = ptr->w;
     JSValue ret = JS_NewInt32(ctx, w);
     return ret;
 }
 
-static JSValue js_Lightmapper_get_h(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Lightmapper_get_h(JSContext* ctx, JSValue this_val) {
     Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
     int h = ptr->h;
     JSValue ret = JS_NewInt32(ctx, h);
     return ret;
 }
 
-static JSValue js_Lightmapper_get_progress(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_Lightmapper_get_progress(JSContext* ctx, JSValue this_val) {
     Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
     float progress = ptr->progress;
     JSValue ret = JS_NewFloat64(ctx, progress);
@@ -2303,14 +2683,14 @@ static void js_LightmapperConfig_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_LightmapperConfig_get_hemisphereSize(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_hemisphereSize(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     int hemisphereSize = ptr->hemisphereSize;
     JSValue ret = JS_NewInt32(ctx, hemisphereSize);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_hemisphereSize(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_hemisphereSize(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -2318,39 +2698,39 @@ static JSValue js_LightmapperConfig_set_hemisphereSize(JSContext* ctx, JSValueCo
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_zNear(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_zNear(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     float zNear = ptr->zNear;
     JSValue ret = JS_NewFloat64(ctx, zNear);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_zNear(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_zNear(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->zNear = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_zFar(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_zFar(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     float zFar = ptr->zFar;
     JSValue ret = JS_NewFloat64(ctx, zFar);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_zFar(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_zFar(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->zFar = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_backgroundColor(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_backgroundColor(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     Color backgroundColor = ptr->backgroundColor;
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
@@ -2360,7 +2740,7 @@ static JSValue js_LightmapperConfig_get_backgroundColor(JSContext* ctx, JSValueC
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_backgroundColor(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_backgroundColor(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     Color* value_ptr = (Color*)JS_GetOpaque2(ctx, v, js_Color_class_id);
     if(value_ptr == NULL) return JS_EXCEPTION;
@@ -2369,14 +2749,14 @@ static JSValue js_LightmapperConfig_set_backgroundColor(JSContext* ctx, JSValueC
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_interpolationPasses(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_interpolationPasses(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     int interpolationPasses = ptr->interpolationPasses;
     JSValue ret = JS_NewInt32(ctx, interpolationPasses);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_interpolationPasses(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_interpolationPasses(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     int value;
     JS_ToInt32(ctx, &value, v);
@@ -2384,34 +2764,34 @@ static JSValue js_LightmapperConfig_set_interpolationPasses(JSContext* ctx, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_interpolationThreshold(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_interpolationThreshold(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     float interpolationThreshold = ptr->interpolationThreshold;
     JSValue ret = JS_NewFloat64(ctx, interpolationThreshold);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_interpolationThreshold(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_interpolationThreshold(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->interpolationThreshold = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_LightmapperConfig_get_cameraToSurfaceDistanceModifier(JSContext* ctx, JSValueConst this_val) {
+static JSValue js_LightmapperConfig_get_cameraToSurfaceDistanceModifier(JSContext* ctx, JSValue this_val) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
     float cameraToSurfaceDistanceModifier = ptr->cameraToSurfaceDistanceModifier;
     JSValue ret = JS_NewFloat64(ctx, cameraToSurfaceDistanceModifier);
     return ret;
 }
 
-static JSValue js_LightmapperConfig_set_cameraToSurfaceDistanceModifier(JSContext* ctx, JSValueConst this_val, JSValueConst v) {
+static JSValue js_LightmapperConfig_set_cameraToSurfaceDistanceModifier(JSContext* ctx, JSValue this_val, JSValue v) {
     LightmapperConfig* ptr = JS_GetOpaque2(ctx, this_val, js_LightmapperConfig_class_id);
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, v);
-    float value = (float)_double_value;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, v);
+    float value = (float)double_value;
     ptr->cameraToSurfaceDistanceModifier = value;
     return JS_UNDEFINED;
 }
@@ -2438,13 +2818,13 @@ static int js_declare_LightmapperConfig(JSContext * ctx, JSModuleDef * m) {
     return 0;
 }
 
-static JSValue js_Vector2_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
+static JSValue js_Vector2_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
     Vector2 _struct = { x, y };
     Vector2* _return_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *_return_ptr = _struct;
@@ -2453,16 +2833,16 @@ static JSValue js_Vector2_constructor(JSContext * ctx, JSValueConst this_val, in
     return _return;
 }
 
-static JSValue js_Vector3_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
-    double _double_z;
-    JS_ToFloat64(ctx, &_double_z, argv[2]);
-    float z = (float)_double_z;
+static JSValue js_Vector3_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
+    double double_z;
+    JS_ToFloat64(ctx, &double_z, argv[2]);
+    float z = (float)double_z;
     Vector3 _struct = { x, y, z };
     Vector3* _return_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *_return_ptr = _struct;
@@ -2471,19 +2851,19 @@ static JSValue js_Vector3_constructor(JSContext * ctx, JSValueConst this_val, in
     return _return;
 }
 
-static JSValue js_Vector4_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
-    double _double_z;
-    JS_ToFloat64(ctx, &_double_z, argv[2]);
-    float z = (float)_double_z;
-    double _double_w;
-    JS_ToFloat64(ctx, &_double_w, argv[3]);
-    float w = (float)_double_w;
+static JSValue js_Vector4_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
+    double double_z;
+    JS_ToFloat64(ctx, &double_z, argv[2]);
+    float z = (float)double_z;
+    double double_w;
+    JS_ToFloat64(ctx, &double_w, argv[3]);
+    float w = (float)double_w;
     Vector4 _struct = { x, y, z, w };
     Vector4* _return_ptr = (Vector4*)js_malloc(ctx, sizeof(Vector4));
     *_return_ptr = _struct;
@@ -2492,7 +2872,7 @@ static JSValue js_Vector4_constructor(JSContext * ctx, JSValueConst this_val, in
     return _return;
 }
 
-static JSValue js_Color_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Color_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int _int_r;
     JS_ToUint32(ctx, &_int_r, argv[0]);
     unsigned char r = (unsigned char)_int_r;
@@ -2513,19 +2893,19 @@ static JSValue js_Color_constructor(JSContext * ctx, JSValueConst this_val, int 
     return _return;
 }
 
-static JSValue js_Rectangle_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
-    double _double_width;
-    JS_ToFloat64(ctx, &_double_width, argv[2]);
-    float width = (float)_double_width;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[3]);
-    float height = (float)_double_height;
+static JSValue js_Rectangle_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
+    double double_width;
+    JS_ToFloat64(ctx, &double_width, argv[2]);
+    float width = (float)double_width;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[3]);
+    float height = (float)double_height;
     Rectangle _struct = { x, y, width, height };
     Rectangle* _return_ptr = (Rectangle*)js_malloc(ctx, sizeof(Rectangle));
     *_return_ptr = _struct;
@@ -2534,7 +2914,7 @@ static JSValue js_Rectangle_constructor(JSContext * ctx, JSValueConst this_val, 
     return _return;
 }
 
-static JSValue js_Image_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Image_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image _struct = {  };
     Image* _return_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *_return_ptr = _struct;
@@ -2543,7 +2923,7 @@ static JSValue js_Image_constructor(JSContext * ctx, JSValueConst this_val, int 
     return _return;
 }
 
-static JSValue js_NPatchInfo_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_NPatchInfo_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* source_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(source_ptr == NULL) return JS_EXCEPTION;
     Rectangle source = *source_ptr;
@@ -2565,7 +2945,7 @@ static JSValue js_NPatchInfo_constructor(JSContext * ctx, JSValueConst this_val,
     return _return;
 }
 
-static JSValue js_Camera3D_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Camera3D_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -2575,9 +2955,9 @@ static JSValue js_Camera3D_constructor(JSContext * ctx, JSValueConst this_val, i
     Vector3* up_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(up_ptr == NULL) return JS_EXCEPTION;
     Vector3 up = *up_ptr;
-    double _double_fovy;
-    JS_ToFloat64(ctx, &_double_fovy, argv[3]);
-    float fovy = (float)_double_fovy;
+    double double_fovy;
+    JS_ToFloat64(ctx, &double_fovy, argv[3]);
+    float fovy = (float)double_fovy;
     int projection;
     JS_ToInt32(ctx, &projection, argv[4]);
     Camera3D _struct = { position, target, up, fovy, projection };
@@ -2588,19 +2968,19 @@ static JSValue js_Camera3D_constructor(JSContext * ctx, JSValueConst this_val, i
     return _return;
 }
 
-static JSValue js_Camera2D_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Camera2D_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* offset_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(offset_ptr == NULL) return JS_EXCEPTION;
     Vector2 offset = *offset_ptr;
     Vector2* target_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     Vector2 target = *target_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[2]);
-    float rotation = (float)_double_rotation;
-    double _double_zoom;
-    JS_ToFloat64(ctx, &_double_zoom, argv[3]);
-    float zoom = (float)_double_zoom;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[2]);
+    float rotation = (float)double_rotation;
+    double double_zoom;
+    JS_ToFloat64(ctx, &double_zoom, argv[3]);
+    float zoom = (float)double_zoom;
     Camera2D _struct = { offset, target, rotation, zoom };
     Camera2D* _return_ptr = (Camera2D*)js_malloc(ctx, sizeof(Camera2D));
     *_return_ptr = _struct;
@@ -2609,7 +2989,7 @@ static JSValue js_Camera2D_constructor(JSContext * ctx, JSValueConst this_val, i
     return _return;
 }
 
-static JSValue js_Mesh_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Mesh_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh _struct = {  };
     Mesh* _return_ptr = (Mesh*)js_malloc(ctx, sizeof(Mesh));
     *_return_ptr = _struct;
@@ -2618,7 +2998,7 @@ static JSValue js_Mesh_constructor(JSContext * ctx, JSValueConst this_val, int a
     return _return;
 }
 
-static JSValue js_Ray_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_Ray_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -2633,7 +3013,7 @@ static JSValue js_Ray_constructor(JSContext * ctx, JSValueConst this_val, int ar
     return _return;
 }
 
-static JSValue js_BoundingBox_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_BoundingBox_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* min_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(min_ptr == NULL) return JS_EXCEPTION;
     Vector3 min = *min_ptr;
@@ -2648,7 +3028,7 @@ static JSValue js_BoundingBox_constructor(JSContext * ctx, JSValueConst this_val
     return _return;
 }
 
-static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrDeviceInfo _struct = {  };
     VrDeviceInfo* _return_ptr = (VrDeviceInfo*)js_malloc(ctx, sizeof(VrDeviceInfo));
     *_return_ptr = _struct;
@@ -2657,71 +3037,117 @@ static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValueConst this_va
     return _return;
 }
 
-static JSValue js_initWindow(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_initWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
     JS_ToInt32(ctx, &height, argv[1]);
-    const char * title = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    InitWindow(width, height, title);
-    JS_FreeCString(ctx, title);
+    char * title;
+    JSValue js_title;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_title;
+        if(JS_GetLength(ctx,argv[2],&size_title)==-1) {
+            return JS_EXCEPTION;
+        }
+        title = js_malloc(ctx, size_title * sizeof(char));
+        for(int i0=0; i0 < size_title; i0++){
+            JSValue js_title = JS_GetPropertyUint32(ctx,argv[2],i0);
+            title[i0] = (char)((char *)JS_ToCString(ctx, js_title))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        title = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_title = JS_DupValue(ctx,argv[2]);
+        size_t size_title;
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[2]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            size_t offset_title;
+            size_t size_title;
+            js_title = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_title,&size_title,NULL);
+            title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    InitWindow(width, height, (const char *)title);
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, title);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, title);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[2]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_title);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_closeWindow(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_closeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     CloseWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_windowShouldClose(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_windowShouldClose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = WindowShouldClose();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowReady();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowFullscreen(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowFullscreen();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowHidden(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowHidden();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowMinimized(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowMinimized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowMinimized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowMaximized(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowMaximized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowMaximized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowFocused(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowFocused();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowResized(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowResized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowResized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowState(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int flag;
     JS_ToUint32(ctx, &flag, argv[0]);
     bool returnVal = IsWindowState(flag);
@@ -2729,46 +3155,46 @@ static JSValue js_isWindowState(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_setWindowState(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int flags;
     JS_ToUint32(ctx, &flags, argv[0]);
     SetWindowState(flags);
     return JS_UNDEFINED;
 }
 
-static JSValue js_clearWindowState(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_clearWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int flags;
     JS_ToUint32(ctx, &flags, argv[0]);
     ClearWindowState(flags);
     return JS_UNDEFINED;
 }
 
-static JSValue js_toggleFullscreen(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_toggleFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ToggleFullscreen();
     return JS_UNDEFINED;
 }
 
-static JSValue js_toggleBorderlessWindowed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_toggleBorderlessWindowed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ToggleBorderlessWindowed();
     return JS_UNDEFINED;
 }
 
-static JSValue js_maximizeWindow(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_maximizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     MaximizeWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_minimizeWindow(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_minimizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     MinimizeWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_restoreWindow(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_restoreWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RestoreWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowIcon(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -2776,14 +3202,60 @@ static JSValue js_setWindowIcon(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowTitle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * title = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    SetWindowTitle(title);
-    JS_FreeCString(ctx, title);
+static JSValue js_setWindowTitle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * title;
+    JSValue js_title;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_title;
+        if(JS_GetLength(ctx,argv[0],&size_title)==-1) {
+            return JS_EXCEPTION;
+        }
+        title = js_malloc(ctx, size_title * sizeof(char));
+        for(int i0=0; i0 < size_title; i0++){
+            JSValue js_title = JS_GetPropertyUint32(ctx,argv[0],i0);
+            title[i0] = (char)((char *)JS_ToCString(ctx, js_title))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        title = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_title = JS_DupValue(ctx,argv[0]);
+        size_t size_title;
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[0]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            size_t offset_title;
+            size_t size_title;
+            js_title = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_title,&size_title,NULL);
+            title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    SetWindowTitle((const char *)title);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, title);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, title);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[0]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_title);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowPosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int x;
     JS_ToInt32(ctx, &x, argv[0]);
     int y;
@@ -2792,14 +3264,14 @@ static JSValue js_setWindowPosition(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMonitor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     SetWindowMonitor(monitor);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMinSize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowMinSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -2808,7 +3280,7 @@ static JSValue js_setWindowMinSize(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMaxSize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowMaxSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -2817,7 +3289,7 @@ static JSValue js_setWindowMaxSize(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowSize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -2826,56 +3298,56 @@ static JSValue js_setWindowSize(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowOpacity(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_opacity;
-    JS_ToFloat64(ctx, &_double_opacity, argv[0]);
-    float opacity = (float)_double_opacity;
+static JSValue js_setWindowOpacity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_opacity;
+    JS_ToFloat64(ctx, &double_opacity, argv[0]);
+    float opacity = (float)double_opacity;
     SetWindowOpacity(opacity);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowFocused(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     SetWindowFocused();
     return JS_UNDEFINED;
 }
 
-static JSValue js_getScreenWidth(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getScreenWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetScreenWidth();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getScreenHeight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getScreenHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetScreenHeight();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getRenderWidth(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRenderWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetRenderWidth();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getRenderHeight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRenderHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetRenderHeight();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getMonitorCount(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMonitorCount();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getCurrentMonitor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCurrentMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetCurrentMonitor();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getMonitorPosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     Vector2 returnVal = GetMonitorPosition(monitor);
@@ -2886,7 +3358,7 @@ static JSValue js_getMonitorPosition(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getMonitorWidth(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     int returnVal = GetMonitorWidth(monitor);
@@ -2894,7 +3366,7 @@ static JSValue js_getMonitorWidth(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_getMonitorHeight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     int returnVal = GetMonitorHeight(monitor);
@@ -2902,7 +3374,7 @@ static JSValue js_getMonitorHeight(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getMonitorPhysicalWidth(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorPhysicalWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     int returnVal = GetMonitorPhysicalWidth(monitor);
@@ -2910,7 +3382,7 @@ static JSValue js_getMonitorPhysicalWidth(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_getMonitorPhysicalHeight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorPhysicalHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     int returnVal = GetMonitorPhysicalHeight(monitor);
@@ -2918,7 +3390,7 @@ static JSValue js_getMonitorPhysicalHeight(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_getMonitorRefreshRate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorRefreshRate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     int returnVal = GetMonitorRefreshRate(monitor);
@@ -2926,7 +3398,7 @@ static JSValue js_getMonitorRefreshRate(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_getWindowPosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetWindowPosition();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -2935,7 +3407,7 @@ static JSValue js_getWindowPosition(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_getWindowScaleDPI(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWindowScaleDPI(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetWindowScaleDPI();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -2944,7 +3416,7 @@ static JSValue js_getWindowScaleDPI(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_getMonitorName(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMonitorName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int monitor;
     JS_ToInt32(ctx, &monitor, argv[0]);
     const char * returnVal = GetMonitorName(monitor);
@@ -2952,62 +3424,108 @@ static JSValue js_getMonitorName(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_setClipboardText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * text = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    SetClipboardText(text);
-    JS_FreeCString(ctx, text);
+static JSValue js_setClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    SetClipboardText((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_getClipboardText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetClipboardText();
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_enableEventWaiting(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_enableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EnableEventWaiting();
     return JS_UNDEFINED;
 }
 
-static JSValue js_disableEventWaiting(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_disableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     DisableEventWaiting();
     return JS_UNDEFINED;
 }
 
-static JSValue js_showCursor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_showCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ShowCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_hideCursor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_hideCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     HideCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isCursorHidden(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isCursorHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsCursorHidden();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_enableCursor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_enableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EnableCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_disableCursor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_disableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     DisableCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isCursorOnScreen(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isCursorOnScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsCursorOnScreen();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_clearBackground(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_clearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -3015,18 +3533,18 @@ static JSValue js_clearBackground(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginDrawing(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BeginDrawing();
     return JS_UNDEFINED;
 }
 
-static JSValue js_endDrawing(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndDrawing();
     app_update_quickjs();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginMode2D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera2D* camera_ptr = (Camera2D*)JS_GetOpaque2(ctx, argv[0], js_Camera2D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera2D camera = *camera_ptr;
@@ -3034,12 +3552,12 @@ static JSValue js_beginMode2D(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_endMode2D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndMode2D();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginMode3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera3D* camera_ptr = (Camera3D*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera3D camera = *camera_ptr;
@@ -3047,12 +3565,12 @@ static JSValue js_beginMode3D(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_endMode3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndMode3D();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginTextureMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* target_ptr = (RenderTexture2D*)JS_GetOpaque2(ctx, argv[0], js_RenderTexture_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     RenderTexture2D target = *target_ptr;
@@ -3060,12 +3578,12 @@ static JSValue js_beginTextureMode(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_endTextureMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndTextureMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginShaderMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3073,24 +3591,24 @@ static JSValue js_beginShaderMode(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_endShaderMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndShaderMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginBlendMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int mode;
     JS_ToInt32(ctx, &mode, argv[0]);
     BeginBlendMode(mode);
     return JS_UNDEFINED;
 }
 
-static JSValue js_endBlendMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndBlendMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginScissorMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int x;
     JS_ToInt32(ctx, &x, argv[0]);
     int y;
@@ -3103,12 +3621,12 @@ static JSValue js_beginScissorMode(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_endScissorMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndScissorMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginVrStereoMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrStereoConfig* config_ptr = (VrStereoConfig*)JS_GetOpaque2(ctx, argv[0], js_VrStereoConfig_class_id);
     if(config_ptr == NULL) return JS_EXCEPTION;
     VrStereoConfig config = *config_ptr;
@@ -3116,12 +3634,12 @@ static JSValue js_beginVrStereoMode(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_endVrStereoMode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndVrStereoMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadVrStereoConfig(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrDeviceInfo* device_ptr = (VrDeviceInfo*)JS_GetOpaque2(ctx, argv[0], js_VrDeviceInfo_class_id);
     if(device_ptr == NULL) return JS_EXCEPTION;
     VrDeviceInfo device = *device_ptr;
@@ -3133,7 +3651,7 @@ static JSValue js_loadVrStereoConfig(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_unloadVrStereoConfig(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrStereoConfig* config_ptr = (VrStereoConfig*)JS_GetOpaque2(ctx, argv[0], js_VrStereoConfig_class_id);
     if(config_ptr == NULL) return JS_EXCEPTION;
     VrStereoConfig config = *config_ptr;
@@ -3141,12 +3659,104 @@ static JSValue js_unloadVrStereoConfig(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadShader(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * vsFileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * fsFileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    Shader returnVal = LoadShader(vsFileName, fsFileName);
-    JS_FreeCString(ctx, vsFileName);
-    JS_FreeCString(ctx, fsFileName);
+static JSValue js_loadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * vsFileName;
+    JSValue js_vsFileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_vsFileName;
+        if(JS_GetLength(ctx,argv[0],&size_vsFileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        vsFileName = js_malloc(ctx, size_vsFileName * sizeof(char));
+        for(int i0=0; i0 < size_vsFileName; i0++){
+            JSValue js_vsFileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            vsFileName[i0] = (char)((char *)JS_ToCString(ctx, js_vsFileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        vsFileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_vsFileName = JS_DupValue(ctx,argv[0]);
+        size_t size_vsFileName;
+        vsFileName = (char *)JS_GetArrayBuffer(ctx, &size_vsFileName, js_vsFileName);
+    }
+    else {
+        JSClassID classid_vsFileName = JS_GetClassID(argv[0]);
+        if(classid_vsFileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_vsFileName;
+            size_t size_vsFileName;
+            js_vsFileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_vsFileName,&size_vsFileName,NULL);
+            vsFileName = (char *)JS_GetArrayBuffer(ctx, &size_vsFileName, js_vsFileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * fsFileName;
+    JSValue js_fsFileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fsFileName;
+        if(JS_GetLength(ctx,argv[1],&size_fsFileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fsFileName = js_malloc(ctx, size_fsFileName * sizeof(char));
+        for(int i0=0; i0 < size_fsFileName; i0++){
+            JSValue js_fsFileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fsFileName[i0] = (char)((char *)JS_ToCString(ctx, js_fsFileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fsFileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fsFileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fsFileName;
+        fsFileName = (char *)JS_GetArrayBuffer(ctx, &size_fsFileName, js_fsFileName);
+    }
+    else {
+        JSClassID classid_fsFileName = JS_GetClassID(argv[1]);
+        if(classid_fsFileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fsFileName;
+            size_t size_fsFileName;
+            js_fsFileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fsFileName,&size_fsFileName,NULL);
+            fsFileName = (char *)JS_GetArrayBuffer(ctx, &size_fsFileName, js_fsFileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Shader returnVal = LoadShader((const char *)vsFileName, (const char *)fsFileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, vsFileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, vsFileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_vsFileName);
+    }
+    else {
+        JSClassID classid_vsFileName = JS_GetClassID(argv[0]);
+        if(classid_vsFileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_vsFileName);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fsFileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fsFileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fsFileName);
+    }
+    else {
+        JSClassID classid_fsFileName = JS_GetClassID(argv[1]);
+        if(classid_fsFileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fsFileName);
+        }
+    }
     Shader* ret_ptr = (Shader*)js_malloc(ctx, sizeof(Shader));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Shader_class_id);
@@ -3154,12 +3764,104 @@ static JSValue js_loadShader(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * vsCode = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * fsCode = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    Shader returnVal = LoadShaderFromMemory(vsCode, fsCode);
-    JS_FreeCString(ctx, vsCode);
-    JS_FreeCString(ctx, fsCode);
+static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * vsCode;
+    JSValue js_vsCode;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_vsCode;
+        if(JS_GetLength(ctx,argv[0],&size_vsCode)==-1) {
+            return JS_EXCEPTION;
+        }
+        vsCode = js_malloc(ctx, size_vsCode * sizeof(char));
+        for(int i0=0; i0 < size_vsCode; i0++){
+            JSValue js_vsCode = JS_GetPropertyUint32(ctx,argv[0],i0);
+            vsCode[i0] = (char)((char *)JS_ToCString(ctx, js_vsCode))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        vsCode = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_vsCode = JS_DupValue(ctx,argv[0]);
+        size_t size_vsCode;
+        vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, js_vsCode);
+    }
+    else {
+        JSClassID classid_vsCode = JS_GetClassID(argv[0]);
+        if(classid_vsCode==JS_CLASS_INT8_ARRAY) {
+            size_t offset_vsCode;
+            size_t size_vsCode;
+            js_vsCode = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_vsCode,&size_vsCode,NULL);
+            vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, js_vsCode);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * fsCode;
+    JSValue js_fsCode;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fsCode;
+        if(JS_GetLength(ctx,argv[1],&size_fsCode)==-1) {
+            return JS_EXCEPTION;
+        }
+        fsCode = js_malloc(ctx, size_fsCode * sizeof(char));
+        for(int i0=0; i0 < size_fsCode; i0++){
+            JSValue js_fsCode = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fsCode[i0] = (char)((char *)JS_ToCString(ctx, js_fsCode))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fsCode = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fsCode = JS_DupValue(ctx,argv[1]);
+        size_t size_fsCode;
+        fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, js_fsCode);
+    }
+    else {
+        JSClassID classid_fsCode = JS_GetClassID(argv[1]);
+        if(classid_fsCode==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fsCode;
+            size_t size_fsCode;
+            js_fsCode = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fsCode,&size_fsCode,NULL);
+            fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, js_fsCode);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Shader returnVal = LoadShaderFromMemory((const char *)vsCode, (const char *)fsCode);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, vsCode);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, vsCode);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_vsCode);
+    }
+    else {
+        JSClassID classid_vsCode = JS_GetClassID(argv[0]);
+        if(classid_vsCode==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_vsCode);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fsCode);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fsCode);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fsCode);
+    }
+    else {
+        JSClassID classid_fsCode = JS_GetClassID(argv[1]);
+        if(classid_fsCode==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fsCode);
+        }
+    }
     Shader* ret_ptr = (Shader*)js_malloc(ctx, sizeof(Shader));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Shader_class_id);
@@ -3167,7 +3869,7 @@ static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_isShaderReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isShaderReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3176,29 +3878,121 @@ static JSValue js_isShaderReady(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_getShaderLocation(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getShaderLocation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
-    const char * uniformName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GetShaderLocation(shader, uniformName);
-    JS_FreeCString(ctx, uniformName);
+    char * uniformName;
+    JSValue js_uniformName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_uniformName;
+        if(JS_GetLength(ctx,argv[1],&size_uniformName)==-1) {
+            return JS_EXCEPTION;
+        }
+        uniformName = js_malloc(ctx, size_uniformName * sizeof(char));
+        for(int i0=0; i0 < size_uniformName; i0++){
+            JSValue js_uniformName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            uniformName[i0] = (char)((char *)JS_ToCString(ctx, js_uniformName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        uniformName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_uniformName = JS_DupValue(ctx,argv[1]);
+        size_t size_uniformName;
+        uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, js_uniformName);
+    }
+    else {
+        JSClassID classid_uniformName = JS_GetClassID(argv[1]);
+        if(classid_uniformName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_uniformName;
+            size_t size_uniformName;
+            js_uniformName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_uniformName,&size_uniformName,NULL);
+            uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, js_uniformName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GetShaderLocation(shader, (const char *)uniformName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, uniformName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, uniformName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_uniformName);
+    }
+    else {
+        JSClassID classid_uniformName = JS_GetClassID(argv[1]);
+        if(classid_uniformName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_uniformName);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getShaderLocationAttrib(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getShaderLocationAttrib(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
-    const char * attribName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GetShaderLocationAttrib(shader, attribName);
-    JS_FreeCString(ctx, attribName);
+    char * attribName;
+    JSValue js_attribName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_attribName;
+        if(JS_GetLength(ctx,argv[1],&size_attribName)==-1) {
+            return JS_EXCEPTION;
+        }
+        attribName = js_malloc(ctx, size_attribName * sizeof(char));
+        for(int i0=0; i0 < size_attribName; i0++){
+            JSValue js_attribName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            attribName[i0] = (char)((char *)JS_ToCString(ctx, js_attribName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        attribName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_attribName = JS_DupValue(ctx,argv[1]);
+        size_t size_attribName;
+        attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, js_attribName);
+    }
+    else {
+        JSClassID classid_attribName = JS_GetClassID(argv[1]);
+        if(classid_attribName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_attribName;
+            size_t size_attribName;
+            js_attribName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_attribName,&size_attribName,NULL);
+            attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, js_attribName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GetShaderLocationAttrib(shader, (const char *)attribName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, attribName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, attribName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_attribName);
+    }
+    else {
+        JSClassID classid_attribName = JS_GetClassID(argv[1]);
+        if(classid_attribName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_attribName);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setShaderValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setShaderValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3210,43 +4004,37 @@ static JSValue js_setShaderValue(JSContext * ctx, JSValueConst this_val, int arg
     int uniformType;
     JS_ToInt32(ctx, &uniformType, argv[3]);
     switch(uniformType) {
-        case SHADER_UNIFORM_FLOAT:
-        {
-            double _double_valueFloat;
-            JS_ToFloat64(ctx, &_double_valueFloat, argv[2]);
-            valueFloat = (float)_double_valueFloat;
+        case SHADER_UNIFORM_FLOAT:{
+            double double_valueFloat;
+            JS_ToFloat64(ctx, &double_valueFloat, argv[2]);
+            float valueFloat = (float)double_valueFloat;
             value = (void *)&valueFloat;
             break;
         }
-        case SHADER_UNIFORM_VEC2:
-        {
+        case SHADER_UNIFORM_VEC2:{
             Vector2* valueV2 = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
             if(valueV2 == NULL) return JS_EXCEPTION;
             value = (void*)valueV2;
             break;
         }
-        case SHADER_UNIFORM_VEC3:
-        {
+        case SHADER_UNIFORM_VEC3:{
             Vector3* valueV3 = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
             if(valueV3 == NULL) return JS_EXCEPTION;
             value = (void*)valueV3;
             break;
         }
-        case SHADER_UNIFORM_VEC4:
-        {
+        case SHADER_UNIFORM_VEC4:{
             Vector4* valueV4 = (Vector4*)JS_GetOpaque2(ctx, argv[2], js_Vector4_class_id);
             if(valueV4 == NULL) return JS_EXCEPTION;
             value = (void*)valueV4;
             break;
         }
-        case SHADER_UNIFORM_INT:
-        {
+        case SHADER_UNIFORM_INT:{
             JS_ToInt32(ctx, &valueInt, argv[2]);
             value = (void*)&valueInt;
             break;
         }
-        default:
-        {
+        default:{
             return JS_EXCEPTION;
             break;
         }
@@ -3255,7 +4043,7 @@ static JSValue js_setShaderValue(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShaderValueMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setShaderValueMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3268,7 +4056,7 @@ static JSValue js_setShaderValueMatrix(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShaderValueTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setShaderValueTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3281,7 +4069,7 @@ static JSValue js_setShaderValueTexture(JSContext * ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadShader(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -3289,7 +4077,7 @@ static JSValue js_unloadShader(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_getScreenToWorldRay(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getScreenToWorldRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -3304,7 +4092,7 @@ static JSValue js_getScreenToWorldRay(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getScreenToWorldRayEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getScreenToWorldRayEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -3323,7 +4111,7 @@ static JSValue js_getScreenToWorldRayEx(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_getWorldToScreen(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWorldToScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -3338,7 +4126,7 @@ static JSValue js_getWorldToScreen(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getWorldToScreenEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWorldToScreenEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -3357,7 +4145,7 @@ static JSValue js_getWorldToScreenEx(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getWorldToScreen2D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWorldToScreen2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -3372,7 +4160,7 @@ static JSValue js_getWorldToScreen2D(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getScreenToWorld2D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getScreenToWorld2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -3387,7 +4175,7 @@ static JSValue js_getScreenToWorld2D(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getCameraMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera_ptr = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera camera = *camera_ptr;
@@ -3399,7 +4187,7 @@ static JSValue js_getCameraMatrix(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_getCameraMatrix2D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraMatrix2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera2D* camera_ptr = (Camera2D*)JS_GetOpaque2(ctx, argv[0], js_Camera2D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera2D camera = *camera_ptr;
@@ -3411,39 +4199,39 @@ static JSValue js_getCameraMatrix2D(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_setTargetFPS(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setTargetFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int fps;
     JS_ToInt32(ctx, &fps, argv[0]);
     SetTargetFPS(fps);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getFrameTime(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getFrameTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetFrameTime();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getTime(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double returnVal = GetTime();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFPS(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetFPS();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setRandomSeed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setRandomSeed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int seed;
     JS_ToUint32(ctx, &seed, argv[0]);
     SetRandomSeed(seed);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getRandomValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRandomValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int min;
     JS_ToInt32(ctx, &min, argv[0]);
     int max;
@@ -3453,7 +4241,7 @@ static JSValue js_getRandomValue(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_loadRandomSequence(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int count;
     JS_ToUint32(ctx, &count, argv[0]);
     int min;
@@ -3461,7 +4249,7 @@ static JSValue js_loadRandomSequence(JSContext * ctx, JSValueConst this_val, int
     int max;
     JS_ToInt32(ctx, &max, argv[2]);
     int * returnVal = LoadRandomSequence(count, min, max);
-    int ret_size = sizeof(returnVal);
+    size_t ret_size = sizeof(returnVal);
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < ret_size; i++){
         JSValue reti = JS_NewInt32(ctx, returnVal[i]);
@@ -3470,221 +4258,1292 @@ static JSValue js_loadRandomSequence(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_unloadRandomSequence(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    size_t sequence_size;
-    void * sequence_js = (void *)JS_GetArrayBuffer(ctx, &sequence_size, argv[0]);
-    if(sequence_js == NULL) {
-        return JS_EXCEPTION;
+static JSValue js_unloadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int * sequence;
+    JSValue js_sequence;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_sequence;
+        if(JS_GetLength(ctx,argv[0],&size_sequence)==-1) {
+            return JS_EXCEPTION;
+        }
+        sequence = js_malloc(ctx, size_sequence * sizeof(int));
+        for(int i0=0; i0 < size_sequence; i0++){
+            JSValue js_sequence = JS_GetPropertyUint32(ctx,argv[0],i0);
+            JS_ToInt32(ctx, &sequence[i0], js_sequence);
+        }
     }
-    int * sequence = malloc(sequence_size);
-    memcpy((void *)sequence, (const void *)sequence_js, sequence_size);
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_sequence = JS_DupValue(ctx,argv[0]);
+        size_t size_sequence;
+        sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, js_sequence);
+    }
+    else {
+        JSClassID classid_sequence = JS_GetClassID(argv[0]);
+        if(classid_sequence==JS_CLASS_INT16_ARRAY) {
+            size_t offset_sequence;
+            size_t size_sequence;
+            js_sequence = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_sequence,&size_sequence,NULL);
+            sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, js_sequence);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     UnloadRandomSequence(sequence);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, sequence);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_sequence);
+    }
+    else {
+        JSClassID classid_sequence = JS_GetClassID(argv[0]);
+        if(classid_sequence==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_sequence);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_takeScreenshot(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    TakeScreenshot(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_takeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    TakeScreenshot((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_setConfigFlags(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setConfigFlags(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int flags;
     JS_ToUint32(ctx, &flags, argv[0]);
     SetConfigFlags(flags);
     return JS_UNDEFINED;
 }
 
-static JSValue js_openURL(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * url = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    OpenURL(url);
-    JS_FreeCString(ctx, url);
+static JSValue js_openURL(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * url;
+    JSValue js_url;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_url;
+        if(JS_GetLength(ctx,argv[0],&size_url)==-1) {
+            return JS_EXCEPTION;
+        }
+        url = js_malloc(ctx, size_url * sizeof(char));
+        for(int i0=0; i0 < size_url; i0++){
+            JSValue js_url = JS_GetPropertyUint32(ctx,argv[0],i0);
+            url[i0] = (char)((char *)JS_ToCString(ctx, js_url))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        url = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_url = JS_DupValue(ctx,argv[0]);
+        size_t size_url;
+        url = (char *)JS_GetArrayBuffer(ctx, &size_url, js_url);
+    }
+    else {
+        JSClassID classid_url = JS_GetClassID(argv[0]);
+        if(classid_url==JS_CLASS_INT8_ARRAY) {
+            size_t offset_url;
+            size_t size_url;
+            js_url = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_url,&size_url,NULL);
+            url = (char *)JS_GetArrayBuffer(ctx, &size_url, js_url);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    OpenURL((const char *)url);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, url);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, url);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_url);
+    }
+    else {
+        JSClassID classid_url = JS_GetClassID(argv[0]);
+        if(classid_url==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_url);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_traceLog(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_traceLog(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int logLevel;
     JS_ToInt32(ctx, &logLevel, argv[0]);
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    TraceLog(logLevel, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    TraceLog(logLevel, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTraceLogLevel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int logLevel;
     JS_ToInt32(ctx, &logLevel, argv[0]);
     SetTraceLogLevel(logLevel);
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadFileData(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_loadFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     unsigned int bytesRead;
     unsigned char * retVal = LoadFileData(fileName, &bytesRead);
     JSValue buffer = JS_NewArrayBufferCopy(ctx, (const uint8_t*)retVal, bytesRead);
     UnloadFileData(retVal);
+    JS_FreeCString(ctx, fileName);
     return buffer;
 }
 
-static JSValue js_saveFileData(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    size_t data_size;
-    void * data_js = (void *)JS_GetArrayBuffer(ctx, &data_size, argv[1]);
-    if(data_js == NULL) {
+static JSValue js_saveFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    void * data;
+    JSValue js_data;
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_data = JS_DupValue(ctx,argv[1]);
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, js_data);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    void * data = malloc(data_size);
-    memcpy((void *)data, (const void *)data_js, data_size);
     int dataSize;
     JS_ToInt32(ctx, &dataSize, argv[2]);
-    bool returnVal = SaveFileData(fileName, data, dataSize);
-    JS_FreeCString(ctx, fileName);
-    free((void *)data);
+    bool returnVal = SaveFileData((const char *)fileName, data, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_data);
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadFileText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    char * returnVal = LoadFileText(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * returnVal = LoadFileText((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     UnloadFileText(returnVal);
     return ret;
 }
 
-static JSValue js_saveFileText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = SaveFileText(fileName, text);
-    JS_FreeCString(ctx, fileName);
-    JS_FreeCString(ctx, text);
+static JSValue js_saveFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = SaveFileText((const char *)fileName, text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_fileExists(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    bool returnVal = FileExists(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_fileExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = FileExists((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_directoryExists(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * dirPath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    bool returnVal = DirectoryExists(dirPath);
-    JS_FreeCString(ctx, dirPath);
+static JSValue js_directoryExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dirPath;
+    JSValue js_dirPath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dirPath;
+        if(JS_GetLength(ctx,argv[0],&size_dirPath)==-1) {
+            return JS_EXCEPTION;
+        }
+        dirPath = js_malloc(ctx, size_dirPath * sizeof(char));
+        for(int i0=0; i0 < size_dirPath; i0++){
+            JSValue js_dirPath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dirPath[i0] = (char)((char *)JS_ToCString(ctx, js_dirPath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dirPath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dirPath = JS_DupValue(ctx,argv[0]);
+        size_t size_dirPath;
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dirPath;
+            size_t size_dirPath;
+            js_dirPath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dirPath,&size_dirPath,NULL);
+            dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = DirectoryExists((const char *)dirPath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, dirPath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, dirPath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_dirPath);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isFileExtension(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * ext = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = IsFileExtension(fileName, ext);
-    JS_FreeCString(ctx, fileName);
-    JS_FreeCString(ctx, ext);
+static JSValue js_isFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * ext;
+    JSValue js_ext;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_ext;
+        if(JS_GetLength(ctx,argv[1],&size_ext)==-1) {
+            return JS_EXCEPTION;
+        }
+        ext = js_malloc(ctx, size_ext * sizeof(char));
+        for(int i0=0; i0 < size_ext; i0++){
+            JSValue js_ext = JS_GetPropertyUint32(ctx,argv[1],i0);
+            ext[i0] = (char)((char *)JS_ToCString(ctx, js_ext))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        ext = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_ext = JS_DupValue(ctx,argv[1]);
+        size_t size_ext;
+        ext = (char *)JS_GetArrayBuffer(ctx, &size_ext, js_ext);
+    }
+    else {
+        JSClassID classid_ext = JS_GetClassID(argv[1]);
+        if(classid_ext==JS_CLASS_INT8_ARRAY) {
+            size_t offset_ext;
+            size_t size_ext;
+            js_ext = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_ext,&size_ext,NULL);
+            ext = (char *)JS_GetArrayBuffer(ctx, &size_ext, js_ext);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = IsFileExtension((const char *)fileName, (const char *)ext);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, ext);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, ext);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_ext);
+    }
+    else {
+        JSClassID classid_ext = JS_GetClassID(argv[1]);
+        if(classid_ext==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_ext);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFileLength(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    int returnVal = GetFileLength(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_getFileLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GetFileLength((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFileExtension(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * returnVal = GetFileExtension(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_getFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GetFileExtension((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFileName(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * filePath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * returnVal = GetFileName(filePath);
-    JS_FreeCString(ctx, filePath);
+static JSValue js_getFileName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * filePath;
+    JSValue js_filePath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_filePath;
+        if(JS_GetLength(ctx,argv[0],&size_filePath)==-1) {
+            return JS_EXCEPTION;
+        }
+        filePath = js_malloc(ctx, size_filePath * sizeof(char));
+        for(int i0=0; i0 < size_filePath; i0++){
+            JSValue js_filePath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            filePath[i0] = (char)((char *)JS_ToCString(ctx, js_filePath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        filePath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_filePath = JS_DupValue(ctx,argv[0]);
+        size_t size_filePath;
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_filePath;
+            size_t size_filePath;
+            js_filePath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_filePath,&size_filePath,NULL);
+            filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GetFileName((const char *)filePath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, filePath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, filePath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_filePath);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFileNameWithoutExt(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * filePath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * returnVal = GetFileNameWithoutExt(filePath);
-    JS_FreeCString(ctx, filePath);
+static JSValue js_getFileNameWithoutExt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * filePath;
+    JSValue js_filePath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_filePath;
+        if(JS_GetLength(ctx,argv[0],&size_filePath)==-1) {
+            return JS_EXCEPTION;
+        }
+        filePath = js_malloc(ctx, size_filePath * sizeof(char));
+        for(int i0=0; i0 < size_filePath; i0++){
+            JSValue js_filePath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            filePath[i0] = (char)((char *)JS_ToCString(ctx, js_filePath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        filePath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_filePath = JS_DupValue(ctx,argv[0]);
+        size_t size_filePath;
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_filePath;
+            size_t size_filePath;
+            js_filePath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_filePath,&size_filePath,NULL);
+            filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GetFileNameWithoutExt((const char *)filePath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, filePath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, filePath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_filePath);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getDirectoryPath(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * filePath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * returnVal = GetDirectoryPath(filePath);
-    JS_FreeCString(ctx, filePath);
+static JSValue js_getDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * filePath;
+    JSValue js_filePath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_filePath;
+        if(JS_GetLength(ctx,argv[0],&size_filePath)==-1) {
+            return JS_EXCEPTION;
+        }
+        filePath = js_malloc(ctx, size_filePath * sizeof(char));
+        for(int i0=0; i0 < size_filePath; i0++){
+            JSValue js_filePath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            filePath[i0] = (char)((char *)JS_ToCString(ctx, js_filePath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        filePath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_filePath = JS_DupValue(ctx,argv[0]);
+        size_t size_filePath;
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_filePath;
+            size_t size_filePath;
+            js_filePath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_filePath,&size_filePath,NULL);
+            filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, js_filePath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GetDirectoryPath((const char *)filePath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, filePath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, filePath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_filePath);
+    }
+    else {
+        JSClassID classid_filePath = JS_GetClassID(argv[0]);
+        if(classid_filePath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_filePath);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getPrevDirectoryPath(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * dirPath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * returnVal = GetPrevDirectoryPath(dirPath);
-    JS_FreeCString(ctx, dirPath);
+static JSValue js_getPrevDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dirPath;
+    JSValue js_dirPath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dirPath;
+        if(JS_GetLength(ctx,argv[0],&size_dirPath)==-1) {
+            return JS_EXCEPTION;
+        }
+        dirPath = js_malloc(ctx, size_dirPath * sizeof(char));
+        for(int i0=0; i0 < size_dirPath; i0++){
+            JSValue js_dirPath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dirPath[i0] = (char)((char *)JS_ToCString(ctx, js_dirPath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dirPath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dirPath = JS_DupValue(ctx,argv[0]);
+        size_t size_dirPath;
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dirPath;
+            size_t size_dirPath;
+            js_dirPath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dirPath,&size_dirPath,NULL);
+            dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GetPrevDirectoryPath((const char *)dirPath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, dirPath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, dirPath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_dirPath);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getWorkingDirectory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getWorkingDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetWorkingDirectory();
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getApplicationDirectory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getApplicationDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetApplicationDirectory();
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_makeDirectory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * dirPath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    int returnVal = MakeDirectory(dirPath);
-    JS_FreeCString(ctx, dirPath);
+static JSValue js_makeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dirPath;
+    JSValue js_dirPath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dirPath;
+        if(JS_GetLength(ctx,argv[0],&size_dirPath)==-1) {
+            return JS_EXCEPTION;
+        }
+        dirPath = js_malloc(ctx, size_dirPath * sizeof(char));
+        for(int i0=0; i0 < size_dirPath; i0++){
+            JSValue js_dirPath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dirPath[i0] = (char)((char *)JS_ToCString(ctx, js_dirPath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dirPath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dirPath = JS_DupValue(ctx,argv[0]);
+        size_t size_dirPath;
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dirPath;
+            size_t size_dirPath;
+            js_dirPath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dirPath,&size_dirPath,NULL);
+            dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = MakeDirectory((const char *)dirPath);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, dirPath);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, dirPath);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_dirPath);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_changeDirectory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * dir = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    bool returnVal = ChangeDirectory(dir);
-    JS_FreeCString(ctx, dir);
+static JSValue js_changeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dir;
+    JSValue js_dir;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dir;
+        if(JS_GetLength(ctx,argv[0],&size_dir)==-1) {
+            return JS_EXCEPTION;
+        }
+        dir = js_malloc(ctx, size_dir * sizeof(char));
+        for(int i0=0; i0 < size_dir; i0++){
+            JSValue js_dir = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dir[i0] = (char)((char *)JS_ToCString(ctx, js_dir))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dir = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dir = JS_DupValue(ctx,argv[0]);
+        size_t size_dir;
+        dir = (char *)JS_GetArrayBuffer(ctx, &size_dir, js_dir);
+    }
+    else {
+        JSClassID classid_dir = JS_GetClassID(argv[0]);
+        if(classid_dir==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dir;
+            size_t size_dir;
+            js_dir = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dir,&size_dir,NULL);
+            dir = (char *)JS_GetArrayBuffer(ctx, &size_dir, js_dir);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ChangeDirectory((const char *)dir);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, dir);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, dir);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_dir);
+    }
+    else {
+        JSClassID classid_dir = JS_GetClassID(argv[0]);
+        if(classid_dir==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_dir);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isPathFile(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * path = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    bool returnVal = IsPathFile(path);
-    JS_FreeCString(ctx, path);
+static JSValue js_isPathFile(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * path;
+    JSValue js_path;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_path;
+        if(JS_GetLength(ctx,argv[0],&size_path)==-1) {
+            return JS_EXCEPTION;
+        }
+        path = js_malloc(ctx, size_path * sizeof(char));
+        for(int i0=0; i0 < size_path; i0++){
+            JSValue js_path = JS_GetPropertyUint32(ctx,argv[0],i0);
+            path[i0] = (char)((char *)JS_ToCString(ctx, js_path))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        path = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_path = JS_DupValue(ctx,argv[0]);
+        size_t size_path;
+        path = (char *)JS_GetArrayBuffer(ctx, &size_path, js_path);
+    }
+    else {
+        JSClassID classid_path = JS_GetClassID(argv[0]);
+        if(classid_path==JS_CLASS_INT8_ARRAY) {
+            size_t offset_path;
+            size_t size_path;
+            js_path = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_path,&size_path,NULL);
+            path = (char *)JS_GetArrayBuffer(ctx, &size_path, js_path);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = IsPathFile((const char *)path);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, path);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, path);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_path);
+    }
+    else {
+        JSClassID classid_path = JS_GetClassID(argv[0]);
+        if(classid_path==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_path);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isFileNameValid(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    bool returnVal = IsFileNameValid(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_isFileNameValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = IsFileNameValid((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadDirectoryFiles(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * dirPath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_loadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dirPath;
+    JSValue js_dirPath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dirPath;
+        if(JS_GetLength(ctx,argv[0],&size_dirPath)==-1) {
+            return JS_EXCEPTION;
+        }
+        dirPath = js_malloc(ctx, size_dirPath * sizeof(char));
+        for(int i0=0; i0 < size_dirPath; i0++){
+            JSValue js_dirPath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dirPath[i0] = (char)((char *)JS_ToCString(ctx, js_dirPath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dirPath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dirPath = JS_DupValue(ctx,argv[0]);
+        size_t size_dirPath;
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+    }
+    else {
+        JSClassID classid_dirPath = JS_GetClassID(argv[0]);
+        if(classid_dirPath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dirPath;
+            size_t size_dirPath;
+            js_dirPath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dirPath,&size_dirPath,NULL);
+            dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, js_dirPath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     FilePathList files = LoadDirectoryFiles(dirPath);
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < files.count; i++){
@@ -3695,9 +5554,73 @@ static JSValue js_loadDirectoryFiles(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * basePath = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    const char * filter = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * basePath;
+    JSValue js_basePath;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_basePath;
+        if(JS_GetLength(ctx,argv[0],&size_basePath)==-1) {
+            return JS_EXCEPTION;
+        }
+        basePath = js_malloc(ctx, size_basePath * sizeof(char));
+        for(int i0=0; i0 < size_basePath; i0++){
+            JSValue js_basePath = JS_GetPropertyUint32(ctx,argv[0],i0);
+            basePath[i0] = (char)((char *)JS_ToCString(ctx, js_basePath))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        basePath = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_basePath = JS_DupValue(ctx,argv[0]);
+        size_t size_basePath;
+        basePath = (char *)JS_GetArrayBuffer(ctx, &size_basePath, js_basePath);
+    }
+    else {
+        JSClassID classid_basePath = JS_GetClassID(argv[0]);
+        if(classid_basePath==JS_CLASS_INT8_ARRAY) {
+            size_t offset_basePath;
+            size_t size_basePath;
+            js_basePath = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_basePath,&size_basePath,NULL);
+            basePath = (char *)JS_GetArrayBuffer(ctx, &size_basePath, js_basePath);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * filter;
+    JSValue js_filter;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_filter;
+        if(JS_GetLength(ctx,argv[1],&size_filter)==-1) {
+            return JS_EXCEPTION;
+        }
+        filter = js_malloc(ctx, size_filter * sizeof(char));
+        for(int i0=0; i0 < size_filter; i0++){
+            JSValue js_filter = JS_GetPropertyUint32(ctx,argv[1],i0);
+            filter[i0] = (char)((char *)JS_ToCString(ctx, js_filter))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        filter = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_filter = JS_DupValue(ctx,argv[1]);
+        size_t size_filter;
+        filter = (char *)JS_GetArrayBuffer(ctx, &size_filter, js_filter);
+    }
+    else {
+        JSClassID classid_filter = JS_GetClassID(argv[1]);
+        if(classid_filter==JS_CLASS_INT8_ARRAY) {
+            size_t offset_filter;
+            size_t size_filter;
+            js_filter = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_filter,&size_filter,NULL);
+            filter = (char *)JS_GetArrayBuffer(ctx, &size_filter, js_filter);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     bool scanSubdirs = JS_ToBool(ctx, argv[2]);
     FilePathList files = LoadDirectoryFilesEx(basePath, filter, scanSubdirs);
     JSValue ret = JS_NewArray(ctx);
@@ -3710,13 +5633,13 @@ static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_isFileDropped(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isFileDropped(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsFileDropped();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadDroppedFiles(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadDroppedFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     FilePathList files = LoadDroppedFiles();
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < files.count; i++){
@@ -3726,18 +5649,110 @@ static JSValue js_loadDroppedFiles(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getFileModTime(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    long returnVal = GetFileModTime(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_getFileModTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    long returnVal = GetFileModTime((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadAutomationEventList(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    AutomationEventList returnVal = LoadAutomationEventList(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    AutomationEventList returnVal = LoadAutomationEventList((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     AutomationEventList* ret_ptr = (AutomationEventList*)js_malloc(ctx, sizeof(AutomationEventList));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_AutomationEventList_class_id);
@@ -3745,7 +5760,7 @@ static JSValue js_loadAutomationEventList(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_unloadAutomationEventList(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList* list_ptr = (AutomationEventList*)JS_GetOpaque2(ctx, argv[0], js_AutomationEventList_class_id);
     if(list_ptr == NULL) return JS_EXCEPTION;
     AutomationEventList list = *list_ptr;
@@ -3753,42 +5768,88 @@ static JSValue js_unloadAutomationEventList(JSContext * ctx, JSValueConst this_v
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportAutomationEventList(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList* list_ptr = (AutomationEventList*)JS_GetOpaque2(ctx, argv[0], js_AutomationEventList_class_id);
     if(list_ptr == NULL) return JS_EXCEPTION;
     AutomationEventList list = *list_ptr;
-    const char * fileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = ExportAutomationEventList(list, fileName);
-    JS_FreeCString(ctx, fileName);
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[1],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportAutomationEventList(list, (const char *)fileName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setAutomationEventList(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList* list = (AutomationEventList*)JS_GetOpaque2(ctx, argv[0], js_AutomationEventList_class_id);
     if(list == NULL) return JS_EXCEPTION;
     SetAutomationEventList(list);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAutomationEventBaseFrame(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setAutomationEventBaseFrame(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int frame;
     JS_ToInt32(ctx, &frame, argv[0]);
     SetAutomationEventBaseFrame(frame);
     return JS_UNDEFINED;
 }
 
-static JSValue js_startAutomationEventRecording(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_startAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     StartAutomationEventRecording();
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopAutomationEventRecording(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_stopAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     StopAutomationEventRecording();
     return JS_UNDEFINED;
 }
 
-static JSValue js_playAutomationEvent(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_playAutomationEvent(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEvent* event_ptr = (AutomationEvent*)JS_GetOpaque2(ctx, argv[0], js_AutomationEvent_class_id);
     if(event_ptr == NULL) return JS_EXCEPTION;
     AutomationEvent event = *event_ptr;
@@ -3796,7 +5857,7 @@ static JSValue js_playAutomationEvent(JSContext * ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_isKeyPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     bool returnVal = IsKeyPressed(key);
@@ -3804,7 +5865,7 @@ static JSValue js_isKeyPressed(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_isKeyPressedRepeat(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isKeyPressedRepeat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     bool returnVal = IsKeyPressedRepeat(key);
@@ -3812,7 +5873,7 @@ static JSValue js_isKeyPressedRepeat(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_isKeyDown(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isKeyDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     bool returnVal = IsKeyDown(key);
@@ -3820,7 +5881,7 @@ static JSValue js_isKeyDown(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_isKeyReleased(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isKeyReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     bool returnVal = IsKeyReleased(key);
@@ -3828,7 +5889,7 @@ static JSValue js_isKeyReleased(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_isKeyUp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isKeyUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     bool returnVal = IsKeyUp(key);
@@ -3836,26 +5897,26 @@ static JSValue js_isKeyUp(JSContext * ctx, JSValueConst this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_getKeyPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetKeyPressed();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getCharPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCharPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetCharPressed();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setExitKey(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setExitKey(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int key;
     JS_ToInt32(ctx, &key, argv[0]);
     SetExitKey(key);
     return JS_UNDEFINED;
 }
 
-static JSValue js_isGamepadAvailable(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGamepadAvailable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     bool returnVal = IsGamepadAvailable(gamepad);
@@ -3863,7 +5924,7 @@ static JSValue js_isGamepadAvailable(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getGamepadName(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGamepadName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     const char * returnVal = GetGamepadName(gamepad);
@@ -3871,7 +5932,7 @@ static JSValue js_getGamepadName(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_isGamepadButtonPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int button;
@@ -3881,7 +5942,7 @@ static JSValue js_isGamepadButtonPressed(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_isGamepadButtonDown(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGamepadButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int button;
@@ -3891,7 +5952,7 @@ static JSValue js_isGamepadButtonDown(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_isGamepadButtonReleased(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGamepadButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int button;
@@ -3901,7 +5962,7 @@ static JSValue js_isGamepadButtonReleased(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_isGamepadButtonUp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGamepadButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int button;
@@ -3911,13 +5972,13 @@ static JSValue js_isGamepadButtonUp(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_getGamepadButtonPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetGamepadButtonPressed();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getGamepadAxisCount(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGamepadAxisCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int returnVal = GetGamepadAxisCount(gamepad);
@@ -3925,7 +5986,7 @@ static JSValue js_getGamepadAxisCount(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getGamepadAxisMovement(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGamepadAxisMovement(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
     int axis;
@@ -3935,28 +5996,74 @@ static JSValue js_getGamepadAxisMovement(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_setGamepadMappings(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * mappings = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    int returnVal = SetGamepadMappings(mappings);
-    JS_FreeCString(ctx, mappings);
+static JSValue js_setGamepadMappings(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * mappings;
+    JSValue js_mappings;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_mappings;
+        if(JS_GetLength(ctx,argv[0],&size_mappings)==-1) {
+            return JS_EXCEPTION;
+        }
+        mappings = js_malloc(ctx, size_mappings * sizeof(char));
+        for(int i0=0; i0 < size_mappings; i0++){
+            JSValue js_mappings = JS_GetPropertyUint32(ctx,argv[0],i0);
+            mappings[i0] = (char)((char *)JS_ToCString(ctx, js_mappings))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        mappings = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_mappings = JS_DupValue(ctx,argv[0]);
+        size_t size_mappings;
+        mappings = (char *)JS_GetArrayBuffer(ctx, &size_mappings, js_mappings);
+    }
+    else {
+        JSClassID classid_mappings = JS_GetClassID(argv[0]);
+        if(classid_mappings==JS_CLASS_INT8_ARRAY) {
+            size_t offset_mappings;
+            size_t size_mappings;
+            js_mappings = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_mappings,&size_mappings,NULL);
+            mappings = (char *)JS_GetArrayBuffer(ctx, &size_mappings, js_mappings);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = SetGamepadMappings((const char *)mappings);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, mappings);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, mappings);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_mappings);
+    }
+    else {
+        JSClassID classid_mappings = JS_GetClassID(argv[0]);
+        if(classid_mappings==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_mappings);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setGamepadVibration(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setGamepadVibration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int gamepad;
     JS_ToInt32(ctx, &gamepad, argv[0]);
-    double _double_leftMotor;
-    JS_ToFloat64(ctx, &_double_leftMotor, argv[1]);
-    float leftMotor = (float)_double_leftMotor;
-    double _double_rightMotor;
-    JS_ToFloat64(ctx, &_double_rightMotor, argv[2]);
-    float rightMotor = (float)_double_rightMotor;
+    double double_leftMotor;
+    JS_ToFloat64(ctx, &double_leftMotor, argv[1]);
+    float leftMotor = (float)double_leftMotor;
+    double double_rightMotor;
+    JS_ToFloat64(ctx, &double_rightMotor, argv[2]);
+    float rightMotor = (float)double_rightMotor;
     SetGamepadVibration(gamepad, leftMotor, rightMotor);
     return JS_UNDEFINED;
 }
 
-static JSValue js_isMouseButtonPressed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMouseButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int button;
     JS_ToInt32(ctx, &button, argv[0]);
     bool returnVal = IsMouseButtonPressed(button);
@@ -3964,7 +6071,7 @@ static JSValue js_isMouseButtonPressed(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_isMouseButtonDown(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMouseButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int button;
     JS_ToInt32(ctx, &button, argv[0]);
     bool returnVal = IsMouseButtonDown(button);
@@ -3972,7 +6079,7 @@ static JSValue js_isMouseButtonDown(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_isMouseButtonReleased(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMouseButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int button;
     JS_ToInt32(ctx, &button, argv[0]);
     bool returnVal = IsMouseButtonReleased(button);
@@ -3980,7 +6087,7 @@ static JSValue js_isMouseButtonReleased(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_isMouseButtonUp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMouseButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int button;
     JS_ToInt32(ctx, &button, argv[0]);
     bool returnVal = IsMouseButtonUp(button);
@@ -3988,19 +6095,19 @@ static JSValue js_isMouseButtonUp(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_getMouseX(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMouseX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMouseX();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getMouseY(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMouseY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMouseY();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getMousePosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMousePosition();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -4009,7 +6116,7 @@ static JSValue js_getMousePosition(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getMouseDelta(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMouseDelta(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMouseDelta();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -4018,7 +6125,7 @@ static JSValue js_getMouseDelta(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_setMousePosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int x;
     JS_ToInt32(ctx, &x, argv[0]);
     int y;
@@ -4027,7 +6134,7 @@ static JSValue js_setMousePosition(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMouseOffset(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMouseOffset(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int offsetX;
     JS_ToInt32(ctx, &offsetX, argv[0]);
     int offsetY;
@@ -4036,24 +6143,24 @@ static JSValue js_setMouseOffset(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMouseScale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_scaleX;
-    JS_ToFloat64(ctx, &_double_scaleX, argv[0]);
-    float scaleX = (float)_double_scaleX;
-    double _double_scaleY;
-    JS_ToFloat64(ctx, &_double_scaleY, argv[1]);
-    float scaleY = (float)_double_scaleY;
+static JSValue js_setMouseScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_scaleX;
+    JS_ToFloat64(ctx, &double_scaleX, argv[0]);
+    float scaleX = (float)double_scaleX;
+    double double_scaleY;
+    JS_ToFloat64(ctx, &double_scaleY, argv[1]);
+    float scaleY = (float)double_scaleY;
     SetMouseScale(scaleX, scaleY);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMouseWheelMove(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMouseWheelMove(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetMouseWheelMove();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getMouseWheelMoveV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMouseWheelMoveV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMouseWheelMoveV();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -4062,26 +6169,26 @@ static JSValue js_getMouseWheelMoveV(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_setMouseCursor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMouseCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int cursor;
     JS_ToInt32(ctx, &cursor, argv[0]);
     SetMouseCursor(cursor);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getTouchX(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTouchX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchX();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getTouchY(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTouchY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchY();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getTouchPosition(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTouchPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int index;
     JS_ToInt32(ctx, &index, argv[0]);
     Vector2 returnVal = GetTouchPosition(index);
@@ -4092,7 +6199,7 @@ static JSValue js_getTouchPosition(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getTouchPointId(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTouchPointId(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int index;
     JS_ToInt32(ctx, &index, argv[0]);
     int returnVal = GetTouchPointId(index);
@@ -4100,20 +6207,20 @@ static JSValue js_getTouchPointId(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_getTouchPointCount(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getTouchPointCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchPointCount();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setGesturesEnabled(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setGesturesEnabled(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int flags;
     JS_ToUint32(ctx, &flags, argv[0]);
     SetGesturesEnabled(flags);
     return JS_UNDEFINED;
 }
 
-static JSValue js_isGestureDetected(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int gesture;
     JS_ToUint32(ctx, &gesture, argv[0]);
     bool returnVal = IsGestureDetected(gesture);
@@ -4121,19 +6228,19 @@ static JSValue js_isGestureDetected(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_getGestureDetected(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetGestureDetected();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getGestureHoldDuration(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGestureHoldDuration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGestureHoldDuration();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getGestureDragVector(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGestureDragVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetGestureDragVector();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -4142,13 +6249,13 @@ static JSValue js_getGestureDragVector(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_getGestureDragAngle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGestureDragAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGestureDragAngle();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getGesturePinchVector(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGesturePinchVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetGesturePinchVector();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -4157,13 +6264,13 @@ static JSValue js_getGesturePinchVector(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_getGesturePinchAngle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGesturePinchAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGesturePinchAngle();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_updateCamera(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateCamera(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     int mode;
@@ -4172,7 +6279,7 @@ static JSValue js_updateCamera(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateCameraPro(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateCameraPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     Vector3* movement_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
@@ -4181,14 +6288,14 @@ static JSValue js_updateCameraPro(JSContext * ctx, JSValueConst this_val, int ar
     Vector3* rotation_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(rotation_ptr == NULL) return JS_EXCEPTION;
     Vector3 rotation = *rotation_ptr;
-    double _double_zoom;
-    JS_ToFloat64(ctx, &_double_zoom, argv[3]);
-    float zoom = (float)_double_zoom;
+    double double_zoom;
+    JS_ToFloat64(ctx, &double_zoom, argv[3]);
+    float zoom = (float)double_zoom;
     UpdateCameraPro(camera, movement, rotation, zoom);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShapesTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -4199,7 +6306,7 @@ static JSValue js_setShapesTexture(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_getShapesTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D returnVal = GetShapesTexture();
     Texture2D* ret_ptr = (Texture2D*)js_malloc(ctx, sizeof(Texture2D));
     *ret_ptr = returnVal;
@@ -4208,7 +6315,7 @@ static JSValue js_getShapesTexture(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getShapesTextureRectangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getShapesTextureRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle returnVal = GetShapesTextureRectangle();
     Rectangle* ret_ptr = (Rectangle*)js_malloc(ctx, sizeof(Rectangle));
     *ret_ptr = returnVal;
@@ -4217,7 +6324,7 @@ static JSValue js_getShapesTextureRectangle(JSContext * ctx, JSValueConst this_v
     return ret;
 }
 
-static JSValue js_drawPixel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -4229,7 +6336,7 @@ static JSValue js_drawPixel(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPixelV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -4240,7 +6347,7 @@ static JSValue js_drawPixelV(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLine(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int startPosX;
     JS_ToInt32(ctx, &startPosX, argv[0]);
     int startPosY;
@@ -4256,7 +6363,7 @@ static JSValue js_drawLine(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* startPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 startPos = *startPos_ptr;
@@ -4270,16 +6377,16 @@ static JSValue js_drawLineV(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* startPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 startPos = *startPos_ptr;
     Vector2* endPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 endPos = *endPos_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4287,16 +6394,16 @@ static JSValue js_drawLineEx(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineBezier(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawLineBezier(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* startPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 startPos = *startPos_ptr;
     Vector2* endPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 endPos = *endPos_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4304,14 +6411,14 @@ static JSValue js_drawLineBezier(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int centerX;
     JS_ToInt32(ctx, &centerX, argv[0]);
     int centerY;
     JS_ToInt32(ctx, &centerY, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4319,19 +6426,19 @@ static JSValue js_drawCircle(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleSector(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleSector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
-    double _double_startAngle;
-    JS_ToFloat64(ctx, &_double_startAngle, argv[2]);
-    float startAngle = (float)_double_startAngle;
-    double _double_endAngle;
-    JS_ToFloat64(ctx, &_double_endAngle, argv[3]);
-    float endAngle = (float)_double_endAngle;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
+    double double_startAngle;
+    JS_ToFloat64(ctx, &double_startAngle, argv[2]);
+    float startAngle = (float)double_startAngle;
+    double double_endAngle;
+    JS_ToFloat64(ctx, &double_endAngle, argv[3]);
+    float endAngle = (float)double_endAngle;
     int segments;
     JS_ToInt32(ctx, &segments, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -4341,19 +6448,19 @@ static JSValue js_drawCircleSector(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleSectorLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleSectorLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
-    double _double_startAngle;
-    JS_ToFloat64(ctx, &_double_startAngle, argv[2]);
-    float startAngle = (float)_double_startAngle;
-    double _double_endAngle;
-    JS_ToFloat64(ctx, &_double_endAngle, argv[3]);
-    float endAngle = (float)_double_endAngle;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
+    double double_startAngle;
+    JS_ToFloat64(ctx, &double_startAngle, argv[2]);
+    float startAngle = (float)double_startAngle;
+    double double_endAngle;
+    JS_ToFloat64(ctx, &double_endAngle, argv[3]);
+    float endAngle = (float)double_endAngle;
     int segments;
     JS_ToInt32(ctx, &segments, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -4363,14 +6470,14 @@ static JSValue js_drawCircleSectorLines(JSContext * ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleGradient(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleGradient(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int centerX;
     JS_ToInt32(ctx, &centerX, argv[0]);
     int centerY;
     JS_ToInt32(ctx, &centerY, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     Color* inner_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(inner_ptr == NULL) return JS_EXCEPTION;
     Color inner = *inner_ptr;
@@ -4381,13 +6488,13 @@ static JSValue js_drawCircleGradient(JSContext * ctx, JSValueConst this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4395,14 +6502,14 @@ static JSValue js_drawCircleV(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int centerX;
     JS_ToInt32(ctx, &centerX, argv[0]);
     int centerY;
     JS_ToInt32(ctx, &centerY, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4410,13 +6517,13 @@ static JSValue js_drawCircleLines(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleLinesV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4424,17 +6531,17 @@ static JSValue js_drawCircleLinesV(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawEllipse(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawEllipse(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int centerX;
     JS_ToInt32(ctx, &centerX, argv[0]);
     int centerY;
     JS_ToInt32(ctx, &centerY, argv[1]);
-    double _double_radiusH;
-    JS_ToFloat64(ctx, &_double_radiusH, argv[2]);
-    float radiusH = (float)_double_radiusH;
-    double _double_radiusV;
-    JS_ToFloat64(ctx, &_double_radiusV, argv[3]);
-    float radiusV = (float)_double_radiusV;
+    double double_radiusH;
+    JS_ToFloat64(ctx, &double_radiusH, argv[2]);
+    float radiusH = (float)double_radiusH;
+    double double_radiusV;
+    JS_ToFloat64(ctx, &double_radiusV, argv[3]);
+    float radiusV = (float)double_radiusV;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4442,17 +6549,17 @@ static JSValue js_drawEllipse(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawEllipseLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawEllipseLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int centerX;
     JS_ToInt32(ctx, &centerX, argv[0]);
     int centerY;
     JS_ToInt32(ctx, &centerY, argv[1]);
-    double _double_radiusH;
-    JS_ToFloat64(ctx, &_double_radiusH, argv[2]);
-    float radiusH = (float)_double_radiusH;
-    double _double_radiusV;
-    JS_ToFloat64(ctx, &_double_radiusV, argv[3]);
-    float radiusV = (float)_double_radiusV;
+    double double_radiusH;
+    JS_ToFloat64(ctx, &double_radiusH, argv[2]);
+    float radiusH = (float)double_radiusH;
+    double double_radiusV;
+    JS_ToFloat64(ctx, &double_radiusV, argv[3]);
+    float radiusV = (float)double_radiusV;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4460,22 +6567,22 @@ static JSValue js_drawEllipseLines(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRing(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_innerRadius;
-    JS_ToFloat64(ctx, &_double_innerRadius, argv[1]);
-    float innerRadius = (float)_double_innerRadius;
-    double _double_outerRadius;
-    JS_ToFloat64(ctx, &_double_outerRadius, argv[2]);
-    float outerRadius = (float)_double_outerRadius;
-    double _double_startAngle;
-    JS_ToFloat64(ctx, &_double_startAngle, argv[3]);
-    float startAngle = (float)_double_startAngle;
-    double _double_endAngle;
-    JS_ToFloat64(ctx, &_double_endAngle, argv[4]);
-    float endAngle = (float)_double_endAngle;
+    double double_innerRadius;
+    JS_ToFloat64(ctx, &double_innerRadius, argv[1]);
+    float innerRadius = (float)double_innerRadius;
+    double double_outerRadius;
+    JS_ToFloat64(ctx, &double_outerRadius, argv[2]);
+    float outerRadius = (float)double_outerRadius;
+    double double_startAngle;
+    JS_ToFloat64(ctx, &double_startAngle, argv[3]);
+    float startAngle = (float)double_startAngle;
+    double double_endAngle;
+    JS_ToFloat64(ctx, &double_endAngle, argv[4]);
+    float endAngle = (float)double_endAngle;
     int segments;
     JS_ToInt32(ctx, &segments, argv[5]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[6], js_Color_class_id);
@@ -4485,22 +6592,22 @@ static JSValue js_drawRing(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRingLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRingLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_innerRadius;
-    JS_ToFloat64(ctx, &_double_innerRadius, argv[1]);
-    float innerRadius = (float)_double_innerRadius;
-    double _double_outerRadius;
-    JS_ToFloat64(ctx, &_double_outerRadius, argv[2]);
-    float outerRadius = (float)_double_outerRadius;
-    double _double_startAngle;
-    JS_ToFloat64(ctx, &_double_startAngle, argv[3]);
-    float startAngle = (float)_double_startAngle;
-    double _double_endAngle;
-    JS_ToFloat64(ctx, &_double_endAngle, argv[4]);
-    float endAngle = (float)_double_endAngle;
+    double double_innerRadius;
+    JS_ToFloat64(ctx, &double_innerRadius, argv[1]);
+    float innerRadius = (float)double_innerRadius;
+    double double_outerRadius;
+    JS_ToFloat64(ctx, &double_outerRadius, argv[2]);
+    float outerRadius = (float)double_outerRadius;
+    double double_startAngle;
+    JS_ToFloat64(ctx, &double_startAngle, argv[3]);
+    float startAngle = (float)double_startAngle;
+    double double_endAngle;
+    JS_ToFloat64(ctx, &double_endAngle, argv[4]);
+    float endAngle = (float)double_endAngle;
     int segments;
     JS_ToInt32(ctx, &segments, argv[5]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[6], js_Color_class_id);
@@ -4510,7 +6617,7 @@ static JSValue js_drawRingLines(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -4526,7 +6633,7 @@ static JSValue js_drawRectangle(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
@@ -4540,7 +6647,7 @@ static JSValue js_drawRectangleV(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
@@ -4551,16 +6658,16 @@ static JSValue js_drawRectangleRec(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectanglePro(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectanglePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
     Vector2* origin_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(origin_ptr == NULL) return JS_EXCEPTION;
     Vector2 origin = *origin_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[2]);
-    float rotation = (float)_double_rotation;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[2]);
+    float rotation = (float)double_rotation;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4568,7 +6675,7 @@ static JSValue js_drawRectanglePro(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleGradientV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -4587,7 +6694,7 @@ static JSValue js_drawRectangleGradientV(JSContext * ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientH(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleGradientH(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -4606,7 +6713,7 @@ static JSValue js_drawRectangleGradientH(JSContext * ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleGradientEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
@@ -4626,7 +6733,7 @@ static JSValue js_drawRectangleGradientEx(JSContext * ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -4642,13 +6749,13 @@ static JSValue js_drawRectangleLines(JSContext * ctx, JSValueConst this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleLinesEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
-    double _double_lineThick;
-    JS_ToFloat64(ctx, &_double_lineThick, argv[1]);
-    float lineThick = (float)_double_lineThick;
+    double double_lineThick;
+    JS_ToFloat64(ctx, &double_lineThick, argv[1]);
+    float lineThick = (float)double_lineThick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4656,13 +6763,13 @@ static JSValue js_drawRectangleLinesEx(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRounded(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleRounded(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
-    double _double_roundness;
-    JS_ToFloat64(ctx, &_double_roundness, argv[1]);
-    float roundness = (float)_double_roundness;
+    double double_roundness;
+    JS_ToFloat64(ctx, &double_roundness, argv[1]);
+    float roundness = (float)double_roundness;
     int segments;
     JS_ToInt32(ctx, &segments, argv[2]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
@@ -4672,13 +6779,13 @@ static JSValue js_drawRectangleRounded(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRoundedLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleRoundedLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
-    double _double_roundness;
-    JS_ToFloat64(ctx, &_double_roundness, argv[1]);
-    float roundness = (float)_double_roundness;
+    double double_roundness;
+    JS_ToFloat64(ctx, &double_roundness, argv[1]);
+    float roundness = (float)double_roundness;
     int segments;
     JS_ToInt32(ctx, &segments, argv[2]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
@@ -4688,18 +6795,18 @@ static JSValue js_drawRectangleRoundedLines(JSContext * ctx, JSValueConst this_v
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRoundedLinesEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRectangleRoundedLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
-    double _double_roundness;
-    JS_ToFloat64(ctx, &_double_roundness, argv[1]);
-    float roundness = (float)_double_roundness;
+    double double_roundness;
+    JS_ToFloat64(ctx, &double_roundness, argv[1]);
+    float roundness = (float)double_roundness;
     int segments;
     JS_ToInt32(ctx, &segments, argv[2]);
-    double _double_lineThick;
-    JS_ToFloat64(ctx, &_double_lineThick, argv[3]);
-    float lineThick = (float)_double_lineThick;
+    double double_lineThick;
+    JS_ToFloat64(ctx, &double_lineThick, argv[3]);
+    float lineThick = (float)double_lineThick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4707,7 +6814,7 @@ static JSValue js_drawRectangleRoundedLinesEx(JSContext * ctx, JSValueConst this
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -4724,7 +6831,7 @@ static JSValue js_drawTriangle(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -4741,18 +6848,18 @@ static JSValue js_drawTriangleLines(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPoly(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
     int sides;
     JS_ToInt32(ctx, &sides, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[3]);
-    float rotation = (float)_double_rotation;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[3]);
+    float rotation = (float)double_rotation;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4760,18 +6867,18 @@ static JSValue js_drawPoly(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPolyLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPolyLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
     int sides;
     JS_ToInt32(ctx, &sides, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[3]);
-    float rotation = (float)_double_rotation;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[3]);
+    float rotation = (float)double_rotation;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4779,21 +6886,21 @@ static JSValue js_drawPolyLines(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPolyLinesEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPolyLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
     int sides;
     JS_ToInt32(ctx, &sides, argv[1]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[3]);
-    float rotation = (float)_double_rotation;
-    double _double_lineThick;
-    JS_ToFloat64(ctx, &_double_lineThick, argv[4]);
-    float lineThick = (float)_double_lineThick;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[3]);
+    float rotation = (float)double_rotation;
+    double double_lineThick;
+    JS_ToFloat64(ctx, &double_lineThick, argv[4]);
+    float lineThick = (float)double_lineThick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4801,91 +6908,91 @@ static JSValue js_drawPolyLinesEx(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineLinear(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector2* points = (const Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
+static JSValue js_drawSplineLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(points == NULL) return JS_EXCEPTION;
     int pointCount;
     JS_ToInt32(ctx, &pointCount, argv[1]);
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawSplineLinear(points, pointCount, thick, color);
+    DrawSplineLinear((const Vector2 *)points, pointCount, thick, color);
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBasis(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector2* points = (const Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
+static JSValue js_drawSplineBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(points == NULL) return JS_EXCEPTION;
     int pointCount;
     JS_ToInt32(ctx, &pointCount, argv[1]);
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawSplineBasis(points, pointCount, thick, color);
+    DrawSplineBasis((const Vector2 *)points, pointCount, thick, color);
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineCatmullRom(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector2* points = (const Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
+static JSValue js_drawSplineCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(points == NULL) return JS_EXCEPTION;
     int pointCount;
     JS_ToInt32(ctx, &pointCount, argv[1]);
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawSplineCatmullRom(points, pointCount, thick, color);
+    DrawSplineCatmullRom((const Vector2 *)points, pointCount, thick, color);
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBezierQuadratic(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector2* points = (const Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
+static JSValue js_drawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(points == NULL) return JS_EXCEPTION;
     int pointCount;
     JS_ToInt32(ctx, &pointCount, argv[1]);
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawSplineBezierQuadratic(points, pointCount, thick, color);
+    DrawSplineBezierQuadratic((const Vector2 *)points, pointCount, thick, color);
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBezierCubic(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector2* points = (const Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
+static JSValue js_drawSplineBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(points == NULL) return JS_EXCEPTION;
     int pointCount;
     JS_ToInt32(ctx, &pointCount, argv[1]);
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawSplineBezierCubic(points, pointCount, thick, color);
+    DrawSplineBezierCubic((const Vector2 *)points, pointCount, thick, color);
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentLinear(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSplineSegmentLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
     Vector2* p2_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(p2_ptr == NULL) return JS_EXCEPTION;
     Vector2 p2 = *p2_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[2]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[2]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4893,7 +7000,7 @@ static JSValue js_drawSplineSegmentLinear(JSContext * ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -4906,9 +7013,9 @@ static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValueConst this_val,
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[4]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[4]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4916,7 +7023,7 @@ static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -4929,9 +7036,9 @@ static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValueConst this
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[4]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[4]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4939,7 +7046,7 @@ static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValueConst this
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -4949,9 +7056,9 @@ static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValueConst
     Vector2* p3_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(p3_ptr == NULL) return JS_EXCEPTION;
     Vector2 p3 = *p3_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[3]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[3]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4959,7 +7066,7 @@ static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValueConst
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -4972,9 +7079,9 @@ static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValueConst thi
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_thick;
-    JS_ToFloat64(ctx, &_double_thick, argv[4]);
-    float thick = (float)_double_thick;
+    double double_thick;
+    JS_ToFloat64(ctx, &double_thick, argv[4]);
+    float thick = (float)double_thick;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -4982,16 +7089,16 @@ static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValueConst thi
     return JS_UNDEFINED;
 }
 
-static JSValue js_getSplinePointLinear(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getSplinePointLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* startPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 startPos = *startPos_ptr;
     Vector2* endPos_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector2 endPos = *endPos_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[2]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[2]);
+    float t = (float)double_t;
     Vector2 returnVal = GetSplinePointLinear(startPos, endPos, t);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -5000,7 +7107,7 @@ static JSValue js_getSplinePointLinear(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_getSplinePointBasis(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getSplinePointBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -5013,9 +7120,9 @@ static JSValue js_getSplinePointBasis(JSContext * ctx, JSValueConst this_val, in
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[4]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[4]);
+    float t = (float)double_t;
     Vector2 returnVal = GetSplinePointBasis(p1, p2, p3, p4, t);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -5024,7 +7131,7 @@ static JSValue js_getSplinePointBasis(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -5037,9 +7144,9 @@ static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValueConst this_va
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[4]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[4]);
+    float t = (float)double_t;
     Vector2 returnVal = GetSplinePointCatmullRom(p1, p2, p3, p4, t);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -5048,7 +7155,7 @@ static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -5058,9 +7165,9 @@ static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValueConst this_va
     Vector2* p3_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(p3_ptr == NULL) return JS_EXCEPTION;
     Vector2 p3 = *p3_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[3]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[3]);
+    float t = (float)double_t;
     Vector2 returnVal = GetSplinePointBezierQuad(p1, c2, p3, t);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -5069,7 +7176,7 @@ static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -5082,9 +7189,9 @@ static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValueConst this_v
     Vector2* p4_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(p4_ptr == NULL) return JS_EXCEPTION;
     Vector2 p4 = *p4_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[4]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[4]);
+    float t = (float)double_t;
     Vector2 returnVal = GetSplinePointBezierCubic(p1, c2, c3, p4, t);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -5093,7 +7200,7 @@ static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValueConst this_v
     return ret;
 }
 
-static JSValue js_checkCollisionRecs(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionRecs(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec1_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec1_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec1 = *rec1_ptr;
@@ -5105,31 +7212,31 @@ static JSValue js_checkCollisionRecs(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_checkCollisionCircles(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionCircles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center1_ptr == NULL) return JS_EXCEPTION;
     Vector2 center1 = *center1_ptr;
-    double _double_radius1;
-    JS_ToFloat64(ctx, &_double_radius1, argv[1]);
-    float radius1 = (float)_double_radius1;
+    double double_radius1;
+    JS_ToFloat64(ctx, &double_radius1, argv[1]);
+    float radius1 = (float)double_radius1;
     Vector2* center2_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(center2_ptr == NULL) return JS_EXCEPTION;
     Vector2 center2 = *center2_ptr;
-    double _double_radius2;
-    JS_ToFloat64(ctx, &_double_radius2, argv[3]);
-    float radius2 = (float)_double_radius2;
+    double double_radius2;
+    JS_ToFloat64(ctx, &double_radius2, argv[3]);
+    float radius2 = (float)double_radius2;
     bool returnVal = CheckCollisionCircles(center1, radius1, center2, radius2);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[2], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
@@ -5138,7 +7245,7 @@ static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* point_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(point_ptr == NULL) return JS_EXCEPTION;
     Vector2 point = *point_ptr;
@@ -5150,22 +7257,22 @@ static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_checkCollisionPointCircle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionPointCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* point_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(point_ptr == NULL) return JS_EXCEPTION;
     Vector2 point = *point_ptr;
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     bool returnVal = CheckCollisionPointCircle(point, center, radius);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_checkCollisionPointTriangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionPointTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* point_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(point_ptr == NULL) return JS_EXCEPTION;
     Vector2 point = *point_ptr;
@@ -5183,7 +7290,7 @@ static JSValue js_checkCollisionPointTriangle(JSContext * ctx, JSValueConst this
     return ret;
 }
 
-static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* point_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(point_ptr == NULL) return JS_EXCEPTION;
     Vector2 point = *point_ptr;
@@ -5200,13 +7307,13 @@ static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector2 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Vector2* p1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(p1_ptr == NULL) return JS_EXCEPTION;
     Vector2 p1 = *p1_ptr;
@@ -5218,7 +7325,7 @@ static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_getCollisionRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCollisionRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* rec1_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(rec1_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec1 = *rec1_ptr;
@@ -5233,10 +7340,56 @@ static JSValue js_getCollisionRec(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_loadImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Image returnVal = LoadImage(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Image returnVal = LoadImage((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5244,8 +7397,40 @@ static JSValue js_loadImage(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_loadImageRaw(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_loadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int width;
     JS_ToInt32(ctx, &width, argv[1]);
     int height;
@@ -5254,8 +7439,22 @@ static JSValue js_loadImageRaw(JSContext * ctx, JSValueConst this_val, int argc,
     JS_ToInt32(ctx, &format, argv[3]);
     int headerSize;
     JS_ToInt32(ctx, &headerSize, argv[4]);
-    Image returnVal = LoadImageRaw(fileName, width, height, format, headerSize);
-    JS_FreeCString(ctx, fileName);
+    Image returnVal = LoadImageRaw((const char *)fileName, width, height, format, headerSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5263,14 +7462,60 @@ static JSValue js_loadImageRaw(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_loadImageSvg(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileNameOrString = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_loadImageSvg(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileNameOrString;
+    JSValue js_fileNameOrString;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileNameOrString;
+        if(JS_GetLength(ctx,argv[0],&size_fileNameOrString)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileNameOrString = js_malloc(ctx, size_fileNameOrString * sizeof(char));
+        for(int i0=0; i0 < size_fileNameOrString; i0++){
+            JSValue js_fileNameOrString = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileNameOrString[i0] = (char)((char *)JS_ToCString(ctx, js_fileNameOrString))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileNameOrString = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileNameOrString = JS_DupValue(ctx,argv[0]);
+        size_t size_fileNameOrString;
+        fileNameOrString = (char *)JS_GetArrayBuffer(ctx, &size_fileNameOrString, js_fileNameOrString);
+    }
+    else {
+        JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
+        if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileNameOrString;
+            size_t size_fileNameOrString;
+            js_fileNameOrString = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileNameOrString,&size_fileNameOrString,NULL);
+            fileNameOrString = (char *)JS_GetArrayBuffer(ctx, &size_fileNameOrString, js_fileNameOrString);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int width;
     JS_ToInt32(ctx, &width, argv[1]);
     int height;
     JS_ToInt32(ctx, &height, argv[2]);
-    Image returnVal = LoadImageSvg(fileNameOrString, width, height);
-    JS_FreeCString(ctx, fileNameOrString);
+    Image returnVal = LoadImageSvg((const char *)fileNameOrString, width, height);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileNameOrString);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileNameOrString);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileNameOrString);
+    }
+    else {
+        JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
+        if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileNameOrString);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5278,27 +7523,144 @@ static JSValue js_loadImageSvg(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileType = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    size_t fileData_size;
-    void * fileData_js = (void *)JS_GetArrayBuffer(ctx, &fileData_size, argv[1]);
-    if(fileData_js == NULL) {
-        return JS_EXCEPTION;
+static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileType;
+    JSValue js_fileType;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileType;
+        if(JS_GetLength(ctx,argv[0],&size_fileType)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileType = js_malloc(ctx, size_fileType * sizeof(char));
+        for(int i0=0; i0 < size_fileType; i0++){
+            JSValue js_fileType = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileType[i0] = (char)((char *)JS_ToCString(ctx, js_fileType))[0];
+        }
     }
-    const unsigned char * fileData = malloc(fileData_size);
-    memcpy((void *)fileData, (const void *)fileData_js, fileData_size);
+    else if(JS_IsString(argv[0]) == 1) {
+        fileType = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileType = JS_DupValue(ctx,argv[0]);
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            js_fileType = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileType,&size_fileType,NULL);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * fileData;
+    JSValue js_fileData;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileData;
+        if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileData = js_malloc(ctx, size_fileData * sizeof(unsigned char));
+        for(int i0=0; i0 < size_fileData; i0++){
+            JSValue js_fileData = JS_GetPropertyUint32(ctx,argv[1],i0);
+            unsigned int _int_fileData[i0];
+            JS_ToUint32(ctx, &_int_fileData[i0], js_fileData);
+            fileData[i0] = (unsigned char)_int_fileData[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileData = JS_DupValue(ctx,argv[1]);
+        size_t size_fileData;
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_fileData;
+            size_t size_fileData;
+            js_fileData = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileData,&size_fileData,NULL);
+            fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int dataSize;
     JS_ToInt32(ctx, &dataSize, argv[2]);
-    size_t frames_size;
-    void * frames_js = (void *)JS_GetArrayBuffer(ctx, &frames_size, argv[3]);
-    if(frames_js == NULL) {
-        return JS_EXCEPTION;
+    int * frames;
+    JSValue js_frames;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_frames;
+        if(JS_GetLength(ctx,argv[3],&size_frames)==-1) {
+            return JS_EXCEPTION;
+        }
+        frames = js_malloc(ctx, size_frames * sizeof(int));
+        for(int i0=0; i0 < size_frames; i0++){
+            JSValue js_frames = JS_GetPropertyUint32(ctx,argv[3],i0);
+            JS_ToInt32(ctx, &frames[i0], js_frames);
+        }
     }
-    int * frames = malloc(frames_size);
-    memcpy((void *)frames, (const void *)frames_js, frames_size);
-    Image returnVal = LoadImageAnimFromMemory(fileType, fileData, dataSize, frames);
-    JS_FreeCString(ctx, fileType);
-    free((void *)fileData);
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_frames = JS_DupValue(ctx,argv[3]);
+        size_t size_frames;
+        frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, js_frames);
+    }
+    else {
+        JSClassID classid_frames = JS_GetClassID(argv[3]);
+        if(classid_frames==JS_CLASS_INT16_ARRAY) {
+            size_t offset_frames;
+            size_t size_frames;
+            js_frames = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_frames,&size_frames,NULL);
+            frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, js_frames);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Image returnVal = LoadImageAnimFromMemory((const char *)fileType, (const unsigned char *)fileData, dataSize, frames);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileType);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileType);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileData);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &js_fileData);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, frames);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_frames);
+    }
+    else {
+        JSClassID classid_frames = JS_GetClassID(argv[3]);
+        if(classid_frames==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_frames);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5306,20 +7668,102 @@ static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_loadImageFromMemory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileType = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    size_t fileData_size;
-    void * fileData_js = (void *)JS_GetArrayBuffer(ctx, &fileData_size, argv[1]);
-    if(fileData_js == NULL) {
-        return JS_EXCEPTION;
+static JSValue js_loadImageFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileType;
+    JSValue js_fileType;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileType;
+        if(JS_GetLength(ctx,argv[0],&size_fileType)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileType = js_malloc(ctx, size_fileType * sizeof(char));
+        for(int i0=0; i0 < size_fileType; i0++){
+            JSValue js_fileType = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileType[i0] = (char)((char *)JS_ToCString(ctx, js_fileType))[0];
+        }
     }
-    const unsigned char * fileData = malloc(fileData_size);
-    memcpy((void *)fileData, (const void *)fileData_js, fileData_size);
+    else if(JS_IsString(argv[0]) == 1) {
+        fileType = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileType = JS_DupValue(ctx,argv[0]);
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            js_fileType = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileType,&size_fileType,NULL);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * fileData;
+    JSValue js_fileData;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileData;
+        if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileData = js_malloc(ctx, size_fileData * sizeof(unsigned char));
+        for(int i0=0; i0 < size_fileData; i0++){
+            JSValue js_fileData = JS_GetPropertyUint32(ctx,argv[1],i0);
+            unsigned int _int_fileData[i0];
+            JS_ToUint32(ctx, &_int_fileData[i0], js_fileData);
+            fileData[i0] = (unsigned char)_int_fileData[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileData = JS_DupValue(ctx,argv[1]);
+        size_t size_fileData;
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_fileData;
+            size_t size_fileData;
+            js_fileData = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileData,&size_fileData,NULL);
+            fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int dataSize;
     JS_ToInt32(ctx, &dataSize, argv[2]);
-    Image returnVal = LoadImageFromMemory(fileType, fileData, dataSize);
-    JS_FreeCString(ctx, fileType);
-    free((void *)fileData);
+    Image returnVal = LoadImageFromMemory((const char *)fileType, (const unsigned char *)fileData, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileType);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileType);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileData);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &js_fileData);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5327,7 +7771,7 @@ static JSValue js_loadImageFromMemory(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_loadImageFromTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadImageFromTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -5339,7 +7783,7 @@ static JSValue js_loadImageFromTexture(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_loadImageFromScreen(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadImageFromScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image returnVal = LoadImageFromScreen();
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
@@ -5348,7 +7792,7 @@ static JSValue js_loadImageFromScreen(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_isImageReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isImageReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5357,7 +7801,7 @@ static JSValue js_isImageReady(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_unloadImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5365,32 +7809,159 @@ static JSValue js_unloadImage(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
-    const char * fileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = ExportImage(image, fileName);
-    JS_FreeCString(ctx, fileName);
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[1],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportImage(image, (const char *)fileName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_exportImageToMemory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportImageToMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
-    const char * fileType = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t fileSize_size;
-    void * fileSize_js = (void *)JS_GetArrayBuffer(ctx, &fileSize_size, argv[2]);
-    if(fileSize_js == NULL) {
-        return JS_EXCEPTION;
+    char * fileType;
+    JSValue js_fileType;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileType;
+        if(JS_GetLength(ctx,argv[1],&size_fileType)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileType = js_malloc(ctx, size_fileType * sizeof(char));
+        for(int i0=0; i0 < size_fileType; i0++){
+            JSValue js_fileType = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileType[i0] = (char)((char *)JS_ToCString(ctx, js_fileType))[0];
+        }
     }
-    int * fileSize = malloc(fileSize_size);
-    memcpy((void *)fileSize, (const void *)fileSize_js, fileSize_size);
-    unsigned char * returnVal = ExportImageToMemory(image, fileType, fileSize);
-    JS_FreeCString(ctx, fileType);
-    unsigned char ret_size = sizeof(returnVal);
+    else if(JS_IsString(argv[1]) == 1) {
+        fileType = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileType = JS_DupValue(ctx,argv[1]);
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[1]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            js_fileType = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileType,&size_fileType,NULL);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int * fileSize;
+    JSValue js_fileSize;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_fileSize;
+        if(JS_GetLength(ctx,argv[2],&size_fileSize)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileSize = js_malloc(ctx, size_fileSize * sizeof(int));
+        for(int i0=0; i0 < size_fileSize; i0++){
+            JSValue js_fileSize = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &fileSize[i0], js_fileSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_fileSize = JS_DupValue(ctx,argv[2]);
+        size_t size_fileSize;
+        fileSize = (int *)JS_GetArrayBuffer(ctx, &size_fileSize, js_fileSize);
+    }
+    else {
+        JSClassID classid_fileSize = JS_GetClassID(argv[2]);
+        if(classid_fileSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_fileSize;
+            size_t size_fileSize;
+            js_fileSize = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_fileSize,&size_fileSize,NULL);
+            fileSize = (int *)JS_GetArrayBuffer(ctx, &size_fileSize, js_fileSize);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * returnVal = ExportImageToMemory(image, (const char *)fileType, fileSize);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileType);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[1]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileType);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, fileSize);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_fileSize);
+    }
+    else {
+        JSClassID classid_fileSize = JS_GetClassID(argv[2]);
+        if(classid_fileSize==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_fileSize);
+        }
+    }
+    size_t ret_size = sizeof(returnVal);
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < ret_size; i++){
         JSValue reti = JS_NewUint32(ctx, returnVal[i]);
@@ -5399,7 +7970,7 @@ static JSValue js_exportImageToMemory(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_genImageColor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -5415,7 +7986,7 @@ static JSValue js_genImageColor(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_genImageGradientLinear(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageGradientLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -5436,14 +8007,14 @@ static JSValue js_genImageGradientLinear(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_genImageGradientRadial(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageGradientRadial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
     JS_ToInt32(ctx, &height, argv[1]);
-    double _double_density;
-    JS_ToFloat64(ctx, &_double_density, argv[2]);
-    float density = (float)_double_density;
+    double double_density;
+    JS_ToFloat64(ctx, &double_density, argv[2]);
+    float density = (float)double_density;
     Color* inner_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(inner_ptr == NULL) return JS_EXCEPTION;
     Color inner = *inner_ptr;
@@ -5458,14 +8029,14 @@ static JSValue js_genImageGradientRadial(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_genImageGradientSquare(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageGradientSquare(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
     JS_ToInt32(ctx, &height, argv[1]);
-    double _double_density;
-    JS_ToFloat64(ctx, &_double_density, argv[2]);
-    float density = (float)_double_density;
+    double double_density;
+    JS_ToFloat64(ctx, &double_density, argv[2]);
+    float density = (float)double_density;
     Color* inner_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(inner_ptr == NULL) return JS_EXCEPTION;
     Color inner = *inner_ptr;
@@ -5480,7 +8051,7 @@ static JSValue js_genImageGradientSquare(JSContext * ctx, JSValueConst this_val,
     return ret;
 }
 
-static JSValue js_genImageChecked(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageChecked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -5503,14 +8074,14 @@ static JSValue js_genImageChecked(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_genImageWhiteNoise(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageWhiteNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
     JS_ToInt32(ctx, &height, argv[1]);
-    double _double_factor;
-    JS_ToFloat64(ctx, &_double_factor, argv[2]);
-    float factor = (float)_double_factor;
+    double double_factor;
+    JS_ToFloat64(ctx, &double_factor, argv[2]);
+    float factor = (float)double_factor;
     Image returnVal = GenImageWhiteNoise(width, height, factor);
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
@@ -5519,7 +8090,7 @@ static JSValue js_genImageWhiteNoise(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -5528,9 +8099,9 @@ static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValueConst this_val, in
     JS_ToInt32(ctx, &offsetX, argv[2]);
     int offsetY;
     JS_ToInt32(ctx, &offsetY, argv[3]);
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[4]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[4]);
+    float scale = (float)double_scale;
     Image returnVal = GenImagePerlinNoise(width, height, offsetX, offsetY, scale);
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
@@ -5539,7 +8110,7 @@ static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_genImageCellular(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageCellular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -5554,14 +8125,60 @@ static JSValue js_genImageCellular(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_genImageText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genImageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
     JS_ToInt32(ctx, &height, argv[1]);
-    const char * text = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    Image returnVal = GenImageText(width, height, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[2],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[2],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_text = JS_DupValue(ctx,argv[2]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[2]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Image returnVal = GenImageText(width, height, (const char *)text);
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[2]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5569,7 +8186,7 @@ static JSValue js_genImageText(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_imageCopy(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5581,7 +8198,7 @@ static JSValue js_imageCopy(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_imageFromImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5596,7 +8213,7 @@ static JSValue js_imageFromImage(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_imageFromChannel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageFromChannel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5610,15 +8227,61 @@ static JSValue js_imageFromChannel(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_imageText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * text = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_imageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int fontSize;
     JS_ToInt32(ctx, &fontSize, argv[1]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    Image returnVal = ImageText(text, fontSize, color);
-    JS_FreeCString(ctx, text);
+    Image returnVal = ImageText((const char *)text, fontSize, color);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5626,22 +8289,68 @@ static JSValue js_imageText(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_imageTextEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[2]);
-    float fontSize = (float)_double_fontSize;
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[3]);
-    float spacing = (float)_double_spacing;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[2]);
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[3]);
+    float spacing = (float)double_spacing;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
-    Image returnVal = ImageTextEx(font, text, fontSize, spacing, tint);
-    JS_FreeCString(ctx, text);
+    Image returnVal = ImageTextEx(font, (const char *)text, fontSize, spacing, tint);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     Image* ret_ptr = (Image*)js_malloc(ctx, sizeof(Image));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
@@ -5649,7 +8358,7 @@ static JSValue js_imageTextEx(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_imageFormat(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int newFormat;
@@ -5658,7 +8367,7 @@ static JSValue js_imageFormat(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageToPOT(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Color* fill_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
@@ -5668,7 +8377,7 @@ static JSValue js_imageToPOT(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageCrop(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Rectangle* crop_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[1], js_Rectangle_class_id);
@@ -5678,30 +8387,30 @@ static JSValue js_imageCrop(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaCrop(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
-    double _double_threshold;
-    JS_ToFloat64(ctx, &_double_threshold, argv[1]);
-    float threshold = (float)_double_threshold;
+    double double_threshold;
+    JS_ToFloat64(ctx, &double_threshold, argv[1]);
+    float threshold = (float)double_threshold;
     ImageAlphaCrop(image, threshold);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaClear(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageAlphaClear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    double _double_threshold;
-    JS_ToFloat64(ctx, &_double_threshold, argv[2]);
-    float threshold = (float)_double_threshold;
+    double double_threshold;
+    JS_ToFloat64(ctx, &double_threshold, argv[2]);
+    float threshold = (float)double_threshold;
     ImageAlphaClear(image, color, threshold);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaMask(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Image* alphaMask_ptr = (Image*)JS_GetOpaque2(ctx, argv[1], js_Image_class_id);
@@ -5711,14 +8420,14 @@ static JSValue js_imageAlphaMask(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageAlphaPremultiply(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageBlurGaussian(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageBlurGaussian(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int blurSize;
@@ -5727,23 +8436,60 @@ static JSValue js_imageBlurGaussian(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageKernelConvolution(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
-    size_t kernel_size;
-    void * kernel_js = (void *)JS_GetArrayBuffer(ctx, &kernel_size, argv[1]);
-    if(kernel_js == NULL) {
-        return JS_EXCEPTION;
+    float * kernel;
+    JSValue js_kernel;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_kernel;
+        if(JS_GetLength(ctx,argv[1],&size_kernel)==-1) {
+            return JS_EXCEPTION;
+        }
+        kernel = js_malloc(ctx, size_kernel * sizeof(float));
+        for(int i0=0; i0 < size_kernel; i0++){
+            JSValue js_kernel = JS_GetPropertyUint32(ctx,argv[1],i0);
+            double double_kernel[i0];
+            JS_ToFloat64(ctx, &double_kernel[i0], js_kernel);
+            kernel[i0] = (float)double_kernel[i0];
+        }
     }
-    const float * kernel = malloc(kernel_size);
-    memcpy((void *)kernel, (const void *)kernel_js, kernel_size);
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_kernel = JS_DupValue(ctx,argv[1]);
+        size_t size_kernel;
+        kernel = (float *)JS_GetArrayBuffer(ctx, &size_kernel, js_kernel);
+    }
+    else {
+        JSClassID classid_kernel = JS_GetClassID(argv[1]);
+        if(classid_kernel==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_kernel;
+            size_t size_kernel;
+            js_kernel = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_kernel,&size_kernel,NULL);
+            kernel = (float *)JS_GetArrayBuffer(ctx, &size_kernel, js_kernel);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int kernelSize;
     JS_ToInt32(ctx, &kernelSize, argv[2]);
-    ImageKernelConvolution(image, kernel, kernelSize);
+    ImageKernelConvolution(image, (const float *)kernel, kernelSize);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, kernel);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_kernel);
+    }
+    else {
+        JSClassID classid_kernel = JS_GetClassID(argv[1]);
+        if(classid_kernel==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_kernel);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageResize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int newWidth;
@@ -5754,7 +8500,7 @@ static JSValue js_imageResize(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResizeNN(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int newWidth;
@@ -5765,7 +8511,7 @@ static JSValue js_imageResizeNN(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResizeCanvas(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageResizeCanvas(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int newWidth;
@@ -5783,14 +8529,14 @@ static JSValue js_imageResizeCanvas(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageMipmaps(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageMipmaps(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDither(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDither(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int rBpp;
@@ -5805,21 +8551,21 @@ static JSValue js_imageDither(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageFlipVertical(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageFlipVertical(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageFlipVertical(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageFlipHorizontal(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int degrees;
@@ -5828,21 +8574,21 @@ static JSValue js_imageRotate(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotateCW(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageRotateCW(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotateCCW(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageRotateCCW(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorTint(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
@@ -5852,31 +8598,31 @@ static JSValue js_imageColorTint(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorInvert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageColorInvert(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorGrayscale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorGrayscale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     ImageColorGrayscale(image);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorContrast(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
-    double _double_contrast;
-    JS_ToFloat64(ctx, &_double_contrast, argv[1]);
-    float contrast = (float)_double_contrast;
+    double double_contrast;
+    JS_ToFloat64(ctx, &double_contrast, argv[1]);
+    float contrast = (float)double_contrast;
     ImageColorContrast(image, contrast);
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorBrightness(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int brightness;
@@ -5885,7 +8631,7 @@ static JSValue js_imageColorBrightness(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorReplace(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageColorReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
@@ -5898,7 +8644,7 @@ static JSValue js_imageColorReplace(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadImageColors(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadImageColors(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5908,13 +8654,13 @@ static JSValue js_loadImageColors(JSContext * ctx, JSValueConst this_val, int ar
     return retVal;
 }
 
-static JSValue js_getImageAlphaBorder(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getImageAlphaBorder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
-    double _double_threshold;
-    JS_ToFloat64(ctx, &_double_threshold, argv[1]);
-    float threshold = (float)_double_threshold;
+    double double_threshold;
+    JS_ToFloat64(ctx, &double_threshold, argv[1]);
+    float threshold = (float)double_threshold;
     Rectangle returnVal = GetImageAlphaBorder(image, threshold);
     Rectangle* ret_ptr = (Rectangle*)js_malloc(ctx, sizeof(Rectangle));
     *ret_ptr = returnVal;
@@ -5923,7 +8669,7 @@ static JSValue js_getImageAlphaBorder(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getImageColor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -5939,7 +8685,7 @@ static JSValue js_getImageColor(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_imageClearBackground(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageClearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
@@ -5949,7 +8695,7 @@ static JSValue js_imageClearBackground(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawPixel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     int posX;
@@ -5963,7 +8709,7 @@ static JSValue js_imageDrawPixel(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawPixelV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -5976,7 +8722,7 @@ static JSValue js_imageDrawPixelV(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLine(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     int startPosX;
@@ -5994,7 +8740,7 @@ static JSValue js_imageDrawLine(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLineV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* start_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6010,7 +8756,7 @@ static JSValue js_imageDrawLineV(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLineEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* start_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6028,7 +8774,7 @@ static JSValue js_imageDrawLineEx(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     int centerX;
@@ -6044,7 +8790,7 @@ static JSValue js_imageDrawCircle(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6059,7 +8805,7 @@ static JSValue js_imageDrawCircleV(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     int centerX;
@@ -6075,7 +8821,7 @@ static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* center_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6090,7 +8836,7 @@ static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     int posX;
@@ -6108,7 +8854,7 @@ static JSValue js_imageDrawRectangle(JSContext * ctx, JSValueConst this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6124,7 +8870,7 @@ static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[1], js_Rectangle_class_id);
@@ -6137,7 +8883,7 @@ static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValueConst this_val, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[1], js_Rectangle_class_id);
@@ -6152,7 +8898,7 @@ static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValueConst this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6171,7 +8917,7 @@ static JSValue js_imageDrawTriangle(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6196,7 +8942,7 @@ static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6215,7 +8961,7 @@ static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6229,7 +8975,7 @@ static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Vector2* points = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
@@ -6243,7 +8989,7 @@ static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDraw(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Image* src_ptr = (Image*)JS_GetOpaque2(ctx, argv[1], js_Image_class_id);
@@ -6262,10 +9008,42 @@ static JSValue js_imageDraw(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int posX;
     JS_ToInt32(ctx, &posX, argv[2]);
     int posY;
@@ -6275,39 +9053,145 @@ static JSValue js_imageDrawText(JSContext * ctx, JSValueConst this_val, int argc
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    ImageDrawText(dst, text, posX, posY, fontSize, color);
-    JS_FreeCString(ctx, text);
+    ImageDrawText(dst, (const char *)text, posX, posY, fontSize, color);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTextEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* dst = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(dst == NULL) return JS_EXCEPTION;
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[1], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
-    const char * text = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[2],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[2],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_text = JS_DupValue(ctx,argv[2]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[2]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[4]);
-    float fontSize = (float)_double_fontSize;
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[5]);
-    float spacing = (float)_double_spacing;
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[4]);
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[5]);
+    float spacing = (float)double_spacing;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[6], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
-    ImageDrawTextEx(dst, font, text, position, fontSize, spacing, tint);
-    JS_FreeCString(ctx, text);
+    ImageDrawTextEx(dst, font, (const char *)text, position, fontSize, spacing, tint);
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[2]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Texture2D returnVal = LoadTexture(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Texture2D returnVal = LoadTexture((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Texture2D* ret_ptr = (Texture2D*)js_malloc(ctx, sizeof(Texture2D));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Texture_class_id);
@@ -6315,7 +9199,7 @@ static JSValue js_loadTexture(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_loadTextureFromImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadTextureFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -6327,7 +9211,7 @@ static JSValue js_loadTextureFromImage(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_loadTextureCubemap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadTextureCubemap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -6341,7 +9225,7 @@ static JSValue js_loadTextureCubemap(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_loadRenderTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -6354,7 +9238,7 @@ static JSValue js_loadRenderTexture(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_isTextureReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isTextureReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6363,7 +9247,7 @@ static JSValue js_isTextureReady(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_unloadTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6371,7 +9255,7 @@ static JSValue js_unloadTexture(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_isRenderTextureReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isRenderTextureReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* target_ptr = (RenderTexture2D*)JS_GetOpaque2(ctx, argv[0], js_RenderTexture_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     RenderTexture2D target = *target_ptr;
@@ -6380,7 +9264,7 @@ static JSValue js_isRenderTextureReady(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_unloadRenderTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* target_ptr = (RenderTexture2D*)JS_GetOpaque2(ctx, argv[0], js_RenderTexture_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     RenderTexture2D target = *target_ptr;
@@ -6388,49 +9272,59 @@ static JSValue js_unloadRenderTexture(JSContext * ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
-    size_t pixels_size;
-    void * pixels_js = (void *)JS_GetArrayBuffer(ctx, &pixels_size, argv[1]);
-    if(pixels_js == NULL) {
+    void * pixels;
+    JSValue js_pixels;
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_pixels = JS_DupValue(ctx,argv[1]);
+        size_t size_pixels;
+        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, js_pixels);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    const void * pixels = malloc(pixels_size);
-    memcpy((void *)pixels, (const void *)pixels_js, pixels_size);
-    UpdateTexture(texture, pixels);
-    free((void *)pixels);
+    UpdateTexture(texture, (const void *)pixels);
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_pixels);
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateTextureRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
     Rectangle* rec_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[1], js_Rectangle_class_id);
     if(rec_ptr == NULL) return JS_EXCEPTION;
     Rectangle rec = *rec_ptr;
-    size_t pixels_size;
-    void * pixels_js = (void *)JS_GetArrayBuffer(ctx, &pixels_size, argv[2]);
-    if(pixels_js == NULL) {
+    void * pixels;
+    JSValue js_pixels;
+    if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_pixels = JS_DupValue(ctx,argv[2]);
+        size_t size_pixels;
+        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, js_pixels);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    const void * pixels = malloc(pixels_size);
-    memcpy((void *)pixels, (const void *)pixels_js, pixels_size);
-    UpdateTextureRec(texture, rec, pixels);
-    free((void *)pixels);
+    UpdateTextureRec(texture, rec, (const void *)pixels);
+    if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_pixels);
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_genTextureMipmaps(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genTextureMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture == NULL) return JS_EXCEPTION;
     GenTextureMipmaps(texture);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextureFilter(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setTextureFilter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6440,7 +9334,7 @@ static JSValue js_setTextureFilter(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextureWrap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setTextureWrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6450,7 +9344,7 @@ static JSValue js_setTextureWrap(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6465,7 +9359,7 @@ static JSValue js_drawTexture(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextureV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6479,19 +9373,19 @@ static JSValue js_drawTextureV(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextureEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[2]);
-    float rotation = (float)_double_rotation;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[3]);
-    float scale = (float)_double_scale;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[2]);
+    float rotation = (float)double_rotation;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[3]);
+    float scale = (float)double_scale;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -6499,7 +9393,7 @@ static JSValue js_drawTextureEx(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6516,7 +9410,7 @@ static JSValue js_drawTextureRec(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTexturePro(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTexturePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6529,9 +9423,9 @@ static JSValue js_drawTexturePro(JSContext * ctx, JSValueConst this_val, int arg
     Vector2* origin_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(origin_ptr == NULL) return JS_EXCEPTION;
     Vector2 origin = *origin_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[4]);
-    float rotation = (float)_double_rotation;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[4]);
+    float rotation = (float)double_rotation;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -6539,7 +9433,7 @@ static JSValue js_drawTexturePro(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureNPatch(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextureNPatch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* texture_ptr = (Texture2D*)JS_GetOpaque2(ctx, argv[0], js_Texture_class_id);
     if(texture_ptr == NULL) return JS_EXCEPTION;
     Texture2D texture = *texture_ptr;
@@ -6552,9 +9446,9 @@ static JSValue js_drawTextureNPatch(JSContext * ctx, JSValueConst this_val, int 
     Vector2* origin_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(origin_ptr == NULL) return JS_EXCEPTION;
     Vector2 origin = *origin_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[4]);
-    float rotation = (float)_double_rotation;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[4]);
+    float rotation = (float)double_rotation;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -6562,7 +9456,7 @@ static JSValue js_drawTextureNPatch(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_colorIsEqual(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* col1_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(col1_ptr == NULL) return JS_EXCEPTION;
     Color col1 = *col1_ptr;
@@ -6574,13 +9468,13 @@ static JSValue js_colorIsEqual(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_fade(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_fade(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    double _double_alpha;
-    JS_ToFloat64(ctx, &_double_alpha, argv[1]);
-    float alpha = (float)_double_alpha;
+    double double_alpha;
+    JS_ToFloat64(ctx, &double_alpha, argv[1]);
+    float alpha = (float)double_alpha;
     Color returnVal = Fade(color, alpha);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6589,7 +9483,7 @@ static JSValue js_fade(JSContext * ctx, JSValueConst this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_colorToInt(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorToInt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -6598,7 +9492,7 @@ static JSValue js_colorToInt(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_colorNormalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -6610,7 +9504,7 @@ static JSValue js_colorNormalize(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_colorFromNormalized(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorFromNormalized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* normalized_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(normalized_ptr == NULL) return JS_EXCEPTION;
     Vector4 normalized = *normalized_ptr;
@@ -6622,7 +9516,7 @@ static JSValue js_colorFromNormalized(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_colorToHSV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorToHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -6634,16 +9528,16 @@ static JSValue js_colorToHSV(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_colorFromHSV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_hue;
-    JS_ToFloat64(ctx, &_double_hue, argv[0]);
-    float hue = (float)_double_hue;
-    double _double_saturation;
-    JS_ToFloat64(ctx, &_double_saturation, argv[1]);
-    float saturation = (float)_double_saturation;
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, argv[2]);
-    float value = (float)_double_value;
+static JSValue js_colorFromHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_hue;
+    JS_ToFloat64(ctx, &double_hue, argv[0]);
+    float hue = (float)double_hue;
+    double double_saturation;
+    JS_ToFloat64(ctx, &double_saturation, argv[1]);
+    float saturation = (float)double_saturation;
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, argv[2]);
+    float value = (float)double_value;
     Color returnVal = ColorFromHSV(hue, saturation, value);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6652,7 +9546,7 @@ static JSValue js_colorFromHSV(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_colorTint(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -6667,13 +9561,13 @@ static JSValue js_colorTint(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_colorBrightness(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    double _double_factor;
-    JS_ToFloat64(ctx, &_double_factor, argv[1]);
-    float factor = (float)_double_factor;
+    double double_factor;
+    JS_ToFloat64(ctx, &double_factor, argv[1]);
+    float factor = (float)double_factor;
     Color returnVal = ColorBrightness(color, factor);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6682,13 +9576,13 @@ static JSValue js_colorBrightness(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_colorContrast(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    double _double_contrast;
-    JS_ToFloat64(ctx, &_double_contrast, argv[1]);
-    float contrast = (float)_double_contrast;
+    double double_contrast;
+    JS_ToFloat64(ctx, &double_contrast, argv[1]);
+    float contrast = (float)double_contrast;
     Color returnVal = ColorContrast(color, contrast);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6697,13 +9591,13 @@ static JSValue js_colorContrast(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_colorAlpha(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    double _double_alpha;
-    JS_ToFloat64(ctx, &_double_alpha, argv[1]);
-    float alpha = (float)_double_alpha;
+    double double_alpha;
+    JS_ToFloat64(ctx, &double_alpha, argv[1]);
+    float alpha = (float)double_alpha;
     Color returnVal = ColorAlpha(color, alpha);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6712,7 +9606,7 @@ static JSValue js_colorAlpha(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_colorAlphaBlend(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorAlphaBlend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* dst_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(dst_ptr == NULL) return JS_EXCEPTION;
     Color dst = *dst_ptr;
@@ -6730,16 +9624,16 @@ static JSValue js_colorAlphaBlend(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_colorLerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_colorLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* color1_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(color1_ptr == NULL) return JS_EXCEPTION;
     Color color1 = *color1_ptr;
     Color* color2_ptr = (Color*)JS_GetOpaque2(ctx, argv[1], js_Color_class_id);
     if(color2_ptr == NULL) return JS_EXCEPTION;
     Color color2 = *color2_ptr;
-    double _double_factor;
-    JS_ToFloat64(ctx, &_double_factor, argv[2]);
-    float factor = (float)_double_factor;
+    double double_factor;
+    JS_ToFloat64(ctx, &double_factor, argv[2]);
+    float factor = (float)double_factor;
     Color returnVal = ColorLerp(color1, color2, factor);
     Color* ret_ptr = (Color*)js_malloc(ctx, sizeof(Color));
     *ret_ptr = returnVal;
@@ -6748,7 +9642,7 @@ static JSValue js_colorLerp(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_getColor(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned int hexValue;
     JS_ToUint32(ctx, &hexValue, argv[0]);
     Color returnVal = GetColor(hexValue);
@@ -6759,7 +9653,7 @@ static JSValue js_getColor(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_getPixelDataSize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getPixelDataSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int width;
     JS_ToInt32(ctx, &width, argv[0]);
     int height;
@@ -6771,7 +9665,7 @@ static JSValue js_getPixelDataSize(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getFontDefault(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getFontDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font returnVal = GetFontDefault();
     Font* ret_ptr = (Font*)js_malloc(ctx, sizeof(Font));
     *ret_ptr = returnVal;
@@ -6780,10 +9674,56 @@ static JSValue js_getFontDefault(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_loadFont(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Font returnVal = LoadFont(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Font returnVal = LoadFont((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Font* ret_ptr = (Font*)js_malloc(ctx, sizeof(Font));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Font_class_id);
@@ -6791,12 +9731,107 @@ static JSValue js_loadFont(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_loadFontEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_loadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int fontSize;
     JS_ToInt32(ctx, &fontSize, argv[1]);
-    Font returnVal = LoadFontEx(fileName, fontSize, NULL, 0);
-    JS_FreeCString(ctx, fileName);
+    int * codepoints;
+    JSValue js_codepoints;
+    if(JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) {
+        codepoints = NULL;
+    }
+    else if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_codepoints;
+        if(JS_GetLength(ctx,argv[2],&size_codepoints)==-1) {
+            return JS_EXCEPTION;
+        }
+        codepoints = js_malloc(ctx, size_codepoints * sizeof(int));
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &codepoints[i0], js_codepoints);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_codepoints = JS_DupValue(ctx,argv[2]);
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, js_codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[2]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            js_codepoints = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, js_codepoints);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int codepointCount;
+    JS_ToInt32(ctx, &codepointCount, argv[3]);
+    Font returnVal = LoadFontEx((const char *)fileName, fontSize, codepoints, codepointCount);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
+    if(JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) {
+    }
+    else if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, codepoints);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[2]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_codepoints);
+        }
+    }
     Font* ret_ptr = (Font*)js_malloc(ctx, sizeof(Font));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Font_class_id);
@@ -6804,7 +9839,7 @@ static JSValue js_loadFontEx(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadFontFromImage(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadFontFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image_ptr == NULL) return JS_EXCEPTION;
     Image image = *image_ptr;
@@ -6821,7 +9856,7 @@ static JSValue js_loadFontFromImage(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_isFontReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isFontReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -6830,7 +9865,7 @@ static JSValue js_isFontReady(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_unloadFont(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -6838,7 +9873,7 @@ static JSValue js_unloadFont(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawFPS(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int posX;
     JS_ToInt32(ctx, &posX, argv[0]);
     int posY;
@@ -6847,8 +9882,40 @@ static JSValue js_drawFPS(JSContext * ctx, JSValueConst this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * text = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_drawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int posX;
     JS_ToInt32(ctx, &posX, argv[1]);
     int posY;
@@ -6858,62 +9925,168 @@ static JSValue js_drawText(JSContext * ctx, JSValueConst this_val, int argc, JSV
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
-    DrawText(text, posX, posY, fontSize, color);
-    JS_FreeCString(ctx, text);
+    DrawText((const char *)text, posX, posY, fontSize, color);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[3]);
-    float fontSize = (float)_double_fontSize;
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[4]);
-    float spacing = (float)_double_spacing;
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[3]);
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[4]);
+    float spacing = (float)double_spacing;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
-    DrawTextEx(font, text, position, fontSize, spacing, tint);
-    JS_FreeCString(ctx, text);
+    DrawTextEx(font, (const char *)text, position, fontSize, spacing, tint);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextPro(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
     Vector2* origin_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[3], js_Vector2_class_id);
     if(origin_ptr == NULL) return JS_EXCEPTION;
     Vector2 origin = *origin_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[4]);
-    float rotation = (float)_double_rotation;
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[5]);
-    float fontSize = (float)_double_fontSize;
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[6]);
-    float spacing = (float)_double_spacing;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[4]);
+    float rotation = (float)double_rotation;
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[5]);
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[6]);
+    float spacing = (float)double_spacing;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[7], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
-    DrawTextPro(font, text, position, origin, rotation, fontSize, spacing, tint);
-    JS_FreeCString(ctx, text);
+    DrawTextPro(font, (const char *)text, position, origin, rotation, fontSize, spacing, tint);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextCodepoint(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTextCodepoint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -6922,9 +10095,9 @@ static JSValue js_drawTextCodepoint(JSContext * ctx, JSValueConst this_val, int 
     Vector2* position_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[2], js_Vector2_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector2 position = *position_ptr;
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[3]);
-    float fontSize = (float)_double_fontSize;
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[3]);
+    float fontSize = (float)double_fontSize;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -6932,36 +10105,128 @@ static JSValue js_drawTextCodepoint(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextLineSpacing(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setTextLineSpacing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int spacing;
     JS_ToInt32(ctx, &spacing, argv[0]);
     SetTextLineSpacing(spacing);
     return JS_UNDEFINED;
 }
 
-static JSValue js_measureText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * text = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
+static JSValue js_measureText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int fontSize;
     JS_ToInt32(ctx, &fontSize, argv[1]);
-    int returnVal = MeasureText(text, fontSize);
-    JS_FreeCString(ctx, text);
+    int returnVal = MeasureText((const char *)text, fontSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_measureTextEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_measureTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    double _double_fontSize;
-    JS_ToFloat64(ctx, &_double_fontSize, argv[2]);
-    float fontSize = (float)_double_fontSize;
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[3]);
-    float spacing = (float)_double_spacing;
-    Vector2 returnVal = MeasureTextEx(font, text, fontSize, spacing);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_fontSize;
+    JS_ToFloat64(ctx, &double_fontSize, argv[2]);
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[3]);
+    float spacing = (float)double_spacing;
+    Vector2 returnVal = MeasureTextEx(font, (const char *)text, fontSize, spacing);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Vector2_class_id);
@@ -6969,7 +10234,7 @@ static JSValue js_measureTextEx(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_getGlyphIndex(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGlyphIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -6980,7 +10245,7 @@ static JSValue js_getGlyphIndex(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_getGlyphAtlasRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -6994,7 +10259,1481 @@ static JSValue js_getGlyphAtlasRec(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_drawLine3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_textCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * dst;
+    JSValue js_dst;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_dst;
+        if(JS_GetLength(ctx,argv[0],&size_dst)==-1) {
+            return JS_EXCEPTION;
+        }
+        dst = js_malloc(ctx, size_dst * sizeof(char));
+        for(int i0=0; i0 < size_dst; i0++){
+            JSValue js_dst = JS_GetPropertyUint32(ctx,argv[0],i0);
+            dst[i0] = (char)((char *)JS_ToCString(ctx, js_dst))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        dst = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_dst = JS_DupValue(ctx,argv[0]);
+        size_t size_dst;
+        dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, js_dst);
+    }
+    else {
+        JSClassID classid_dst = JS_GetClassID(argv[0]);
+        if(classid_dst==JS_CLASS_INT8_ARRAY) {
+            size_t offset_dst;
+            size_t size_dst;
+            js_dst = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dst,&size_dst,NULL);
+            dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, js_dst);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * src;
+    JSValue js_src;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_src;
+        if(JS_GetLength(ctx,argv[1],&size_src)==-1) {
+            return JS_EXCEPTION;
+        }
+        src = js_malloc(ctx, size_src * sizeof(char));
+        for(int i0=0; i0 < size_src; i0++){
+            JSValue js_src = JS_GetPropertyUint32(ctx,argv[1],i0);
+            src[i0] = (char)((char *)JS_ToCString(ctx, js_src))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        src = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_src = JS_DupValue(ctx,argv[1]);
+        size_t size_src;
+        src = (char *)JS_GetArrayBuffer(ctx, &size_src, js_src);
+    }
+    else {
+        JSClassID classid_src = JS_GetClassID(argv[1]);
+        if(classid_src==JS_CLASS_INT8_ARRAY) {
+            size_t offset_src;
+            size_t size_src;
+            js_src = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_src,&size_src,NULL);
+            src = (char *)JS_GetArrayBuffer(ctx, &size_src, js_src);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = TextCopy(dst, (const char *)src);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, dst);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, dst);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_dst);
+    }
+    else {
+        JSClassID classid_dst = JS_GetClassID(argv[0]);
+        if(classid_dst==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_dst);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, src);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, src);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_src);
+    }
+    else {
+        JSClassID classid_src = JS_GetClassID(argv[1]);
+        if(classid_src==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_src);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text1;
+    JSValue js_text1;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text1;
+        if(JS_GetLength(ctx,argv[0],&size_text1)==-1) {
+            return JS_EXCEPTION;
+        }
+        text1 = js_malloc(ctx, size_text1 * sizeof(char));
+        for(int i0=0; i0 < size_text1; i0++){
+            JSValue js_text1 = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text1[i0] = (char)((char *)JS_ToCString(ctx, js_text1))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text1 = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text1 = JS_DupValue(ctx,argv[0]);
+        size_t size_text1;
+        text1 = (char *)JS_GetArrayBuffer(ctx, &size_text1, js_text1);
+    }
+    else {
+        JSClassID classid_text1 = JS_GetClassID(argv[0]);
+        if(classid_text1==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text1;
+            size_t size_text1;
+            js_text1 = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text1,&size_text1,NULL);
+            text1 = (char *)JS_GetArrayBuffer(ctx, &size_text1, js_text1);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * text2;
+    JSValue js_text2;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text2;
+        if(JS_GetLength(ctx,argv[1],&size_text2)==-1) {
+            return JS_EXCEPTION;
+        }
+        text2 = js_malloc(ctx, size_text2 * sizeof(char));
+        for(int i0=0; i0 < size_text2; i0++){
+            JSValue js_text2 = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text2[i0] = (char)((char *)JS_ToCString(ctx, js_text2))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text2 = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text2 = JS_DupValue(ctx,argv[1]);
+        size_t size_text2;
+        text2 = (char *)JS_GetArrayBuffer(ctx, &size_text2, js_text2);
+    }
+    else {
+        JSClassID classid_text2 = JS_GetClassID(argv[1]);
+        if(classid_text2==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text2;
+            size_t size_text2;
+            js_text2 = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text2,&size_text2,NULL);
+            text2 = (char *)JS_GetArrayBuffer(ctx, &size_text2, js_text2);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = TextIsEqual((const char *)text1, (const char *)text2);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text1);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text1);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text1);
+    }
+    else {
+        JSClassID classid_text1 = JS_GetClassID(argv[0]);
+        if(classid_text1==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text1);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text2);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text2);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text2);
+    }
+    else {
+        JSClassID classid_text2 = JS_GetClassID(argv[1]);
+        if(classid_text2==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text2);
+        }
+    }
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned int returnVal = TextLength((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewUint32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;;
+    size_t size_text = argc;
+    if(size_text>4)size_text=4;
+    char * * text = js_malloc(ctx, size_text * sizeof(char *));
+    for(int i0=0; i0 < size_text; i0++){
+        if(JS_IsArray(ctx,argv[i0]) == 1) {
+            size_t size_texti0;
+            if(JS_GetLength(ctx,argv[i0],&size_texti0)==-1) {
+                return JS_EXCEPTION;
+            }
+            text[i0] = js_malloc(ctx, size_texti0 * sizeof(char));
+            memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, text[i0]);
+            for(int i1=0; i1 < size_texti0; i1++){
+                JSValue js_texti0 = JS_GetPropertyUint32(ctx,argv[i0],i1);
+                text[i0][i1] = (char)((char *)JS_ToCString(ctx, js_texti0))[0];
+            }
+        }
+        else if(JS_IsString(argv[i0]) == 1) {
+            text[i0] = (char *)JS_ToCString(ctx, argv[i0]);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text[i0]);
+        }
+        else if(JS_IsArrayBuffer(argv[i0]) == 1) {
+            JSValue js_texti0 = JS_DupValue(ctx,argv[i0]);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_texti0);
+            size_t size_texti0;
+            text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, js_texti0);
+        }
+        else {
+            JSClassID classid_texti0 = JS_GetClassID(argv[i0]);
+            if(classid_texti0==JS_CLASS_INT8_ARRAY) {
+                size_t offset_texti0;
+                size_t size_texti0;
+                JSValue js_texti0 = JS_GetTypedArrayBuffer(ctx,argv[i0],&offset_texti0,&size_texti0,NULL);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_texti0);
+                text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, js_texti0);
+            }
+            else {
+                return JS_EXCEPTION;
+            }
+        }
+    }
+    const char * returnVal;
+    switch(size_text) {
+        case 0:{
+             returnVal = TextFormat((const char *)text, (const char *)text[0]);
+            break;
+        }
+        case 1:{
+             returnVal = TextFormat((const char *)text, (const char *)text[0], (const char *)text[1]);
+            break;
+        }
+        case 2:{
+             returnVal = TextFormat((const char *)text, (const char *)text[0], (const char *)text[1], (const char *)text[2]);
+            break;
+        }
+        case 3:{
+             returnVal = TextFormat((const char *)text, (const char *)text[0], (const char *)text[1], (const char *)text[2], (const char *)text[3]);
+            break;
+        }
+    }
+    memoryClear(memoryHead);
+    js_free(ctx, text);
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textSubtext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int position;
+    JS_ToInt32(ctx, &position, argv[1]);
+    int length;
+    JS_ToInt32(ctx, &length, argv[2]);
+    const char * returnVal = TextSubtext((const char *)text, position, length);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * replace;
+    JSValue js_replace;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_replace;
+        if(JS_GetLength(ctx,argv[1],&size_replace)==-1) {
+            return JS_EXCEPTION;
+        }
+        replace = js_malloc(ctx, size_replace * sizeof(char));
+        for(int i0=0; i0 < size_replace; i0++){
+            JSValue js_replace = JS_GetPropertyUint32(ctx,argv[1],i0);
+            replace[i0] = (char)((char *)JS_ToCString(ctx, js_replace))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        replace = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_replace = JS_DupValue(ctx,argv[1]);
+        size_t size_replace;
+        replace = (char *)JS_GetArrayBuffer(ctx, &size_replace, js_replace);
+    }
+    else {
+        JSClassID classid_replace = JS_GetClassID(argv[1]);
+        if(classid_replace==JS_CLASS_INT8_ARRAY) {
+            size_t offset_replace;
+            size_t size_replace;
+            js_replace = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_replace,&size_replace,NULL);
+            replace = (char *)JS_GetArrayBuffer(ctx, &size_replace, js_replace);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * by;
+    JSValue js_by;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_by;
+        if(JS_GetLength(ctx,argv[2],&size_by)==-1) {
+            return JS_EXCEPTION;
+        }
+        by = js_malloc(ctx, size_by * sizeof(char));
+        for(int i0=0; i0 < size_by; i0++){
+            JSValue js_by = JS_GetPropertyUint32(ctx,argv[2],i0);
+            by[i0] = (char)((char *)JS_ToCString(ctx, js_by))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        by = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_by = JS_DupValue(ctx,argv[2]);
+        size_t size_by;
+        by = (char *)JS_GetArrayBuffer(ctx, &size_by, js_by);
+    }
+    else {
+        JSClassID classid_by = JS_GetClassID(argv[2]);
+        if(classid_by==JS_CLASS_INT8_ARRAY) {
+            size_t offset_by;
+            size_t size_by;
+            js_by = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_by,&size_by,NULL);
+            by = (char *)JS_GetArrayBuffer(ctx, &size_by, js_by);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * returnVal = TextReplace((const char *)text, (const char *)replace, (const char *)by);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, replace);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, replace);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_replace);
+    }
+    else {
+        JSClassID classid_replace = JS_GetClassID(argv[1]);
+        if(classid_replace==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_replace);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, by);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, by);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_by);
+    }
+    else {
+        JSClassID classid_by = JS_GetClassID(argv[2]);
+        if(classid_by==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_by);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textInsert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * insert;
+    JSValue js_insert;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_insert;
+        if(JS_GetLength(ctx,argv[1],&size_insert)==-1) {
+            return JS_EXCEPTION;
+        }
+        insert = js_malloc(ctx, size_insert * sizeof(char));
+        for(int i0=0; i0 < size_insert; i0++){
+            JSValue js_insert = JS_GetPropertyUint32(ctx,argv[1],i0);
+            insert[i0] = (char)((char *)JS_ToCString(ctx, js_insert))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        insert = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_insert = JS_DupValue(ctx,argv[1]);
+        size_t size_insert;
+        insert = (char *)JS_GetArrayBuffer(ctx, &size_insert, js_insert);
+    }
+    else {
+        JSClassID classid_insert = JS_GetClassID(argv[1]);
+        if(classid_insert==JS_CLASS_INT8_ARRAY) {
+            size_t offset_insert;
+            size_t size_insert;
+            js_insert = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_insert,&size_insert,NULL);
+            insert = (char *)JS_GetArrayBuffer(ctx, &size_insert, js_insert);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int position;
+    JS_ToInt32(ctx, &position, argv[2]);
+    char * returnVal = TextInsert((const char *)text, (const char *)insert, position);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, insert);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, insert);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_insert);
+    }
+    else {
+        JSClassID classid_insert = JS_GetClassID(argv[1]);
+        if(classid_insert==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_insert);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textJoin(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;;
+    char * * textList;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_textList;
+        if(JS_GetLength(ctx,argv[0],&size_textList)==-1) {
+            return JS_EXCEPTION;
+        }
+        textList = js_malloc(ctx, size_textList * sizeof(char *));
+        for(int i0=0; i0 < size_textList; i0++){
+            JSValue js_textList = JS_GetPropertyUint32(ctx,argv[0],i0);
+            if(JS_IsArray(ctx,js_textList) == 1) {
+                size_t size_textListi0;
+                if(JS_GetLength(ctx,js_textList,&size_textListi0)==-1) {
+                    return JS_EXCEPTION;
+                }
+                textList[i0] = js_malloc(ctx, size_textListi0 * sizeof(char));
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, textList[i0]);
+                for(int i1=0; i1 < size_textListi0; i1++){
+                    JSValue js_textListi0 = JS_GetPropertyUint32(ctx,js_textList,i1);
+                    textList[i0][i1] = (char)((char *)JS_ToCString(ctx, js_textListi0))[0];
+                }
+            }
+            else if(JS_IsString(js_textList) == 1) {
+                textList[i0] = (char *)JS_ToCString(ctx, js_textList);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, textList[i0]);
+            }
+            else if(JS_IsArrayBuffer(js_textList) == 1) {
+                JSValue js_textListi0 = JS_DupValue(ctx,js_textList);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_textListi0);
+                size_t size_textListi0;
+                textList[i0] = (char *)JS_GetArrayBuffer(ctx, &size_textListi0, js_textListi0);
+            }
+            else {
+                JSClassID classid_textListi0 = JS_GetClassID(js_textList);
+                if(classid_textListi0==JS_CLASS_INT8_ARRAY) {
+                    size_t offset_textListi0;
+                    size_t size_textListi0;
+                    JSValue js_textListi0 = JS_GetTypedArrayBuffer(ctx,js_textList,&offset_textListi0,&size_textListi0,NULL);
+                    memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_textListi0);
+                    textList[i0] = (char *)JS_GetArrayBuffer(ctx, &size_textListi0, js_textListi0);
+                }
+                else {
+                    return JS_EXCEPTION;
+                }
+            }
+        }
+    }
+    else {
+        return JS_EXCEPTION;
+    }
+    int count;
+    JS_ToInt32(ctx, &count, argv[1]);
+    char * delimiter;
+    JSValue js_delimiter;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_delimiter;
+        if(JS_GetLength(ctx,argv[2],&size_delimiter)==-1) {
+            return JS_EXCEPTION;
+        }
+        delimiter = js_malloc(ctx, size_delimiter * sizeof(char));
+        for(int i0=0; i0 < size_delimiter; i0++){
+            JSValue js_delimiter = JS_GetPropertyUint32(ctx,argv[2],i0);
+            delimiter[i0] = (char)((char *)JS_ToCString(ctx, js_delimiter))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        delimiter = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_delimiter = JS_DupValue(ctx,argv[2]);
+        size_t size_delimiter;
+        delimiter = (char *)JS_GetArrayBuffer(ctx, &size_delimiter, js_delimiter);
+    }
+    else {
+        JSClassID classid_delimiter = JS_GetClassID(argv[2]);
+        if(classid_delimiter==JS_CLASS_INT8_ARRAY) {
+            size_t offset_delimiter;
+            size_t size_delimiter;
+            js_delimiter = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_delimiter,&size_delimiter,NULL);
+            delimiter = (char *)JS_GetArrayBuffer(ctx, &size_delimiter, js_delimiter);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextJoin((const char * *)textList, count, (const char *)delimiter);
+    memoryClear(memoryHead);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, textList);
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, delimiter);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, delimiter);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_delimiter);
+    }
+    else {
+        JSClassID classid_delimiter = JS_GetClassID(argv[2]);
+        if(classid_delimiter==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_delimiter);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textSplit(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char delimiter = (char)((char *)JS_ToCString(ctx, argv[1]))[0];
+    int * count;
+    JSValue js_count;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_count;
+        if(JS_GetLength(ctx,argv[2],&size_count)==-1) {
+            return JS_EXCEPTION;
+        }
+        count = js_malloc(ctx, size_count * sizeof(int));
+        for(int i0=0; i0 < size_count; i0++){
+            JSValue js_count = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &count[i0], js_count);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_count = JS_DupValue(ctx,argv[2]);
+        size_t size_count;
+        count = (int *)JS_GetArrayBuffer(ctx, &size_count, js_count);
+    }
+    else {
+        JSClassID classid_count = JS_GetClassID(argv[2]);
+        if(classid_count==JS_CLASS_INT16_ARRAY) {
+            size_t offset_count;
+            size_t size_count;
+            js_count = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_count,&size_count,NULL);
+            count = (int *)JS_GetArrayBuffer(ctx, &size_count, js_count);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char ** returnVal = TextSplit((const char *)text, delimiter, count);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, count);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_count);
+    }
+    else {
+        JSClassID classid_count = JS_GetClassID(argv[2]);
+        if(classid_count==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_count);
+        }
+    }
+    size_t ret_size = sizeof(returnVal);
+    JSValue ret = JS_NewArray(ctx);
+    for(int i=0; i < ret_size; i++){
+        JSValue reti = JS_NewString(ctx, returnVal[i]);
+        JS_DefinePropertyValue(ctx,ret,'i',reti,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_textAppend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * append;
+    JSValue js_append;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_append;
+        if(JS_GetLength(ctx,argv[1],&size_append)==-1) {
+            return JS_EXCEPTION;
+        }
+        append = js_malloc(ctx, size_append * sizeof(char));
+        for(int i0=0; i0 < size_append; i0++){
+            JSValue js_append = JS_GetPropertyUint32(ctx,argv[1],i0);
+            append[i0] = (char)((char *)JS_ToCString(ctx, js_append))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        append = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_append = JS_DupValue(ctx,argv[1]);
+        size_t size_append;
+        append = (char *)JS_GetArrayBuffer(ctx, &size_append, js_append);
+    }
+    else {
+        JSClassID classid_append = JS_GetClassID(argv[1]);
+        if(classid_append==JS_CLASS_INT8_ARRAY) {
+            size_t offset_append;
+            size_t size_append;
+            js_append = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_append,&size_append,NULL);
+            append = (char *)JS_GetArrayBuffer(ctx, &size_append, js_append);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int * position;
+    JSValue js_position;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_position;
+        if(JS_GetLength(ctx,argv[2],&size_position)==-1) {
+            return JS_EXCEPTION;
+        }
+        position = js_malloc(ctx, size_position * sizeof(int));
+        for(int i0=0; i0 < size_position; i0++){
+            JSValue js_position = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &position[i0], js_position);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_position = JS_DupValue(ctx,argv[2]);
+        size_t size_position;
+        position = (int *)JS_GetArrayBuffer(ctx, &size_position, js_position);
+    }
+    else {
+        JSClassID classid_position = JS_GetClassID(argv[2]);
+        if(classid_position==JS_CLASS_INT16_ARRAY) {
+            size_t offset_position;
+            size_t size_position;
+            js_position = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_position,&size_position,NULL);
+            position = (int *)JS_GetArrayBuffer(ctx, &size_position, js_position);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    TextAppend(text, (const char *)append, position);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, append);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, append);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_append);
+    }
+    else {
+        JSClassID classid_append = JS_GetClassID(argv[1]);
+        if(classid_append==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_append);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, position);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_position);
+    }
+    else {
+        JSClassID classid_position = JS_GetClassID(argv[2]);
+        if(classid_position==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_position);
+        }
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_textFindIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * find;
+    JSValue js_find;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_find;
+        if(JS_GetLength(ctx,argv[1],&size_find)==-1) {
+            return JS_EXCEPTION;
+        }
+        find = js_malloc(ctx, size_find * sizeof(char));
+        for(int i0=0; i0 < size_find; i0++){
+            JSValue js_find = JS_GetPropertyUint32(ctx,argv[1],i0);
+            find[i0] = (char)((char *)JS_ToCString(ctx, js_find))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        find = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_find = JS_DupValue(ctx,argv[1]);
+        size_t size_find;
+        find = (char *)JS_GetArrayBuffer(ctx, &size_find, js_find);
+    }
+    else {
+        JSClassID classid_find = JS_GetClassID(argv[1]);
+        if(classid_find==JS_CLASS_INT8_ARRAY) {
+            size_t offset_find;
+            size_t size_find;
+            js_find = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_find,&size_find,NULL);
+            find = (char *)JS_GetArrayBuffer(ctx, &size_find, js_find);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = TextFindIndex((const char *)text, (const char *)find);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, find);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, find);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_find);
+    }
+    else {
+        JSClassID classid_find = JS_GetClassID(argv[1]);
+        if(classid_find==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_find);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToUpper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextToUpper((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToLower(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextToLower((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToPascal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextToPascal((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToSnake(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextToSnake((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToCamel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = TextToCamel((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToInteger(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = TextToInteger((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_textToFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[0],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[0],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_text = JS_DupValue(ctx,argv[0]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float returnVal = TextToFloat((const char *)text);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewFloat64(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_drawLine3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* startPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 startPos = *startPos_ptr;
@@ -7008,7 +11747,7 @@ static JSValue js_drawLine3D(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPoint3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPoint3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -7019,19 +11758,19 @@ static JSValue js_drawPoint3D(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircle3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCircle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* center_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector3 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Vector3* rotationAxis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(rotationAxis_ptr == NULL) return JS_EXCEPTION;
     Vector3 rotationAxis = *rotationAxis_ptr;
-    double _double_rotationAngle;
-    JS_ToFloat64(ctx, &_double_rotationAngle, argv[3]);
-    float rotationAngle = (float)_double_rotationAngle;
+    double double_rotationAngle;
+    JS_ToFloat64(ctx, &double_rotationAngle, argv[3]);
+    float rotationAngle = (float)double_rotationAngle;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -7039,7 +11778,7 @@ static JSValue js_drawCircle3D(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangle3D(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawTriangle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -7056,19 +11795,19 @@ static JSValue js_drawTriangle3D(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCube(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_width;
-    JS_ToFloat64(ctx, &_double_width, argv[1]);
-    float width = (float)_double_width;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[2]);
-    float height = (float)_double_height;
-    double _double_length;
-    JS_ToFloat64(ctx, &_double_length, argv[3]);
-    float length = (float)_double_length;
+    double double_width;
+    JS_ToFloat64(ctx, &double_width, argv[1]);
+    float width = (float)double_width;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[2]);
+    float height = (float)double_height;
+    double double_length;
+    JS_ToFloat64(ctx, &double_length, argv[3]);
+    float length = (float)double_length;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -7076,7 +11815,7 @@ static JSValue js_drawCube(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCubeV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -7090,19 +11829,19 @@ static JSValue js_drawCubeV(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeWires(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCubeWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_width;
-    JS_ToFloat64(ctx, &_double_width, argv[1]);
-    float width = (float)_double_width;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[2]);
-    float height = (float)_double_height;
-    double _double_length;
-    JS_ToFloat64(ctx, &_double_length, argv[3]);
-    float length = (float)_double_length;
+    double double_width;
+    JS_ToFloat64(ctx, &double_width, argv[1]);
+    float width = (float)double_width;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[2]);
+    float height = (float)double_height;
+    double double_length;
+    JS_ToFloat64(ctx, &double_length, argv[3]);
+    float length = (float)double_length;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -7110,7 +11849,7 @@ static JSValue js_drawCubeWires(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeWiresV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCubeWiresV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
@@ -7124,13 +11863,13 @@ static JSValue js_drawCubeWiresV(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphere(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* centerPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(centerPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 centerPos = *centerPos_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color_ptr == NULL) return JS_EXCEPTION;
     Color color = *color_ptr;
@@ -7138,13 +11877,13 @@ static JSValue js_drawSphere(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphereEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSphereEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* centerPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(centerPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 centerPos = *centerPos_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     int rings;
     JS_ToInt32(ctx, &rings, argv[2]);
     int slices;
@@ -7156,13 +11895,13 @@ static JSValue js_drawSphereEx(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphereWires(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawSphereWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* centerPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(centerPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 centerPos = *centerPos_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     int rings;
     JS_ToInt32(ctx, &rings, argv[2]);
     int slices;
@@ -7174,19 +11913,19 @@ static JSValue js_drawSphereWires(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinder(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_radiusTop;
-    JS_ToFloat64(ctx, &_double_radiusTop, argv[1]);
-    float radiusTop = (float)_double_radiusTop;
-    double _double_radiusBottom;
-    JS_ToFloat64(ctx, &_double_radiusBottom, argv[2]);
-    float radiusBottom = (float)_double_radiusBottom;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[3]);
-    float height = (float)_double_height;
+    double double_radiusTop;
+    JS_ToFloat64(ctx, &double_radiusTop, argv[1]);
+    float radiusTop = (float)double_radiusTop;
+    double double_radiusBottom;
+    JS_ToFloat64(ctx, &double_radiusBottom, argv[2]);
+    float radiusBottom = (float)double_radiusBottom;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[3]);
+    float height = (float)double_height;
     int slices;
     JS_ToInt32(ctx, &slices, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -7196,19 +11935,19 @@ static JSValue js_drawCylinder(JSContext * ctx, JSValueConst this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCylinderEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* startPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 startPos = *startPos_ptr;
     Vector3* endPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 endPos = *endPos_ptr;
-    double _double_startRadius;
-    JS_ToFloat64(ctx, &_double_startRadius, argv[2]);
-    float startRadius = (float)_double_startRadius;
-    double _double_endRadius;
-    JS_ToFloat64(ctx, &_double_endRadius, argv[3]);
-    float endRadius = (float)_double_endRadius;
+    double double_startRadius;
+    JS_ToFloat64(ctx, &double_startRadius, argv[2]);
+    float startRadius = (float)double_startRadius;
+    double double_endRadius;
+    JS_ToFloat64(ctx, &double_endRadius, argv[3]);
+    float endRadius = (float)double_endRadius;
     int sides;
     JS_ToInt32(ctx, &sides, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -7218,19 +11957,19 @@ static JSValue js_drawCylinderEx(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderWires(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCylinderWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_radiusTop;
-    JS_ToFloat64(ctx, &_double_radiusTop, argv[1]);
-    float radiusTop = (float)_double_radiusTop;
-    double _double_radiusBottom;
-    JS_ToFloat64(ctx, &_double_radiusBottom, argv[2]);
-    float radiusBottom = (float)_double_radiusBottom;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[3]);
-    float height = (float)_double_height;
+    double double_radiusTop;
+    JS_ToFloat64(ctx, &double_radiusTop, argv[1]);
+    float radiusTop = (float)double_radiusTop;
+    double double_radiusBottom;
+    JS_ToFloat64(ctx, &double_radiusBottom, argv[2]);
+    float radiusBottom = (float)double_radiusBottom;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[3]);
+    float height = (float)double_height;
     int slices;
     JS_ToInt32(ctx, &slices, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -7240,19 +11979,19 @@ static JSValue js_drawCylinderWires(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderWiresEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCylinderWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* startPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 startPos = *startPos_ptr;
     Vector3* endPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 endPos = *endPos_ptr;
-    double _double_startRadius;
-    JS_ToFloat64(ctx, &_double_startRadius, argv[2]);
-    float startRadius = (float)_double_startRadius;
-    double _double_endRadius;
-    JS_ToFloat64(ctx, &_double_endRadius, argv[3]);
-    float endRadius = (float)_double_endRadius;
+    double double_startRadius;
+    JS_ToFloat64(ctx, &double_startRadius, argv[2]);
+    float startRadius = (float)double_startRadius;
+    double double_endRadius;
+    JS_ToFloat64(ctx, &double_endRadius, argv[3]);
+    float endRadius = (float)double_endRadius;
     int sides;
     JS_ToInt32(ctx, &sides, argv[4]);
     Color* color_ptr = (Color*)JS_GetOpaque2(ctx, argv[5], js_Color_class_id);
@@ -7262,16 +12001,16 @@ static JSValue js_drawCylinderWiresEx(JSContext * ctx, JSValueConst this_val, in
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCapsule(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCapsule(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* startPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 startPos = *startPos_ptr;
     Vector3* endPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 endPos = *endPos_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     int slices;
     JS_ToInt32(ctx, &slices, argv[3]);
     int rings;
@@ -7283,16 +12022,16 @@ static JSValue js_drawCapsule(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCapsuleWires(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawCapsuleWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* startPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(startPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 startPos = *startPos_ptr;
     Vector3* endPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(endPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 endPos = *endPos_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     int slices;
     JS_ToInt32(ctx, &slices, argv[3]);
     int rings;
@@ -7304,7 +12043,7 @@ static JSValue js_drawCapsuleWires(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPlane(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* centerPos_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(centerPos_ptr == NULL) return JS_EXCEPTION;
     Vector3 centerPos = *centerPos_ptr;
@@ -7318,7 +12057,7 @@ static JSValue js_drawPlane(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRay(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
@@ -7329,20 +12068,66 @@ static JSValue js_drawRay(JSContext * ctx, JSValueConst this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawGrid(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int slices;
     JS_ToInt32(ctx, &slices, argv[0]);
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[1]);
-    float spacing = (float)_double_spacing;
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[1]);
+    float spacing = (float)double_spacing;
     DrawGrid(slices, spacing);
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadModel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Model returnVal = LoadModel(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Model returnVal = LoadModel((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Model* ret_ptr = (Model*)js_malloc(ctx, sizeof(Model));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Model_class_id);
@@ -7350,7 +12135,7 @@ static JSValue js_loadModel(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_loadModelFromMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadModelFromMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
@@ -7362,7 +12147,7 @@ static JSValue js_loadModelFromMesh(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_isModelReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isModelReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7371,7 +12156,7 @@ static JSValue js_isModelReady(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_unloadModel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7379,7 +12164,7 @@ static JSValue js_unloadModel(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_getModelBoundingBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getModelBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7391,16 +12176,16 @@ static JSValue js_getModelBoundingBox(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_drawModel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[2]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[2]);
+    float scale = (float)double_scale;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -7408,7 +12193,7 @@ static JSValue js_drawModel(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModelEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7418,9 +12203,9 @@ static JSValue js_drawModelEx(JSContext * ctx, JSValueConst this_val, int argc, 
     Vector3* rotationAxis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(rotationAxis_ptr == NULL) return JS_EXCEPTION;
     Vector3 rotationAxis = *rotationAxis_ptr;
-    double _double_rotationAngle;
-    JS_ToFloat64(ctx, &_double_rotationAngle, argv[3]);
-    float rotationAngle = (float)_double_rotationAngle;
+    double double_rotationAngle;
+    JS_ToFloat64(ctx, &double_rotationAngle, argv[3]);
+    float rotationAngle = (float)double_rotationAngle;
     Vector3* scale_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[4], js_Vector3_class_id);
     if(scale_ptr == NULL) return JS_EXCEPTION;
     Vector3 scale = *scale_ptr;
@@ -7431,16 +12216,16 @@ static JSValue js_drawModelEx(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelWires(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModelWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[2]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[2]);
+    float scale = (float)double_scale;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -7448,7 +12233,7 @@ static JSValue js_drawModelWires(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelWiresEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModelWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7458,9 +12243,9 @@ static JSValue js_drawModelWiresEx(JSContext * ctx, JSValueConst this_val, int a
     Vector3* rotationAxis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(rotationAxis_ptr == NULL) return JS_EXCEPTION;
     Vector3 rotationAxis = *rotationAxis_ptr;
-    double _double_rotationAngle;
-    JS_ToFloat64(ctx, &_double_rotationAngle, argv[3]);
-    float rotationAngle = (float)_double_rotationAngle;
+    double double_rotationAngle;
+    JS_ToFloat64(ctx, &double_rotationAngle, argv[3]);
+    float rotationAngle = (float)double_rotationAngle;
     Vector3* scale_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[4], js_Vector3_class_id);
     if(scale_ptr == NULL) return JS_EXCEPTION;
     Vector3 scale = *scale_ptr;
@@ -7471,16 +12256,16 @@ static JSValue js_drawModelWiresEx(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelPoints(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModelPoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[2]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[2]);
+    float scale = (float)double_scale;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[3], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -7488,7 +12273,7 @@ static JSValue js_drawModelPoints(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelPointsEx(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawModelPointsEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7498,9 +12283,9 @@ static JSValue js_drawModelPointsEx(JSContext * ctx, JSValueConst this_val, int 
     Vector3* rotationAxis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(rotationAxis_ptr == NULL) return JS_EXCEPTION;
     Vector3 rotationAxis = *rotationAxis_ptr;
-    double _double_rotationAngle;
-    JS_ToFloat64(ctx, &_double_rotationAngle, argv[3]);
-    float rotationAngle = (float)_double_rotationAngle;
+    double double_rotationAngle;
+    JS_ToFloat64(ctx, &double_rotationAngle, argv[3]);
+    float rotationAngle = (float)double_rotationAngle;
     Vector3* scale_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[4], js_Vector3_class_id);
     if(scale_ptr == NULL) return JS_EXCEPTION;
     Vector3 scale = *scale_ptr;
@@ -7511,7 +12296,7 @@ static JSValue js_drawModelPointsEx(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBoundingBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* box_ptr = (BoundingBox*)JS_GetOpaque2(ctx, argv[0], js_BoundingBox_class_id);
     if(box_ptr == NULL) return JS_EXCEPTION;
     BoundingBox box = *box_ptr;
@@ -7522,7 +12307,7 @@ static JSValue js_drawBoundingBox(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboard(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawBillboard(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera_ptr = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera camera = *camera_ptr;
@@ -7532,9 +12317,9 @@ static JSValue js_drawBillboard(JSContext * ctx, JSValueConst this_val, int argc
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(position_ptr == NULL) return JS_EXCEPTION;
     Vector3 position = *position_ptr;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[3]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[3]);
+    float scale = (float)double_scale;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[4], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -7542,7 +12327,7 @@ static JSValue js_drawBillboard(JSContext * ctx, JSValueConst this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboardRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawBillboardRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera_ptr = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera camera = *camera_ptr;
@@ -7565,7 +12350,7 @@ static JSValue js_drawBillboardRec(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboardPro(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawBillboardPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera_ptr = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera_ptr == NULL) return JS_EXCEPTION;
     Camera camera = *camera_ptr;
@@ -7587,9 +12372,9 @@ static JSValue js_drawBillboardPro(JSContext * ctx, JSValueConst this_val, int a
     Vector2* origin_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[6], js_Vector2_class_id);
     if(origin_ptr == NULL) return JS_EXCEPTION;
     Vector2 origin = *origin_ptr;
-    double _double_rotation;
-    JS_ToFloat64(ctx, &_double_rotation, argv[7]);
-    float rotation = (float)_double_rotation;
+    double double_rotation;
+    JS_ToFloat64(ctx, &double_rotation, argv[7]);
+    float rotation = (float)double_rotation;
     Color* tint_ptr = (Color*)JS_GetOpaque2(ctx, argv[8], js_Color_class_id);
     if(tint_ptr == NULL) return JS_EXCEPTION;
     Color tint = *tint_ptr;
@@ -7597,7 +12382,7 @@ static JSValue js_drawBillboardPro(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_uploadMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_uploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh == NULL) return JS_EXCEPTION;
     bool dynamic = JS_ToBool(ctx, argv[1]);
@@ -7605,29 +12390,34 @@ static JSValue js_uploadMesh(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateMeshBuffer(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateMeshBuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
     int index;
     JS_ToInt32(ctx, &index, argv[1]);
-    size_t data_size;
-    void * data_js = (void *)JS_GetArrayBuffer(ctx, &data_size, argv[2]);
-    if(data_js == NULL) {
+    void * data;
+    JSValue js_data;
+    if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_data = JS_DupValue(ctx,argv[2]);
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, js_data);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    const void * data = malloc(data_size);
-    memcpy((void *)data, (const void *)data_js, data_size);
     int dataSize;
     JS_ToInt32(ctx, &dataSize, argv[3]);
     int offset;
     JS_ToInt32(ctx, &offset, argv[4]);
-    UpdateMeshBuffer(mesh, index, data, dataSize, offset);
-    free((void *)data);
+    UpdateMeshBuffer(mesh, index, (const void *)data, dataSize, offset);
+    if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_data);
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
@@ -7635,7 +12425,7 @@ static JSValue js_unloadMesh(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
@@ -7649,22 +12439,22 @@ static JSValue js_drawMesh(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawMeshInstanced(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_drawMeshInstanced(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
     Material* material_ptr = (Material*)JS_GetOpaque2(ctx, argv[1], js_Material_class_id);
     if(material_ptr == NULL) return JS_EXCEPTION;
     Material material = *material_ptr;
-    const Matrix* transforms = (const Matrix*)JS_GetOpaque2(ctx, argv[2], js_Matrix_class_id);
+    Matrix* transforms = (Matrix*)JS_GetOpaque2(ctx, argv[2], js_Matrix_class_id);
     if(transforms == NULL) return JS_EXCEPTION;
     int instances;
     JS_ToInt32(ctx, &instances, argv[3]);
-    DrawMeshInstanced(mesh, material, transforms, instances);
+    DrawMeshInstanced(mesh, material, (const Matrix *)transforms, instances);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
@@ -7676,41 +12466,133 @@ static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_genMeshTangents(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genMeshTangents(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh == NULL) return JS_EXCEPTION;
     GenMeshTangents(mesh);
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
-    const char * fileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = ExportMesh(mesh, fileName);
-    JS_FreeCString(ctx, fileName);
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[1],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportMesh(mesh, (const char *)fileName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_exportMeshAsCode(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
-    const char * fileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = ExportMeshAsCode(mesh, fileName);
-    JS_FreeCString(ctx, fileName);
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[1],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportMeshAsCode(mesh, (const char *)fileName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_genMeshPoly(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genMeshPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int sides;
     JS_ToInt32(ctx, &sides, argv[0]);
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[1]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[1]);
+    float radius = (float)double_radius;
     Mesh returnVal = GenMeshPoly(sides, radius);
     Mesh* ret_ptr = (Mesh*)js_malloc(ctx, sizeof(Mesh));
     *ret_ptr = returnVal;
@@ -7719,13 +12601,13 @@ static JSValue js_genMeshPoly(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshPlane(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_width;
-    JS_ToFloat64(ctx, &_double_width, argv[0]);
-    float width = (float)_double_width;
-    double _double_length;
-    JS_ToFloat64(ctx, &_double_length, argv[1]);
-    float length = (float)_double_length;
+static JSValue js_genMeshPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_width;
+    JS_ToFloat64(ctx, &double_width, argv[0]);
+    float width = (float)double_width;
+    double double_length;
+    JS_ToFloat64(ctx, &double_length, argv[1]);
+    float length = (float)double_length;
     int resX;
     JS_ToInt32(ctx, &resX, argv[2]);
     int resZ;
@@ -7738,16 +12620,16 @@ static JSValue js_genMeshPlane(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_genMeshCube(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_width;
-    JS_ToFloat64(ctx, &_double_width, argv[0]);
-    float width = (float)_double_width;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[1]);
-    float height = (float)_double_height;
-    double _double_length;
-    JS_ToFloat64(ctx, &_double_length, argv[2]);
-    float length = (float)_double_length;
+static JSValue js_genMeshCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_width;
+    JS_ToFloat64(ctx, &double_width, argv[0]);
+    float width = (float)double_width;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[1]);
+    float height = (float)double_height;
+    double double_length;
+    JS_ToFloat64(ctx, &double_length, argv[2]);
+    float length = (float)double_length;
     Mesh returnVal = GenMeshCube(width, height, length);
     Mesh* ret_ptr = (Mesh*)js_malloc(ctx, sizeof(Mesh));
     *ret_ptr = returnVal;
@@ -7756,10 +12638,10 @@ static JSValue js_genMeshCube(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshSphere(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
+static JSValue js_genMeshSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
     int rings;
     JS_ToInt32(ctx, &rings, argv[1]);
     int slices;
@@ -7772,10 +12654,10 @@ static JSValue js_genMeshSphere(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_genMeshHemiSphere(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
+static JSValue js_genMeshHemiSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
     int rings;
     JS_ToInt32(ctx, &rings, argv[1]);
     int slices;
@@ -7788,13 +12670,13 @@ static JSValue js_genMeshHemiSphere(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_genMeshCylinder(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[1]);
-    float height = (float)_double_height;
+static JSValue js_genMeshCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[1]);
+    float height = (float)double_height;
     int slices;
     JS_ToInt32(ctx, &slices, argv[2]);
     Mesh returnVal = GenMeshCylinder(radius, height, slices);
@@ -7805,13 +12687,13 @@ static JSValue js_genMeshCylinder(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_genMeshCone(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
-    double _double_height;
-    JS_ToFloat64(ctx, &_double_height, argv[1]);
-    float height = (float)_double_height;
+static JSValue js_genMeshCone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
+    double double_height;
+    JS_ToFloat64(ctx, &double_height, argv[1]);
+    float height = (float)double_height;
     int slices;
     JS_ToInt32(ctx, &slices, argv[2]);
     Mesh returnVal = GenMeshCone(radius, height, slices);
@@ -7822,13 +12704,13 @@ static JSValue js_genMeshCone(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshTorus(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
-    double _double_size;
-    JS_ToFloat64(ctx, &_double_size, argv[1]);
-    float size = (float)_double_size;
+static JSValue js_genMeshTorus(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
+    double double_size;
+    JS_ToFloat64(ctx, &double_size, argv[1]);
+    float size = (float)double_size;
     int radSeg;
     JS_ToInt32(ctx, &radSeg, argv[2]);
     int sides;
@@ -7841,13 +12723,13 @@ static JSValue js_genMeshTorus(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_genMeshKnot(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[0]);
-    float radius = (float)_double_radius;
-    double _double_size;
-    JS_ToFloat64(ctx, &_double_size, argv[1]);
-    float size = (float)_double_size;
+static JSValue js_genMeshKnot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[0]);
+    float radius = (float)double_radius;
+    double double_size;
+    JS_ToFloat64(ctx, &double_size, argv[1]);
+    float size = (float)double_size;
     int radSeg;
     JS_ToInt32(ctx, &radSeg, argv[2]);
     int sides;
@@ -7860,7 +12742,7 @@ static JSValue js_genMeshKnot(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshHeightmap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genMeshHeightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* heightmap_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(heightmap_ptr == NULL) return JS_EXCEPTION;
     Image heightmap = *heightmap_ptr;
@@ -7875,7 +12757,7 @@ static JSValue js_genMeshHeightmap(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_genMeshCubicmap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_genMeshCubicmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* cubicmap_ptr = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(cubicmap_ptr == NULL) return JS_EXCEPTION;
     Image cubicmap = *cubicmap_ptr;
@@ -7890,7 +12772,7 @@ static JSValue js_genMeshCubicmap(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_loadMaterialDefault(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadMaterialDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material returnVal = LoadMaterialDefault();
     Material* ret_ptr = (Material*)js_malloc(ctx, sizeof(Material));
     *ret_ptr = returnVal;
@@ -7899,7 +12781,7 @@ static JSValue js_loadMaterialDefault(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_isMaterialReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMaterialReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* material_ptr = (Material*)JS_GetOpaque2(ctx, argv[0], js_Material_class_id);
     if(material_ptr == NULL) return JS_EXCEPTION;
     Material material = *material_ptr;
@@ -7908,7 +12790,7 @@ static JSValue js_isMaterialReady(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_unloadMaterial(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* material_ptr = (Material*)JS_GetOpaque2(ctx, argv[0], js_Material_class_id);
     if(material_ptr == NULL) return JS_EXCEPTION;
     Material material = *material_ptr;
@@ -7916,7 +12798,7 @@ static JSValue js_unloadMaterial(JSContext * ctx, JSValueConst this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMaterialTexture(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMaterialTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* material = (Material*)JS_GetOpaque2(ctx, argv[0], js_Material_class_id);
     if(material == NULL) return JS_EXCEPTION;
     int mapType;
@@ -7928,7 +12810,7 @@ static JSValue js_setMaterialTexture(JSContext * ctx, JSValueConst this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model == NULL) return JS_EXCEPTION;
     int meshId;
@@ -7939,7 +12821,7 @@ static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValueConst this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateModelAnimationBoneMatrices(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateModelAnimationBoneMatrices(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model_ptr = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model_ptr == NULL) return JS_EXCEPTION;
     Model model = *model_ptr;
@@ -7952,25 +12834,25 @@ static JSValue js_updateModelAnimationBoneMatrices(JSContext * ctx, JSValueConst
     return JS_UNDEFINED;
 }
 
-static JSValue js_checkCollisionSpheres(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionSpheres(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* center1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(center1_ptr == NULL) return JS_EXCEPTION;
     Vector3 center1 = *center1_ptr;
-    double _double_radius1;
-    JS_ToFloat64(ctx, &_double_radius1, argv[1]);
-    float radius1 = (float)_double_radius1;
+    double double_radius1;
+    JS_ToFloat64(ctx, &double_radius1, argv[1]);
+    float radius1 = (float)double_radius1;
     Vector3* center2_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(center2_ptr == NULL) return JS_EXCEPTION;
     Vector3 center2 = *center2_ptr;
-    double _double_radius2;
-    JS_ToFloat64(ctx, &_double_radius2, argv[3]);
-    float radius2 = (float)_double_radius2;
+    double double_radius2;
+    JS_ToFloat64(ctx, &double_radius2, argv[3]);
+    float radius2 = (float)double_radius2;
     bool returnVal = CheckCollisionSpheres(center1, radius1, center2, radius2);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_checkCollisionBoxes(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionBoxes(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* box1_ptr = (BoundingBox*)JS_GetOpaque2(ctx, argv[0], js_BoundingBox_class_id);
     if(box1_ptr == NULL) return JS_EXCEPTION;
     BoundingBox box1 = *box1_ptr;
@@ -7982,31 +12864,31 @@ static JSValue js_checkCollisionBoxes(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_checkCollisionBoxSphere(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_checkCollisionBoxSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* box_ptr = (BoundingBox*)JS_GetOpaque2(ctx, argv[0], js_BoundingBox_class_id);
     if(box_ptr == NULL) return JS_EXCEPTION;
     BoundingBox box = *box_ptr;
     Vector3* center_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector3 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     bool returnVal = CheckCollisionBoxSphere(box, center, radius);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getRayCollisionSphere(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRayCollisionSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
     Vector3* center_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(center_ptr == NULL) return JS_EXCEPTION;
     Vector3 center = *center_ptr;
-    double _double_radius;
-    JS_ToFloat64(ctx, &_double_radius, argv[2]);
-    float radius = (float)_double_radius;
+    double double_radius;
+    JS_ToFloat64(ctx, &double_radius, argv[2]);
+    float radius = (float)double_radius;
     RayCollision returnVal = GetRayCollisionSphere(ray, center, radius);
     RayCollision* ret_ptr = (RayCollision*)js_malloc(ctx, sizeof(RayCollision));
     *ret_ptr = returnVal;
@@ -8015,7 +12897,7 @@ static JSValue js_getRayCollisionSphere(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_getRayCollisionBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRayCollisionBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
@@ -8030,7 +12912,7 @@ static JSValue js_getRayCollisionBox(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getRayCollisionMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRayCollisionMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
@@ -8048,7 +12930,7 @@ static JSValue js_getRayCollisionMesh(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getRayCollisionTriangle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRayCollisionTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
@@ -8069,7 +12951,7 @@ static JSValue js_getRayCollisionTriangle(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_getRayCollisionQuad(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getRayCollisionQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ray_ptr = (Ray*)JS_GetOpaque2(ctx, argv[0], js_Ray_class_id);
     if(ray_ptr == NULL) return JS_EXCEPTION;
     Ray ray = *ray_ptr;
@@ -8093,40 +12975,86 @@ static JSValue js_getRayCollisionQuad(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_initAudioDevice(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_initAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     InitAudioDevice();
     return JS_UNDEFINED;
 }
 
-static JSValue js_closeAudioDevice(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_closeAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     CloseAudioDevice();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isAudioDeviceReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isAudioDeviceReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsAudioDeviceReady();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setMasterVolume(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_volume;
-    JS_ToFloat64(ctx, &_double_volume, argv[0]);
-    float volume = (float)_double_volume;
+static JSValue js_setMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_volume;
+    JS_ToFloat64(ctx, &double_volume, argv[0]);
+    float volume = (float)double_volume;
     SetMasterVolume(volume);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMasterVolume(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetMasterVolume();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadWave(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Wave returnVal = LoadWave(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Wave returnVal = LoadWave((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Wave* ret_ptr = (Wave*)js_malloc(ctx, sizeof(Wave));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Wave_class_id);
@@ -8134,20 +13062,102 @@ static JSValue js_loadWave(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileType = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    size_t fileData_size;
-    void * fileData_js = (void *)JS_GetArrayBuffer(ctx, &fileData_size, argv[1]);
-    if(fileData_js == NULL) {
-        return JS_EXCEPTION;
+static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileType;
+    JSValue js_fileType;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileType;
+        if(JS_GetLength(ctx,argv[0],&size_fileType)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileType = js_malloc(ctx, size_fileType * sizeof(char));
+        for(int i0=0; i0 < size_fileType; i0++){
+            JSValue js_fileType = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileType[i0] = (char)((char *)JS_ToCString(ctx, js_fileType))[0];
+        }
     }
-    const unsigned char * fileData = malloc(fileData_size);
-    memcpy((void *)fileData, (const void *)fileData_js, fileData_size);
+    else if(JS_IsString(argv[0]) == 1) {
+        fileType = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileType = JS_DupValue(ctx,argv[0]);
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            js_fileType = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileType,&size_fileType,NULL);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, js_fileType);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * fileData;
+    JSValue js_fileData;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileData;
+        if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileData = js_malloc(ctx, size_fileData * sizeof(unsigned char));
+        for(int i0=0; i0 < size_fileData; i0++){
+            JSValue js_fileData = JS_GetPropertyUint32(ctx,argv[1],i0);
+            unsigned int _int_fileData[i0];
+            JS_ToUint32(ctx, &_int_fileData[i0], js_fileData);
+            fileData[i0] = (unsigned char)_int_fileData[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileData = JS_DupValue(ctx,argv[1]);
+        size_t size_fileData;
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_fileData;
+            size_t size_fileData;
+            js_fileData = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileData,&size_fileData,NULL);
+            fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, js_fileData);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int dataSize;
     JS_ToInt32(ctx, &dataSize, argv[2]);
-    Wave returnVal = LoadWaveFromMemory(fileType, fileData, dataSize);
-    JS_FreeCString(ctx, fileType);
-    free((void *)fileData);
+    Wave returnVal = LoadWaveFromMemory((const char *)fileType, (const unsigned char *)fileData, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileType);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileType);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileData);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY && classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &js_fileData);
+        }
+    }
     Wave* ret_ptr = (Wave*)js_malloc(ctx, sizeof(Wave));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Wave_class_id);
@@ -8155,7 +13165,7 @@ static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_isWaveReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isWaveReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave_ptr = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave_ptr == NULL) return JS_EXCEPTION;
     Wave wave = *wave_ptr;
@@ -8164,10 +13174,56 @@ static JSValue js_isWaveReady(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_loadSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Sound returnVal = LoadSound(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Sound returnVal = LoadSound((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Sound* ret_ptr = (Sound*)js_malloc(ctx, sizeof(Sound));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Sound_class_id);
@@ -8175,7 +13231,7 @@ static JSValue js_loadSound(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_loadSoundFromWave(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadSoundFromWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave_ptr = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave_ptr == NULL) return JS_EXCEPTION;
     Wave wave = *wave_ptr;
@@ -8187,7 +13243,7 @@ static JSValue js_loadSoundFromWave(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_loadSoundAlias(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* source_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(source_ptr == NULL) return JS_EXCEPTION;
     Sound source = *source_ptr;
@@ -8199,7 +13255,7 @@ static JSValue js_loadSoundAlias(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_isSoundReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isSoundReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8208,25 +13264,30 @@ static JSValue js_isSoundReady(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_updateSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
-    size_t data_size;
-    void * data_js = (void *)JS_GetArrayBuffer(ctx, &data_size, argv[1]);
-    if(data_js == NULL) {
+    void * data;
+    JSValue js_data;
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_data = JS_DupValue(ctx,argv[1]);
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, js_data);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    const void * data = malloc(data_size);
-    memcpy((void *)data, (const void *)data_js, data_size);
     int sampleCount;
     JS_ToInt32(ctx, &sampleCount, argv[2]);
-    UpdateSound(sound, data, sampleCount);
-    free((void *)data);
+    UpdateSound(sound, (const void *)data, sampleCount);
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_data);
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadWave(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave_ptr = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave_ptr == NULL) return JS_EXCEPTION;
     Wave wave = *wave_ptr;
@@ -8234,7 +13295,7 @@ static JSValue js_unloadWave(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8242,7 +13303,7 @@ static JSValue js_unloadSound(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadSoundAlias(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* alias_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(alias_ptr == NULL) return JS_EXCEPTION;
     Sound alias = *alias_ptr;
@@ -8250,18 +13311,64 @@ static JSValue js_unloadSoundAlias(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportWave(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_exportWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave_ptr = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave_ptr == NULL) return JS_EXCEPTION;
     Wave wave = *wave_ptr;
-    const char * fileName = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    bool returnVal = ExportWave(wave, fileName);
-    JS_FreeCString(ctx, fileName);
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[1],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[1],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[1]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportWave(wave, (const char *)fileName);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_playSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_playSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8269,7 +13376,7 @@ static JSValue js_playSound(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_stopSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8277,7 +13384,7 @@ static JSValue js_stopSound(JSContext * ctx, JSValueConst this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_pauseSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_pauseSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8285,7 +13392,7 @@ static JSValue js_pauseSound(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_resumeSound(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_resumeSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8293,7 +13400,7 @@ static JSValue js_resumeSound(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_isSoundPlaying(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isSoundPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
@@ -8302,40 +13409,40 @@ static JSValue js_isSoundPlaying(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_setSoundVolume(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setSoundVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
-    double _double_volume;
-    JS_ToFloat64(ctx, &_double_volume, argv[1]);
-    float volume = (float)_double_volume;
+    double double_volume;
+    JS_ToFloat64(ctx, &double_volume, argv[1]);
+    float volume = (float)double_volume;
     SetSoundVolume(sound, volume);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSoundPitch(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setSoundPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
-    double _double_pitch;
-    JS_ToFloat64(ctx, &_double_pitch, argv[1]);
-    float pitch = (float)_double_pitch;
+    double double_pitch;
+    JS_ToFloat64(ctx, &double_pitch, argv[1]);
+    float pitch = (float)double_pitch;
     SetSoundPitch(sound, pitch);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSoundPan(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setSoundPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* sound_ptr = (Sound*)JS_GetOpaque2(ctx, argv[0], js_Sound_class_id);
     if(sound_ptr == NULL) return JS_EXCEPTION;
     Sound sound = *sound_ptr;
-    double _double_pan;
-    JS_ToFloat64(ctx, &_double_pan, argv[1]);
-    float pan = (float)_double_pan;
+    double double_pan;
+    JS_ToFloat64(ctx, &double_pan, argv[1]);
+    float pan = (float)double_pan;
     SetSoundPan(sound, pan);
     return JS_UNDEFINED;
 }
 
-static JSValue js_waveCopy(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_waveCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave_ptr = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave_ptr == NULL) return JS_EXCEPTION;
     Wave wave = *wave_ptr;
@@ -8347,7 +13454,7 @@ static JSValue js_waveCopy(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_waveCrop(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_waveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave == NULL) return JS_EXCEPTION;
     int initFrame;
@@ -8358,7 +13465,7 @@ static JSValue js_waveCrop(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_waveFormat(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_waveFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* wave = (Wave*)JS_GetOpaque2(ctx, argv[0], js_Wave_class_id);
     if(wave == NULL) return JS_EXCEPTION;
     int sampleRate;
@@ -8371,10 +13478,56 @@ static JSValue js_waveFormat(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    Music returnVal = LoadMusicStream(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_loadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    Music returnVal = LoadMusicStream((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     Music* ret_ptr = (Music*)js_malloc(ctx, sizeof(Music));
     *ret_ptr = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Music_class_id);
@@ -8382,7 +13535,7 @@ static JSValue js_loadMusicStream(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_isMusicReady(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMusicReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8391,7 +13544,7 @@ static JSValue js_isMusicReady(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_unloadMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8399,7 +13552,7 @@ static JSValue js_unloadMusicStream(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_playMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_playMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8407,7 +13560,7 @@ static JSValue js_playMusicStream(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_isMusicStreamPlaying(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_isMusicStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8416,7 +13569,7 @@ static JSValue js_isMusicStreamPlaying(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_updateMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8424,7 +13577,7 @@ static JSValue js_updateMusicStream(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_stopMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8432,7 +13585,7 @@ static JSValue js_stopMusicStream(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_pauseMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_pauseMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8440,7 +13593,7 @@ static JSValue js_pauseMusicStream(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_resumeMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_resumeMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8448,51 +13601,51 @@ static JSValue js_resumeMusicStream(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_seekMusicStream(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_seekMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
-    double _double_position;
-    JS_ToFloat64(ctx, &_double_position, argv[1]);
-    float position = (float)_double_position;
+    double double_position;
+    JS_ToFloat64(ctx, &double_position, argv[1]);
+    float position = (float)double_position;
     SeekMusicStream(music, position);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicVolume(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMusicVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
-    double _double_volume;
-    JS_ToFloat64(ctx, &_double_volume, argv[1]);
-    float volume = (float)_double_volume;
+    double double_volume;
+    JS_ToFloat64(ctx, &double_volume, argv[1]);
+    float volume = (float)double_volume;
     SetMusicVolume(music, volume);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicPitch(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMusicPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
-    double _double_pitch;
-    JS_ToFloat64(ctx, &_double_pitch, argv[1]);
-    float pitch = (float)_double_pitch;
+    double double_pitch;
+    JS_ToFloat64(ctx, &double_pitch, argv[1]);
+    float pitch = (float)double_pitch;
     SetMusicPitch(music, pitch);
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicPan(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setMusicPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
-    double _double_pan;
-    JS_ToFloat64(ctx, &_double_pan, argv[1]);
-    float pan = (float)_double_pan;
+    double double_pan;
+    JS_ToFloat64(ctx, &double_pan, argv[1]);
+    float pan = (float)double_pan;
     SetMusicPan(music, pan);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMusicTimeLength(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMusicTimeLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8501,7 +13654,7 @@ static JSValue js_getMusicTimeLength(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* music_ptr = (Music*)JS_GetOpaque2(ctx, argv[0], js_Music_class_id);
     if(music_ptr == NULL) return JS_EXCEPTION;
     Music music = *music_ptr;
@@ -8510,100 +13663,100 @@ static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_clamp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, argv[0]);
-    float value = (float)_double_value;
-    double _double_min;
-    JS_ToFloat64(ctx, &_double_min, argv[1]);
-    float min = (float)_double_min;
-    double _double_max;
-    JS_ToFloat64(ctx, &_double_max, argv[2]);
-    float max = (float)_double_max;
+static JSValue js_clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, argv[0]);
+    float value = (float)double_value;
+    double double_min;
+    JS_ToFloat64(ctx, &double_min, argv[1]);
+    float min = (float)double_min;
+    double double_max;
+    JS_ToFloat64(ctx, &double_max, argv[2]);
+    float max = (float)double_max;
     float returnVal = Clamp(value, min, max);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_lerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_start;
-    JS_ToFloat64(ctx, &_double_start, argv[0]);
-    float start = (float)_double_start;
-    double _double_end;
-    JS_ToFloat64(ctx, &_double_end, argv[1]);
-    float end = (float)_double_end;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+static JSValue js_lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_start;
+    JS_ToFloat64(ctx, &double_start, argv[0]);
+    float start = (float)double_start;
+    double double_end;
+    JS_ToFloat64(ctx, &double_end, argv[1]);
+    float end = (float)double_end;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     float returnVal = Lerp(start, end, amount);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_normalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, argv[0]);
-    float value = (float)_double_value;
-    double _double_start;
-    JS_ToFloat64(ctx, &_double_start, argv[1]);
-    float start = (float)_double_start;
-    double _double_end;
-    JS_ToFloat64(ctx, &_double_end, argv[2]);
-    float end = (float)_double_end;
+static JSValue js_normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, argv[0]);
+    float value = (float)double_value;
+    double double_start;
+    JS_ToFloat64(ctx, &double_start, argv[1]);
+    float start = (float)double_start;
+    double double_end;
+    JS_ToFloat64(ctx, &double_end, argv[2]);
+    float end = (float)double_end;
     float returnVal = Normalize(value, start, end);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_remap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, argv[0]);
-    float value = (float)_double_value;
-    double _double_inputStart;
-    JS_ToFloat64(ctx, &_double_inputStart, argv[1]);
-    float inputStart = (float)_double_inputStart;
-    double _double_inputEnd;
-    JS_ToFloat64(ctx, &_double_inputEnd, argv[2]);
-    float inputEnd = (float)_double_inputEnd;
-    double _double_outputStart;
-    JS_ToFloat64(ctx, &_double_outputStart, argv[3]);
-    float outputStart = (float)_double_outputStart;
-    double _double_outputEnd;
-    JS_ToFloat64(ctx, &_double_outputEnd, argv[4]);
-    float outputEnd = (float)_double_outputEnd;
+static JSValue js_remap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, argv[0]);
+    float value = (float)double_value;
+    double double_inputStart;
+    JS_ToFloat64(ctx, &double_inputStart, argv[1]);
+    float inputStart = (float)double_inputStart;
+    double double_inputEnd;
+    JS_ToFloat64(ctx, &double_inputEnd, argv[2]);
+    float inputEnd = (float)double_inputEnd;
+    double double_outputStart;
+    JS_ToFloat64(ctx, &double_outputStart, argv[3]);
+    float outputStart = (float)double_outputStart;
+    double double_outputEnd;
+    JS_ToFloat64(ctx, &double_outputEnd, argv[4]);
+    float outputEnd = (float)double_outputEnd;
     float returnVal = Remap(value, inputStart, inputEnd, outputStart, outputEnd);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_wrap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_value;
-    JS_ToFloat64(ctx, &_double_value, argv[0]);
-    float value = (float)_double_value;
-    double _double_min;
-    JS_ToFloat64(ctx, &_double_min, argv[1]);
-    float min = (float)_double_min;
-    double _double_max;
-    JS_ToFloat64(ctx, &_double_max, argv[2]);
-    float max = (float)_double_max;
+static JSValue js_wrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_value;
+    JS_ToFloat64(ctx, &double_value, argv[0]);
+    float value = (float)double_value;
+    double double_min;
+    JS_ToFloat64(ctx, &double_min, argv[1]);
+    float min = (float)double_min;
+    double double_max;
+    JS_ToFloat64(ctx, &double_max, argv[2]);
+    float max = (float)double_max;
     float returnVal = Wrap(value, min, max);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_floatEquals(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
+static JSValue js_floatEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
     int returnVal = FloatEquals(x, y);
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_vector2Zero(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = Vector2Zero();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8612,7 +13765,7 @@ static JSValue js_vector2Zero(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2One(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = Vector2One();
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8621,7 +13774,7 @@ static JSValue js_vector2One(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2Add(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8636,13 +13789,13 @@ static JSValue js_vector2Add(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2AddValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
-    double _double_add;
-    JS_ToFloat64(ctx, &_double_add, argv[1]);
-    float add = (float)_double_add;
+    double double_add;
+    JS_ToFloat64(ctx, &double_add, argv[1]);
+    float add = (float)double_add;
     Vector2 returnVal = Vector2AddValue(v, add);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8651,7 +13804,7 @@ static JSValue js_vector2AddValue(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector2Subtract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8666,13 +13819,13 @@ static JSValue js_vector2Subtract(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector2SubtractValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
-    double _double_sub;
-    JS_ToFloat64(ctx, &_double_sub, argv[1]);
-    float sub = (float)_double_sub;
+    double double_sub;
+    JS_ToFloat64(ctx, &double_sub, argv[1]);
+    float sub = (float)double_sub;
     Vector2 returnVal = Vector2SubtractValue(v, sub);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8681,7 +13834,7 @@ static JSValue js_vector2SubtractValue(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_vector2Length(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8690,7 +13843,7 @@ static JSValue js_vector2Length(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2LengthSqr(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8699,7 +13852,7 @@ static JSValue js_vector2LengthSqr(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector2DotProduct(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8711,7 +13864,7 @@ static JSValue js_vector2DotProduct(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_vector2Distance(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8723,7 +13876,7 @@ static JSValue js_vector2Distance(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector2DistanceSqr(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8735,7 +13888,7 @@ static JSValue js_vector2DistanceSqr(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector2Angle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8747,7 +13900,7 @@ static JSValue js_vector2Angle(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector2LineAngle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2LineAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* start_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(start_ptr == NULL) return JS_EXCEPTION;
     Vector2 start = *start_ptr;
@@ -8759,13 +13912,13 @@ static JSValue js_vector2LineAngle(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector2Scale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
-    double _double_scale;
-    JS_ToFloat64(ctx, &_double_scale, argv[1]);
-    float scale = (float)_double_scale;
+    double double_scale;
+    JS_ToFloat64(ctx, &double_scale, argv[1]);
+    float scale = (float)double_scale;
     Vector2 returnVal = Vector2Scale(v, scale);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8774,7 +13927,7 @@ static JSValue js_vector2Scale(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector2Multiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8789,7 +13942,7 @@ static JSValue js_vector2Multiply(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector2Negate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8801,7 +13954,7 @@ static JSValue js_vector2Negate(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Divide(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8816,7 +13969,7 @@ static JSValue js_vector2Divide(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Normalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8828,7 +13981,7 @@ static JSValue js_vector2Normalize(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector2Transform(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8843,16 +13996,16 @@ static JSValue js_vector2Transform(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector2Lerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
     Vector2* v2_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(v2_ptr == NULL) return JS_EXCEPTION;
     Vector2 v2 = *v2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Vector2 returnVal = Vector2Lerp(v1, v2, amount);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8861,7 +14014,7 @@ static JSValue js_vector2Lerp(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2Reflect(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8876,7 +14029,7 @@ static JSValue js_vector2Reflect(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_vector2Min(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8891,7 +14044,7 @@ static JSValue js_vector2Min(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2Max(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v1_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector2 v1 = *v1_ptr;
@@ -8906,13 +14059,13 @@ static JSValue js_vector2Max(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2Rotate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Rotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     Vector2 returnVal = Vector2Rotate(v, angle);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8921,16 +14074,16 @@ static JSValue js_vector2Rotate(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2MoveTowards(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
     Vector2* target_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     Vector2 target = *target_ptr;
-    double _double_maxDistance;
-    JS_ToFloat64(ctx, &_double_maxDistance, argv[2]);
-    float maxDistance = (float)_double_maxDistance;
+    double double_maxDistance;
+    JS_ToFloat64(ctx, &double_maxDistance, argv[2]);
+    float maxDistance = (float)double_maxDistance;
     Vector2 returnVal = Vector2MoveTowards(v, target, maxDistance);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8939,7 +14092,7 @@ static JSValue js_vector2MoveTowards(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector2Invert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8951,7 +14104,7 @@ static JSValue js_vector2Invert(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Clamp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
@@ -8969,16 +14122,16 @@ static JSValue js_vector2Clamp(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector2ClampValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
-    double _double_min;
-    JS_ToFloat64(ctx, &_double_min, argv[1]);
-    float min = (float)_double_min;
-    double _double_max;
-    JS_ToFloat64(ctx, &_double_max, argv[2]);
-    float max = (float)_double_max;
+    double double_min;
+    JS_ToFloat64(ctx, &double_min, argv[1]);
+    float min = (float)double_min;
+    double double_max;
+    JS_ToFloat64(ctx, &double_max, argv[2]);
+    float max = (float)double_max;
     Vector2 returnVal = Vector2ClampValue(v, min, max);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -8987,7 +14140,7 @@ static JSValue js_vector2ClampValue(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_vector2Equals(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* p_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(p_ptr == NULL) return JS_EXCEPTION;
     Vector2 p = *p_ptr;
@@ -8999,16 +14152,16 @@ static JSValue js_vector2Equals(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Refract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector2Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* v_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[0], js_Vector2_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector2 v = *v_ptr;
     Vector2* n_ptr = (Vector2*)JS_GetOpaque2(ctx, argv[1], js_Vector2_class_id);
     if(n_ptr == NULL) return JS_EXCEPTION;
     Vector2 n = *n_ptr;
-    double _double_r;
-    JS_ToFloat64(ctx, &_double_r, argv[2]);
-    float r = (float)_double_r;
+    double double_r;
+    JS_ToFloat64(ctx, &double_r, argv[2]);
+    float r = (float)double_r;
     Vector2 returnVal = Vector2Refract(v, n, r);
     Vector2* ret_ptr = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ret_ptr = returnVal;
@@ -9017,7 +14170,7 @@ static JSValue js_vector2Refract(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_vector3Zero(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3 returnVal = Vector3Zero();
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9026,7 +14179,7 @@ static JSValue js_vector3Zero(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3One(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3 returnVal = Vector3One();
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9035,7 +14188,7 @@ static JSValue js_vector3One(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3Add(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9050,13 +14203,13 @@ static JSValue js_vector3Add(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3AddValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
-    double _double_add;
-    JS_ToFloat64(ctx, &_double_add, argv[1]);
-    float add = (float)_double_add;
+    double double_add;
+    JS_ToFloat64(ctx, &double_add, argv[1]);
+    float add = (float)double_add;
     Vector3 returnVal = Vector3AddValue(v, add);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9065,7 +14218,7 @@ static JSValue js_vector3AddValue(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3Subtract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9080,13 +14233,13 @@ static JSValue js_vector3Subtract(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3SubtractValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
-    double _double_sub;
-    JS_ToFloat64(ctx, &_double_sub, argv[1]);
-    float sub = (float)_double_sub;
+    double double_sub;
+    JS_ToFloat64(ctx, &double_sub, argv[1]);
+    float sub = (float)double_sub;
     Vector3 returnVal = Vector3SubtractValue(v, sub);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9095,13 +14248,13 @@ static JSValue js_vector3SubtractValue(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_vector3Scale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
-    double _double_scalar;
-    JS_ToFloat64(ctx, &_double_scalar, argv[1]);
-    float scalar = (float)_double_scalar;
+    double double_scalar;
+    JS_ToFloat64(ctx, &double_scalar, argv[1]);
+    float scalar = (float)double_scalar;
     Vector3 returnVal = Vector3Scale(v, scalar);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9110,7 +14263,7 @@ static JSValue js_vector3Scale(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3Multiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9125,7 +14278,7 @@ static JSValue js_vector3Multiply(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3CrossProduct(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3CrossProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9140,7 +14293,7 @@ static JSValue js_vector3CrossProduct(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_vector3Perpendicular(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Perpendicular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9152,25 +14305,25 @@ static JSValue js_vector3Perpendicular(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_vector3Length(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector3* v_ptr = (const Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
+static JSValue js_vector3Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
-    const Vector3 v = *v_ptr;
-    float returnVal = Vector3Length(v);
+    Vector3 v = *v_ptr;
+    float returnVal = Vector3Length((const Vector3)v);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_vector3LengthSqr(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const Vector3* v_ptr = (const Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
+static JSValue js_vector3LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
-    const Vector3 v = *v_ptr;
-    float returnVal = Vector3LengthSqr(v);
+    Vector3 v = *v_ptr;
+    float returnVal = Vector3LengthSqr((const Vector3)v);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_vector3DotProduct(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9182,7 +14335,7 @@ static JSValue js_vector3DotProduct(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_vector3Distance(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9194,7 +14347,7 @@ static JSValue js_vector3Distance(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3DistanceSqr(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9206,7 +14359,7 @@ static JSValue js_vector3DistanceSqr(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector3Angle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9218,7 +14371,7 @@ static JSValue js_vector3Angle(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3Negate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9230,7 +14383,7 @@ static JSValue js_vector3Negate(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Divide(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9245,7 +14398,7 @@ static JSValue js_vector3Divide(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Normalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9257,7 +14410,7 @@ static JSValue js_vector3Normalize(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector3Project(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Project(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9272,7 +14425,7 @@ static JSValue js_vector3Project(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_vector3Reject(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9287,7 +14440,7 @@ static JSValue js_vector3Reject(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Transform(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9302,7 +14455,7 @@ static JSValue js_vector3Transform(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector3RotateByQuaternion(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3RotateByQuaternion(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9317,16 +14470,16 @@ static JSValue js_vector3RotateByQuaternion(JSContext * ctx, JSValueConst this_v
     return ret;
 }
 
-static JSValue js_vector3RotateByAxisAngle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3RotateByAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
     Vector3* axis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(axis_ptr == NULL) return JS_EXCEPTION;
     Vector3 axis = *axis_ptr;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[2]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[2]);
+    float angle = (float)double_angle;
     Vector3 returnVal = Vector3RotateByAxisAngle(v, axis, angle);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9335,16 +14488,16 @@ static JSValue js_vector3RotateByAxisAngle(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_vector3MoveTowards(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
     Vector3* target_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     Vector3 target = *target_ptr;
-    double _double_maxDistance;
-    JS_ToFloat64(ctx, &_double_maxDistance, argv[2]);
-    float maxDistance = (float)_double_maxDistance;
+    double double_maxDistance;
+    JS_ToFloat64(ctx, &double_maxDistance, argv[2]);
+    float maxDistance = (float)double_maxDistance;
     Vector3 returnVal = Vector3MoveTowards(v, target, maxDistance);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9353,16 +14506,16 @@ static JSValue js_vector3MoveTowards(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector3Lerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
     Vector3* v2_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(v2_ptr == NULL) return JS_EXCEPTION;
     Vector3 v2 = *v2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Vector3 returnVal = Vector3Lerp(v1, v2, amount);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9371,7 +14524,7 @@ static JSValue js_vector3Lerp(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3CubicHermite(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3CubicHermite(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9384,9 +14537,9 @@ static JSValue js_vector3CubicHermite(JSContext * ctx, JSValueConst this_val, in
     Vector3* tangent2_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[3], js_Vector3_class_id);
     if(tangent2_ptr == NULL) return JS_EXCEPTION;
     Vector3 tangent2 = *tangent2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[4]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[4]);
+    float amount = (float)double_amount;
     Vector3 returnVal = Vector3CubicHermite(v1, tangent1, v2, tangent2, amount);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9395,7 +14548,7 @@ static JSValue js_vector3CubicHermite(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_vector3Reflect(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9410,7 +14563,7 @@ static JSValue js_vector3Reflect(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_vector3Min(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9425,7 +14578,7 @@ static JSValue js_vector3Min(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3Max(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v1_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector3 v1 = *v1_ptr;
@@ -9440,7 +14593,7 @@ static JSValue js_vector3Max(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3Barycenter(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Barycenter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* p_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(p_ptr == NULL) return JS_EXCEPTION;
     Vector3 p = *p_ptr;
@@ -9461,7 +14614,7 @@ static JSValue js_vector3Barycenter(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_vector3Unproject(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Unproject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* source_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(source_ptr == NULL) return JS_EXCEPTION;
     Vector3 source = *source_ptr;
@@ -9479,7 +14632,7 @@ static JSValue js_vector3Unproject(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector3Invert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9491,7 +14644,7 @@ static JSValue js_vector3Invert(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Clamp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
@@ -9509,16 +14662,16 @@ static JSValue js_vector3Clamp(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3ClampValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
-    double _double_min;
-    JS_ToFloat64(ctx, &_double_min, argv[1]);
-    float min = (float)_double_min;
-    double _double_max;
-    JS_ToFloat64(ctx, &_double_max, argv[2]);
-    float max = (float)_double_max;
+    double double_min;
+    JS_ToFloat64(ctx, &double_min, argv[1]);
+    float min = (float)double_min;
+    double double_max;
+    JS_ToFloat64(ctx, &double_max, argv[2]);
+    float max = (float)double_max;
     Vector3 returnVal = Vector3ClampValue(v, min, max);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9527,7 +14680,7 @@ static JSValue js_vector3ClampValue(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_vector3Equals(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* p_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(p_ptr == NULL) return JS_EXCEPTION;
     Vector3 p = *p_ptr;
@@ -9539,16 +14692,16 @@ static JSValue js_vector3Equals(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Refract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector3Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* v_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector3 v = *v_ptr;
     Vector3* n_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
     if(n_ptr == NULL) return JS_EXCEPTION;
     Vector3 n = *n_ptr;
-    double _double_r;
-    JS_ToFloat64(ctx, &_double_r, argv[2]);
-    float r = (float)_double_r;
+    double double_r;
+    JS_ToFloat64(ctx, &double_r, argv[2]);
+    float r = (float)double_r;
     Vector3 returnVal = Vector3Refract(v, n, r);
     Vector3* ret_ptr = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ret_ptr = returnVal;
@@ -9557,7 +14710,7 @@ static JSValue js_vector3Refract(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_vector4Distance(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9569,7 +14722,7 @@ static JSValue js_vector4Distance(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector4DistanceSqr(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9581,7 +14734,7 @@ static JSValue js_vector4DistanceSqr(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector4Multiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9596,7 +14749,7 @@ static JSValue js_vector4Multiply(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_vector4Negate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector4 v = *v_ptr;
@@ -9608,7 +14761,7 @@ static JSValue js_vector4Negate(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector4Divide(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9623,7 +14776,7 @@ static JSValue js_vector4Divide(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector4Normalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector4 v = *v_ptr;
@@ -9635,7 +14788,7 @@ static JSValue js_vector4Normalize(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_vector4Min(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9650,7 +14803,7 @@ static JSValue js_vector4Min(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4Max(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
@@ -9665,16 +14818,16 @@ static JSValue js_vector4Max(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4Lerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v1_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v1_ptr == NULL) return JS_EXCEPTION;
     Vector4 v1 = *v1_ptr;
     Vector4* v2_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[1], js_Vector4_class_id);
     if(v2_ptr == NULL) return JS_EXCEPTION;
     Vector4 v2 = *v2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Vector4 returnVal = Vector4Lerp(v1, v2, amount);
     Vector4* ret_ptr = (Vector4*)js_malloc(ctx, sizeof(Vector4));
     *ret_ptr = returnVal;
@@ -9683,16 +14836,16 @@ static JSValue js_vector4Lerp(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector4MoveTowards(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector4 v = *v_ptr;
     Vector4* target_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[1], js_Vector4_class_id);
     if(target_ptr == NULL) return JS_EXCEPTION;
     Vector4 target = *target_ptr;
-    double _double_maxDistance;
-    JS_ToFloat64(ctx, &_double_maxDistance, argv[2]);
-    float maxDistance = (float)_double_maxDistance;
+    double double_maxDistance;
+    JS_ToFloat64(ctx, &double_maxDistance, argv[2]);
+    float maxDistance = (float)double_maxDistance;
     Vector4 returnVal = Vector4MoveTowards(v, target, maxDistance);
     Vector4* ret_ptr = (Vector4*)js_malloc(ctx, sizeof(Vector4));
     *ret_ptr = returnVal;
@@ -9701,7 +14854,7 @@ static JSValue js_vector4MoveTowards(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_vector4Invert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* v_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(v_ptr == NULL) return JS_EXCEPTION;
     Vector4 v = *v_ptr;
@@ -9713,7 +14866,7 @@ static JSValue js_vector4Invert(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_vector4Equals(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_vector4Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* p_ptr = (Vector4*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(p_ptr == NULL) return JS_EXCEPTION;
     Vector4 p = *p_ptr;
@@ -9725,7 +14878,7 @@ static JSValue js_vector4Equals(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_matrixDeterminant(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixDeterminant(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -9734,7 +14887,7 @@ static JSValue js_matrixDeterminant(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_matrixTrace(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixTrace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -9743,7 +14896,7 @@ static JSValue js_matrixTrace(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_matrixTranspose(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixTranspose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -9755,7 +14908,7 @@ static JSValue js_matrixTranspose(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_matrixInvert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -9767,7 +14920,7 @@ static JSValue js_matrixInvert(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_matrixIdentity(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix returnVal = MatrixIdentity();
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9776,7 +14929,7 @@ static JSValue js_matrixIdentity(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_matrixAdd(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* left_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(left_ptr == NULL) return JS_EXCEPTION;
     Matrix left = *left_ptr;
@@ -9791,7 +14944,7 @@ static JSValue js_matrixAdd(JSContext * ctx, JSValueConst this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_matrixSubtract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* left_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(left_ptr == NULL) return JS_EXCEPTION;
     Matrix left = *left_ptr;
@@ -9806,7 +14959,7 @@ static JSValue js_matrixSubtract(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_matrixMultiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* left_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(left_ptr == NULL) return JS_EXCEPTION;
     Matrix left = *left_ptr;
@@ -9821,16 +14974,16 @@ static JSValue js_matrixMultiply(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_matrixTranslate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
-    double _double_z;
-    JS_ToFloat64(ctx, &_double_z, argv[2]);
-    float z = (float)_double_z;
+static JSValue js_matrixTranslate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
+    double double_z;
+    JS_ToFloat64(ctx, &double_z, argv[2]);
+    float z = (float)double_z;
     Matrix returnVal = MatrixTranslate(x, y, z);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9839,13 +14992,13 @@ static JSValue js_matrixTranslate(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_matrixRotate(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* axis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(axis_ptr == NULL) return JS_EXCEPTION;
     Vector3 axis = *axis_ptr;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     Matrix returnVal = MatrixRotate(axis, angle);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9854,10 +15007,10 @@ static JSValue js_matrixRotate(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_matrixRotateX(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[0]);
-    float angle = (float)_double_angle;
+static JSValue js_matrixRotateX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[0]);
+    float angle = (float)double_angle;
     Matrix returnVal = MatrixRotateX(angle);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9866,10 +15019,10 @@ static JSValue js_matrixRotateX(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_matrixRotateY(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[0]);
-    float angle = (float)_double_angle;
+static JSValue js_matrixRotateY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[0]);
+    float angle = (float)double_angle;
     Matrix returnVal = MatrixRotateY(angle);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9878,10 +15031,10 @@ static JSValue js_matrixRotateY(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_matrixRotateZ(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[0]);
-    float angle = (float)_double_angle;
+static JSValue js_matrixRotateZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[0]);
+    float angle = (float)double_angle;
     Matrix returnVal = MatrixRotateZ(angle);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9890,7 +15043,7 @@ static JSValue js_matrixRotateZ(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_matrixRotateXYZ(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixRotateXYZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* angle_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(angle_ptr == NULL) return JS_EXCEPTION;
     Vector3 angle = *angle_ptr;
@@ -9902,7 +15055,7 @@ static JSValue js_matrixRotateXYZ(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_matrixRotateZYX(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixRotateZYX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* angle_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(angle_ptr == NULL) return JS_EXCEPTION;
     Vector3 angle = *angle_ptr;
@@ -9914,16 +15067,16 @@ static JSValue js_matrixRotateZYX(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_matrixScale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_x;
-    JS_ToFloat64(ctx, &_double_x, argv[0]);
-    float x = (float)_double_x;
-    double _double_y;
-    JS_ToFloat64(ctx, &_double_y, argv[1]);
-    float y = (float)_double_y;
-    double _double_z;
-    JS_ToFloat64(ctx, &_double_z, argv[2]);
-    float z = (float)_double_z;
+static JSValue js_matrixScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_x;
+    JS_ToFloat64(ctx, &double_x, argv[0]);
+    float x = (float)double_x;
+    double double_y;
+    JS_ToFloat64(ctx, &double_y, argv[1]);
+    float y = (float)double_y;
+    double double_z;
+    JS_ToFloat64(ctx, &double_z, argv[2]);
+    float z = (float)double_z;
     Matrix returnVal = MatrixScale(x, y, z);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -9932,7 +15085,7 @@ static JSValue js_matrixScale(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_matrixFrustum(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixFrustum(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double left;
     JS_ToFloat64(ctx, &left, argv[0]);
     double right;
@@ -9953,7 +15106,7 @@ static JSValue js_matrixFrustum(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_matrixPerspective(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixPerspective(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double fovY;
     JS_ToFloat64(ctx, &fovY, argv[0]);
     double aspect;
@@ -9970,7 +15123,7 @@ static JSValue js_matrixPerspective(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_matrixOrtho(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixOrtho(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double left;
     JS_ToFloat64(ctx, &left, argv[0]);
     double right;
@@ -9991,7 +15144,7 @@ static JSValue js_matrixOrtho(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_matrixLookAt(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixLookAt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* eye_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(eye_ptr == NULL) return JS_EXCEPTION;
     Vector3 eye = *eye_ptr;
@@ -10009,7 +15162,7 @@ static JSValue js_matrixLookAt(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_quaternionAdd(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
@@ -10024,13 +15177,13 @@ static JSValue js_quaternionAdd(JSContext * ctx, JSValueConst this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionAddValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionAddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
-    double _double_add;
-    JS_ToFloat64(ctx, &_double_add, argv[1]);
-    float add = (float)_double_add;
+    double double_add;
+    JS_ToFloat64(ctx, &double_add, argv[1]);
+    float add = (float)double_add;
     Quaternion returnVal = QuaternionAddValue(q, add);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10039,7 +15192,7 @@ static JSValue js_quaternionAddValue(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_quaternionSubtract(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
@@ -10054,13 +15207,13 @@ static JSValue js_quaternionSubtract(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_quaternionSubtractValue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionSubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
-    double _double_sub;
-    JS_ToFloat64(ctx, &_double_sub, argv[1]);
-    float sub = (float)_double_sub;
+    double double_sub;
+    JS_ToFloat64(ctx, &double_sub, argv[1]);
+    float sub = (float)double_sub;
     Quaternion returnVal = QuaternionSubtractValue(q, sub);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10069,7 +15222,7 @@ static JSValue js_quaternionSubtractValue(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_quaternionIdentity(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion returnVal = QuaternionIdentity();
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10078,7 +15231,7 @@ static JSValue js_quaternionIdentity(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_quaternionLength(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10087,7 +15240,7 @@ static JSValue js_quaternionLength(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_quaternionNormalize(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10099,7 +15252,7 @@ static JSValue js_quaternionNormalize(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_quaternionInvert(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10111,7 +15264,7 @@ static JSValue js_quaternionInvert(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_quaternionMultiply(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
@@ -10126,13 +15279,13 @@ static JSValue js_quaternionMultiply(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_quaternionScale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
-    double _double_mul;
-    JS_ToFloat64(ctx, &_double_mul, argv[1]);
-    float mul = (float)_double_mul;
+    double double_mul;
+    JS_ToFloat64(ctx, &double_mul, argv[1]);
+    float mul = (float)double_mul;
     Quaternion returnVal = QuaternionScale(q, mul);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10141,7 +15294,7 @@ static JSValue js_quaternionScale(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_quaternionDivide(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionDivide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
@@ -10156,16 +15309,16 @@ static JSValue js_quaternionDivide(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_quaternionLerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
     Quaternion* q2_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[1], js_Vector4_class_id);
     if(q2_ptr == NULL) return JS_EXCEPTION;
     Quaternion q2 = *q2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Quaternion returnVal = QuaternionLerp(q1, q2, amount);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10174,16 +15327,16 @@ static JSValue js_quaternionLerp(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_quaternionNlerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionNlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
     Quaternion* q2_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[1], js_Vector4_class_id);
     if(q2_ptr == NULL) return JS_EXCEPTION;
     Quaternion q2 = *q2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Quaternion returnVal = QuaternionNlerp(q1, q2, amount);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10192,16 +15345,16 @@ static JSValue js_quaternionNlerp(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_quaternionSlerp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionSlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
     Quaternion* q2_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[1], js_Vector4_class_id);
     if(q2_ptr == NULL) return JS_EXCEPTION;
     Quaternion q2 = *q2_ptr;
-    double _double_amount;
-    JS_ToFloat64(ctx, &_double_amount, argv[2]);
-    float amount = (float)_double_amount;
+    double double_amount;
+    JS_ToFloat64(ctx, &double_amount, argv[2]);
+    float amount = (float)double_amount;
     Quaternion returnVal = QuaternionSlerp(q1, q2, amount);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10210,7 +15363,7 @@ static JSValue js_quaternionSlerp(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q1_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q1_ptr == NULL) return JS_EXCEPTION;
     Quaternion q1 = *q1_ptr;
@@ -10223,9 +15376,9 @@ static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValueConst thi
     Quaternion* inTangent2_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[3], js_Vector4_class_id);
     if(inTangent2_ptr == NULL) return JS_EXCEPTION;
     Quaternion inTangent2 = *inTangent2_ptr;
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[4]);
-    float t = (float)_double_t;
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[4]);
+    float t = (float)double_t;
     Quaternion returnVal = QuaternionCubicHermiteSpline(q1, outTangent1, q2, inTangent2, t);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10234,7 +15387,7 @@ static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValueConst thi
     return ret;
 }
 
-static JSValue js_quaternionFromVector3ToVector3(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionFromVector3ToVector3(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* from_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(from_ptr == NULL) return JS_EXCEPTION;
     Vector3 from = *from_ptr;
@@ -10249,7 +15402,7 @@ static JSValue js_quaternionFromVector3ToVector3(JSContext * ctx, JSValueConst t
     return ret;
 }
 
-static JSValue js_quaternionFromMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionFromMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -10261,7 +15414,7 @@ static JSValue js_quaternionFromMatrix(JSContext * ctx, JSValueConst this_val, i
     return ret;
 }
 
-static JSValue js_quaternionToMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionToMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10273,13 +15426,13 @@ static JSValue js_quaternionToMatrix(JSContext * ctx, JSValueConst this_val, int
     return ret;
 }
 
-static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* axis_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[0], js_Vector3_class_id);
     if(axis_ptr == NULL) return JS_EXCEPTION;
     Vector3 axis = *axis_ptr;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     Quaternion returnVal = QuaternionFromAxisAngle(axis, angle);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10288,16 +15441,16 @@ static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_quaternionFromEuler(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_pitch;
-    JS_ToFloat64(ctx, &_double_pitch, argv[0]);
-    float pitch = (float)_double_pitch;
-    double _double_yaw;
-    JS_ToFloat64(ctx, &_double_yaw, argv[1]);
-    float yaw = (float)_double_yaw;
-    double _double_roll;
-    JS_ToFloat64(ctx, &_double_roll, argv[2]);
-    float roll = (float)_double_roll;
+static JSValue js_quaternionFromEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_pitch;
+    JS_ToFloat64(ctx, &double_pitch, argv[0]);
+    float pitch = (float)double_pitch;
+    double double_yaw;
+    JS_ToFloat64(ctx, &double_yaw, argv[1]);
+    float yaw = (float)double_yaw;
+    double double_roll;
+    JS_ToFloat64(ctx, &double_roll, argv[2]);
+    float roll = (float)double_roll;
     Quaternion returnVal = QuaternionFromEuler(pitch, yaw, roll);
     Quaternion* ret_ptr = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ret_ptr = returnVal;
@@ -10306,7 +15459,7 @@ static JSValue js_quaternionFromEuler(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_quaternionToEuler(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionToEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10318,7 +15471,7 @@ static JSValue js_quaternionToEuler(JSContext * ctx, JSValueConst this_val, int 
     return ret;
 }
 
-static JSValue js_quaternionTransform(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionTransform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* q_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(q_ptr == NULL) return JS_EXCEPTION;
     Quaternion q = *q_ptr;
@@ -10333,7 +15486,7 @@ static JSValue js_quaternionTransform(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_quaternionEquals(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_quaternionEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* p_ptr = (Quaternion*)JS_GetOpaque2(ctx, argv[0], js_Vector4_class_id);
     if(p_ptr == NULL) return JS_EXCEPTION;
     Quaternion p = *p_ptr;
@@ -10345,7 +15498,7 @@ static JSValue js_quaternionEquals(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_matrixDecompose(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_matrixDecompose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* mat_ptr = (Matrix*)JS_GetOpaque2(ctx, argv[0], js_Matrix_class_id);
     if(mat_ptr == NULL) return JS_EXCEPTION;
     Matrix mat = *mat_ptr;
@@ -10359,7 +15512,7 @@ static JSValue js_matrixDecompose(JSContext * ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_getCameraForward(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     Vector3 returnVal = GetCameraForward(camera);
@@ -10370,7 +15523,7 @@ static JSValue js_getCameraForward(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getCameraUp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     Vector3 returnVal = GetCameraUp(camera);
@@ -10381,7 +15534,7 @@ static JSValue js_getCameraUp(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getCameraRight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     Vector3 returnVal = GetCameraRight(camera);
@@ -10392,65 +15545,65 @@ static JSValue js_getCameraRight(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_cameraMoveForward(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraMoveForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_distance;
-    JS_ToFloat64(ctx, &_double_distance, argv[1]);
-    float distance = (float)_double_distance;
+    double double_distance;
+    JS_ToFloat64(ctx, &double_distance, argv[1]);
+    float distance = (float)double_distance;
     bool moveInWorldPlane = JS_ToBool(ctx, argv[2]);
     CameraMoveForward(camera, distance, moveInWorldPlane);
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveUp(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_distance;
-    JS_ToFloat64(ctx, &_double_distance, argv[1]);
-    float distance = (float)_double_distance;
+    double double_distance;
+    JS_ToFloat64(ctx, &double_distance, argv[1]);
+    float distance = (float)double_distance;
     CameraMoveUp(camera, distance);
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveRight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraMoveRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_distance;
-    JS_ToFloat64(ctx, &_double_distance, argv[1]);
-    float distance = (float)_double_distance;
+    double double_distance;
+    JS_ToFloat64(ctx, &double_distance, argv[1]);
+    float distance = (float)double_distance;
     bool moveInWorldPlane = JS_ToBool(ctx, argv[2]);
     CameraMoveRight(camera, distance, moveInWorldPlane);
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_delta;
-    JS_ToFloat64(ctx, &_double_delta, argv[1]);
-    float delta = (float)_double_delta;
+    double double_delta;
+    JS_ToFloat64(ctx, &double_delta, argv[1]);
+    float delta = (float)double_delta;
     CameraMoveToTarget(camera, delta);
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraYaw(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     bool rotateAroundTarget = JS_ToBool(ctx, argv[2]);
     CameraYaw(camera, angle, rotateAroundTarget);
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraPitch(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     bool lockView = JS_ToBool(ctx, argv[2]);
     bool rotateAroundTarget = JS_ToBool(ctx, argv[3]);
     bool rotateUp = JS_ToBool(ctx, argv[4]);
@@ -10458,17 +15611,17 @@ static JSValue js_cameraPitch(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraRoll(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_cameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_angle;
-    JS_ToFloat64(ctx, &_double_angle, argv[1]);
-    float angle = (float)_double_angle;
+    double double_angle;
+    JS_ToFloat64(ctx, &double_angle, argv[1]);
+    float angle = (float)double_angle;
     CameraRoll(camera, angle);
     return JS_UNDEFINED;
 }
 
-static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
     Matrix returnVal = GetCameraViewMatrix(camera);
@@ -10479,12 +15632,12 @@ static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValueConst this_val, in
     return ret;
 }
 
-static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* camera = (Camera*)JS_GetOpaque2(ctx, argv[0], js_Camera3D_class_id);
     if(camera == NULL) return JS_EXCEPTION;
-    double _double_aspect;
-    JS_ToFloat64(ctx, &_double_aspect, argv[1]);
-    float aspect = (float)_double_aspect;
+    double double_aspect;
+    JS_ToFloat64(ctx, &double_aspect, argv[1]);
+    float aspect = (float)double_aspect;
     Matrix returnVal = GetCameraProjectionMatrix(camera, aspect);
     Matrix* ret_ptr = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ret_ptr = returnVal;
@@ -10493,54 +15646,54 @@ static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValueConst this_v
     return ret;
 }
 
-static JSValue js_guiEnable(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiEnable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiEnable();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDisable(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiDisable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiDisable();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiLock(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiLock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiLock();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiUnlock(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiUnlock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiUnlock();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiIsLocked(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiIsLocked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = GuiIsLocked();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiSetAlpha(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_alpha;
-    JS_ToFloat64(ctx, &_double_alpha, argv[0]);
-    float alpha = (float)_double_alpha;
+static JSValue js_guiSetAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_alpha;
+    JS_ToFloat64(ctx, &double_alpha, argv[0]);
+    float alpha = (float)double_alpha;
     GuiSetAlpha(alpha);
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiSetState(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int state;
     JS_ToInt32(ctx, &state, argv[0]);
     GuiSetState(state);
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetState(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiGetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GuiGetState();
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiSetFont(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* font_ptr = (Font*)JS_GetOpaque2(ctx, argv[0], js_Font_class_id);
     if(font_ptr == NULL) return JS_EXCEPTION;
     Font font = *font_ptr;
@@ -10548,7 +15701,7 @@ static JSValue js_guiSetFont(JSContext * ctx, JSValueConst this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetFont(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiGetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font returnVal = GuiGetFont();
     Font* ret_ptr = (Font*)js_malloc(ctx, sizeof(Font));
     *ret_ptr = returnVal;
@@ -10557,7 +15710,7 @@ static JSValue js_guiGetFont(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_guiSetStyle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int control;
     JS_ToInt32(ctx, &control, argv[0]);
     int property;
@@ -10568,7 +15721,7 @@ static JSValue js_guiSetStyle(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetStyle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiGetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int control;
     JS_ToInt32(ctx, &control, argv[0]);
     int property;
@@ -10578,53 +15731,191 @@ static JSValue js_guiGetStyle(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_guiLoadStyle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * fileName = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    GuiLoadStyle(fileName);
-    JS_FreeCString(ctx, fileName);
+static JSValue js_guiLoadStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    JSValue js_fileName;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_fileName;
+        if(JS_GetLength(ctx,argv[0],&size_fileName)==-1) {
+            return JS_EXCEPTION;
+        }
+        fileName = js_malloc(ctx, size_fileName * sizeof(char));
+        for(int i0=0; i0 < size_fileName; i0++){
+            JSValue js_fileName = JS_GetPropertyUint32(ctx,argv[0],i0);
+            fileName[i0] = (char)((char *)JS_ToCString(ctx, js_fileName))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_fileName = JS_DupValue(ctx,argv[0]);
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            js_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, js_fileName);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    GuiLoadStyle((const char *)fileName);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_fileName);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiLoadStyleDefault(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiLoadStyleDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiLoadStyleDefault();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiEnableTooltip(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiEnableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiEnableTooltip();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDisableTooltip(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiDisableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiDisableTooltip();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiSetTooltip(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    const char * tooltip = (JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) ? NULL : (const char *)JS_ToCString(ctx, argv[0]);
-    GuiSetTooltip(tooltip);
-    JS_FreeCString(ctx, tooltip);
+static JSValue js_guiSetTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * tooltip;
+    JSValue js_tooltip;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_tooltip;
+        if(JS_GetLength(ctx,argv[0],&size_tooltip)==-1) {
+            return JS_EXCEPTION;
+        }
+        tooltip = js_malloc(ctx, size_tooltip * sizeof(char));
+        for(int i0=0; i0 < size_tooltip; i0++){
+            JSValue js_tooltip = JS_GetPropertyUint32(ctx,argv[0],i0);
+            tooltip[i0] = (char)((char *)JS_ToCString(ctx, js_tooltip))[0];
+        }
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        tooltip = (char *)JS_ToCString(ctx, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_tooltip = JS_DupValue(ctx,argv[0]);
+        size_t size_tooltip;
+        tooltip = (char *)JS_GetArrayBuffer(ctx, &size_tooltip, js_tooltip);
+    }
+    else {
+        JSClassID classid_tooltip = JS_GetClassID(argv[0]);
+        if(classid_tooltip==JS_CLASS_INT8_ARRAY) {
+            size_t offset_tooltip;
+            size_t size_tooltip;
+            js_tooltip = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_tooltip,&size_tooltip,NULL);
+            tooltip = (char *)JS_GetArrayBuffer(ctx, &size_tooltip, js_tooltip);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    GuiSetTooltip((const char *)tooltip);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, tooltip);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, tooltip);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        js_free(ctx, &js_tooltip);
+    }
+    else {
+        JSClassID classid_tooltip = JS_GetClassID(argv[0]);
+        if(classid_tooltip==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_tooltip);
+        }
+    }
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiIconText(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiIconText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int iconId;
     JS_ToInt32(ctx, &iconId, argv[0]);
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * returnVal = GuiIconText(iconId, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    const char * returnVal = GuiIconText(iconId, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiSetIconScale(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSetIconScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int scale;
     JS_ToInt32(ctx, &scale, argv[0]);
     GuiSetIconScale(scale);
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDrawIcon(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiDrawIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int iconId;
     JS_ToInt32(ctx, &iconId, argv[0]);
     int posX;
@@ -10640,55 +15931,271 @@ static JSValue js_guiDrawIcon(JSContext * ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiWindowBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiWindowBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * title = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiWindowBox(bounds, title);
-    JS_FreeCString(ctx, title);
+    char * title;
+    JSValue js_title;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_title;
+        if(JS_GetLength(ctx,argv[1],&size_title)==-1) {
+            return JS_EXCEPTION;
+        }
+        title = js_malloc(ctx, size_title * sizeof(char));
+        for(int i0=0; i0 < size_title; i0++){
+            JSValue js_title = JS_GetPropertyUint32(ctx,argv[1],i0);
+            title[i0] = (char)((char *)JS_ToCString(ctx, js_title))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        title = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_title = JS_DupValue(ctx,argv[1]);
+        size_t size_title;
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            size_t offset_title;
+            size_t size_title;
+            js_title = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,&size_title,NULL);
+            title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiWindowBox(bounds, (const char *)title);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, title);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, title);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_title);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiGroupBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiGroupBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiGroupBox(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiGroupBox(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiLine(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiLine(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiLine(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiPanel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiPanel(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiPanel(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiScrollPanel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Rectangle* content_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[2], js_Rectangle_class_id);
     if(content_ptr == NULL) return JS_EXCEPTION;
     Rectangle content = *content_ptr;
@@ -10696,140 +16203,699 @@ static JSValue js_guiScrollPanel(JSContext * ctx, JSValueConst this_val, int arg
     if(scroll == NULL) return JS_EXCEPTION;
     Rectangle* view = (Rectangle*)JS_GetOpaque2(ctx, argv[4], js_Rectangle_class_id);
     if(view == NULL) return JS_EXCEPTION;
-    int returnVal = GuiScrollPanel(bounds, text, content, scroll, view);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiScrollPanel(bounds, (const char *)text, content, scroll, view);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiLabel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiLabel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiLabel(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiLabel(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiButton(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiButton(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiButton(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiLabelButton(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiLabelButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiLabelButton(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiLabelButton(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiToggle(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t active_size;
-    void * active_js = (void *)JS_GetArrayBuffer(ctx, &active_size, argv[2]);
-    if(active_js == NULL) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool * active;
+    JSValue js_active;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_active;
+        if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
+            return JS_EXCEPTION;
+        }
+        active = js_malloc(ctx, size_active * sizeof(bool));
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
+            active[i0] = JS_ToBool(ctx, js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_active = JS_DupValue(ctx,argv[2]);
+        size_t size_active;
+        active = (bool *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    bool * active = malloc(active_size);
-    memcpy((void *)active, (const void *)active_js, active_size);
-    int returnVal = GuiToggle(bounds, text, active);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiToggle(bounds, (const char *)text, active);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, active);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_active);
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiToggleGroup(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t active_size;
-    void * active_js = (void *)JS_GetArrayBuffer(ctx, &active_size, argv[2]);
-    if(active_js == NULL) {
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int * active;
+    JSValue js_active;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_active;
+        if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
+            return JS_EXCEPTION;
+        }
+        active = js_malloc(ctx, size_active * sizeof(int));
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &active[i0], js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_active = JS_DupValue(ctx,argv[2]);
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            js_active = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_active,&size_active,NULL);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiToggleGroup(bounds, (const char *)text, active);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, active);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_active);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiToggleSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int * active;
+    JSValue js_active;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_active;
+        if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
+            return JS_EXCEPTION;
+        }
+        active = js_malloc(ctx, size_active * sizeof(int));
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &active[i0], js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_active = JS_DupValue(ctx,argv[2]);
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            js_active = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_active,&size_active,NULL);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiToggleSlider(bounds, (const char *)text, active);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, active);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_active);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    bool * checked;
+    JSValue js_checked;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_checked;
+        if(JS_GetLength(ctx,argv[2],&size_checked)==-1) {
+            return JS_EXCEPTION;
+        }
+        checked = js_malloc(ctx, size_checked * sizeof(bool));
+        for(int i0=0; i0 < size_checked; i0++){
+            JSValue js_checked = JS_GetPropertyUint32(ctx,argv[2],i0);
+            checked[i0] = JS_ToBool(ctx, js_checked);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_checked = JS_DupValue(ctx,argv[2]);
+        size_t size_checked;
+        checked = (bool *)JS_GetArrayBuffer(ctx, &size_checked, js_checked);
+    }
+    else {
         return JS_EXCEPTION;
     }
-    int * active = malloc(active_size);
-    memcpy((void *)active, (const void *)active_js, active_size);
-    int returnVal = GuiToggleGroup(bounds, text, active);
-    JS_FreeCString(ctx, text);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiToggleSlider(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t active_size;
-    void * active_js = (void *)JS_GetArrayBuffer(ctx, &active_size, argv[2]);
-    if(active_js == NULL) {
-        return JS_EXCEPTION;
+    int returnVal = GuiCheckBox(bounds, (const char *)text, checked);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
     }
-    int * active = malloc(active_size);
-    memcpy((void *)active, (const void *)active_js, active_size);
-    int returnVal = GuiToggleSlider(bounds, text, active);
-    JS_FreeCString(ctx, text);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiCheckBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t checked_size;
-    void * checked_js = (void *)JS_GetArrayBuffer(ctx, &checked_size, argv[2]);
-    if(checked_js == NULL) {
-        return JS_EXCEPTION;
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
     }
-    bool * checked = malloc(checked_size);
-    memcpy((void *)checked, (const void *)checked_js, checked_size);
-    int returnVal = GuiCheckBox(bounds, text, checked);
-    JS_FreeCString(ctx, text);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiComboBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t active_size;
-    void * active_js = (void *)JS_GetArrayBuffer(ctx, &active_size, argv[2]);
-    if(active_js == NULL) {
-        return JS_EXCEPTION;
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
     }
-    int * active = malloc(active_size);
-    memcpy((void *)active, (const void *)active_js, active_size);
-    int returnVal = GuiComboBox(bounds, text, active);
-    JS_FreeCString(ctx, text);
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, checked);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_checked);
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiDropdownBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiComboBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int * active;
+    JSValue js_active;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_active;
+        if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
+            return JS_EXCEPTION;
+        }
+        active = js_malloc(ctx, size_active * sizeof(int));
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
+            JS_ToInt32(ctx, &active[i0], js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_active = JS_DupValue(ctx,argv[2]);
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            js_active = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_active,&size_active,NULL);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiComboBox(bounds, (const char *)text, active);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, active);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[2]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_active);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int * active = NULL;
     int active_out;
     if(!JS_IsNull(argv[2])) {
@@ -10838,8 +16904,22 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValueConst this_val, int arg
         JS_ToInt32(ctx, active, active_js);
     }
     bool editMode = JS_ToBool(ctx, argv[3]);
-    int returnVal = GuiDropdownBox(bounds, text, active, editMode);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiDropdownBox(bounds, (const char *)text, active, editMode);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     if(!JS_IsNull(argv[2])) {
         JS_SetPropertyStr(ctx, argv[2], "active", JS_NewInt32(ctx,active_out));
     }
@@ -10847,11 +16927,43 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_guiSpinner(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int * value = NULL;
     int value_out;
     if(!JS_IsNull(argv[2])) {
@@ -10864,8 +16976,22 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValueConst this_val, int argc, J
     int maxValue;
     JS_ToInt32(ctx, &maxValue, argv[4]);
     bool editMode = JS_ToBool(ctx, argv[5]);
-    int returnVal = GuiSpinner(bounds, text, value, minValue, maxValue, editMode);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiSpinner(bounds, (const char *)text, value, minValue, maxValue, editMode);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     if(!JS_IsNull(argv[2])) {
         JS_SetPropertyStr(ctx, argv[2], "value", JS_NewInt32(ctx,value_out));
     }
@@ -10873,11 +16999,43 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_guiValueBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int * value = NULL;
     int value_out;
     if(!JS_IsNull(argv[2])) {
@@ -10890,8 +17048,22 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValueConst this_val, int argc, 
     int maxValue;
     JS_ToInt32(ctx, &maxValue, argv[4]);
     bool editMode = JS_ToBool(ctx, argv[5]);
-    int returnVal = GuiValueBox(bounds, text, value, minValue, maxValue, editMode);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiValueBox(bounds, (const char *)text, value, minValue, maxValue, editMode);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     if(!JS_IsNull(argv[2])) {
         JS_SetPropertyStr(ctx, argv[2], "value", JS_NewInt32(ctx,value_out));
     }
@@ -10899,29 +17071,157 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    char * textValue = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (char *)JS_ToCString(ctx, argv[2]);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, argv[3]);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * textValue;
+    JSValue js_textValue;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_textValue;
+        if(JS_GetLength(ctx,argv[2],&size_textValue)==-1) {
+            return JS_EXCEPTION;
+        }
+        textValue = js_malloc(ctx, size_textValue * sizeof(char));
+        for(int i0=0; i0 < size_textValue; i0++){
+            JSValue js_textValue = JS_GetPropertyUint32(ctx,argv[2],i0);
+            textValue[i0] = (char)((char *)JS_ToCString(ctx, js_textValue))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        textValue = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_textValue = JS_DupValue(ctx,argv[2]);
+        size_t size_textValue;
+        textValue = (char *)JS_GetArrayBuffer(ctx, &size_textValue, js_textValue);
+    }
+    else {
+        JSClassID classid_textValue = JS_GetClassID(argv[2]);
+        if(classid_textValue==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textValue;
+            size_t size_textValue;
+            js_textValue = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textValue,&size_textValue,NULL);
+            textValue = (char *)JS_GetArrayBuffer(ctx, &size_textValue, js_textValue);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_value = JS_DupValue(ctx,argv[3]);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     bool editMode = JS_ToBool(ctx, argv[4]);
-    int returnVal = GuiValueBoxFloat(bounds, text, textValue, value, editMode);
-    JS_FreeCString(ctx, text);
-    JS_FreeCString(ctx, textValue);
-    free((void *)value);
+    int returnVal = GuiValueBoxFloat(bounds, (const char *)text, textValue, value, editMode);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, textValue);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, textValue);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_textValue);
+    }
+    else {
+        JSClassID classid_textValue = JS_GetClassID(argv[2]);
+        if(classid_textValue==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textValue);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_value);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiTextBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
@@ -10940,132 +17240,686 @@ static JSValue js_guiTextBox(JSContext * ctx, JSValueConst this_val, int argc, J
     return ret;
 }
 
-static JSValue js_guiSlider(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * textLeft = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * textRight = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, argv[3]);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    char * textLeft;
+    JSValue js_textLeft;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_textLeft;
+        if(JS_GetLength(ctx,argv[1],&size_textLeft)==-1) {
+            return JS_EXCEPTION;
+        }
+        textLeft = js_malloc(ctx, size_textLeft * sizeof(char));
+        for(int i0=0; i0 < size_textLeft; i0++){
+            JSValue js_textLeft = JS_GetPropertyUint32(ctx,argv[1],i0);
+            textLeft[i0] = (char)((char *)JS_ToCString(ctx, js_textLeft))[0];
+        }
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
-    double _double_minValue;
-    JS_ToFloat64(ctx, &_double_minValue, argv[4]);
-    float minValue = (float)_double_minValue;
-    double _double_maxValue;
-    JS_ToFloat64(ctx, &_double_maxValue, argv[5]);
-    float maxValue = (float)_double_maxValue;
-    int returnVal = GuiSlider(bounds, textLeft, textRight, value, minValue, maxValue);
-    JS_FreeCString(ctx, textLeft);
-    JS_FreeCString(ctx, textRight);
-    free((void *)value);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiSliderBar(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * textLeft = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * textRight = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, argv[3]);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    else if(JS_IsString(argv[1]) == 1) {
+        textLeft = (char *)JS_ToCString(ctx, argv[1]);
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
-    double _double_minValue;
-    JS_ToFloat64(ctx, &_double_minValue, argv[4]);
-    float minValue = (float)_double_minValue;
-    double _double_maxValue;
-    JS_ToFloat64(ctx, &_double_maxValue, argv[5]);
-    float maxValue = (float)_double_maxValue;
-    int returnVal = GuiSliderBar(bounds, textLeft, textRight, value, minValue, maxValue);
-    JS_FreeCString(ctx, textLeft);
-    JS_FreeCString(ctx, textRight);
-    free((void *)value);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiProgressBar(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * textLeft = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * textRight = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, argv[3]);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_textLeft = JS_DupValue(ctx,argv[1]);
+        size_t size_textLeft;
+        textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
-    double _double_minValue;
-    JS_ToFloat64(ctx, &_double_minValue, argv[4]);
-    float minValue = (float)_double_minValue;
-    double _double_maxValue;
-    JS_ToFloat64(ctx, &_double_maxValue, argv[5]);
-    float maxValue = (float)_double_maxValue;
-    int returnVal = GuiProgressBar(bounds, textLeft, textRight, value, minValue, maxValue);
-    JS_FreeCString(ctx, textLeft);
-    JS_FreeCString(ctx, textRight);
-    free((void *)value);
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textLeft;
+            size_t size_textLeft;
+            js_textLeft = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,&size_textLeft,NULL);
+            textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * textRight;
+    JSValue js_textRight;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_textRight;
+        if(JS_GetLength(ctx,argv[2],&size_textRight)==-1) {
+            return JS_EXCEPTION;
+        }
+        textRight = js_malloc(ctx, size_textRight * sizeof(char));
+        for(int i0=0; i0 < size_textRight; i0++){
+            JSValue js_textRight = JS_GetPropertyUint32(ctx,argv[2],i0);
+            textRight[i0] = (char)((char *)JS_ToCString(ctx, js_textRight))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        textRight = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_textRight = JS_DupValue(ctx,argv[2]);
+        size_t size_textRight;
+        textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textRight;
+            size_t size_textRight;
+            js_textRight = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,&size_textRight,NULL);
+            textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_value = JS_DupValue(ctx,argv[3]);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_minValue;
+    JS_ToFloat64(ctx, &double_minValue, argv[4]);
+    float minValue = (float)double_minValue;
+    double double_maxValue;
+    JS_ToFloat64(ctx, &double_maxValue, argv[5]);
+    float maxValue = (float)double_maxValue;
+    int returnVal = GuiSlider(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, textLeft);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, textLeft);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_textLeft);
+    }
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textLeft);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, textRight);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, textRight);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textRight);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_value);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiStatusBar(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiStatusBar(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * textLeft;
+    JSValue js_textLeft;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_textLeft;
+        if(JS_GetLength(ctx,argv[1],&size_textLeft)==-1) {
+            return JS_EXCEPTION;
+        }
+        textLeft = js_malloc(ctx, size_textLeft * sizeof(char));
+        for(int i0=0; i0 < size_textLeft; i0++){
+            JSValue js_textLeft = JS_GetPropertyUint32(ctx,argv[1],i0);
+            textLeft[i0] = (char)((char *)JS_ToCString(ctx, js_textLeft))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        textLeft = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_textLeft = JS_DupValue(ctx,argv[1]);
+        size_t size_textLeft;
+        textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
+    }
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textLeft;
+            size_t size_textLeft;
+            js_textLeft = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,&size_textLeft,NULL);
+            textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * textRight;
+    JSValue js_textRight;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_textRight;
+        if(JS_GetLength(ctx,argv[2],&size_textRight)==-1) {
+            return JS_EXCEPTION;
+        }
+        textRight = js_malloc(ctx, size_textRight * sizeof(char));
+        for(int i0=0; i0 < size_textRight; i0++){
+            JSValue js_textRight = JS_GetPropertyUint32(ctx,argv[2],i0);
+            textRight[i0] = (char)((char *)JS_ToCString(ctx, js_textRight))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        textRight = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_textRight = JS_DupValue(ctx,argv[2]);
+        size_t size_textRight;
+        textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textRight;
+            size_t size_textRight;
+            js_textRight = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,&size_textRight,NULL);
+            textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_value = JS_DupValue(ctx,argv[3]);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_minValue;
+    JS_ToFloat64(ctx, &double_minValue, argv[4]);
+    float minValue = (float)double_minValue;
+    double double_maxValue;
+    JS_ToFloat64(ctx, &double_maxValue, argv[5]);
+    float maxValue = (float)double_maxValue;
+    int returnVal = GuiSliderBar(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, textLeft);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, textLeft);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_textLeft);
+    }
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textLeft);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, textRight);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, textRight);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textRight);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_value);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiDummyRec(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiProgressBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    int returnVal = GuiDummyRec(bounds, text);
-    JS_FreeCString(ctx, text);
+    char * textLeft;
+    JSValue js_textLeft;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_textLeft;
+        if(JS_GetLength(ctx,argv[1],&size_textLeft)==-1) {
+            return JS_EXCEPTION;
+        }
+        textLeft = js_malloc(ctx, size_textLeft * sizeof(char));
+        for(int i0=0; i0 < size_textLeft; i0++){
+            JSValue js_textLeft = JS_GetPropertyUint32(ctx,argv[1],i0);
+            textLeft[i0] = (char)((char *)JS_ToCString(ctx, js_textLeft))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        textLeft = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_textLeft = JS_DupValue(ctx,argv[1]);
+        size_t size_textLeft;
+        textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
+    }
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textLeft;
+            size_t size_textLeft;
+            js_textLeft = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,&size_textLeft,NULL);
+            textLeft = (char *)JS_GetArrayBuffer(ctx, &size_textLeft, js_textLeft);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * textRight;
+    JSValue js_textRight;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_textRight;
+        if(JS_GetLength(ctx,argv[2],&size_textRight)==-1) {
+            return JS_EXCEPTION;
+        }
+        textRight = js_malloc(ctx, size_textRight * sizeof(char));
+        for(int i0=0; i0 < size_textRight; i0++){
+            JSValue js_textRight = JS_GetPropertyUint32(ctx,argv[2],i0);
+            textRight[i0] = (char)((char *)JS_ToCString(ctx, js_textRight))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        textRight = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_textRight = JS_DupValue(ctx,argv[2]);
+        size_t size_textRight;
+        textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            size_t offset_textRight;
+            size_t size_textRight;
+            js_textRight = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,&size_textRight,NULL);
+            textRight = (char *)JS_GetArrayBuffer(ctx, &size_textRight, js_textRight);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_value = JS_DupValue(ctx,argv[3]);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_minValue;
+    JS_ToFloat64(ctx, &double_minValue, argv[4]);
+    float minValue = (float)double_minValue;
+    double double_maxValue;
+    JS_ToFloat64(ctx, &double_maxValue, argv[5]);
+    float maxValue = (float)double_maxValue;
+    int returnVal = GuiProgressBar(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, textLeft);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, textLeft);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_textLeft);
+    }
+    else {
+        JSClassID classid_textLeft = JS_GetClassID(argv[1]);
+        if(classid_textLeft==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textLeft);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, textRight);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, textRight);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_textRight);
+    }
+    else {
+        JSClassID classid_textRight = JS_GetClassID(argv[2]);
+        if(classid_textRight==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_textRight);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[3]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_value);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiGrid(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiStatusBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    double _double_spacing;
-    JS_ToFloat64(ctx, &_double_spacing, argv[2]);
-    float spacing = (float)_double_spacing;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiStatusBar(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiDummyRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiDummyRec(bounds, (const char *)text);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    double double_spacing;
+    JS_ToFloat64(ctx, &double_spacing, argv[2]);
+    float spacing = (float)double_spacing;
     int subdivs;
     JS_ToInt32(ctx, &subdivs, argv[3]);
     Vector2* mouseCell = (Vector2*)JS_GetOpaque2(ctx, argv[4], js_Vector2_class_id);
     if(mouseCell == NULL) return JS_EXCEPTION;
-    int returnVal = GuiGrid(bounds, text, spacing, subdivs, mouseCell);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiGrid(bounds, (const char *)text, spacing, subdivs, mouseCell);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiListView(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     int * scrollIndex = NULL;
     int scrollIndex_out;
     if(!JS_IsNull(argv[2])) {
@@ -11073,44 +17927,327 @@ static JSValue js_guiListView(JSContext * ctx, JSValueConst this_val, int argc, 
         JSValue scrollIndex_js = JS_GetPropertyStr(ctx, argv[2], "scrollIndex");
         JS_ToInt32(ctx, scrollIndex, scrollIndex_js);
     }
-    size_t active_size;
-    void * active_js = (void *)JS_GetArrayBuffer(ctx, &active_size, argv[3]);
-    if(active_js == NULL) {
-        return JS_EXCEPTION;
+    int * active;
+    JSValue js_active;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_active;
+        if(JS_GetLength(ctx,argv[3],&size_active)==-1) {
+            return JS_EXCEPTION;
+        }
+        active = js_malloc(ctx, size_active * sizeof(int));
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[3],i0);
+            JS_ToInt32(ctx, &active[i0], js_active);
+        }
     }
-    int * active = malloc(active_size);
-    memcpy((void *)active, (const void *)active_js, active_size);
-    int returnVal = GuiListView(bounds, text, scrollIndex, active);
-    JS_FreeCString(ctx, text);
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_active = JS_DupValue(ctx,argv[3]);
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[3]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            js_active = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_active,&size_active,NULL);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, js_active);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiListView(bounds, (const char *)text, scrollIndex, active);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     if(!JS_IsNull(argv[2])) {
         JS_SetPropertyStr(ctx, argv[2], "scrollIndex", JS_NewInt32(ctx,scrollIndex_out));
     }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, active);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[3]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &js_active);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiMessageBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiMessageBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * title = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * message = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    const char * buttons = (JS_IsNull(argv[3]) || JS_IsUndefined(argv[3])) ? NULL : (const char *)JS_ToCString(ctx, argv[3]);
-    int returnVal = GuiMessageBox(bounds, title, message, buttons);
-    JS_FreeCString(ctx, title);
-    JS_FreeCString(ctx, message);
-    JS_FreeCString(ctx, buttons);
+    char * title;
+    JSValue js_title;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_title;
+        if(JS_GetLength(ctx,argv[1],&size_title)==-1) {
+            return JS_EXCEPTION;
+        }
+        title = js_malloc(ctx, size_title * sizeof(char));
+        for(int i0=0; i0 < size_title; i0++){
+            JSValue js_title = JS_GetPropertyUint32(ctx,argv[1],i0);
+            title[i0] = (char)((char *)JS_ToCString(ctx, js_title))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        title = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_title = JS_DupValue(ctx,argv[1]);
+        size_t size_title;
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            size_t offset_title;
+            size_t size_title;
+            js_title = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,&size_title,NULL);
+            title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * message;
+    JSValue js_message;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_message;
+        if(JS_GetLength(ctx,argv[2],&size_message)==-1) {
+            return JS_EXCEPTION;
+        }
+        message = js_malloc(ctx, size_message * sizeof(char));
+        for(int i0=0; i0 < size_message; i0++){
+            JSValue js_message = JS_GetPropertyUint32(ctx,argv[2],i0);
+            message[i0] = (char)((char *)JS_ToCString(ctx, js_message))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        message = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_message = JS_DupValue(ctx,argv[2]);
+        size_t size_message;
+        message = (char *)JS_GetArrayBuffer(ctx, &size_message, js_message);
+    }
+    else {
+        JSClassID classid_message = JS_GetClassID(argv[2]);
+        if(classid_message==JS_CLASS_INT8_ARRAY) {
+            size_t offset_message;
+            size_t size_message;
+            js_message = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_message,&size_message,NULL);
+            message = (char *)JS_GetArrayBuffer(ctx, &size_message, js_message);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * buttons;
+    JSValue js_buttons;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_buttons;
+        if(JS_GetLength(ctx,argv[3],&size_buttons)==-1) {
+            return JS_EXCEPTION;
+        }
+        buttons = js_malloc(ctx, size_buttons * sizeof(char));
+        for(int i0=0; i0 < size_buttons; i0++){
+            JSValue js_buttons = JS_GetPropertyUint32(ctx,argv[3],i0);
+            buttons[i0] = (char)((char *)JS_ToCString(ctx, js_buttons))[0];
+        }
+    }
+    else if(JS_IsString(argv[3]) == 1) {
+        buttons = (char *)JS_ToCString(ctx, argv[3]);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_buttons = JS_DupValue(ctx,argv[3]);
+        size_t size_buttons;
+        buttons = (char *)JS_GetArrayBuffer(ctx, &size_buttons, js_buttons);
+    }
+    else {
+        JSClassID classid_buttons = JS_GetClassID(argv[3]);
+        if(classid_buttons==JS_CLASS_INT8_ARRAY) {
+            size_t offset_buttons;
+            size_t size_buttons;
+            js_buttons = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_buttons,&size_buttons,NULL);
+            buttons = (char *)JS_GetArrayBuffer(ctx, &size_buttons, js_buttons);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiMessageBox(bounds, (const char *)title, (const char *)message, (const char *)buttons);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, title);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, title);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_title);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, message);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, message);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_message);
+    }
+    else {
+        JSClassID classid_message = JS_GetClassID(argv[2]);
+        if(classid_message==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_message);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, buttons);
+    }
+    else if(JS_IsString(argv[3]) == 1) {
+        JS_FreeCString(ctx, buttons);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_buttons);
+    }
+    else {
+        JSClassID classid_buttons = JS_GetClassID(argv[3]);
+        if(classid_buttons==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_buttons);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiTextInputBox(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiTextInputBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * title = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    const char * message = (JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) ? NULL : (const char *)JS_ToCString(ctx, argv[2]);
-    const char * buttons = (JS_IsNull(argv[3]) || JS_IsUndefined(argv[3])) ? NULL : (const char *)JS_ToCString(ctx, argv[3]);
+    char * title;
+    JSValue js_title;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_title;
+        if(JS_GetLength(ctx,argv[1],&size_title)==-1) {
+            return JS_EXCEPTION;
+        }
+        title = js_malloc(ctx, size_title * sizeof(char));
+        for(int i0=0; i0 < size_title; i0++){
+            JSValue js_title = JS_GetPropertyUint32(ctx,argv[1],i0);
+            title[i0] = (char)((char *)JS_ToCString(ctx, js_title))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        title = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_title = JS_DupValue(ctx,argv[1]);
+        size_t size_title;
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            size_t offset_title;
+            size_t size_title;
+            js_title = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,&size_title,NULL);
+            title = (char *)JS_GetArrayBuffer(ctx, &size_title, js_title);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * message;
+    JSValue js_message;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_message;
+        if(JS_GetLength(ctx,argv[2],&size_message)==-1) {
+            return JS_EXCEPTION;
+        }
+        message = js_malloc(ctx, size_message * sizeof(char));
+        for(int i0=0; i0 < size_message; i0++){
+            JSValue js_message = JS_GetPropertyUint32(ctx,argv[2],i0);
+            message[i0] = (char)((char *)JS_ToCString(ctx, js_message))[0];
+        }
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        message = (char *)JS_ToCString(ctx, argv[2]);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_message = JS_DupValue(ctx,argv[2]);
+        size_t size_message;
+        message = (char *)JS_GetArrayBuffer(ctx, &size_message, js_message);
+    }
+    else {
+        JSClassID classid_message = JS_GetClassID(argv[2]);
+        if(classid_message==JS_CLASS_INT8_ARRAY) {
+            size_t offset_message;
+            size_t size_message;
+            js_message = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_message,&size_message,NULL);
+            message = (char *)JS_GetArrayBuffer(ctx, &size_message, js_message);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    char * buttons;
+    JSValue js_buttons;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        size_t size_buttons;
+        if(JS_GetLength(ctx,argv[3],&size_buttons)==-1) {
+            return JS_EXCEPTION;
+        }
+        buttons = js_malloc(ctx, size_buttons * sizeof(char));
+        for(int i0=0; i0 < size_buttons; i0++){
+            JSValue js_buttons = JS_GetPropertyUint32(ctx,argv[3],i0);
+            buttons[i0] = (char)((char *)JS_ToCString(ctx, js_buttons))[0];
+        }
+    }
+    else if(JS_IsString(argv[3]) == 1) {
+        buttons = (char *)JS_ToCString(ctx, argv[3]);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_buttons = JS_DupValue(ctx,argv[3]);
+        size_t size_buttons;
+        buttons = (char *)JS_GetArrayBuffer(ctx, &size_buttons, js_buttons);
+    }
+    else {
+        JSClassID classid_buttons = JS_GetClassID(argv[3]);
+        if(classid_buttons==JS_CLASS_INT8_ARRAY) {
+            size_t offset_buttons;
+            size_t size_buttons;
+            js_buttons = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_buttons,&size_buttons,NULL);
+            buttons = (char *)JS_GetArrayBuffer(ctx, &size_buttons, js_buttons);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     JSValue text_js = JS_GetPropertyStr(ctx, argv[4], "text");
     size_t text_len;
     const char * text_val = JS_ToCStringLen(ctx, &text_len, text_js);
@@ -11125,10 +18262,52 @@ static JSValue js_guiTextInputBox(JSContext * ctx, JSValueConst this_val, int ar
         JSValue secretViewActive_js = JS_GetPropertyStr(ctx, argv[5], "secretViewActive");
         JS_ToBool(ctx, secretViewActive_js);
     }
-    int returnVal = GuiTextInputBox(bounds, title, message, buttons, text, textMaxSize, secretViewActive);
-    JS_FreeCString(ctx, title);
-    JS_FreeCString(ctx, message);
-    JS_FreeCString(ctx, buttons);
+    int returnVal = GuiTextInputBox(bounds, (const char *)title, (const char *)message, (const char *)buttons, text, textMaxSize, secretViewActive);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, title);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, title);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_title);
+    }
+    else {
+        JSClassID classid_title = JS_GetClassID(argv[1]);
+        if(classid_title==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_title);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, message);
+    }
+    else if(JS_IsString(argv[2]) == 1) {
+        JS_FreeCString(ctx, message);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_message);
+    }
+    else {
+        JSClassID classid_message = JS_GetClassID(argv[2]);
+        if(classid_message==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_message);
+        }
+    }
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        js_free(ctx, buttons);
+    }
+    else if(JS_IsString(argv[3]) == 1) {
+        JS_FreeCString(ctx, buttons);
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        js_free(ctx, &js_buttons);
+    }
+    else {
+        JSClassID classid_buttons = JS_GetClassID(argv[3]);
+        if(classid_buttons==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_buttons);
+        }
+    }
     JS_FreeCString(ctx, text_val);
     JS_SetPropertyStr(ctx, argv[4], "text", JS_NewString(ctx,text));
     if(!JS_IsNull(argv[5])) {
@@ -11138,97 +18317,445 @@ static JSValue js_guiTextInputBox(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_guiColorPicker(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiColorPicker(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Color* color = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color == NULL) return JS_EXCEPTION;
-    int returnVal = GuiColorPicker(bounds, text, color);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiColorPicker(bounds, (const char *)text, color);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiColorPanel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Color* color = (Color*)JS_GetOpaque2(ctx, argv[2], js_Color_class_id);
     if(color == NULL) return JS_EXCEPTION;
-    int returnVal = GuiColorPanel(bounds, text, color);
-    JS_FreeCString(ctx, text);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t alpha_size;
-    void * alpha_js = (void *)JS_GetArrayBuffer(ctx, &alpha_size, argv[2]);
-    if(alpha_js == NULL) {
-        return JS_EXCEPTION;
+    int returnVal = GuiColorPanel(bounds, (const char *)text, color);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
     }
-    float * alpha = malloc(alpha_size);
-    memcpy((void *)alpha, (const void *)alpha_js, alpha_size);
-    int returnVal = GuiColorBarAlpha(bounds, text, alpha);
-    JS_FreeCString(ctx, text);
-    free((void *)alpha);
-    JSValue ret = JS_NewInt32(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_guiColorBarHue(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
-    if(bounds_ptr == NULL) return JS_EXCEPTION;
-    Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
-    size_t value_size;
-    void * value_js = (void *)JS_GetArrayBuffer(ctx, &value_size, argv[2]);
-    if(value_js == NULL) {
-        return JS_EXCEPTION;
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
     }
-    float * value = malloc(value_size);
-    memcpy((void *)value, (const void *)value_js, value_size);
-    int returnVal = GuiColorBarHue(bounds, text, value);
-    JS_FreeCString(ctx, text);
-    free((void *)value);
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiColorPickerHSV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * alpha;
+    JSValue js_alpha;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_alpha;
+        if(JS_GetLength(ctx,argv[2],&size_alpha)==-1) {
+            return JS_EXCEPTION;
+        }
+        alpha = js_malloc(ctx, size_alpha * sizeof(float));
+        for(int i0=0; i0 < size_alpha; i0++){
+            JSValue js_alpha = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_alpha[i0];
+            JS_ToFloat64(ctx, &double_alpha[i0], js_alpha);
+            alpha[i0] = (float)double_alpha[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_alpha = JS_DupValue(ctx,argv[2]);
+        size_t size_alpha;
+        alpha = (float *)JS_GetArrayBuffer(ctx, &size_alpha, js_alpha);
+    }
+    else {
+        JSClassID classid_alpha = JS_GetClassID(argv[2]);
+        if(classid_alpha==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_alpha;
+            size_t size_alpha;
+            js_alpha = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_alpha,&size_alpha,NULL);
+            alpha = (float *)JS_GetArrayBuffer(ctx, &size_alpha, js_alpha);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiColorBarAlpha(bounds, (const char *)text, alpha);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, alpha);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_alpha);
+    }
+    else {
+        JSClassID classid_alpha = JS_GetClassID(argv[2]);
+        if(classid_alpha==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_alpha);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    float * value;
+    JSValue js_value;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_value;
+        if(JS_GetLength(ctx,argv[2],&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = js_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_value[i0];
+            JS_ToFloat64(ctx, &double_value[i0], js_value);
+            value[i0] = (float)double_value[i0];
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_value = JS_DupValue(ctx,argv[2]);
+        size_t size_value;
+        value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[2]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            js_value = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_value,&size_value,NULL);
+            value = (float *)JS_GetArrayBuffer(ctx, &size_value, js_value);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiColorBarHue(bounds, (const char *)text, value);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        js_free(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        js_free(ctx, &js_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(argv[2]);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &js_value);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_guiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
+    if(bounds_ptr == NULL) return JS_EXCEPTION;
+    Rectangle bounds = *bounds_ptr;
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Vector3* colorHsv = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) return JS_EXCEPTION;
-    int returnVal = GuiColorPickerHSV(bounds, text, colorHsv);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiColorPickerHSV(bounds, (const char *)text, colorHsv);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiColorPanelHSV(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_guiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* bounds_ptr = (Rectangle*)JS_GetOpaque2(ctx, argv[0], js_Rectangle_class_id);
     if(bounds_ptr == NULL) return JS_EXCEPTION;
     Rectangle bounds = *bounds_ptr;
-    const char * text = (JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) ? NULL : (const char *)JS_ToCString(ctx, argv[1]);
+    char * text;
+    JSValue js_text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            return JS_EXCEPTION;
+        }
+        text = js_malloc(ctx, size_text * sizeof(char));
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            text[i0] = (char)((char *)JS_ToCString(ctx, js_text))[0];
+        }
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        text = (char *)JS_ToCString(ctx, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_text = JS_DupValue(ctx,argv[1]);
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            js_text = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, js_text);
+        }
+        else {
+            return JS_EXCEPTION;
+        }
+    }
     Vector3* colorHsv = (Vector3*)JS_GetOpaque2(ctx, argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) return JS_EXCEPTION;
-    int returnVal = GuiColorPanelHSV(bounds, text, colorHsv);
-    JS_FreeCString(ctx, text);
+    int returnVal = GuiColorPanelHSV(bounds, (const char *)text, colorHsv);
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        js_free(ctx, &js_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[1]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &js_text);
+        }
+    }
     JSValue ret = JS_NewInt32(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_createLight(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_createLight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int type;
     JS_ToInt32(ctx, &type, argv[0]);
     Vector3* position_ptr = (Vector3*)JS_GetOpaque2(ctx, argv[1], js_Vector3_class_id);
@@ -11251,7 +18778,7 @@ static JSValue js_createLight(JSContext * ctx, JSValueConst this_val, int argc, 
     return ret;
 }
 
-static JSValue js_updateLightValues(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_updateLightValues(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader_ptr = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader_ptr == NULL) return JS_EXCEPTION;
     Shader shader = *shader_ptr;
@@ -11262,421 +18789,421 @@ static JSValue js_updateLightValues(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_easeLinearNone(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeLinearNone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseLinearNone(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeLinearIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeLinearIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseLinearIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeLinearOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeLinearOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseLinearOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeLinearInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeLinearInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseLinearInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeSineIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeSineIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseSineIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeSineOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeSineOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseSineOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeSineInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeSineInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseSineInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCircIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCircIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCircIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCircOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCircOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCircOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCircInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCircInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCircInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCubicIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCubicIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCubicIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCubicOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCubicOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCubicOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeCubicInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeCubicInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseCubicInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeQuadIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeQuadIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseQuadIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeQuadOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeQuadOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseQuadOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeQuadInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeQuadInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseQuadInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeExpoIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeExpoIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseExpoIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeExpoOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeExpoOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseExpoOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeExpoInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeExpoInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseExpoInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeBackIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeBackIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseBackIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeBounceOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeBounceOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseBounceOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeBounceInOut(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeBounceInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseBounceInOut(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_easeElasticIn(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
-    double _double_t;
-    JS_ToFloat64(ctx, &_double_t, argv[0]);
-    float t = (float)_double_t;
-    double _double_b;
-    JS_ToFloat64(ctx, &_double_b, argv[1]);
-    float b = (float)_double_b;
-    double _double_c;
-    JS_ToFloat64(ctx, &_double_c, argv[2]);
-    float c = (float)_double_c;
-    double _double_d;
-    JS_ToFloat64(ctx, &_double_d, argv[3]);
-    float d = (float)_double_d;
+static JSValue js_easeElasticIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    double double_t;
+    JS_ToFloat64(ctx, &double_t, argv[0]);
+    float t = (float)double_t;
+    double double_b;
+    JS_ToFloat64(ctx, &double_b, argv[1]);
+    float b = (float)double_b;
+    double double_c;
+    JS_ToFloat64(ctx, &double_c, argv[2]);
+    float c = (float)double_c;
+    double double_d;
+    JS_ToFloat64(ctx, &double_d, argv[3]);
+    float d = (float)double_d;
     float returnVal = EaseElasticIn(t, b, c, d);
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getDefaultLightmapperConfig(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getDefaultLightmapperConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     LightmapperConfig returnVal = GetDefaultLightmapperConfig();
     LightmapperConfig* ret_ptr = (LightmapperConfig*)js_malloc(ctx, sizeof(LightmapperConfig));
     *ret_ptr = returnVal;
@@ -11685,7 +19212,7 @@ static JSValue js_getDefaultLightmapperConfig(JSContext * ctx, JSValueConst this
     return ret;
 }
 
-static JSValue js_loadLightmapper(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int w;
     JS_ToInt32(ctx, &w, argv[0]);
     int h;
@@ -11704,13 +19231,13 @@ static JSValue js_loadLightmapper(JSContext * ctx, JSValueConst this_val, int ar
     return ret;
 }
 
-static JSValue js_loadMaterialLightmapper(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadMaterialLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* emissiveColor_ptr = (Color*)JS_GetOpaque2(ctx, argv[0], js_Color_class_id);
     if(emissiveColor_ptr == NULL) return JS_EXCEPTION;
     Color emissiveColor = *emissiveColor_ptr;
-    double _double_intensity;
-    JS_ToFloat64(ctx, &_double_intensity, argv[1]);
-    float intensity = (float)_double_intensity;
+    double double_intensity;
+    JS_ToFloat64(ctx, &double_intensity, argv[1]);
+    float intensity = (float)double_intensity;
     Material returnVal = LoadMaterialLightmapper(emissiveColor, intensity);
     Material* ret_ptr = (Material*)js_malloc(ctx, sizeof(Material));
     *ret_ptr = returnVal;
@@ -11719,7 +19246,7 @@ static JSValue js_loadMaterialLightmapper(JSContext * ctx, JSValueConst this_val
     return ret;
 }
 
-static JSValue js_unloadLightmapper(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_unloadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* lm_ptr = (Lightmapper*)JS_GetOpaque2(ctx, argv[0], js_Lightmapper_class_id);
     if(lm_ptr == NULL) return JS_EXCEPTION;
     Lightmapper lm = *lm_ptr;
@@ -11727,17 +19254,17 @@ static JSValue js_unloadLightmapper(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginLightmap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BeginLightmap();
     return JS_UNDEFINED;
 }
 
-static JSValue js_endLightmap(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndLightmap();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginLightmapFragment(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_beginLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* lm = (Lightmapper*)JS_GetOpaque2(ctx, argv[0], js_Lightmapper_class_id);
     if(lm == NULL) return JS_EXCEPTION;
     bool returnVal = BeginLightmapFragment(lm);
@@ -11745,14 +19272,14 @@ static JSValue js_beginLightmapFragment(JSContext * ctx, JSValueConst this_val, 
     return ret;
 }
 
-static JSValue js_endLightmapFragment(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_endLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* lm = (Lightmapper*)JS_GetOpaque2(ctx, argv[0], js_Lightmapper_class_id);
     if(lm == NULL) return JS_EXCEPTION;
     EndLightmapFragment(lm);
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* lm_ptr = (Lightmapper*)JS_GetOpaque2(ctx, argv[0], js_Lightmapper_class_id);
     if(lm_ptr == NULL) return JS_EXCEPTION;
     Lightmapper lm = *lm_ptr;
@@ -11764,7 +19291,7 @@ static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValueConst this_va
     return ret;
 }
 
-static JSValue js_setModelMaterial(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setModelMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model == NULL) return JS_EXCEPTION;
     int materialIndex;
@@ -11776,7 +19303,7 @@ static JSValue js_setModelMaterial(JSContext * ctx, JSValueConst this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_getModelMaterial(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getModelMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model == NULL) return JS_EXCEPTION;
     int materialIndex;
@@ -11789,7 +19316,7 @@ static JSValue js_getModelMaterial(JSContext * ctx, JSValueConst this_val, int a
     return ret;
 }
 
-static JSValue js_getModelMesh(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_getModelMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* model = (Model*)JS_GetOpaque2(ctx, argv[0], js_Model_class_id);
     if(model == NULL) return JS_EXCEPTION;
     int meshIndex;
@@ -11802,7 +19329,7 @@ static JSValue js_getModelMesh(JSContext * ctx, JSValueConst this_val, int argc,
     return ret;
 }
 
-static JSValue js_setShaderLocation(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_setShaderLocation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* shader = (Shader*)JS_GetOpaque2(ctx, argv[0], js_Shader_class_id);
     if(shader == NULL) return JS_EXCEPTION;
     int constant;
@@ -11813,7 +19340,7 @@ static JSValue js_setShaderLocation(JSContext * ctx, JSValueConst this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageReadPixel(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_imageReadPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* image = (Image*)JS_GetOpaque2(ctx, argv[0], js_Image_class_id);
     if(image == NULL) return JS_EXCEPTION;
     int x;
@@ -11828,7 +19355,7 @@ static JSValue js_imageReadPixel(JSContext * ctx, JSValueConst this_val, int arg
     return ret;
 }
 
-static JSValue js_meshCopy(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_meshCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* mesh_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(mesh_ptr == NULL) return JS_EXCEPTION;
     Mesh mesh = *mesh_ptr;
@@ -11840,7 +19367,7 @@ static JSValue js_meshCopy(JSContext * ctx, JSValueConst this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_meshMerge(JSContext * ctx, JSValueConst this_val, int argc, JSValueConst * argv) {
+static JSValue js_meshMerge(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* a_ptr = (Mesh*)JS_GetOpaque2(ctx, argv[0], js_Mesh_class_id);
     if(a_ptr == NULL) return JS_EXCEPTION;
     Mesh a = *a_ptr;
@@ -12209,7 +19736,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("getPixelDataSize",3,js_getPixelDataSize),
     JS_CFUNC_DEF("getFontDefault",0,js_getFontDefault),
     JS_CFUNC_DEF("loadFont",1,js_loadFont),
-    JS_CFUNC_DEF("loadFontEx",2,js_loadFontEx),
+    JS_CFUNC_DEF("loadFontEx",4,js_loadFontEx),
     JS_CFUNC_DEF("loadFontFromImage",3,js_loadFontFromImage),
     JS_CFUNC_DEF("isFontReady",1,js_isFontReady),
     JS_CFUNC_DEF("unloadFont",1,js_unloadFont),
@@ -12223,6 +19750,24 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("measureTextEx",4,js_measureTextEx),
     JS_CFUNC_DEF("getGlyphIndex",2,js_getGlyphIndex),
     JS_CFUNC_DEF("getGlyphAtlasRec",2,js_getGlyphAtlasRec),
+    JS_CFUNC_DEF("textCopy",2,js_textCopy),
+    JS_CFUNC_DEF("textIsEqual",2,js_textIsEqual),
+    JS_CFUNC_DEF("textLength",1,js_textLength),
+    JS_CFUNC_DEF("textFormat",0,js_textFormat),
+    JS_CFUNC_DEF("textSubtext",3,js_textSubtext),
+    JS_CFUNC_DEF("textReplace",3,js_textReplace),
+    JS_CFUNC_DEF("textInsert",3,js_textInsert),
+    JS_CFUNC_DEF("textJoin",3,js_textJoin),
+    JS_CFUNC_DEF("textSplit",3,js_textSplit),
+    JS_CFUNC_DEF("textAppend",3,js_textAppend),
+    JS_CFUNC_DEF("textFindIndex",2,js_textFindIndex),
+    JS_CFUNC_DEF("textToUpper",1,js_textToUpper),
+    JS_CFUNC_DEF("textToLower",1,js_textToLower),
+    JS_CFUNC_DEF("textToPascal",1,js_textToPascal),
+    JS_CFUNC_DEF("textToSnake",1,js_textToSnake),
+    JS_CFUNC_DEF("textToCamel",1,js_textToCamel),
+    JS_CFUNC_DEF("textToInteger",1,js_textToInteger),
+    JS_CFUNC_DEF("textToFloat",1,js_textToFloat),
     JS_CFUNC_DEF("drawLine3D",3,js_drawLine3D),
     JS_CFUNC_DEF("drawPoint3D",2,js_drawPoint3D),
     JS_CFUNC_DEF("drawCircle3D",5,js_drawCircle3D),

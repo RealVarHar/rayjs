@@ -97,10 +97,14 @@ export class GenericCodeGenerator {
         this.inline(params.join(", "));
         this.statement(")");
     }
-    declare(name, type, isStatic = false, initValue = null) {
-        if (isStatic)
-            this.inline("static ");
-        this.inline(type + " " + name);
+    declare(name, type, isStatic = false, initValue = null, supressDeclaration = false) {
+        if(!supressDeclaration){
+            if (isStatic)
+                this.inline("static ");
+            this.inline(type + " " + name);
+        }else{
+            this.inline(name);
+        }
         if (initValue)
             this.inline(" = " + initValue);
         this.statement("");
@@ -162,6 +166,19 @@ export class GenericCodeGenerator {
             funIf(sub);
         return sub;
     }
+    elsif(condition, funIf){
+        this.line("else if(" + condition + ") {");
+        this.indent();
+        const sub = this.createGenerator();
+        sub.setTag("_type", "if-body");
+        sub.setTag("_condition", condition);
+        this.child(sub);
+        this.unindent();
+        this.line("}");
+        if (funIf)
+            funIf(sub);
+        return sub;
+    }
     else(funElse) {
         this.line("else {");
         this.indent();
@@ -180,8 +197,8 @@ export class GenericCodeGenerator {
     include(name) {
         this.line("#include <" + name + ">");
     }
-    for(indexVar, lengthVar) {
-        this.line(`for(int ${indexVar}; i < ${lengthVar}; i++){`);
+    for(indexVar, lengthVar, iter='i') {
+        this.line(`for(int ${iter}=${indexVar}; ${iter} < ${lengthVar}; ${iter}++){`);
         this.indent();
         const child = this.child();
         this.unindent();
@@ -217,8 +234,7 @@ export class GenericCodeGenerator {
         this.line(`case ${value}:`);
     }
     defaultBreak() {
-        this.line("default:");
-        this.line("{");
+        this.line("default:{");
         this.indent();
         const body = this.child();
         this.statement("break");
@@ -227,8 +243,7 @@ export class GenericCodeGenerator {
         return body;
     }
     caseBreak(value) {
-        this.case(value);
-        this.line("{");
+        this.line(`case ${value}:{`);
         this.indent();
         const body = this.child();
         this.statement("break");

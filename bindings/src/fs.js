@@ -97,23 +97,13 @@ function tounicode(high,low){//utf16 to unicode
 	}
 	return ((high&1023)<<10|low&1023)+0x10000;
 }
-function fromunicode(i){//utf16 to unicode
+function fromunicode(i){//unicode to utf16
 	//Always provide second character, if possible
 	if(i<0x10000){
 		return String.fromCharCode(i);
 	}
 	i-=0x10000;
 	return String.fromCharCode(i>>10|0xD800)+String.fromCharCode(i&1023|0xDC00);
-	if(low==undefined){
-		return high;
-	}
-	if(high<0xD800||high>0xDFFF){
-		return high;
-	}
-	if(high>0xDBFF||low<0xDC00||low>0xDFFF){
-		return 65533;//�
-	}
-	return ((high&1023)<<10|low&1023)+0x10000;
 }
 function toutf8(str=""){
 	let srclen=str.length;
@@ -152,6 +142,7 @@ function toutf8(str=""){
 	}
 	return ret.resolve();
 }
+//TODO: make this function faster
 function fromutf8(src=new Uint8Array(1),start=0){
 	let srclen=src.length;
 	let ret="";
@@ -195,16 +186,19 @@ function fromutf8(src=new Uint8Array(1),start=0){
 function readflags(flag){
 	switch(flag){
 		case 'a':{
-			return os.O_APPEND | os.O_CREAT;
+			return os.O_WRONLY | os.O_APPEND | os.O_CREAT;
 		}break;
 		case 'ax':{
-			return os.O_APPEND | os.O_CREAT | os.O_EXCL;
+			return os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL;
 		}break;
 		case 'a+':{
 			return os.O_RDWR | os.O_APPEND | os.O_CREAT;
 		}break;
+		case 'ax+':{
+			return os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_EXCL;
+		}break;
 		case 'as':{
-			return os.O_APPEND | os.O_CREAT;
+			return os.O_WRONLY | os.O_APPEND | os.O_CREAT;
 		}break;
 		case 'as+':{
 			return os.O_RDWR | os.O_APPEND | os.O_CREAT;
@@ -219,19 +213,19 @@ function readflags(flag){
 			return os.O_RDWR;
 		}break;
 		case 'rs+':{
-			return os.O_RDWR | os.O_CREAT;
+			return os.O_RDWR;
 		}break;
 		case 'w':{
-			return os.O_WRONLY | os.O_CREAT;
+			return os.O_WRONLY | os.O_CREAT | os.O_TRUNC;
 		}break;
 		case 'wx':{
-			return os.O_WRONLY | os.O_CREAT,O_EXCL;
+			return os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC;
 		}break;
 		case 'w+':{
-			return os.O_RDWR | O_CREAT | O_TRUNC;
+			return os.O_RDWR | os.O_CREAT | os.O_TRUNC;
 		}break;
 		case 'wx+':{
-			return os.O_RDWR | os.O_CREAT | os.O_EXCL,O_TRUNC;
+			return os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_TRUNC;
 		}break;
 	}
 	return os.O_RDWR | os.O_CREAT;
@@ -273,7 +267,7 @@ export function writeFileSync(path, data, options={}){
 		options.mode=0o666;
 	}
 	if(options.flag==undefined){
-		options.flag= os.O_WRONLY;
+		options.flag= os.O_WRONLY | os.O_CREAT | os.O_TRUNC;
 	}else{
 		options.flag=readflags(options.flag);
 	}
