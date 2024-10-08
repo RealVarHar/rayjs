@@ -1288,7 +1288,7 @@ declare function unloadMaterial(material: Material): void;
 declare function setMaterialTexture(material: Material, mapType: number, texture: Texture): void;
 /** Set material for a mesh */
 declare function setModelMeshMaterial(model: Model, meshId: number, materialId: number): void;
-/** Update model animation mesh bone matrices */
+/** Update model animation mesh bone matrices (Note GPU skinning does not work on Mac) */
 declare function updateModelAnimationBoneMatrices(model: Model, anim: ModelAnimation, frame: number): void;
 /** Check collision between two spheres */
 declare function checkCollisionSpheres(center1: Vector3, radius1: number, center2: Vector3, radius2: number): boolean;
