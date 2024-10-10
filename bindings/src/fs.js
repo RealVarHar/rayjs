@@ -48,9 +48,104 @@ class Buffer{
 		this.currentLength++;
 		this.length++;
 	}
+	toString(){
+		const alloc=this.alloc;
+		let ret=String.fromCharCode(...(this.bufferhistory[0]));
+		let n=0;
+		for(let i=1;i<this.bufferhistory.length;i++){
+			ret+=String.fromCharCode(...(this.bufferhistory[i]));
+		}
+		let currentbufer=this.currentbufer;
+		if(this.currentLength<this.alloc){
+			currentbufer=new Uint8Array(buffer, 0, this.currentLength);
+		}
+		ret+=String.fromCharCode(...currentbufer);
+		return ret;
+	}
 	resolve(){
 		const alloc=this.alloc;
 		let ret=new Uint8Array(this.length);
+		let n=0;
+		for(let i=0;i<this.bufferhistory.length;i++){
+			let buffer=this.bufferhistory[i];
+			for(let j=0;j<alloc;j++){
+				ret[n]=buffer[j];
+				n++;
+			}
+		}
+		const currentbufer=this.currentbufer;
+		for(let j=0;j<alloc;j++){
+			ret[n]=currentbufer[j];
+			n++;
+		}
+		return ret;
+	}
+}
+class Buffer16{
+	bufferhistory=[];
+	currentbufer;
+	currentLength=0;
+	length=0;
+	alloc=0;
+
+	constructor(alloc){
+		this.alloc=alloc;
+		this.currentbufer=new Uint16Array(alloc);
+	}
+	get(index){
+		const alloc=this.alloc;
+		const currentLength=this.currentLength;
+		if(index>currentLength)return 0;
+		let i=Math.floor(index/alloc);
+		if(i==0){
+			const currentbufer=this.currentbufer;
+			return currentbufer[index];
+		}else{
+			const bufferhistory=this.bufferhistory;
+			return bufferhistory[bufferhistory.length-i][index-i*alloc];
+		}
+	}
+	set(index,value){
+		const alloc=this.alloc;
+		const bufferhistory=this.bufferhistory;
+		if(index>this.length)return;
+		let i=Math.floor(index/alloc);
+		if(i==bufferhistory.length){
+			const currentbufer=this.currentbufer;
+			currentbufer[index-i*alloc]=value;
+		}else{
+			bufferhistory[i][index-i*alloc]=value;
+		}
+	}
+	append(value){
+		const alloc=this.alloc;
+		const bufferhistory=this.bufferhistory;
+		if(this.currentLength==alloc){
+			bufferhistory.push(this.currentbufer);
+			this.currentbufer=new Uint8Array(alloc);
+			this.currentLength=0;
+		}
+		this.currentbufer[this.currentLength]=value;
+		this.currentLength++;
+		this.length++;
+	}
+	toString(){
+		const alloc=this.alloc;
+		let ret=String.fromCharCode(...(this.bufferhistory[0]));
+		let n=0;
+		for(let i=1;i<this.bufferhistory.length;i++){
+			ret+=String.fromCharCode(...(this.bufferhistory[i]));
+		}
+		let currentbufer=this.currentbufer;
+		if(this.currentLength<this.alloc){
+			currentbufer=currentbufer.slice(0, this.currentLength);
+		}
+		ret+=String.fromCharCode(...currentbufer);
+		return ret;
+	}
+	resolve(){
+		const alloc=this.alloc;
+		let ret=new Uint16Array(this.length);
 		let n=0;
 		for(let i=0;i<this.bufferhistory.length;i++){
 			let buffer=this.bufferhistory[i];
@@ -144,44 +239,57 @@ function toutf8(str=""){
 }
 //TODO: make this function faster
 function fromutf8(src=new Uint8Array(1),start=0){
-	let srclen=src.length;
-	let ret="";
-	for(let i=start;i<srclen;i++){
+	const srclen=src.length;
+	let ret=new Buffer16(Math.min(srclen,4096));
+	let i=start;
+	while(i<srclen){
 		const header=src[i];
 		if(header<192){
 			if(header<128){
-				ret+=String.fromCharCode(src[i]);
+				ret.append(header);
 			}else{
-				ret+='�';
+				ret.append(65533);//�
 			}
+			i++
 		}else{
 			let codes;
 			if(header<224){
 				//len=2
 				codes=(header&31)<<6;
 				codes|=src[i+1]&63;
-				i++;
+				i+=2;
+				ret.append(codes);
+				continue;
 			}else if(header<240){
 				//len=3
 				codes=(header&15)<<12;
 				codes|=(src[i+1]&63)<<6;
 				codes|=(src[i+2]&63);
-				i+=2;
+				i+=3;
+				ret.append(codes);
+				continue;
 			}else if(header<248){
 				//len=4
 				codes=(header&7)<<18;
 				codes|=(src[i+1]&63)<<12;
 				codes|=(src[i+2]&63)<<6;
 				codes|=(src[i+3]&63);
-				i+=3;
+				i+=4;
 			}else{
-				ret+='�';
+				ret.append(65533);//�
+				i++;
 				continue;
 			}
-			ret+=fromunicode(codes);
+			if(codes<0x10000){
+				ret.append(codes);
+			}else{
+				codes-=0x10000;
+				ret.append(codes>>10|0xD800);
+				ret.append(codes&1023|0xDC00);
+			}
 		}
 	}
-	return ret;
+	return ret.toString();
 }
 function readflags(flag){
 	switch(flag){
@@ -239,7 +347,7 @@ export function readFileSync(path, options={}){
 	}else{
 		options.flag=readflags(options.flag);
 	}
-    let ret;
+	let ret;
 	const f = os.open(path, options.flag);
 	if(f==null){
 		console.log('ERROR: fs.read');
@@ -279,12 +387,12 @@ export function writeFileSync(path, data, options={}){
 	}
 	const f = os.open(path, options.flag);
 	if(f==null){
-        console.log('ERROR: fs.write');
+		console.log('ERROR: fs.write');
 		return false;//not up to spec, throw error
 	}
 
 	let written=os.write(f,data.buffer,0,data.length);
-    os.close(f);
+	os.close(f);
 	if(written<0)return false;
 	return true;
 }

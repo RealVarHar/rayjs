@@ -16,7 +16,7 @@ function ignore(name) {
 }
 function main() {
     // Load the pre-generated raylib api
-    api = JSON.parse((0, fs.readFileSync)("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
+    api = JSON.parse(fs.readFileSync("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
     //make sure json structure is as expected
     api.functions=api.functions.map(fn=>{
         return {
@@ -607,14 +607,14 @@ function main() {
     //     lenParam.binding = { ignore: true }
     //     const param = fun!.params![index]
     //     fun.binding = { customizeCall: "int returnVal = GuiListViewEx(bounds, text, count, focus, scrollIndex, active);" }
-    //     param.binding = { 
+    //     param.binding = {
     //         jsType: `{ ${param.name}: string[] }`,
     //         customConverter: (gen,src) => {
     //             gen.line("// TODO: Read string values")
     //         },
     //         customCleanup: (gen, src) => {
     //             gen.line("// TODO: Dispose strings")
-    //         }             
+    //         }
     //     }
     // }
     //const glve = getFunction(api.functions, "GuiListViewEx")!
