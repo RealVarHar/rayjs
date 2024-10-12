@@ -1,6 +1,6 @@
 [submodule "thirdparty/quickjs"]
 	path = thirdparty/quickjs
-	url = https://github.com/bellard/quickjs.git
+	url = https://github.com/quickjs-ng/quickjs.git
 [submodule "thirdparty/raylib"]
 	path = thirdparty/raylib
 	url = https://github.com/raysan5/raylib.git
