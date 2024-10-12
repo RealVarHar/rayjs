@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.9)
 cmake_policy(SET CMP0063 NEW)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
 
@@ -13,6 +13,28 @@ if (UNIX)
 endif (UNIX)
 
 project(rayjs LANGUAGES C)
+#Inherit some compiler flags
+include(CheckCCompilerFlag)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON)
+set(CMAKE_C_STANDARD 11)
+macro(xcheck_add_c_compiler_flag FLAG)
+    string(REPLACE "-" "" FLAG_NO_HYPHEN ${FLAG})
+    check_c_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG_NO_HYPHEN})
+    if(COMPILER_SUPPORTS_${FLAG_NO_HYPHEN})
+        add_compile_options(${FLAG})
+    endif()
+endmacro()
+
+xcheck_add_c_compiler_flag(-Wno-implicit-fallthrough)
+xcheck_add_c_compiler_flag(-Wno-sign-compare)
+xcheck_add_c_compiler_flag(-Wno-missing-field-initializers)
+xcheck_add_c_compiler_flag(-Wno-unused-parameter)
+xcheck_add_c_compiler_flag(-Wno-unused-but-set-variable)
+xcheck_add_c_compiler_flag(-Wno-array-bounds)
+xcheck_add_c_compiler_flag(-Wno-format-truncation)
+xcheck_add_c_compiler_flag(-funsigned-char)
+#Inherit some compiler flags
 
 include(CheckCCompilerFlag)
 include(GNUInstallDirs)

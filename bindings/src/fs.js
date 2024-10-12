@@ -237,7 +237,6 @@ function toutf8(str=""){
 	}
 	return ret.resolve();
 }
-//TODO: make this function faster
 function fromutf8(src=new Uint8Array(1),start=0){
 	const srclen=src.length;
 	let ret=new Buffer16(Math.min(srclen,4096));
@@ -349,8 +348,8 @@ export function readFileSync(path, options={}){
 	}
 	let ret;
 	const f = os.open(path, options.flag);
-	if(f==null){
-		console.log('ERROR: fs.read');
+	if(f==null||f<0){
+		console.log('ERROR: fs.read',path);
 		return undefined;
 	}
 

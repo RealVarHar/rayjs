@@ -167,7 +167,7 @@ Rayjs builds bindings from sources, to refresh those, run
 cd rayjs
 qjs.exe bindings/src/index.js
 ```
-qjs.exe can be aquired from https://github.com/quickjs-ng/quickjs
+qjs.exe can be aquired from https://github.com/quickjs-ng/quickjs or rayjs.exe itself can be used
 
 ### Build with cmake
 Make sure you have cmake installed and in your path.

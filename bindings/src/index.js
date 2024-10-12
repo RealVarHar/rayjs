@@ -333,7 +333,7 @@ function main() {
 			//chromaAbCorrection : { set: true, get: true }
         }
     };
-    getFunction(api.functions, "EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", []) };
+    getFunction(api.functions, "EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
     ignore("SetWindowIcons");
     ignore("GetWindowHandle");
     // Custom frame control functions
@@ -645,4 +645,8 @@ function main() {
     console.log("Success!");
     // TODO: Expose PLatform defines
 }
-main();
+try{
+    main();
+}catch(e){
+    console.log(e);
+}
