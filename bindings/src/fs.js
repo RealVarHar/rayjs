@@ -130,18 +130,22 @@ class Buffer16{
 		this.length++;
 	}
 	toString(){
-		const alloc=this.alloc;
-		let ret=String.fromCharCode(...(this.bufferhistory[0]));
+		const historylen=this.bufferhistory.length;
+		let ret;
 		let n=0;
-		for(let i=1;i<this.bufferhistory.length;i++){
-			ret+=String.fromCharCode(...(this.bufferhistory[i]));
-		}
 		let currentbufer=this.currentbufer;
 		if(this.currentLength<this.alloc){
 			currentbufer=currentbufer.slice(0, this.currentLength);
 		}
-		ret+=String.fromCharCode(...currentbufer);
-		return ret;
+		if(historylen>0){
+			ret=String.fromCharCode(...(this.bufferhistory[0]));
+			for(let i=1;i<historylen;i++){
+				ret+=String.fromCharCode(...(this.bufferhistory[i]));
+			}
+			return ret+String.fromCharCode(...currentbufer);
+		}else{
+			return String.fromCharCode(...currentbufer);
+		}
 	}
 	resolve(){
 		const alloc=this.alloc;

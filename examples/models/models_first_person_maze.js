@@ -27,14 +27,14 @@ const position = new Vector3(0,0,0);            // Set model position
 const imMap = loadImage("resources/cubicmap.png");      // Load cubicmap image (RAM)
 const cubicmap = loadTextureFromImage(imMap);       // Convert image to texture to display (VRAM)
 const mesh = genMeshCubicmap(imMap, new Vector3(1.0, 1.0, 1.0));
-const model = loadModelFromMesh(mesh);
+const floor = loadModelFromMesh(mesh);
 
 // NOTE: By default each cube is mapped to one part of texture atlas
 const texture = loadTexture("resources/cubicmap_atlas.png");    // Load map texture
 //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;    // Set map diffuse texture
 const mat = loadMaterialDefault()
 setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture)
-setModelMaterial(model,0,mat)
+setModelMaterial(floor,0,mat)
 
 // Get map image data to be used for collision detection
 const mapPixels = new Uint8Array(loadImageColors(imMap));
@@ -96,7 +96,7 @@ while (!windowShouldClose())    // Detect window close button or ESC key
         clearBackground(RAYWHITE);
 
         beginMode3D(camera);
-            drawModel(model, mapPosition, 1.0, WHITE);                     // Draw maze map
+            drawModel(floor, mapPosition, 1.0, WHITE);                     // Draw maze map
         endMode3D();
 
         drawTextureEx(cubicmap, new Vector2(getScreenWidth() - cubicmap.width*4.0 - 20, 20.0), 0.0, 4.0, WHITE);

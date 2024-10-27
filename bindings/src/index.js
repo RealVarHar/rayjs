@@ -1,6 +1,12 @@
 import * as fs from "./fs.js";
 import * as raylib_header from "./raylib-header.js";
 import * as header_parser from "./header-parser.js";
+const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
+
+String.prototype.replaceAt = function(index, replacement) {
+    return this.substr(0, index) + replacement + this.substr(index+1);
+};
+
 let api;
 function getFunction(funList, name) {
     return funList.find(x => x.name === name);
@@ -14,18 +20,21 @@ function getAliases(aliasList, name) {
 function ignore(name) {
     getFunction(api.functions, name).binding = { ignore: true };
 }
+function normalizeType(type=''){
+    return type.trim().replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ');
+}
 function main() {
     // Load the pre-generated raylib api
     api = JSON.parse(fs.readFileSync("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
     //make sure json structure is as expected
     api.functions=api.functions.map(fn=>{
         return {
-            returnType: fn.returnType,
+            returnType: normalizeType(fn.returnType),
             name: fn.name,
             params: (fn.params||[]).map( parm =>{
                 return {
                     name: parm.name || "",
-                    type: parm.type.trim().replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' '),
+                    type: normalizeType(parm.type),
                     binding:{}
                 }
             }),
@@ -34,19 +43,19 @@ function main() {
         };
     });
     const parser = new header_parser.HeaderParser();
-    const rmathHeader = (0, fs.readFileSync)("thirdparty/raylib/src/raymath.h", "utf8");
+    const rmathHeader = fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8");
     const mathApi = parser.parseFunctions(rmathHeader);
     mathApi.forEach(x => api.functions.push(x));
-    const rcameraHeader = (0, fs.readFileSync)("thirdparty/raylib/src/rcamera.h", "utf8");
+    const rcameraHeader = fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8");
     const cameraApi = parser.parseFunctionDefinitions(rcameraHeader);
     cameraApi.forEach(x => api.functions.push(x));
-    const rguiHeader = (0, fs.readFileSync)("thirdparty/raygui/src/raygui.h", "utf8");
+    const rguiHeader = fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8");
     const rguiFunctions = parser.parseFunctionDefinitions(rguiHeader);
     const rguiEnums = parser.parseEnums(rguiHeader);
     //rguiApi.forEach(x => console.log(`core.addApiFunctionByName("${x.name}")`))
     rguiFunctions.forEach(x => api.functions.push(x));
     rguiEnums.forEach(x => api.enums.push(x));
-    const rlightsHeader = (0, fs.readFileSync)("include/rlights.h", "utf8");
+    const rlightsHeader = fs.readFileSync("include/rlights.h", "utf8");
     const rlightsFunctions = parser.parseFunctions(rlightsHeader, true);
     api.functions.push(rlightsFunctions[0]);
     api.functions.push(rlightsFunctions[1]);
@@ -64,10 +73,10 @@ function main() {
         },
     };
     api.structs.push(rlightsStructs[0]);
-    const reasingsHeader = (0, fs.readFileSync)("include/reasings.h", "utf8");
+    const reasingsHeader = fs.readFileSync("include/reasings.h", "utf8");
     const reasingsFunctions = parser.parseFunctions(reasingsHeader);
     reasingsFunctions.forEach(x => api.functions.push(x));
-    const rlightmapperHeader = (0, fs.readFileSync)("src/rlightmapper.h", "utf8");
+    const rlightmapperHeader = fs.readFileSync("src/rlightmapper.h", "utf8");
     const rlightmapperFunctions = parser.parseFunctionDefinitions(rlightmapperHeader);
     const rlightmapperStructs = parser.parseStructs(rlightmapperHeader);
     rlightmapperFunctions.forEach(x => api.functions.push(x));
@@ -244,7 +253,12 @@ function main() {
             transform: { get: true, set: true },
             meshCount: { get: true },
             materialCount: { get: true },
+            meshes: { get: true },
+            materials: { get: true },
+            meshMaterial: { get: true },
             boneCount: { get: true },
+            bones: { get: true },
+            bindPose: { get: true }
         },
         //destructor: "UnloadModel"
     };
@@ -253,10 +267,10 @@ function main() {
             vertexCount: { get: true, set: true },
             triangleCount: { get: true, set: true },
             // TODO: Free previous pointers before overwriting
-            vertices: { set: true },
-            texcoords: { set: true },
+            vertices: { get: true, set: true },
+            texcoords: { get:true, set: true },
             texcoords2: { set: true },
-            normals: { set: true },
+            normals: { get:true, set: true },
             tangents: { set: true },
             colors: { set: true },
             indices: { set: true },
@@ -312,7 +326,8 @@ function main() {
     };
     getStruct(api.structs, "Material").binding = {
         properties: {
-            shader: { get: true, set: true }
+            shader: { get: true, set: true },
+            maps: { get: true }
         },
         //destructor: "UnloadMaterial"
     };
@@ -346,34 +361,76 @@ function main() {
     //ignore("LoadVrStereoConfig")
     //ignore("UnloadVrStereoConfig")
     getFunction(api.functions, "SetShaderValue").binding = { body: (gen) => {
+        gen.jsToC("Shader", "shader", "argv[0]", core.structLookup);
+        gen.jsToC("int", "locIndex", "argv[1]", core.structLookup);
+        gen.declare("value", "void *", false, "NULL");
+        gen.declare("da_value", "JSValue");
+        gen.jsToC("int", "uniformType", "argv[3]", core.structLookup);
+        const sw = gen.switch("uniformType");
+        //Named VEC but examples and inner code use (float *) technically the same
+        let b = sw.caseBreak("SHADER_UNIFORM_FLOAT");
+            b.jsToC("float &", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_VEC2");
+            b.jsToC("float [2]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_VEC3");
+            b.jsToC("float [3]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_VEC4");
+            b.jsToC("float [4]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        sw.case("SHADER_UNIFORM_INT");
+        b = sw.caseBreak("SHADER_UNIFORM_SAMPLER2D");
+            b.jsToC("int &", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_IVEC2");
+            b.jsToC("int [2]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_IVEC3");
+            b.jsToC("int [3]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.caseBreak("SHADER_UNIFORM_IVEC4");
+            b.jsToC("int [4]", "val", "argv[2]", core.structLookup);
+            b.statement("value = (void *)val");b.statement("da_value = da_val");
+        b = sw.defaultBreak();
+            b.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
+            b.returnExp("JS_EXCEPTION");
+        gen.call("SetShaderValue", ["shader", "locIndex", "value", "uniformType"]);
+        gen.jsCleanUpParameter("void *", 'value', "argv[2]", core.structLookup);
+        gen.returnExp("JS_UNDEFINED");
+    } };
+    getFunction(api.functions, "SetShaderValueV").binding = { body: (gen) => {
             gen.jsToC("Shader", "shader", "argv[0]", core.structLookup);
             gen.jsToC("int", "locIndex", "argv[1]", core.structLookup);
-            gen.declare("value", "void *", false, "NULL");
-            gen.declare("valueFloat", "float");
-            gen.declare("valueInt", "int");
             gen.jsToC("int", "uniformType", "argv[3]", core.structLookup);
+            gen.jsToC("int", "count", "argv[4]", core.structLookup);
+            gen.declare("value", "void *", false, "NULL");
+            gen.declare("da_value", "JSValue");
             const sw = gen.switch("uniformType");
-            let b = sw.caseBreak("SHADER_UNIFORM_FLOAT");
-            b.jsToC("float", "valueFloat", "argv[2]", core.structLookup, true);
-            b.statement("value = (void *)&valueFloat");
-            b = sw.caseBreak("SHADER_UNIFORM_VEC2");
-            b.jsToC("Vector2 *", "valueV2", "argv[2]", core.structLookup);
-            b.statement("value = (void*)valueV2");
-            b = sw.caseBreak("SHADER_UNIFORM_VEC3");
-            b.jsToC("Vector3 *", "valueV3", "argv[2]", core.structLookup);
-            b.statement("value = (void*)valueV3");
+            //Named VEC but examples and inner code use (float *) technically the same
+            let b;
+            sw.case("SHADER_UNIFORM_FLOAT");
+            sw.case("SHADER_UNIFORM_VEC2");
+            sw.case("SHADER_UNIFORM_VEC3");
             b = sw.caseBreak("SHADER_UNIFORM_VEC4");
-            b.jsToC("Vector4 *", "valueV4", "argv[2]", core.structLookup);
-            b.statement("value = (void*)valueV4");
-            b = sw.caseBreak("SHADER_UNIFORM_INT");
-            b.jsToC("int", "valueInt", "argv[2]", core.structLookup, {supressDeclaration:true});
-            b.statement("value = (void*)&valueInt");
+                b.jsToC("float *", "val", "argv[2]", core.structLookup);
+                b.statement("value = (void *)val");b.statement("da_value = da_val");
+            sw.case("SHADER_UNIFORM_INT");
+            sw.case("SHADER_UNIFORM_SAMPLER2D");
+            sw.case("SHADER_UNIFORM_IVEC2");
+            sw.case("SHADER_UNIFORM_IVEC3");
+            b = sw.caseBreak("SHADER_UNIFORM_IVEC4");
+                b.jsToC("int *", "val", "argv[2]", core.structLookup);
+                b.statement("value = (void*)val");b.statement("da_value = da_val");
             b = sw.defaultBreak();
-            b.returnExp("JS_EXCEPTION");
-            gen.call("SetShaderValue", ["shader", "locIndex", "value", "uniformType"]);
+                b.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
+                b.returnExp("JS_EXCEPTION");
+            gen.call("SetShaderValueV", ["shader", "locIndex", "value", "uniformType",'count']);
+            gen.jsCleanUpParameter("void *", 'value', "argv[2]", core.structLookup);
             gen.returnExp("JS_UNDEFINED");
         } };
-    ignore("SetShaderValueV");
+    getFunction(api.functions, "SetShaderValueV").params.find(a=>a.name=='value').name='values';
     const traceLog = getFunction(api.functions, "TraceLog");
     traceLog.params?.pop();
     // JS User has no need to raw allocate memory
@@ -495,9 +552,12 @@ function main() {
     ignore("GetCodepointNext");
     ignore("GetCodepointPrevious");
     ignore("CodepointToUTF8");
-    // use JS Stdlib instead
-    // Allow until we get polyfills ready
-    //api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
+    if(!config.bindText){
+        //Text functions are enabled for compatibility
+        api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
+    }else{
+        getFunction(api.functions, "TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+    }
     ignore("DrawTriangleStrip3D");
     ignore("LoadMaterials");
     ignore("LoadModelAnimations");
@@ -535,102 +595,48 @@ function main() {
     ignore("QuaternionToAxisAngle");
     core.exportGlobalDouble("DEG2RAD", "(PI/180.0)");
     core.exportGlobalDouble("RAD2DEG", "(180.0/PI)");
-    const setOutParam = (fun, index) => {
-        const param = fun.params[index];
-        param.binding = {
-            jsType: `{ ${param.name}: number }`,
-            customConverter: (gen, src) => {
-                gen.declare(param.name, param.type, false, "NULL");
-                const subtype=param.type.replace(" *", "");
-                gen.declare(param.name + "_out", subtype);
-                const body = gen.if("!JS_IsNull(" + src + ")");
-                body.statement(param.name + " = &" + param.name + "_out");
-                body.call("JS_GetPropertyStr", ["ctx", src, '"' + param.name + '"'], { name: param.name + "_js", type: "JSValue" });
-                switch(subtype){
-                    case 'int':{
-                        body.call("JS_ToInt32", ["ctx", param.name, param.name + "_js"]);
-                        break;
-                    }
-                    case 'bool':{
-                        body.call("JS_ToBool", ["ctx", param.name + "_js"]);
-                        break;
-                    }
-                    default:{console.log("Warning: unsupported");}
-                }
-            },
-            customCleanup: (gen, src) => {
-                const body = gen.if("!JS_IsNull(" + src + ")");
-                const subtype=param.type.replace(" *", "");
-                switch(subtype){
-                    case 'int':{
-                        body.call("JS_SetPropertyStr", ["ctx", src, `"${param.name}"`, "JS_NewInt32(ctx," + param.name + "_out)"]);
-                        break;
-                    }
-                    case 'bool':{
-                        body.call("JS_SetPropertyStr", ["ctx", src, `"${param.name}"`, "JS_NewBool(ctx," + param.name + "_out)"]);
-                        break;
-                    }
-                    default:{console.log("Warning: unsupported");}
-                }
-
-            }
-        };
-    };
-    const setOutParamString = (fun, index, indexLen) => {
-        const lenParam = fun.params[indexLen];
-        lenParam.binding = { ignore: true };
-        const param = fun.params[index];
-        param.binding = {
-            jsType: `{ ${param.name}: string }`,
-            customConverter: (gen, src) => {
-                gen.call("JS_GetPropertyStr", ["ctx", src, '"' + param.name + '"'], { name: param.name + "_js", type: "JSValue" });
-                gen.declare(param.name + "_len", "size_t");
-                gen.call("JS_ToCStringLen", ["ctx", "&" + param.name + "_len", param.name + "_js"], { name: param.name + "_val", type: "const char *" });
-                gen.call("memcpy", ["(void *)textbuffer", param.name + "_val", param.name + "_len"]);
-                gen.statement("textbuffer[" + param.name + "_len] = 0");
-                gen.declare(param.name, param.type, false, "textbuffer");
-                gen.declare(lenParam.name, lenParam.type, false, "4096");
-            },
-            customCleanup: (gen, src) => {
-                gen.statement(`JS_FreeCString(ctx, ${param.name}_val)`);
-                gen.call("JS_SetPropertyStr", ["ctx", src, `"${param.name}"`, "JS_NewString(ctx," + param.name + ")"]);
-            }
-        };
-    };
     core.definitions.declare("textbuffer[4096]", "char", true);
-    setOutParam(getFunction(api.functions, "GuiDropdownBox"), 2);
-    setOutParam(getFunction(api.functions, "GuiSpinner"), 2);
-    setOutParam(getFunction(api.functions, "GuiValueBox"), 2);
-    setOutParam(getFunction(api.functions, "GuiListView"), 2);
-    // const setStringListParam = (fun: RayLibFunction, index: number, indexLen: number) => {
-    //     const lenParam = fun!.params![indexLen]
-    //     lenParam.binding = { ignore: true }
-    //     const param = fun!.params![index]
-    //     fun.binding = { customizeCall: "int returnVal = GuiListViewEx(bounds, text, count, focus, scrollIndex, active);" }
-    //     param.binding = {
-    //         jsType: `{ ${param.name}: string[] }`,
-    //         customConverter: (gen,src) => {
-    //             gen.line("// TODO: Read string values")
-    //         },
-    //         customCleanup: (gen, src) => {
-    //             gen.line("// TODO: Dispose strings")
-    //         }
-    //     }
-    // }
-    //const glve = getFunction(api.functions, "GuiListViewEx")!
-    //setStringListParam(glve, 1,2)
-    //setOutParam(glve, 3)
-    //setOutParam(glve, 4)
     ignore("GuiListViewEx");
-    setOutParamString(getFunction(api.functions, "GuiTextBox"), 1, 2);
-    const gtib = getFunction(api.functions, "GuiTextInputBox");
-    setOutParamString(gtib, 4, 5);
-    setOutParam(gtib, 6);
     // needs string array
     ignore("GuiTabBar");
     ignore("GuiGetIcons");
     ignore("GuiLoadIcons");
     api.structs.forEach(x => core.addApiStruct(x));
+    api.functions.forEach(fn => {//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
+        for(let i=0;i<fn.params.length;i++){
+            const parm=fn.params[i];
+            if(parm.type.endsWith(' *')>0){
+                if(fn.params.length==1 && !parm.type.endsWith('char *')){//Arrays tend to require length int but strings not
+                    parm.type=parm.type.replaceAt(parm.type.length-1,'&');
+                    continue;
+                }
+                const name=parm.name.toLowerCase();
+                const subtype=parm.type.toLowerCase().substring(0,parm.type.length-2);
+                //common names
+                if(name==subtype || ['dst','texture','view','active','alpha','filesize','count','position','value','frames','lm','checked','scrollindex'].includes(name)){
+                    parm.type=parm.type.replaceAt(parm.type.length-1,'&');
+                }else
+                if(name.endsWith('s')){
+                    continue;
+                }else
+                if(subtype.startsWith('vector') || subtype.startsWith('quaternion')){
+                    parm.type=parm.type.replaceAt(parm.type.length-1,'&');
+                }
+            }
+        }
+    });
+    let f=getFunction(api.functions, "UnloadRandomSequence").params[0];f.type=f.type.replaceAt(f.type.length-1,'*');
+    getFunction(api.functions,'LoadShader').params[0].binding.allowNull=true;
+    getFunction(api.functions,'GuiSpinner').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiValueBox').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiColorPicker').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiSlider').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiSliderBar').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiProgressBar').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiScrollPanel').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiGrid').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiColorBarAlpha').params[1].binding.allowNull=true;
+    getFunction(api.functions,'GuiTextInputBox').params[6].binding.allowNull=true;
     api.functions.forEach(x => core.addApiFunction(x));
     api.defines.filter(x => x.type === "COLOR").map(x => ({ name: x.name, description: x.description, values: (x.value.match(/\{([^}]+)\}/) || "")[1].split(',').map(x => x.trim()) })).forEach(x => {
         core.exportGlobalStruct("Color", x.name, x.values, x.description);

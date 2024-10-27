@@ -1,3 +1,31 @@
+/*Below is the qjs.c code with minimal modifications allowing raylib addition
+ * Making a module for qjs and qjsc instead would be prefferable,
+ * As it allows for plugin approach
+ */
+/*
+ * QuickJS stand alone interpreter
+ *
+ * Copyright (c) 2017-2021 Fabrice Bellard
+ * Copyright (c) 2017-2021 Charlie Gordon
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -17,6 +45,9 @@
 #ifdef QJS_USE_MIMALLOC
 #include <mimalloc.h>
 #endif
+
+extern const uint8_t qjsc_repl[];
+extern const uint32_t qjsc_repl_size;
 
 #include <stdbool.h>
 #include <limits.h>
@@ -85,11 +116,6 @@ static int eval_file(JSContext *ctx, const char *filename, int module){
     int ret, eval_flags;
     size_t buf_len;
 
-    if(DirectoryExists(filename)){
-        perror(filename);
-        exit(1);
-    }
-
     buf = js_load_file(ctx, &buf_len, filename);
     if (!buf) {
         perror(filename);
@@ -97,7 +123,7 @@ static int eval_file(JSContext *ctx, const char *filename, int module){
     }
 
     if (module < 0) {
-        module = (endsWith(filename, ".mjs") ||
+        module = (has_suffix(filename, ".mjs") ||
                   JS_DetectModule((const char *)buf, buf_len));
     }
     if (module)
@@ -186,6 +212,101 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt){
     return ctx;
 }
 
+struct trace_malloc_data {
+    uint8_t *base;
+};
+
+static inline unsigned long long js_trace_malloc_ptr_offset(uint8_t *ptr,
+                                                struct trace_malloc_data *dp)
+{
+    return ptr - dp->base;
+}
+
+static void
+#if defined(_WIN32) && !defined(__clang__)
+/* mingw printf is used */
+__attribute__((format(gnu_printf, 2, 3)))
+#else
+__attribute__((format(printf, 2, 3)))
+#endif
+    js_trace_malloc_printf(void *opaque, const char *fmt, ...)
+{
+    va_list ap;
+    int c;
+
+    va_start(ap, fmt);
+    while ((c = *fmt++) != '\0') {
+        if (c == '%') {
+            /* only handle %p and %zd */
+            if (*fmt == 'p') {
+                uint8_t *ptr = va_arg(ap, void *);
+                if (ptr == NULL) {
+                    printf("NULL");
+                } else {
+                    printf("H%+06lld.%zd",
+                           js_trace_malloc_ptr_offset(ptr, opaque),
+                           js__malloc_usable_size(ptr));
+                }
+                fmt++;
+                continue;
+            }
+            if (fmt[0] == 'z' && fmt[1] == 'd') {
+                size_t sz = va_arg(ap, size_t);
+                printf("%zd", sz);
+                fmt += 2;
+                continue;
+            }
+        }
+        putc(c, stdout);
+    }
+    va_end(ap);
+}
+
+static void js_trace_malloc_init(struct trace_malloc_data *s)
+{
+    free(s->base = malloc(8));
+}
+
+static void *js_trace_calloc(void *opaque, size_t count, size_t size)
+{
+    void *ptr;
+    ptr = calloc(count, size);
+    js_trace_malloc_printf(opaque, "C %zd %zd -> %p\n", count, size, ptr);
+    return ptr;
+}
+
+static void *js_trace_malloc(void *opaque, size_t size)
+{
+    void *ptr;
+    ptr = malloc(size);
+    js_trace_malloc_printf(opaque, "A %zd -> %p\n", size, ptr);
+    return ptr;
+}
+
+static void js_trace_free(void *opaque, void *ptr)
+{
+    if (!ptr)
+        return;
+    js_trace_malloc_printf(opaque, "F %p\n", ptr);
+    free(ptr);
+}
+
+static void *js_trace_realloc(void *opaque, void *ptr, size_t size)
+{
+    js_trace_malloc_printf(opaque, "R %zd %p", size, ptr);
+    ptr = realloc(ptr, size);
+    js_trace_malloc_printf(opaque, " -> %p\n", ptr);
+    return ptr;
+}
+
+static const JSMallocFunctions trace_mf = {
+    js_trace_calloc,
+    js_trace_malloc,
+    js_trace_free,
+    js_trace_realloc,
+    js__malloc_usable_size
+};
+
 #ifdef QJS_USE_MIMALLOC
 static void *js_mi_calloc(void *opaque, size_t count, size_t size){
     return mi_calloc(count, size);
@@ -221,10 +342,12 @@ void help(void){
            "usage: " PROG_NAME " [options] [file [args]]\n"
            "-h  --help         list options\n"
            "-e  --eval EXPR    evaluate EXPR\n"
+           "-i  --interactive  go to interactive mode\n"
            "-m  --module       load as ES6 module (default=autodetect)\n"
            "    --script       load as ES6 script (default=autodetect)\n"
            "-I  --include file include an additional file\n"
            "    --std          make 'std' and 'os' available to the loaded script\n"
+           "-T  --trace        trace memory allocation\n"
            "-d  --dump         dump the memory usage stats\n"
            "-D  --dump-flags   flags for dumping debug data -D=<bitmask> (see DUMP_* defines)\n"
            "    --memory-limit n       limit the memory usage to 'n' Kbytes\n"
@@ -238,6 +361,7 @@ int main(int argc, char** argv){
     JSRuntime *rt;
     JSContext *ctx;
     JSValue ret;
+    struct trace_malloc_data trace_data = { NULL };
     int optind;
     char *expr = NULL;
     char *dump_flags_str = NULL;
@@ -314,6 +438,10 @@ int main(int argc, char** argv){
                 include_list[include_count++] = argv[optind++];
                 continue;
             }
+            if (opt == 'i' || !strcmp(longopt, "interactive")) {
+                interactive++;
+                continue;
+            }
             if (opt == 'm' || !strcmp(longopt, "module")) {
                 module = 1;
                 continue;
@@ -329,6 +457,10 @@ int main(int argc, char** argv){
             if (opt == 'D' || !strcmp(longopt, "dump-flags")) {
                 dump_flags = opt_arg ? strtol(opt_arg, NULL, 16) : 0;
                 break;
+            }
+            if (opt == 'T' || !strcmp(longopt, "trace")) {
+                trace_memory++;
+                continue;
             }
             if (!strcmp(longopt, "std")) {
                 load_std = 1;
@@ -372,11 +504,17 @@ int main(int argc, char** argv){
             help();
         }
     }
+
+    if (trace_memory) {
+        js_trace_malloc_init(&trace_data);
+        rt = JS_NewRuntime2(&trace_mf, &trace_data);
+    } else {
 #ifdef QJS_USE_MIMALLOC
-    rt = JS_NewRuntime2(&mi_mf, NULL);
+        rt = JS_NewRuntime2(&mi_mf, NULL);
 #else
-    rt = JS_NewRuntime();
+        rt = JS_NewRuntime();
 #endif
+    }
     if (!rt) {
         fprintf(stderr, "qjs: cannot allocate JS runtime\n");
         exit(2);
@@ -399,8 +537,7 @@ int main(int argc, char** argv){
     JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
 
     if (dump_unhandled_promise_rejection) {
-        JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker,
-                                          NULL);
+        JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker,NULL);
     }
 
     if (!empty_run) {
@@ -410,8 +547,10 @@ int main(int argc, char** argv){
         if (load_std) {
             const char *str = "import * as std from 'std';\n"
                 "import * as os from 'os';\n"
+                "import * as raylib from 'raylib';\n"
                 "globalThis.std = std;\n"
                 "globalThis.os = os;\n";
+                "globalThis.raylib = raylib;\n";
             eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
         }
 
@@ -432,6 +571,9 @@ int main(int argc, char** argv){
             filename = argv[optind];
             if (eval_file(ctx, filename, module))
                 goto fail;
+        }
+        if (interactive) {
+            js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
         }
         ret = js_std_loop(ctx);
         if (!JS_IsUndefined(ret)) {

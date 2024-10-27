@@ -1,5 +1,7 @@
 import { writeFileSync } from "./fs.js";
 import { CodeWriter, GenericCodeGenerator } from "./generation.js"
+import * as fs from "./fs.js";
+const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
 export class QuickJsHeader {
     constructor(name) {
         this.name = name;
@@ -68,19 +70,24 @@ export class QuickJsHeader {
    }
 }`);
         //define clear function
-        body.line(`void memoryClear(memoryNode *head) {
+        body.line(`void memoryClear(JSContext * ctx, memoryNode *head) {
     memoryNode * prev_node;
     while (head != NULL) {
         for (int i = 0; i < head->length; i += 2) {
-            void (*free_func) (void *) = head->pointers[i];
+            void (*free_func) (JSContext *,void *) = head->pointers[i];
             void * ptr_to_free = head->pointers[i + 1];
-            free_func(ptr_to_free);
+            free_func(ctx, ptr_to_free);
+        }
         prev_node = head;
         head = head->next;
         free(prev_node);
-        }
     }
 }`);
+        //define a proxy for FreeValue
+        body.line(`void JS_FreeValuePtr(JSContext *ctx, JSValue * v){
+    JS_FreeValue(ctx,*v);
+}`);
+
         //TODO: Should be dynamicly taken from quickjs.c
         body.line(`enum {
     /* classid tag        */    /* union usage   | properties */
@@ -160,8 +167,15 @@ function getsubtype(type){
         return type.substring(0,type.lastIndexOf(' ['));
     }else if(type.endsWith('*')){
         return type.substring(0,type.lastIndexOf(' *'));
+    }else if(type.endsWith('&')){
+        return type.substring(0,type.lastIndexOf(' &'));
     }else{
-        return type.substring(0,type.lastIndexOf(' '));
+        const last=type.lastIndexOf(' ');
+        if(last<0){
+            return '';
+        }else{
+            return type.substring(0,type.lastIndexOf(' '));
+        }
     }
 }
 export class GenericQuickJsGenerator extends GenericCodeGenerator {
@@ -186,14 +200,12 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             case "short int":
             case "signed short":
             case "signed short int":
-                return ["JS_CLASS_UINT8C_ARRAY"];
-            case "unsigned short":
-            case "unsigned short int":
-                return ["JS_CLASS_UINT8C_ARRAY"];
             case "int":
             case "signed":
             case "signed int":
                 return ["JS_CLASS_INT16_ARRAY"];
+            case "unsigned short":
+            case "unsigned short int":
             case "unsigned":
             case "unsigned int":
                 return ["JS_CLASS_UINT16_ARRAY"];
@@ -222,17 +234,13 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 return false;
         }
     }
-    jsToC(type, name, src, classIds = {},flags={},depth=0) {
+    jsToC(type, name, src, classIds = {},flags={},depth=0,errorCleanupFn=((ctx)=>{})) {
         //needs to return flags
-        function getArray(ctx,type,name,src,srclen){
-            //console.log(type,'subtype',getsubtype(type));
+        //TODO: cache functions to limit js_raylib_core.h size
+        function getArray(ctx,type,name,src,srclen,overrideElse=false){
             //define
             if(!flags.supressDeclaration){
-                if(srclen != undefined){
-                    ctx.declare(name+'['+srclen+']',getsubtype(type));
-                }else{
-                    ctx.declare(name,type);
-                }
+                ctx.declare(name,type);
             }
             let tmpname=name.replace(/[[\]]/g,'');
             let ctxif='if';
@@ -242,7 +250,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             let addTypedArray=typedClassIds!==false;
             let topDefineJs=!flags.dynamicAlloc && (addBuffer||addTypedArray);
             if( topDefineJs ){
-                ctx.declare(`js_${tmpname}`,'JSValue');//for de-allocation
+                ctx.declare(`da_${tmpname}`,'JSValue');//for de-allocation
             }
 
             //Check if NULL
@@ -251,29 +259,37 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 ctxif='elsif';
             }
 
+            //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
+
             //Check if Array
             let arr;
-            if(getsubtype(type)!='void') {//TODO: allow dynamic binding of array properties
+            if( !['void','char'].includes(getsubtype(type)) ) {//Dont allow dumb usecases: Array of direct opaque data, array of char
+                //TODO: allow dynamic binding of array properties
                 arr = ctx[ctxif](`JS_IsArray(ctx,${src}) == 1`);
+                let size=srclen;
                 if (srclen == undefined) {
+                    size="size_" + tmpname;
                     arr.declare("size_" + tmpname, "size_t");
-                    arr.if(`JS_GetLength(ctx,${src},&size_${tmpname})==-1`).returnExp("JS_EXCEPTION");
-                } else {
-                    arr.declare("size_" + tmpname, "size_t", false, srclen);
+                    let fi = arr.if(`JS_GetLength(ctx,${src},&size_${tmpname})==-1`);
+                    errorCleanupFn(fi);
+                    fi.returnExp("JS_EXCEPTION");
                 }
-                arr.statement(`${name} = js_malloc(ctx, size_${tmpname} * sizeof(${getsubtype(type)}))`);
+                let subtype=getsubtype(type);
+                arr.declare(name,type,false,`(${type})js_malloc(ctx, ${size} * sizeof(${subtype}))`,true);
                 if (flags.dynamicAlloc) {
                     arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
                 }
                 let iter = 'i' + depth;
-                let arrf = arr.for('0', `size_${tmpname}`, iter);
+                let arrf = arr.for('0', size, iter);//TODO: fastpath if size==1
                 arrf.declare(`js_${tmpname}`, 'JSValue', false, `JS_GetPropertyUint32(ctx,${src},${iter})`);
-                arrf.jsToC(getsubtype(type), `${name}[${iter}]`, `js_${tmpname}`, classIds, {
+                arrf.jsToC(subtype, `${name}[${iter}]`, `js_${tmpname}`, classIds, {
                     supressDeclaration: true,
                     dynamicAlloc: true
                 }, depth + 1);
+                arrf.statement(`JS_FreeValue(ctx, js_${tmpname})`);//There is no reason for us to keep every value out of scope
                 ctxif = 'elsif';
             }
+
             //Check if String
             if(getsubtype(type)=='char') {
                 arr = ctx[ctxif](`JS_IsString(${src}) == 1`);
@@ -284,15 +300,15 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 ctxif='elsif';
             }
 
-            //Check id Buffer
+            //Check if Buffer
             if(addBuffer) {//check for arrayBuffer only if [] but not [][]
                 arr = ctx[ctxif](`JS_IsArrayBuffer(${src}) == 1`);
-                arr.declare(`js_${tmpname}`,'JSValue',false,`JS_DupValue(ctx,${src})`,topDefineJs);
+                arr.declare(`da_${tmpname}`,'JSValue',false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
                 if(flags.dynamicAlloc){
-                    arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_${tmpname})`);
+                    arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_${tmpname})`);
                 }
                 arr.declare("size_" + tmpname, "size_t");
-                arr.declare(`${name}`, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, js_${tmpname})`,true);
+                arr.declare(`${name}`, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
                 ctxif='elsif';
             }
 
@@ -302,23 +318,30 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                     ctx = ctx.else();
                 }
                 ctx.declare('classid_'+tmpname,'JSClassID',false,`JS_GetClassID(${src})`);
-                arr = ctx.if('classid_'+tmpname+'=='+typedClassIds.join(' && classid_'+tmpname+'=='));
+                arr = ctx.if('classid_'+tmpname+'=='+typedClassIds.join(' || classid_'+tmpname+'=='));
                 arr.declare('offset_'+tmpname,'size_t',false);
                 arr.declare('size_'+tmpname,'size_t',false);
-                arr.declare('js_'+tmpname,'JSValue',false,`JS_GetTypedArrayBuffer(ctx,${src},&offset_${tmpname},&size_${tmpname},NULL)`,topDefineJs);//calls js_dup, free this
+                arr.declare('da_'+tmpname,'JSValue',false,`JS_GetTypedArrayBuffer(ctx,${src},&offset_${tmpname},&size_${tmpname},NULL)`,!flags.dynamicAlloc);//calls js_dup, free this
                 if(flags.dynamicAlloc){
-                    arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, &js_${tmpname})`);
+                    arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_${tmpname})`);
                 }
                 //TODO: respect buffer offset
-                arr.declare(name, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, js_${tmpname})`,true);
+                arr.declare(name, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
                 ctxif='elsif';
             }
-            ctx.else().returnExp("JS_EXCEPTION");
+            const fi=ctx.else();
+            if(overrideElse){
+                return fi;
+            }
+            errorCleanupFn(fi);
+            fi.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${type}"`]);
+            fi.returnExp("JS_EXCEPTION");
             //return exception
         }
         //normalize type
         type=type.replace('const ','');
         let tmpname=name.replace(/[[\]]/g,'');
+
         //spread
         if(type.startsWith('...')){
             //getSize based on argc-arg[i]
@@ -335,10 +358,12 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 initValue+='-'+String(start);
             }
             this.declare(`size_${tmpname}`, "size_t",false,initValue);
-            let spreadsize=4;
-            this.statement(`if(size_${tmpname}>${spreadsize})size_${tmpname}=${spreadsize}`);
+            this.statement(`if(size_${tmpname}>${config.spreadSize})size_${tmpname}=${config.spreadSize}`);
             //[]=[].map()
             this.declare(name,type+' *',false,`js_malloc(ctx, size_` + tmpname + ` * sizeof(${type}))`,flags.supressDeclaration);
+            if(flags.dynamicAlloc){
+                this.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
+            }
             //main spread allways skips dynamicAlloc
             let iter='i'+depth;
             const f=this.for('0','size_' + tmpname,iter);
@@ -349,141 +374,373 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         }else if(type.endsWith(']')){
             const stpos=type.indexOf('[');
             let len=type.substring(stpos+1,type.length-1).trim();
-            getArray(this,type,name,src,len);
+            getArray(this,getsubtype(type)+' *',name,src,len);
         }else if(type.endsWith('*')){
-            const classId = classIds[type.replace(" *", "")];
+            getArray(this,type,name,src);
+        }else if(type.endsWith('&')){
+            let subtype=getsubtype(type);
+
+            const classId = classIds[subtype];
             if (classId){
-                this.jsOpqToStructPtr(type.replace(" *", ""), name, src, classId);
-                if(!flags.allowNull) {
-                    this.statement(`if(${name} == NULL) return JS_EXCEPTION`);
+                if(!flags.supressDeclaration){
+                    this.declare(name,subtype+' *');
                 }
+                this.declare(name, subtype+' *', false, `(${subtype} *)JS_GetOpaque(${src}, ${classId})`,true);
+                const fi=this.if(`${name} == NULL`);
+                errorCleanupFn(fi);
+                fi.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${subtype}"`]);
+                fi.returnExp("JS_EXCEPTION");
             }else{
-                getArray(this,type,name,src);
+                //A pointer may be declared as [el]
+                let els;
+                if(subtype.endsWith('*')){
+                    getArray(this,subtype,name,src,undefined);
+                }else{
+                    els = getArray(this,subtype+' *',name,src,1,true);
+                    //Or direct
+                    els.jsToC(subtype,'js_'+tmpname,src,classIds,flags,depth,errorCleanupFn);
+                    els.declare(name,subtype+' *',false,'&js_'+tmpname,true);
+                }
             }
         }else{
             switch (type) {
-                case "char":
-                    this.declare(name,type,false,`(${type})((${type} *)JS_ToCString(ctx, ${src}))[0]`,flags.supressDeclaration);
+                case "bool": {
+                    this.declare(name, type, false, `JS_ToBool(ctx, ${src})`, flags.supressDeclaration);
+                    const fi = this.if(`${name}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not a bool"`]);
+                    fi.returnExp("JS_EXCEPTION");
                     break;
-                case "double":
-                    if (!flags.supressDeclaration)
-                        this.statement(`${type} ${name}`);
-                    this.statement(`JS_ToFloat64(ctx, &${name}, ${src})`);
+                }
+                case "char":{
+                    this.declare('js_' + tmpname, "char *", false, `(char *)JS_ToCString(ctx, ${src})`);
+                    this.declare(name, "char", false, `(char)js_${tmpname}[0]`, flags.supressDeclaration);
+                    this.call('JS_FreeCString', ['ctx', 'js_' + tmpname]);
                     break;
-                case "float":
-                    this.statement("double double_" + name);
-                    this.statement(`JS_ToFloat64(ctx, &double_${name}, ${src})`);
-                    this.declare(name,type,false,`(${type})double_${name}`,flags.supressDeclaration);
-                    break;
+                }
+                case "int8_t":
                 case "int":
-                    if (!flags.supressDeclaration)
-                        this.statement(`${type} ${name}`);
-                    this.statement(`JS_ToInt32(ctx, &${name}, ${src})`);
-                    break;
-                case "unsigned int":
-                    if (!flags.supressDeclaration)
-                        this.statement(`${type} ${name}`);
-                    this.statement(`JS_ToUint32(ctx, &${name}, ${src})`);
-                    break;
+                case "signed":
+                case "signed int":
                 case "short":
-                    this.statement("unsigned int _int_" + name);
-                    this.statement(`JS_ToInt32(ctx, &_int_${name}, ${src})`);
-                    this.declare(name,type,false,`(${type})_int_${name}`,flags.supressDeclaration);
+                case "short int":
+                case "signed short":
+                case "signed short int":
+                case "signed char":{//too small, needs to be cast
+                    this.statement(`int32_t long_${tmpname}`);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt32(ctx, &long_${tmpname}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
                     break;
-                case "unsigned short":
+                }
+                case "int32_t":
+                case "long":
+                case "long int":
+                case "signed long":
+                case "signed long int": {
+                    if (!flags.supressDeclaration)
+                        this.declare(name,type);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt32(ctx, &${name}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    break;
+                }
+                case "uint8_t":
                 case "unsigned char":
-                    this.statement("unsigned int _int_" + name);
-                    this.statement(`JS_ToUint32(ctx, &_int_${name}, ${src})`);
-                    this.declare(name,type,false,`(${type})_int_${name}`,flags.supressDeclaration);
+                case "unsigned short":
+                case "unsigned short int":
+                case "unsigned":
+                case "unsigned int":{//too small, needs to be cast
+                    this.statement(`uint32_t long_${tmpname}`);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToUint32(ctx, &long_${tmpname}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
                     break;
-                case "bool":
-                    this.declare(name,type,false,`JS_ToBool(ctx, ${src})`,flags.supressDeclaration);
+                }
+                case "uint32_t":
+                case "unsigned long":
+                case "unsigned long int": {
+                    if (!flags.supressDeclaration)
+                        this.statement(`${type} ${name}`);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToUint32(ctx, &${name}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
                     break;
-                default:
+                }
+                case "int64_t":
+                case "long long":
+                case "long long int":
+                case "signed long long":
+                case "signed long long int":{
+                    if (!flags.supressDeclaration)
+                        this.declare(name,type);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt64(ctx, &${name}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    break;
+                }
+                case "uint64_t":
+                case "unsigned long long":
+                case "unsigned long long int":
+                    this.statement(`uint64_t long_${tmpname}`);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt64(ctx, &long_${tmpname}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
+                    break;
+                case "float": {
+                    this.statement("double double_" + tmpname);
+                    this.declare('err_' + tmpname, 'int', false, `JS_ToFloat64(ctx, &double_${tmpname}, ${src})`);
+                    const fi = this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    this.declare(name, type, false, `(${type})double_${tmpname}`, flags.supressDeclaration);
+                    break;
+                }
+                case "double":
+                case "long double":{
+                    if (!flags.supressDeclaration)
+                        this.statement(`${type} ${name}`);
+                    this.declare('err_'+tmpname, 'int', false, `JS_ToFloat64(ctx, &${name}, ${src})`);
+                    const fi=this.if(`err_${tmpname}<0`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    break;
+                }
+                default: {
                     const classId = classIds[type];
                     if (!classId) throw new Error("Cannot convert into parameter type: " + type);
-                    this.jsOpqToStructPtr(type, name+'_ptr', src, classId);
+                    this.declare('ptr_'+tmpname, type + "*", false, `(${type}*)JS_GetOpaque(${src}, ${classId})`);
                     //AllowNull unsupported for direct types
-                    this.statement(`if(${name}_ptr == NULL) return JS_EXCEPTION`);
-                    this.declare(name, type, false, `*${name}_ptr`);
+                    const fi = this.if(`ptr_${tmpname} == NULL`);
+                    errorCleanupFn(fi);
+                    fi.call('JS_ThrowTypeError',['ctx',`"${src} does not allow null"`]);
+                    fi.returnExp("JS_EXCEPTION");
+                    this.declare(name, type, false, `*ptr_${tmpname}`,flags.supressDeclaration);
+                }
             }
         }
     }
-    jsToJs(type, name, src, classIds = {}) {
-        function arrayof(thiz,src,name,len,subtype){
-            thiz.declare(name, 'JSValue', false, `JS_NewArray(ctx)`);
-            if(typeof(len)=='number'){
-                for(let i=0;i<len;i++){
-                    let subname=name+i;
-                    thiz.jsToJs(subtype,subname,src+'['+i+']',classIds);//TODO: get correct classId
-                    thiz.statement(`JS_DefinePropertyValue(ctx,${name},${i},${subname},JS_PROP_C_W_E)`);//TODO: flags
+    cToJs(type,name,src,classIds = {},flags={},depth=0,sizeVars=[]){
+        //normalize type
+        type=type.replace('const ','');
+        let tmpname=name.replace(/[[\]]/g,'');
+        //We try to write return from c to js
+        //This needs to work with any type, also returned by reference
+        //This assumes no return int &
+        function setArray(ctx,type,name,src,overrideElse=false){
+
+            const subtype=getsubtype(type);
+            //Check if String
+            if(getsubtype(type)=='char') {
+                ctx.statement(`${name} = JS_NewString(ctx, ${src})`);
+                return;
+            }
+
+            //Check if Array
+            if( !['void','char'].includes(getsubtype(type))) {//Dont allow dumb usecases: Array of direct opaque data, array of char
+                let srclen=sizeVars.pop();
+                if(srclen==undefined){
+                    //TODO: remove sizeof() based length
+                    ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
+                    ctx.declare('size_'+name,'size_t',false,`sizeof(${src})/sizeof(${subtype})`);
+                    let child=ctx.for('0', 'size_'+name,'i'+depth);
+                    child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
+                    child.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
+
+                }else if(typeof(srclen)=="number"){
+                    ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
+                    for(let i=0;i<srclen;i++){
+                        ctx.cToJs(subtype,'js_'+tmpname,src+'['+i+']',classIds,flags,depth+1,sizeVars);
+                        ctx.statement(`JS_DefinePropertyValueUint32(ctx,${name},${i},js_${tmpname},JS_PROP_C_W_E)`);
+                    }
+                }else if(typeof(srclen)=="string"){
+                    let child=ctx;
+                    if(srclen=='1&'){
+                        ctx.cToJs(subtype,'js_'+tmpname,`${src}[0]`,classIds,flags,depth+1,sizeVars);
+                        ctx.statement(`JS_DefinePropertyValueUint32(ctx,${name},0,js_${tmpname},JS_PROP_C_W_E)`);
+                        return;
+                    }else if(srclen=='&'){
+                        sizeVars.push('&');
+                        ctx.declare("size_" + tmpname, "size_t");
+                        ctx.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
+                        child=ctx.for('0', "size_" + tmpname,'i'+depth);
+                    }else{
+                        ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
+                        child=ctx.for('0', srclen,'i'+depth);
+                    }
+                    child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
+                    child.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
                 }
-            }else{
-                let child=thiz.for('0', len);
-                let subname=name+'i';
-                child.jsToJs(subtype,subname,src+'[i]',classIds);//TODO: get correct classId
-                child.statement(`JS_DefinePropertyValue(ctx,${name},'i',${subname},JS_PROP_C_W_E)`);//TODO: flags
             }
         }
-        switch (type) {
-            case "int":
-            case "long":
-                this.declare(name, 'JSValue', false, `JS_NewInt32(ctx, ${src})`);
-                break;
-            case "long":
-                this.declare(name, 'JSValue', false, `JS_NewInt64(ctx, ${src})`);
-                break;
-            case "unsigned int":
-            case "unsigned char":
-                this.declare(name, 'JSValue', false, `JS_NewUint32(ctx, ${src})`);
-                break;
-            case "bool":
-                this.declare(name, 'JSValue', false, `JS_NewBool(ctx, ${src})`);
-                break;
-            case "float":
-            case "double":
-                this.declare(name, 'JSValue', false, `JS_NewFloat64(ctx, ${src})`);
-                break;
-            case "const void *":
-            case "void *":
-            case "int *":
-            case "float *":
-            case "unsigned short *":
-            case "unsigned char *":
-            case "const unsigned char *":
-            case "const char **":
-            case "char **":
-                let subtype=type.substring(0,type.length-1).trim();
-                this.declare(name+'_size','size_t',false,`sizeof(${src})`);
-                arrayof(this,src,name,name+'_size',subtype);
-                break;
-            case "const char *":
-            case "char *":
-                this.declare(name, 'JSValue', false, `JS_NewString(ctx, ${src})`);
-                break;
-            // case "unsigned char *":
-            //     this.declare(name, 'JSValue', false, `JS_NewString(ctx, ${src})`)
-            //     break;
-            default:
-                if(type.startsWith("float[")&&type.endsWith(']')){
-                    let subtype=type.split('[')[0];
-                    let len=type.substring('float['.length,type.length-1);
-                    arrayof(this,src,name,len,subtype);
+
+        let subtype=getsubtype(type);
+        if(type.startsWith('...')){//TODO
+            //Unlikely, but if exists it will be [] of &
+            //define name as []
+            //getglobal JS size
+            //Call CtoJs in a for loop
+        }else if(type.endsWith(']')){
+            //get static JS size
+            const strpos=type.indexOf('[');
+            let len=type.substring(strpos+1,type.length-1).trim();
+            //define
+            if(!flags.supressDeclaration){
+                this.declare(name+'['+len+']','JSValue');
+            }
+            sizeVars.push(Number(len));
+            setArray(this,type,name,src);
+            //define name as (any)[] using setArray
+        }else if(type.endsWith('*')){
+            //define name as (any)[] using setArray
+            if(!flags.supressDeclaration){
+                this.declare(name,'JSValue');
+            }
+            setArray(this,type,name,src);
+        }else if(type.endsWith('&')){
+            // set flag supressDeclaration=true (we already have JSValue) in the function ABOVE, for readability
+            if(classIds[subtype]){
+                return;//class by pointer, no work to do
+            }
+            // int * & is [int,int]
+            // int & is [int] or int without writeback
+            if(subtype.endsWith(']')){
+                const stpos=type.indexOf('[');
+                let len=type.substring(stpos+1,type.length-1).trim();
+                sizeVars.push(len);
+                subtype=getsubtype(subtype)+' *';
+            }
+            //Check if NULL
+            let arr=this;
+            if(flags.allowNull){
+                arr.if(`${src} != NULL`);
+            }
+            /*Experimental*/
+            arr = arr.if(`JS_IsArray(ctx,${name}) == 1`);
+            if(subtype.endsWith(' *')){
+                sizeVars.push("&");
+            }else{
+                sizeVars.push('1&');
+                subtype+=' *';
+            }
+            setArray(arr,subtype,name,src);
+            /*
+            if(getsubtype(subtype)!='char'){
+                arr.declare("size_" + tmpname, "size_t");
+                arr.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
+                arr=arr.for('0', "size_" + tmpname,'i'+depth);
+                arr.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
+                arr.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
+            }else{
+                setArray(arr,type,name,src);
+                arr.cToJs('char *','js_'+tmpname,`${src}[0]`,classIds,flags,depth+1,sizeVars);
+                arr.statement(`JS_DefinePropertyValueUint32(ctx,${name},0,js_${tmpname},JS_PROP_C_W_E)`);
+            }//*/
+
+            //check if array, if so, set
+            //typedArrays and buffers need nothing
+        }else{
+            //Normal type return
+            switch (type) {
+                case "bool": {
+                    this.declare(name, 'JSValue', false, `JS_NewBool(ctx, ${src})`, flags.supressDeclaration);
                     break;
                 }
-                const classId = classIds[type];
-                if (!classId)
-                    throw new Error("Cannot convert parameter type to Javascript: " + type);
-                this.jsStructToOpq(type, name, src, classId);
+                case "char":{
+                    this.declare('js_' + name, "JSValue", false, `JS_NewStringLen(ctx, &${src},1)`, flags.supressDeclaration);
+                    break;
+                }
+                case "int8_t":
+                case "int":
+                case "signed":
+                case "signed int":
+                case "short":
+                case "short int":
+                case "signed short":
+                case "signed short int":
+                case "signed char":{//too small, needs to be cast
+                    this.declare(name, 'JSValue', false, `JS_NewInt32(ctx, (long)${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "int32_t":
+                case "long":
+                case "long int":
+                case "signed long":
+                case "signed long int": {
+                    this.declare(name, 'JSValue', false, `JS_NewInt32(ctx, ${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "uint8_t":
+                case "unsigned char":
+                case "unsigned short":
+                case "unsigned short int":
+                case "unsigned":
+                case "unsigned int":{//too small, needs to be cast
+                    this.declare(name, 'JSValue', false, `JS_NewUint32(ctx, (unsigned long)${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "uint32_t":
+                case "unsigned long":
+                case "unsigned long int": {
+                    this.declare(name, 'JSValue', false, `JS_NewUint32(ctx,  ${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "int64_t":
+                case "long long":
+                case "long long int":
+                case "signed long long":
+                case "signed long long int":{
+                    this.declare(name, 'JSValue', false, `JS_NewInt64(ctx, ${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "uint64_t":
+                case "unsigned long long":
+                case "unsigned long long int":
+                    this.declare(name, 'JSValue', false, `JS_NewInt64(ctx, (long long)${src})`, flags.supressDeclaration);
+                    break;
+                case "float":
+                case "long double":{
+                    this.declare(name, 'JSValue', false, `JS_NewFloat64(ctx, (double)${src})`, flags.supressDeclaration);
+                    break;
+                }
+                case "double":{
+                    this.declare(name, 'JSValue', false, `JS_NewFloat64(ctx, ${src})`, flags.supressDeclaration);
+                    break;
+                }
+                default: {
+                    const classId = classIds[type];
+                    if (!classId)
+                        throw new Error("Cannot convert parameter type to Javascript: " + type);
+                    this.jsStructToOpq(type, name, src, classId);
+                }
+            }
         }
     }
     jsStructToOpq(structType, jsVar, srcVar, classId) {
-        this.declare(jsVar + "_ptr", structType + "*", false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
-        this.statement("*" + jsVar + "_ptr = " + srcVar);
+        this.declare('ptr_'+jsVar, structType + "*", false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
+        this.statement("*ptr_" + jsVar + " = " + srcVar);
         this.declare(jsVar, "JSValue", false, `JS_NewObjectClass(ctx, ${classId})`);
-        this.call("JS_SetOpaque", [jsVar, jsVar + "_ptr"]);
+        this.call("JS_SetOpaque", [jsVar, "ptr_"+jsVar]);
     }
     jsCleanUpParameter(type, name, src, classIds = {}, flags = {}) {
+        //Data clearing when not using dynamic Allocation
         function getArray(ctx,type,name,src){
             //console.log(type,'subtype',getsubtype(type));
             //define
@@ -511,7 +768,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             if(!getsubtype(type).includes('*')) {//check for arrayBuffer only if [] but not [][]
                 arr = ctx[ctxif](`JS_IsArrayBuffer(${src}) == 1`);
                 //Check if isArrayBuffer
-                arr.call('js_free',['ctx','&js_'+tmpname]);
+                arr.call('JS_FreeValue',['ctx','da_'+tmpname]);
                 ctxif='elsif';
             }
             let typedClassIds=ctx.getTypedArray(getsubtype(type));
@@ -521,7 +778,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 }
                 ctx.declare('classid_'+tmpname,'JSClassID',false,`JS_GetClassID(${src})`);
                 arr = ctx.if('classid_'+tmpname+'=='+typedClassIds.join(' && classid_'+tmpname+'=='));
-                arr.call('js_free',['ctx','&js_'+tmpname]);
+                arr.call('js_free',['ctx','&da_'+tmpname]);
                 ctxif='elsif';
             }
         }
@@ -531,9 +788,11 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             this.call('js_free',['ctx',name]);
             //Arrays
         }else if(type.endsWith(']')){
-            getArray(this,type,name,src);
+            getArray(this,getsubtype(type)+' *',name,src);
         }else if(type.endsWith('*')){
-            const classId = classIds[type.replace(" *", "")];
+            getArray(this,type,name,src);
+        }else if(type.endsWith('&')){
+            const classId = classIds[type.replace(" &", "")];
             if (!classId){
                 getArray(this,type,name,src);
             }
@@ -605,7 +864,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 fun.declare(field, type, false, "ptr->" + field);
             }
         }
-        fun.jsToJs(type, "ret", field, classIds);
+        fun.cToJs(type, "ret", field, classIds);
         fun.returnExp("ret");
         return fun;
     }
@@ -623,9 +882,6 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         }
         fun.returnExp("JS_UNDEFINED");
         return fun;
-    }
-    jsOpqToStructPtr(structType, structVar, srcVar, classId) {
-        this.declare(structVar, structType + "*", false, `(${structType}*)JS_GetOpaque2(ctx, ${srcVar}, ${classId})`);
     }
     jsStructConstructor(structName, fields, classId, classIds) {
         //console.log('jsStructConstructor',structName, fields, classId, classIds);

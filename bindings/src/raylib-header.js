@@ -1,5 +1,7 @@
 import { QuickJsHeader } from "./quickjs.js"
 import { TypeScriptDeclaration } from "./typescript.js"
+import * as fs from "./fs.js";
+const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
 export class RayLibHeader extends QuickJsHeader {
     constructor(name) {
         super(name);
@@ -35,39 +37,56 @@ export class RayLibHeader extends QuickJsHeader {
                 api.params.pop();
                 len--;
             }
-            //if we have arrays in arrays, use dynamic de-allocation
+            //Enable dynamic de-allocation if we need to allocate more than one object:
+            //Arrays in arrays require inefficient type test code in cleanup
             let dynamicAlloc=false;
-            for(let i=0;i<len;i++){
-                const param=activeParams[i];
+            let allocLen=0;
+            const paramAllocLen=(param)=>{
                 let match= param.type.match(/\*/g);
-                if(match==null)continue;
+                if(match==null)return 0;
                 let len=match.length;
                 if(param.spread=='...')len++;
-                if(len<2)continue;
-                //it is common to expect a struct pointer
-                if(this.structLookup[param.type.split(' ')[0]]!=undefined){
-                    len--;
-                }
-                if(len>=2){
-                    dynamicAlloc=true;
-                    break;
-                }
+                //Do not remove length for opaque, pointers need to be re-evaluated manually
+                return len;
+            };
+            for(let i=0;i<len;i++){
+                allocLen+=paramAllocLen(activeParams[i]);
             }
+            if(allocLen>=2){
+                dynamicAlloc=true;
+            }
+            allocLen=0;//re-use allocation length, now used to count the current state
             if(dynamicAlloc){
-                console.log('dynamicAlloc',dynamicAlloc,JSON.stringify(
-                    activeParams.map(param=>param.spread+param.type)
-                    )
-                );
+                //console.log('dynamicAlloc',dynamicAlloc,JSON.stringify(activeParams.map(param=>param.spread+param.type)));
                 fun.declare('memoryHead','memoryNode *',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
                 fun.declare('memoryCurrent','memoryNode *',false,'memoryHead;');
             }
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
+                allocLen+=paramAllocLen(param);
                 if (param.binding.customConverter) {
                     param.binding.customConverter(fun, "argv[" + i + "]");
                 } else {
-                    //do not pass the dynamicAlloc flag, unless we want to autodealloc everything
-                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup, {allowNull:param.binding.allowNull});
+                    //cleans parameters initialized before an error
+                    //TODO: reorder parameters to limit amount of code generated in cleanup
+                    const errorCleanupFn =(ctx)=>{
+                        if(allocLen==0){
+                            return;
+                        }
+                        for (let j = 0; j < i; j++) {
+                            const param = activeParams[j];
+                            if (param.binding.customCleanup){
+                                param.binding.customCleanup(ctx, "argv[" + j + "]");
+                            }
+                            if (!dynamicAlloc && !param.binding.customCleanup){
+                                ctx.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + j + "]", this.structLookup,{allowNull:param.binding.allowNull});
+                            }
+                        }
+                        if(dynamicAlloc){
+                            ctx.call('memoryClear',['ctx','memoryHead']);
+                        }
+                    };
+                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup, {allowNull:param.binding.allowNull,dynamicAlloc},0,errorCleanupFn);
                 }
             }
             // call c function
@@ -80,15 +99,17 @@ export class RayLibHeader extends QuickJsHeader {
                 let params=api.params.map(x => x.cast+x.name);
                 if(hasspread){
                     //functions with bigger spread use more memory, but are less likely that user will run into limitations
-                    //Min 2, Max 127
-                    let spreadsize=4;
+                    //spreadSize Min 2, Max 127
                     fun.declare("returnVal",api.returnType);
-                    const siz=api.params.length-1;
                     let last=api.params.pop();
+                    params.pop();
                     let sw =fun.switch('size_'+last.name);
-                    for(let i=siz;i<siz+spreadsize;i++){
+                    //0 Arguments will not compile
+                    let s1=sw.caseBreak(0);
+                    s1.statement(`return JS_EXCEPTION`);
+                    for(let i=0;i<config.spreadSize;i++){
+                        s1=sw.caseBreak(i+1);
                         params[params.length]=last.cast+last.name+'['+i+']';
-                        let s1=sw.caseBreak(i);
                         s1.call(api.name, params, api.returnType === "void" ? null : { type: '', name: "returnVal" });
                     }
                 }else{
@@ -98,14 +119,18 @@ export class RayLibHeader extends QuickJsHeader {
 
             // clean up parameters
             if(dynamicAlloc){
-                fun.call('memoryClear',['memoryHead']);
+                fun.call('memoryClear',['ctx','memoryHead']);
             }
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
-                if (param.binding.customCleanup)
+                if(param.type.endsWith('&')){
+                    fun.cToJs(param.type,"argv[" + i + "]",param.name,this.structLookup,{allowNull:param.binding.allowNull});
+                }
+                if(param.binding.customCleanup){
                     param.binding.customCleanup(fun, "argv[" + i + "]");
-                else
+                } else if(!dynamicAlloc){
                     fun.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup,{allowNull:param.binding.allowNull});
+                }
             }
             // return result
             if (api.returnType === "void") {
@@ -114,7 +139,7 @@ export class RayLibHeader extends QuickJsHeader {
                 fun.statement("return JS_UNDEFINED");
             }
             else {
-                fun.jsToJs(api.returnType, "ret", "returnVal", this.structLookup);
+                fun.cToJs(api.returnType, "ret", "returnVal", this.structLookup);
                 if (options.after)
                     options.after(fun);
                 fun.returnExp("ret");

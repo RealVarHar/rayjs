@@ -40,7 +40,7 @@ const projection = CAMERA_PERSPECTIVE;             // Camera projection type
 const camera = new Camera3D(position,target,up,fovy,projection)
 
 // Load plane model from a generated mesh
-const model = loadModelFromMesh(genMeshPlane(100.0, 100.0, 3, 3));
+const floor = loadModelFromMesh(genMeshPlane(100.0, 100.0, 3, 3));
 //const cube = loadModelFromMesh(genMeshCube(2.0, 4.0, 2.0));
 const cube = loadModel("resources/models/icosphere.glb")
 
@@ -66,12 +66,12 @@ const viewLoc = getShaderLocation(shader, "viewPos")
 
 // Ambient light level (some basic lighting)
 const ambientLoc = getShaderLocation(shader, "ambient");
-setShaderValue(shader, ambientLoc, new Vector4(0.1, 0.1, 0.1, 1.0), SHADER_UNIFORM_VEC4);
+setShaderValue(shader, ambientLoc, [0.1, 0.1, 0.1, 1.0], SHADER_UNIFORM_VEC4);
 
 // Assign out lighting shader to model
 const matModel = loadMaterialDefault()
 matModel.shader = shader
-setModelMaterial(model, 0, matModel)
+setModelMaterial(floor, 0, matModel)
 setMaterialTexture(matModel, MATERIAL_MAP_DIFFUSE, texture)
 const matCube = loadMaterialDefault()
 matCube.shader = shader
@@ -93,7 +93,7 @@ while (!windowShouldClose())        // Detect window close button or ESC key
     updateCamera(camera, CAMERA_ORBITAL);
 
     // Update the shader with the camera view vector (points towards { 0.0, 0.0, 0.0 })
-    const cameraPos = new Vector3(camera.position.x, camera.position.y, camera.position.z);
+    const cameraPos = [camera.position.x, camera.position.y, camera.position.z];
     setShaderValue(shader, viewLoc, cameraPos, SHADER_UNIFORM_VEC3);
     
     // Check key inputs to enable/disable lights
@@ -110,7 +110,7 @@ while (!windowShouldClose())        // Detect window close button or ESC key
         clearBackground(RAYWHITE);
         beginMode3D(camera);
 
-            drawModel(model, vector3Zero(), 1.0, WHITE);
+            drawModel(floor, vector3Zero(), 1.0, WHITE);
             drawModel(cube, new Vector3(0,1,0), 1.0, WHITE);
 
             if (light.enabled) drawSphereEx(light.position, 0.2, 8, 8, light.color);

@@ -60,6 +60,7 @@ set(quickjs_sources
 	${quickjs_sources_root}/libbf.c
 	${quickjs_sources_root}/cutils.c
 	${quickjs_sources_root}/quickjs-libc.c
+	${quickjs_sources_root}/gen/repl.c
 )
 add_library(quickjs STATIC
 	${quickjs_sources}

@@ -226,6 +226,8 @@ declare var MaterialMap: {
 interface Material {
     /** Material shader */
     shader: Shader,
+    /** Material maps array (MAX_MATERIAL_MAPS) */
+    maps: MaterialMap,
 }
 declare var Material: {
     prototype: Material;
@@ -247,8 +249,18 @@ interface Model {
     meshCount: number,
     /** Number of materials */
     materialCount: number,
+    /** Meshes array */
+    meshes: Mesh,
+    /** Materials array */
+    materials: Material,
+    /** Mesh material number */
+    meshMaterial: int,
     /** Number of bones */
     boneCount: number,
+    /** Bones information (skeleton) */
+    bones: BoneInfo,
+    /** Bones base transformation (pose) */
+    bindPose: Transform,
 }
 declare var Model: {
     prototype: Model;
@@ -551,7 +563,9 @@ declare function getShaderLocation(shader: Shader, uniformName: string | undefin
 /** Get shader attribute location */
 declare function getShaderLocationAttrib(shader: Shader, attribName: string | undefined | null): number;
 /** Set shader uniform value */
-declare function setShaderValue(shader: Shader, locIndex: number, value: any, uniformType: number): void;
+declare function setShaderValue(shader: Shader, locIndex: number, value: void &, uniformType: number): void;
+/** Set shader uniform value vector */
+declare function setShaderValueV(shader: Shader, locIndex: number, values: any, uniformType: number, count: number): void;
 /** Set shader uniform value (matrix 4x4) */
 declare function setShaderValueMatrix(shader: Shader, locIndex: number, mat: Matrix): void;
 /** Set shader uniform value for texture (sampler2d) */
@@ -655,7 +669,7 @@ declare function unloadAutomationEventList(list: AutomationEventList): void;
 /** Export automation events list as text file */
 declare function exportAutomationEventList(list: AutomationEventList, fileName: string | undefined | null): boolean;
 /** Set automation event list to record to */
-declare function setAutomationEventList(list: AutomationEventList): void;
+declare function setAutomationEventList(list: AutomationEventList &): void;
 /** Set automation event internal base frame to start recording */
 declare function setAutomationEventBaseFrame(frame: number): void;
 /** Start recording automation events (AutomationEventList must be set) */
@@ -757,9 +771,9 @@ declare function getGesturePinchVector(): Vector2;
 /** Get gesture pinch angle */
 declare function getGesturePinchAngle(): number;
 /** Update camera position for selected mode */
-declare function updateCamera(camera: Camera3D, mode: number): void;
+declare function updateCamera(camera: Camera &, mode: number): void;
 /** Update camera movement/rotation */
-declare function updateCameraPro(camera: Camera3D, movement: Vector3, rotation: Vector3, zoom: number): void;
+declare function updateCameraPro(camera: Camera &, movement: Vector3, rotation: Vector3, zoom: number): void;
 /** Set texture and rectangle to be used on shapes drawing */
 declare function setShapesTexture(texture: Texture, source: Rectangle): void;
 /** Get texture that is used for shapes drawing */
@@ -889,7 +903,7 @@ declare function loadImageRaw(fileName: string | undefined | null, width: number
 /** Load image from SVG file data or string with specified size */
 declare function loadImageSvg(fileNameOrString: string | undefined | null, width: number, height: number): Image;
 /** Load image sequence from memory buffer */
-declare function loadImageAnimFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number, frames: int): Image;
+declare function loadImageAnimFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number, frames: int &): Image;
 /** Load image from memory buffer, fileType refers to extension: i.e. '.png' */
 declare function loadImageFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Image;
 /** Load image from GPU texture data */
@@ -903,7 +917,7 @@ declare function unloadImage(image: Image): void;
 /** Export image data to file, returns true on success */
 declare function exportImage(image: Image, fileName: string | undefined | null): boolean;
 /** Export image to memory buffer */
-declare function exportImageToMemory(image: Image, fileType: string | undefined | null, fileSize: int): ArrayBuffer;
+declare function exportImageToMemory(image: Image, fileType: string | undefined | null, fileSize: int &): ArrayBuffer;
 /** Generate image: plain color */
 declare function genImageColor(width: number, height: number, color: Color): Image;
 /** Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient */
@@ -933,55 +947,55 @@ declare function imageText(text: string | undefined | null, fontSize: number, co
 /** Create an image from text (custom sprite font) */
 declare function imageTextEx(font: Font, text: string | undefined | null, fontSize: number, spacing: number, tint: Color): Image;
 /** Convert image data to desired format */
-declare function imageFormat(image: Image, newFormat: number): void;
+declare function imageFormat(image: Image &, newFormat: number): void;
 /** Convert image to POT (power-of-two) */
-declare function imageToPOT(image: Image, fill: Color): void;
+declare function imageToPOT(image: Image &, fill: Color): void;
 /** Crop an image to a defined rectangle */
-declare function imageCrop(image: Image, crop: Rectangle): void;
+declare function imageCrop(image: Image &, crop: Rectangle): void;
 /** Crop image depending on alpha value */
-declare function imageAlphaCrop(image: Image, threshold: number): void;
+declare function imageAlphaCrop(image: Image &, threshold: number): void;
 /** Clear alpha channel to desired color */
-declare function imageAlphaClear(image: Image, color: Color, threshold: number): void;
+declare function imageAlphaClear(image: Image &, color: Color, threshold: number): void;
 /** Apply alpha mask to image */
-declare function imageAlphaMask(image: Image, alphaMask: Image): void;
+declare function imageAlphaMask(image: Image &, alphaMask: Image): void;
 /** Premultiply alpha channel */
-declare function imageAlphaPremultiply(image: Image): void;
+declare function imageAlphaPremultiply(image: Image &): void;
 /** Apply Gaussian blur using a box blur approximation */
-declare function imageBlurGaussian(image: Image, blurSize: number): void;
+declare function imageBlurGaussian(image: Image &, blurSize: number): void;
 /** Apply custom square convolution kernel to image */
-declare function imageKernelConvolution(image: Image, kernel: float, kernelSize: number): void;
+declare function imageKernelConvolution(image: Image &, kernel: float, kernelSize: number): void;
 /** Resize image (Bicubic scaling algorithm) */
-declare function imageResize(image: Image, newWidth: number, newHeight: number): void;
+declare function imageResize(image: Image &, newWidth: number, newHeight: number): void;
 /** Resize image (Nearest-Neighbor scaling algorithm) */
-declare function imageResizeNN(image: Image, newWidth: number, newHeight: number): void;
+declare function imageResizeNN(image: Image &, newWidth: number, newHeight: number): void;
 /** Resize canvas and fill with color */
-declare function imageResizeCanvas(image: Image, newWidth: number, newHeight: number, offsetX: number, offsetY: number, fill: Color): void;
+declare function imageResizeCanvas(image: Image &, newWidth: number, newHeight: number, offsetX: number, offsetY: number, fill: Color): void;
 /** Compute all mipmap levels for a provided image */
-declare function imageMipmaps(image: Image): void;
+declare function imageMipmaps(image: Image &): void;
 /** Dither image data to 16bpp or lower (Floyd-Steinberg dithering) */
-declare function imageDither(image: Image, rBpp: number, gBpp: number, bBpp: number, aBpp: number): void;
+declare function imageDither(image: Image &, rBpp: number, gBpp: number, bBpp: number, aBpp: number): void;
 /** Flip image vertically */
-declare function imageFlipVertical(image: Image): void;
+declare function imageFlipVertical(image: Image &): void;
 /** Flip image horizontally */
-declare function imageFlipHorizontal(image: Image): void;
+declare function imageFlipHorizontal(image: Image &): void;
 /** Rotate image by input angle in degrees (-359 to 359) */
-declare function imageRotate(image: Image, degrees: number): void;
+declare function imageRotate(image: Image &, degrees: number): void;
 /** Rotate image clockwise 90deg */
-declare function imageRotateCW(image: Image): void;
+declare function imageRotateCW(image: Image &): void;
 /** Rotate image counter-clockwise 90deg */
-declare function imageRotateCCW(image: Image): void;
+declare function imageRotateCCW(image: Image &): void;
 /** Modify image color: tint */
-declare function imageColorTint(image: Image, color: Color): void;
+declare function imageColorTint(image: Image &, color: Color): void;
 /** Modify image color: invert */
-declare function imageColorInvert(image: Image): void;
+declare function imageColorInvert(image: Image &): void;
 /** Modify image color: grayscale */
-declare function imageColorGrayscale(image: Image): void;
+declare function imageColorGrayscale(image: Image &): void;
 /** Modify image color: contrast (-100 to 100) */
-declare function imageColorContrast(image: Image, contrast: number): void;
+declare function imageColorContrast(image: Image &, contrast: number): void;
 /** Modify image color: brightness (-255 to 255) */
-declare function imageColorBrightness(image: Image, brightness: number): void;
+declare function imageColorBrightness(image: Image &, brightness: number): void;
 /** Modify image color: replace color */
-declare function imageColorReplace(image: Image, color: Color, replace: Color): void;
+declare function imageColorReplace(image: Image &, color: Color, replace: Color): void;
 /** Load color data from image as a Color array (RGBA - 32bit) */
 declare function loadImageColors(image: Image): ArrayBuffer;
 /** Get image alpha border rectangle */
@@ -989,49 +1003,49 @@ declare function getImageAlphaBorder(image: Image, threshold: number): Rectangle
 /** Get image pixel color at (x, y) position */
 declare function getImageColor(image: Image, x: number, y: number): Color;
 /** Clear image background with given color */
-declare function imageClearBackground(dst: Image, color: Color): void;
+declare function imageClearBackground(dst: Image &, color: Color): void;
 /** Draw pixel within an image */
-declare function imageDrawPixel(dst: Image, posX: number, posY: number, color: Color): void;
+declare function imageDrawPixel(dst: Image &, posX: number, posY: number, color: Color): void;
 /** Draw pixel within an image (Vector version) */
-declare function imageDrawPixelV(dst: Image, position: Vector2, color: Color): void;
+declare function imageDrawPixelV(dst: Image &, position: Vector2, color: Color): void;
 /** Draw line within an image */
-declare function imageDrawLine(dst: Image, startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
+declare function imageDrawLine(dst: Image &, startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
 /** Draw line within an image (Vector version) */
-declare function imageDrawLineV(dst: Image, start: Vector2, end: Vector2, color: Color): void;
+declare function imageDrawLineV(dst: Image &, start: Vector2, end: Vector2, color: Color): void;
 /** Draw a line defining thickness within an image */
-declare function imageDrawLineEx(dst: Image, start: Vector2, end: Vector2, thick: number, color: Color): void;
+declare function imageDrawLineEx(dst: Image &, start: Vector2, end: Vector2, thick: number, color: Color): void;
 /** Draw a filled circle within an image */
-declare function imageDrawCircle(dst: Image, centerX: number, centerY: number, radius: number, color: Color): void;
+declare function imageDrawCircle(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
 /** Draw a filled circle within an image (Vector version) */
-declare function imageDrawCircleV(dst: Image, center: Vector2, radius: number, color: Color): void;
+declare function imageDrawCircleV(dst: Image &, center: Vector2, radius: number, color: Color): void;
 /** Draw circle outline within an image */
-declare function imageDrawCircleLines(dst: Image, centerX: number, centerY: number, radius: number, color: Color): void;
+declare function imageDrawCircleLines(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
 /** Draw circle outline within an image (Vector version) */
-declare function imageDrawCircleLinesV(dst: Image, center: Vector2, radius: number, color: Color): void;
+declare function imageDrawCircleLinesV(dst: Image &, center: Vector2, radius: number, color: Color): void;
 /** Draw rectangle within an image */
-declare function imageDrawRectangle(dst: Image, posX: number, posY: number, width: number, height: number, color: Color): void;
+declare function imageDrawRectangle(dst: Image &, posX: number, posY: number, width: number, height: number, color: Color): void;
 /** Draw rectangle within an image (Vector version) */
-declare function imageDrawRectangleV(dst: Image, position: Vector2, size: Vector2, color: Color): void;
+declare function imageDrawRectangleV(dst: Image &, position: Vector2, size: Vector2, color: Color): void;
 /** Draw rectangle within an image */
-declare function imageDrawRectangleRec(dst: Image, rec: Rectangle, color: Color): void;
+declare function imageDrawRectangleRec(dst: Image &, rec: Rectangle, color: Color): void;
 /** Draw rectangle lines within an image */
-declare function imageDrawRectangleLines(dst: Image, rec: Rectangle, thick: number, color: Color): void;
+declare function imageDrawRectangleLines(dst: Image &, rec: Rectangle, thick: number, color: Color): void;
 /** Draw triangle within an image */
-declare function imageDrawTriangle(dst: Image, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function imageDrawTriangle(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** Draw triangle with interpolated colors within an image */
-declare function imageDrawTriangleEx(dst: Image, v1: Vector2, v2: Vector2, v3: Vector2, c1: Color, c2: Color, c3: Color): void;
+declare function imageDrawTriangleEx(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, c1: Color, c2: Color, c3: Color): void;
 /** Draw triangle outline within an image */
-declare function imageDrawTriangleLines(dst: Image, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function imageDrawTriangleLines(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** Draw a triangle fan defined by points within an image (first vertex is the center) */
-declare function imageDrawTriangleFan(dst: Image, points: Vector2, pointCount: number, color: Color): void;
+declare function imageDrawTriangleFan(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
 /** Draw a triangle strip defined by points within an image */
-declare function imageDrawTriangleStrip(dst: Image, points: Vector2, pointCount: number, color: Color): void;
+declare function imageDrawTriangleStrip(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
 /** Draw a source image within a destination image (tint applied to source) */
-declare function imageDraw(dst: Image, src: Image, srcRec: Rectangle, dstRec: Rectangle, tint: Color): void;
+declare function imageDraw(dst: Image &, src: Image, srcRec: Rectangle, dstRec: Rectangle, tint: Color): void;
 /** Draw text (using default font) within an image (destination) */
-declare function imageDrawText(dst: Image, text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
+declare function imageDrawText(dst: Image &, text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
 /** Draw text (custom sprite font) within an image (destination) */
-declare function imageDrawTextEx(dst: Image, font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
+declare function imageDrawTextEx(dst: Image &, font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
 /** Load texture from file into GPU memory (VRAM) */
 declare function loadTexture(fileName: string | undefined | null): Texture;
 /** Load texture from image data */
@@ -1053,7 +1067,7 @@ declare function updateTexture(texture: Texture, pixels: any): void;
 /** Update GPU texture rectangle with new data */
 declare function updateTextureRec(texture: Texture, rec: Rectangle, pixels: any): void;
 /** Generate GPU mipmaps for a texture */
-declare function genTextureMipmaps(texture: Texture): void;
+declare function genTextureMipmaps(texture: Texture2D &): void;
 /** Set texture scaling filter mode */
 declare function setTextureFilter(texture: Texture, filter: number): void;
 /** Set texture wrapping mode */
@@ -1133,7 +1147,7 @@ declare function getGlyphIndex(font: Font, codepoint: number): number;
 /** Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found */
 declare function getGlyphAtlasRec(font: Font, codepoint: number): Rectangle;
 /** Copy one string to another, returns bytes copied */
-declare function textCopy(dst: string | undefined | null, src: string | undefined | null): number;
+declare function textCopy(dst: char &, src: string | undefined | null): number;
 /** Check if two text string are equal */
 declare function textIsEqual(text1: string | undefined | null, text2: string | undefined | null): boolean;
 /** Get text length, checks for '\0' ending */
@@ -1149,9 +1163,9 @@ declare function textInsert(text: string | undefined | null, insert: string | un
 /** Join text strings with delimiter */
 declare function textJoin(textList: char *, count: number, delimiter: string | undefined | null): string | undefined | null;
 /** Split text into multiple strings */
-declare function textSplit(text: string | undefined | null, delimiter: char, count: int): char*;
+declare function textSplit(text: string | undefined | null, delimiter: char, count: int &): char *;
 /** Append text at specific position and move cursor! */
-declare function textAppend(text: string | undefined | null, append: string | undefined | null, position: int): void;
+declare function textAppend(text: string | undefined | null, append: string | undefined | null, position: int &): void;
 /** Find first text occurrence within a string */
 declare function textFindIndex(text: string | undefined | null, find: string | undefined | null): number;
 /** Get upper case version of provided string */
@@ -1239,7 +1253,7 @@ declare function drawBillboardRec(camera: Camera3D, texture: Texture, source: Re
 /** Draw a billboard texture defined by source and rotation */
 declare function drawBillboardPro(camera: Camera3D, texture: Texture, source: Rectangle, position: Vector3, up: Vector3, size: Vector2, origin: Vector2, rotation: number, tint: Color): void;
 /** Upload mesh vertex data in GPU and provide VAO/VBO ids */
-declare function uploadMesh(mesh: Mesh, dynamic: boolean): void;
+declare function uploadMesh(mesh: Mesh &, dynamic: boolean): void;
 /** Update mesh vertex data in GPU for a specific buffer index */
 declare function updateMeshBuffer(mesh: Mesh, index: number, data: any, dataSize: number, offset: number): void;
 /** Unload mesh data from CPU and GPU */
@@ -1251,7 +1265,7 @@ declare function drawMeshInstanced(mesh: Mesh, material: Material, transforms: M
 /** Compute mesh bounding box limits */
 declare function getMeshBoundingBox(mesh: Mesh): BoundingBox;
 /** Compute mesh tangents */
-declare function genMeshTangents(mesh: Mesh): void;
+declare function genMeshTangents(mesh: Mesh &): void;
 /** Export mesh data to file, returns true on success */
 declare function exportMesh(mesh: Mesh, fileName: string | undefined | null): boolean;
 /** Export mesh as code file (.h) defining multiple arrays of vertex attributes */
@@ -1285,9 +1299,9 @@ declare function isMaterialReady(material: Material): boolean;
 /** Unload material from GPU memory (VRAM) */
 declare function unloadMaterial(material: Material): void;
 /** Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...) */
-declare function setMaterialTexture(material: Material, mapType: number, texture: Texture): void;
+declare function setMaterialTexture(material: Material &, mapType: number, texture: Texture): void;
 /** Set material for a mesh */
-declare function setModelMeshMaterial(model: Model, meshId: number, materialId: number): void;
+declare function setModelMeshMaterial(model: Model &, meshId: number, materialId: number): void;
 /** Update model animation mesh bone matrices (Note GPU skinning does not work on Mac) */
 declare function updateModelAnimationBoneMatrices(model: Model, anim: ModelAnimation, frame: number): void;
 /** Check collision between two spheres */
@@ -1359,9 +1373,9 @@ declare function setSoundPan(sound: Sound, pan: number): void;
 /** Copy a wave to a new wave */
 declare function waveCopy(wave: Wave): Wave;
 /** Crop a wave to defined frames range */
-declare function waveCrop(wave: Wave, initFrame: number, finalFrame: number): void;
+declare function waveCrop(wave: Wave &, initFrame: number, finalFrame: number): void;
 /** Convert wave data to desired format */
-declare function waveFormat(wave: Wave, sampleRate: number, sampleSize: number, channels: number): void;
+declare function waveFormat(wave: Wave &, sampleRate: number, sampleSize: number, channels: number): void;
 /** Load music stream from file */
 declare function loadMusicStream(fileName: string | undefined | null): Music;
 /** Checks if a music stream is ready */
@@ -1677,31 +1691,31 @@ declare function quaternionTransform(q: Vector4, mat: Matrix): Vector4;
 /** Check whether two given quaternions are almost equal */
 declare function quaternionEquals(p: Vector4, q: Vector4): number;
 /** Decompose a transformation matrix into its rotational, translational and scaling components */
-declare function matrixDecompose(mat: Matrix, translation: Vector3, rotation: Quaternion, scale: Vector3): void;
+declare function matrixDecompose(mat: Matrix, translation: Vector3 &, rotation: Quaternion &, scale: Vector3 &): void;
 /**  */
-declare function getCameraForward(camera: Camera3D): Vector3;
+declare function getCameraForward(camera: Camera &): Vector3;
 /**  */
-declare function getCameraUp(camera: Camera3D): Vector3;
+declare function getCameraUp(camera: Camera &): Vector3;
 /**  */
-declare function getCameraRight(camera: Camera3D): Vector3;
+declare function getCameraRight(camera: Camera &): Vector3;
 /**  */
-declare function cameraMoveForward(camera: Camera3D, distance: number, moveInWorldPlane: boolean): void;
+declare function cameraMoveForward(camera: Camera &, distance: number, moveInWorldPlane: boolean): void;
 /**  */
-declare function cameraMoveUp(camera: Camera3D, distance: number): void;
+declare function cameraMoveUp(camera: Camera &, distance: number): void;
 /**  */
-declare function cameraMoveRight(camera: Camera3D, distance: number, moveInWorldPlane: boolean): void;
+declare function cameraMoveRight(camera: Camera &, distance: number, moveInWorldPlane: boolean): void;
 /**  */
-declare function cameraMoveToTarget(camera: Camera3D, delta: number): void;
+declare function cameraMoveToTarget(camera: Camera &, delta: number): void;
 /**  */
-declare function cameraYaw(camera: Camera3D, angle: number, rotateAroundTarget: boolean): void;
+declare function cameraYaw(camera: Camera &, angle: number, rotateAroundTarget: boolean): void;
 /**  */
-declare function cameraPitch(camera: Camera3D, angle: number, lockView: boolean, rotateAroundTarget: boolean, rotateUp: boolean): void;
+declare function cameraPitch(camera: Camera &, angle: number, lockView: boolean, rotateAroundTarget: boolean, rotateUp: boolean): void;
 /**  */
-declare function cameraRoll(camera: Camera3D, angle: number): void;
+declare function cameraRoll(camera: Camera &, angle: number): void;
 /**  */
-declare function getCameraViewMatrix(camera: Camera3D): Matrix;
+declare function getCameraViewMatrix(camera: Camera &): Matrix;
 /**  */
-declare function getCameraProjectionMatrix(camera: Camera3D, aspect: number): Matrix;
+declare function getCameraProjectionMatrix(camera: Camera &, aspect: number): Matrix;
 /** Enable gui controls (global state) */
 declare function guiEnable(): void;
 /** Disable gui controls (global state) */
@@ -1751,7 +1765,7 @@ declare function guiLine(bounds: Rectangle, text: string | undefined | null): nu
 /** Panel control, useful to group controls */
 declare function guiPanel(bounds: Rectangle, text: string | undefined | null): number;
 /** Scroll Panel control */
-declare function guiScrollPanel(bounds: Rectangle, text: string | undefined | null, content: Rectangle, scroll: Vector2, view: Rectangle): number;
+declare function guiScrollPanel(bounds: Rectangle, text: string | undefined | null, content: Rectangle, scroll: Vector2 &, view: Rectangle &): number;
 /** Label control */
 declare function guiLabel(bounds: Rectangle, text: string | undefined | null): number;
 /** Button control, returns true when clicked */
@@ -1759,55 +1773,55 @@ declare function guiButton(bounds: Rectangle, text: string | undefined | null): 
 /** Label button control, returns true when clicked */
 declare function guiLabelButton(bounds: Rectangle, text: string | undefined | null): number;
 /** Toggle Button control */
-declare function guiToggle(bounds: Rectangle, text: string | undefined | null, active: bool): number;
+declare function guiToggle(bounds: Rectangle, text: string | undefined | null, active: bool &): number;
 /** Toggle Group control */
-declare function guiToggleGroup(bounds: Rectangle, text: string | undefined | null, active: int): number;
+declare function guiToggleGroup(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** Toggle Slider control */
-declare function guiToggleSlider(bounds: Rectangle, text: string | undefined | null, active: int): number;
+declare function guiToggleSlider(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** Check Box control, returns true when active */
-declare function guiCheckBox(bounds: Rectangle, text: string | undefined | null, checked: bool): number;
+declare function guiCheckBox(bounds: Rectangle, text: string | undefined | null, checked: bool &): number;
 /** Combo Box control */
-declare function guiComboBox(bounds: Rectangle, text: string | undefined | null, active: int): number;
+declare function guiComboBox(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** Dropdown Box control */
-declare function guiDropdownBox(bounds: Rectangle, text: string | undefined | null, active: { active: number }, editMode: boolean): number;
+declare function guiDropdownBox(bounds: Rectangle, text: string | undefined | null, active: int &, editMode: boolean): number;
 /** Spinner control */
-declare function guiSpinner(bounds: Rectangle, text: string | undefined | null, value: { value: number }, minValue: number, maxValue: number, editMode: boolean): number;
+declare function guiSpinner(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
 /** Value Box control, updates input text with numbers */
-declare function guiValueBox(bounds: Rectangle, text: string | undefined | null, value: { value: number }, minValue: number, maxValue: number, editMode: boolean): number;
+declare function guiValueBox(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
 /** Value box control for float values */
-declare function guiValueBoxFloat(bounds: Rectangle, text: string | undefined | null, textValue: string | undefined | null, value: ArrayBuffer, editMode: boolean): number;
+declare function guiValueBoxFloat(bounds: Rectangle, text: string | undefined | null, textValue: string | undefined | null, value: float &, editMode: boolean): number;
 /** Text Box control, updates input text */
-declare function guiTextBox(bounds: Rectangle, text: { text: string }, editMode: boolean): number;
+declare function guiTextBox(bounds: Rectangle, text: string | undefined | null, textSize: number, editMode: boolean): number;
 /** Slider control */
-declare function guiSlider(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: ArrayBuffer, minValue: number, maxValue: number): number;
+declare function guiSlider(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** Slider Bar control */
-declare function guiSliderBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: ArrayBuffer, minValue: number, maxValue: number): number;
+declare function guiSliderBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** Progress Bar control */
-declare function guiProgressBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: ArrayBuffer, minValue: number, maxValue: number): number;
+declare function guiProgressBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** Status Bar control, shows info text */
 declare function guiStatusBar(bounds: Rectangle, text: string | undefined | null): number;
 /** Dummy control for placeholders */
 declare function guiDummyRec(bounds: Rectangle, text: string | undefined | null): number;
 /** Grid control */
-declare function guiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2): number;
+declare function guiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2 &): number;
 /** List View control */
-declare function guiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: { scrollIndex: number }, active: int): number;
+declare function guiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: int &, active: int &): number;
 /** Message Box control, displays a message */
 declare function guiMessageBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null): number;
 /** Text Input Box control, ask for text, supports secret */
-declare function guiTextInputBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null, text: { text: string }, secretViewActive: { secretViewActive: number }): number;
+declare function guiTextInputBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null, text: string | undefined | null, textMaxSize: number, secretViewActive: bool): number;
 /** Color Picker control (multiple color controls) */
-declare function guiColorPicker(bounds: Rectangle, text: string | undefined | null, color: Color): number;
+declare function guiColorPicker(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
 /** Color Panel control */
-declare function guiColorPanel(bounds: Rectangle, text: string | undefined | null, color: Color): number;
+declare function guiColorPanel(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
 /** Color Bar Alpha control */
-declare function guiColorBarAlpha(bounds: Rectangle, text: string | undefined | null, alpha: ArrayBuffer): number;
+declare function guiColorBarAlpha(bounds: Rectangle, text: string | undefined | null, alpha: float &): number;
 /** Color Bar Hue control */
-declare function guiColorBarHue(bounds: Rectangle, text: string | undefined | null, value: ArrayBuffer): number;
+declare function guiColorBarHue(bounds: Rectangle, text: string | undefined | null, value: float &): number;
 /** Color Picker control that avoids conversion to RGB on each call (multiple color controls) */
-declare function guiColorPickerHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3): number;
+declare function guiColorPickerHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
 /** Color Panel control that updates Hue-Saturation-Value color value, used by GuiColorPickerHSV() */
-declare function guiColorPanelHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3): number;
+declare function guiColorPanelHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
 /** //----------------------------------------------------------------------------------
 Module Functions Declaration
 //---------------------------------------------------------------------------------- */
@@ -1873,21 +1887,21 @@ declare function beginLightmap(): void;
 /**  */
 declare function endLightmap(): void;
 /**  */
-declare function beginLightmapFragment(lm: Lightmapper): boolean;
+declare function beginLightmapFragment(lm: Lightmapper &): boolean;
 /**  */
-declare function endLightmapFragment(lm: Lightmapper): void;
+declare function endLightmapFragment(lm: Lightmapper &): void;
 /**  */
 declare function loadImageFromLightmapper(lm: Lightmapper): Image;
 /** Replace material in slot materialIndex (Material is NOT unloaded) */
-declare function setModelMaterial(model: Model, materialIndex: number, material: Material): void;
+declare function setModelMaterial(model: Model &, materialIndex: number, material: Material): void;
 /** Get material in slot materialIndex */
-declare function getModelMaterial(model: Model, materialIndex: number): Material;
+declare function getModelMaterial(model: Model &, materialIndex: number): Material;
 /** Get a single mesh from a model */
-declare function getModelMesh(model: Model, meshIndex: number): Mesh;
+declare function getModelMesh(model: Model &, meshIndex: number): Mesh;
 /** Set shader constant in shader locations array */
-declare function setShaderLocation(shader: Shader, constant: number, location: number): void;
+declare function setShaderLocation(shader: Shader &, constant: number, location: number): void;
 /** Read a single pixel from an image */
-declare function imageReadPixel(image: Image, x: number, y: number): Color;
+declare function imageReadPixel(image: Image &, x: number, y: number): Color;
 /** Make a deep-copy of an existing mesh */
 declare function meshCopy(mesh: Mesh): Mesh;
 /** Create a new mesh that contains combined attributes of two meshes */

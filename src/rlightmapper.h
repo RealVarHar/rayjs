@@ -227,40 +227,40 @@ bool BeginLightmapFragment(Lightmapper *lm)
     return (bool)status;
 }
 
-void EndLightmapFragment(Lightmapper *lm)
+void EndLightmapFragment(Lightmapper *value)
 {
-    lm->progress = lmProgress((lm_context *)lm->lm_handle);
-    lmEnd((lm_context *)lm->lm_handle);
+    value->progress = lmProgress((lm_context *)value->lm_handle);
+    lmEnd((lm_context *)value->lm_handle);
 }
 
-Image LoadImageFromLightmapper(Lightmapper lm)
+Image LoadImageFromLightmapper(Lightmapper value)
 {
     Image im = {0};
 
-    if (lm.progress < 1.0f)
+    if (value.progress < 1.0f)
     {
         TraceLog(LOG_ERROR, "Lightmapping is not finished");
         return im;
     }
     // postprocess texture
-    float *temp = calloc(lm.w * lm.h * 4, sizeof(float));
+    float *temp = calloc(value.w * value.h * 4, sizeof(float));
     for (int i = 0; i < 16; i++)
     {
-        lmImageDilate(lm.data, temp, lm.w, lm.h, 4);
-        lmImageDilate(temp, lm.data, lm.w, lm.h, 4);
+        lmImageDilate(value.data, temp, value.w, value.h, 4);
+        lmImageDilate(temp, value.data, value.w, value.h, 4);
     }
-    lmImageSmooth(lm.data, temp, lm.w, lm.h, 4);
-    lmImageDilate(temp, lm.data, lm.w, lm.h, 4);
-    lmImagePower(lm.data, lm.w, lm.h, 4, 1.0f / 2.2f, 0x7); // gamma correct color channels
+    lmImageSmooth(value.data, temp, value.w, value.h, 4);
+    lmImageDilate(temp, value.data, value.w, value.h, 4);
+    lmImagePower(value.data, value.w, value.h, 4, 1.0f / 2.2f, 0x7); // gamma correct color channels
     free(temp);
 
-    unsigned char *tempub = (unsigned char *)calloc(lm.w * lm.h * 4, sizeof(unsigned char));
-    lmImageFtoUB(lm.data, tempub, lm.w, lm.h, 4, 1.0f);
+    unsigned char *tempub = (unsigned char *)calloc(value.w * value.h * 4, sizeof(unsigned char));
+    lmImageFtoUB(value.data, tempub, value.w, value.h, 4, 1.0f);
 
     im.data = tempub;
     im.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-    im.height = lm.w;
-    im.width = lm.h;
+    im.height = value.w;
+    im.width = value.h;
     im.mipmaps = 1;
     return im;
 }
