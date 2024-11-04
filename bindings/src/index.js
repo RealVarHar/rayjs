@@ -21,7 +21,7 @@ function ignore(name) {
     getFunction(api.functions, name).binding = { ignore: true };
 }
 function normalizeType(type=''){
-    return type.trim().replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ');
+    return type.replaceAll("*", " * ").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ').trim();
 }
 function main() {
     // Load the pre-generated raylib api
@@ -363,8 +363,8 @@ function main() {
     getFunction(api.functions, "SetShaderValue").binding = { body: (gen) => {
         gen.jsToC("Shader", "shader", "argv[0]", core.structLookup);
         gen.jsToC("int", "locIndex", "argv[1]", core.structLookup);
-        gen.declare("value", "void *", false, "NULL");
-        gen.declare("da_value", "JSValue");
+        gen.declare("void *", "value", false, "NULL");
+        gen.declare("JSValue", "da_value");
         gen.jsToC("int", "uniformType", "argv[3]", core.structLookup);
         const sw = gen.switch("uniformType");
         //Named VEC but examples and inner code use (float *) technically the same
@@ -405,8 +405,8 @@ function main() {
             gen.jsToC("int", "locIndex", "argv[1]", core.structLookup);
             gen.jsToC("int", "uniformType", "argv[3]", core.structLookup);
             gen.jsToC("int", "count", "argv[4]", core.structLookup);
-            gen.declare("value", "void *", false, "NULL");
-            gen.declare("da_value", "JSValue");
+            gen.declare("void *", "value", false, "NULL");
+            gen.declare("JSValue", "da_value");
             const sw = gen.switch("uniformType");
             //Named VEC but examples and inner code use (float *) technically the same
             let b;
@@ -449,7 +449,7 @@ function main() {
     lfd.binding = {
         body: gen => {
             gen.jsToC("const char *", "fileName", "argv[0]");
-            gen.declare("bytesRead", "unsigned int");
+            gen.declare("unsigned int", "bytesRead");
             gen.call("LoadFileData", ["fileName", "&bytesRead"], { type: "unsigned char *", name: "retVal" });
             gen.statement("JSValue buffer = JS_NewArrayBufferCopy(ctx, (const uint8_t*)retVal, bytesRead)");
             gen.call("UnloadFileData", ["retVal"]);
@@ -557,6 +557,165 @@ function main() {
         api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
     }else{
         getFunction(api.functions, "TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+        getFunction(api.functions, "TextFormat").binding.body=(gen)=>{
+            //TODO: Can improve performance by reusing buffers (static)
+            let bufferdefined=false;
+            const errorCleanupFn =(ctx)=>{
+                ctx.call('memoryClear',['ctx','memoryHead']);
+                ctx.call('js_free',['ctx','char_ptr']);
+                if(bufferdefined)ctx.call('js_free',['ctx','buffer']);
+            };
+            let flags={dynamicAlloc:true};//reduces code size
+            gen.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+            gen.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
+
+            gen.declare('size_t','char_ptrlen',false,10);
+            gen.declare('char *','char_ptr',false,'(char *)js_calloc(ctx, char_ptrlen, sizeof(char))');
+            gen.declare("size_t","formatlen");
+            let fi = gen.if('JS_GetLength(ctx,argv[0],&formatlen)==-1');
+            errorCleanupFn(fi);
+            fi.returnExp("JS_EXCEPTION");
+            gen.jsToC('char *','format','argv[0]',core.structLookup,flags);
+            gen.declare('char *','subformat',false,`format`);
+            gen.declare('size_t','subformatlen',false,0);
+            gen.declare('char','subformatlenh');
+            gen.declare('size_t','bufferlen',false,'formatlen*2');
+            gen.declare('char *','buffer',false,'(char *)js_calloc(ctx, bufferlen, sizeof(char))');
+            bufferdefined=true;
+            gen.declare('int','l',false,0);
+            gen.declare('int','c',false,1);
+            gen.declare('int','ilen',false,0);
+            let t0,t1,t2,t3,t4,t5,t6;
+            t0=gen.for(0, 'formatlen');
+                t1=t0.if("format[i]!='%'");
+                    t1.statement('buffer[l]=format[i];');
+                    t1.statement('i++');
+                t1=t0.else();
+                    t1.declare('int','firsth',false,'i+1');
+                    t1.declare('char','har',false,'format[firsth]');
+                        t2=t1.if('har==0');
+                        t2.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                        errorCleanupFn(t2);
+                        t2.returnExp('ret');
+                    t2=t1.while("!(har>=97&&har<=122)&&!(har>=65&&har<=90)&&har!='%'");
+                        t2.statement('firsth++');
+                        t2.statement('har=format[firsth]');
+                        t3=t2.if('har==0');
+                            t3.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                            errorCleanupFn(t3);
+                            t3.returnExp('ret');
+                    t1.declare('int','lasth',false,'firsth');
+                    t1.statement('har=format[lasth]');
+                    t2=t1.while('strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL');
+                        t2.statement('lasth++');
+                        t2.declare('char','har',false,'format[lasth]',true);
+                        t3=t2.if('har==0');
+                            t3.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                            errorCleanupFn(t3);
+                            t3.returnExp('ret');
+                    t1.declare('size_t','subformatlen',false,'lasth-i+1',true);
+                    t1.declare('char','subformatlenh',false,'format[lasth+1]',true);
+                    t1.declare('char *','subformat',false,'format+i',true);
+                    t1.statement('subformat[subformatlen]=0');
+                    t2=t1.if("format[lasth]=='%'");
+                        t2.declare('int','i',false,'lasth',true);
+                        t2.statement("buffer[l]='%';");
+                        t2.statement("i++");
+                        t2.statement("continue");
+                    t1.statement('memset(char_ptr,0,ilen * sizeof(char))');
+                    t2=t1.switch('har');
+                        t2.case("'d'");
+                        t3=t2.caseBreak("'i'");
+                            t3.jsToC('int64_t','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                            t4=t3.if('firsth==lasth');
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(int)a'],{name:'char_ptr'});
+                            t4=t3.else().switch('format[lasth-1]');
+                                t5=t4.caseBreak("'h'");
+                                    t6=t5.if("subformat[lasth-i-2]=='h'");
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(signed char)a'],{name:'char_ptr'});
+                                    t6=t5.else();
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(short int)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'l'");
+                                    t6=t5.if("subformat[lasth-i-2]=='l'");
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long long int)a'],{name:'char_ptr'});
+                                    t6=t5.else();
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long int)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'j'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(intmax_t)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'z'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(size_t)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'t'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(ptrdiff_t)a'],{name:'char_ptr'});
+                                //Dont do anything on default, if this is a broken format, let it be skipped
+                        t2.case("'u'");
+                        t2.case("'o'");
+                        t2.case("'x'");
+                        t3=t2.caseBreak("'X'");
+                            t3.jsToC('uint32_t','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                            t4=t3.if('firsth==lasth');
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned int)a'],{name:'char_ptr'});
+                            t4=t3.else().switch('subformat[lasth-i-1]');
+                                t5=t4.caseBreak("'h'");
+                                    t6=t5.if("subformat[lasth-i-2]=='h'");
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned char)a'],{name:'char_ptr'});
+                                    t6=t5.else();
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned short int)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'l'");
+                                    t6=t5.if("subformat[lasth-i-2]=='l'");
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned long long int)a'],{name:'char_ptr'});
+                                    t6=t5.else();
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned long int)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'j'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(uintmax_t)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'z'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(size_t)a'],{name:'char_ptr'});
+                                t5=t4.caseBreak("'t'");
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(ptrdiff_t)a'],{name:'char_ptr'});
+                                //Dont do anything on default, if this is a broken format, let it be skipped
+                        t2.case("'f'");
+                        t2.case("'F'");
+                        t2.case("'e'");
+                        t2.case("'E'");
+                        t2.case("'g'");
+                        t2.case("'G'");
+                        t2.case("'a'");
+                        t3=t2.caseBreak("'A'");
+                            t3.jsToC('double','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                            t4=t3.if('firsth==lasth');
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(double)a'],{name:'char_ptr'});
+                            t4=t3.else();
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long double)a'],{name:'char_ptr'});
+                        t3=t2.caseBreak("'c'");
+                            t3.jsToC('int','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                            t4=t3.if('firsth==lasth');
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(int)a'],{name:'char_ptr'});
+                            t4=t3.else();
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(wint_t)a'],{name:'char_ptr'});
+                        t3=t2.caseBreak("'s'");
+                            t4=t3.if('firsth==lasth');
+                                t4.jsToC('char *','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','a'],{name:'char_ptr'});
+                            t4=t3.else();
+                                t4.jsToC('wchar_t *','a','argv[c]',core.structLookup,flags,0,errorCleanupFn);
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','a'],{name:'char_ptr'});
+                        t3=t2.caseBreak("'p'");
+                            t3.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(void *)&argv[c]'],{name:'char_ptr'});
+                        t3=t2.caseBreak("'n'");
+                            t3.cToJs('int &','argv[c]','(&l)',core.structLookup,flags);
+                    t1.statement('subformat[subformatlen]=subformatlenh');
+                    t1.statement('c++');
+                    t1.declare('int','ilen',false,'strlen(char_ptr)',true);
+                    t1.declare('int','maxstrlen',false,'formatlen+l+ilen-lasth');
+                    t2=t1.if('bufferlen<maxstrlen');
+                        t2.declare('char *','buffer',false,'js_realloc(ctx,buffer,maxstrlen)',true);
+                        t2.call('memset',['buffer+bufferlen',0,'maxstrlen-bufferlen']);
+                        t2.declare('int','bufferlen',false,'maxstrlen',true);
+                    t1.call('strncpy',['buffer+l','char_ptr','ilen']);
+                    t1.statement('l+=ilen');
+                    t1.declare('int','i',false,'lasth',true);
+            gen.cToJs('char *','js_buffer','buffer',core.structLookup);
+            gen.returnExp('js_buffer');
+        };
     }
     ignore("DrawTriangleStrip3D");
     ignore("LoadMaterials");
@@ -567,36 +726,17 @@ function main() {
     ignore("IsModelAnimationValid");
     ignore("ExportWaveAsCode");
     // Wave/Sound management functions
-    ignore("LoadWaveSamples");
-    ignore("UnloadWaveSamples");
-    ignore("LoadMusicStreamFromMemory");
-    ignore("LoadAudioStream");
-    ignore("IsAudioStreamReady");
-    ignore("UnloadAudioStream");
-    ignore("UpdateAudioStream");
-    ignore("IsAudioStreamProcessed");
-    ignore("PlayAudioStream");
-    ignore("PauseAudioStream");
-    ignore("ResumeAudioStream");
-    ignore("IsAudioStreamPlaying");
-    ignore("StopAudioStream");
-    ignore("SetAudioStreamVolume");
-    ignore("SetAudioStreamPitch");
-    ignore("SetAudioStreamPan");
-    ignore("SetAudioStreamBufferSizeDefault");
     ignore("SetAudioStreamCallback");
     ignore("AttachAudioStreamProcessor");
     ignore("DetachAudioStreamProcessor");
     ignore("AttachAudioMixedProcessor");
     ignore("DetachAudioMixedProcessor");
-    ignore("Vector3OrthoNormalize");
     ignore("Vector3ToFloatV");
     ignore("MatrixToFloatV");
-    ignore("QuaternionToAxisAngle");
     core.exportGlobalDouble("DEG2RAD", "(PI/180.0)");
     core.exportGlobalDouble("RAD2DEG", "(180.0/PI)");
-    core.definitions.declare("textbuffer[4096]", "char", true);
-    ignore("GuiListViewEx");
+    core.definitions.declare("char", "textbuffer[4096]", true);
+    //ignore("GuiListViewEx");
     // needs string array
     ignore("GuiTabBar");
     ignore("GuiGetIcons");

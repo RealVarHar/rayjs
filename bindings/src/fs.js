@@ -1,5 +1,5 @@
-import * as std from "std";
-import * as os from "os";
+import * as std from "qjs:std";
+import * as os from "qjs:os";
 class Buffer{
 	bufferhistory=[];
 	currentbufer;

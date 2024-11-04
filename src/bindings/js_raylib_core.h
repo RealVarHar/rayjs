@@ -124,6 +124,20 @@ enum {
 
     JS_CLASS_INIT_COUNT, /* last entry for predefined classes */
 };
+char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, ...){
+    va_list args;
+    va_start(args, format);
+    int len=vsnprintf(buffer,*maxsize,format,args);
+    if(len>*maxsize){
+        len++;
+        buffer=js_realloc(ctx,buffer,len * sizeof(char));
+        memset(buffer+*maxsize,0,len-*maxsize);
+        maxsize[0]=len;
+        len=vsnprintf(buffer,len,format,args);
+    }
+    va_end(args);
+    return buffer;
+};
 #endif
 
 static char textbuffer[4096];
@@ -4542,14 +4556,14 @@ static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_isShaderReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isShaderValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Shader shader = *ptr_shader;
-    bool returnVal = IsShaderReady(shader);
+    bool returnVal = IsShaderValid(shader);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -6665,6 +6679,243 @@ static JSValue js_getFileModTime(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
+static JSValue js_computeCRC32(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    unsigned char * data;
+    JSValue da_data;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_data;
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        da_data = JS_DupValue(ctx,argv[0]);
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        }
+        else {
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        if(JS_IsArray(ctx,argv[0]) == 1) {
+            js_free(ctx, data);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_data);
+        }
+        else {
+            JSClassID classid_data = JS_GetClassID(argv[0]);
+            if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+                js_free(ctx, &da_data);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    unsigned int returnVal = ComputeCRC32(data, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, data);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &da_data);
+        }
+    }
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
+    return ret;
+}
+
+static JSValue js_computeMD5(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    unsigned char * data;
+    JSValue da_data;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_data;
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        da_data = JS_DupValue(ctx,argv[0]);
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        }
+        else {
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        if(JS_IsArray(ctx,argv[0]) == 1) {
+            js_free(ctx, data);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_data);
+        }
+        else {
+            JSClassID classid_data = JS_GetClassID(argv[0]);
+            if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+                js_free(ctx, &da_data);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    unsigned int * returnVal = ComputeMD5(data, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, data);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &da_data);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned int);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_computeSHA1(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    unsigned char * data;
+    JSValue da_data;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        size_t size_data;
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        da_data = JS_DupValue(ctx,argv[0]);
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        }
+        else {
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        if(JS_IsArray(ctx,argv[0]) == 1) {
+            js_free(ctx, data);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_data);
+        }
+        else {
+            JSClassID classid_data = JS_GetClassID(argv[0]);
+            if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+                js_free(ctx, &da_data);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    unsigned int * returnVal = ComputeSHA1(data, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, data);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY && classid_data==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &da_data);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned int);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
 static JSValue js_loadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
@@ -7118,7 +7369,14 @@ static JSValue js_setGamepadVibration(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     float rightMotor = (float)double_rightMotor;
-    SetGamepadVibration(gamepad, leftMotor, rightMotor);
+    double double_duration;
+    int err_duration = JS_ToFloat64(ctx, &double_duration, argv[3]);
+    if(err_duration<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float duration = (float)double_duration;
+    SetGamepadVibration(gamepad, leftMotor, rightMotor, duration);
     return JS_UNDEFINED;
 }
 
@@ -9481,6 +9739,37 @@ static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
+static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
+    if(ptr_center == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 center = *ptr_center;
+    double double_radius;
+    int err_radius = JS_ToFloat64(ctx, &double_radius, argv[1]);
+    if(err_radius<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float radius = (float)double_radius;
+    Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[2], js_Vector2_class_id);
+    if(ptr_p1 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 p1 = *ptr_p1;
+    Vector2* ptr_p2 = (Vector2*)JS_GetOpaque(argv[3], js_Vector2_class_id);
+    if(ptr_p2 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 p2 = *ptr_p2;
+    bool returnVal = CheckCollisionCircleLine(center, radius, p1, p2);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
 static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_point == NULL) {
@@ -9581,37 +9870,6 @@ static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValue this_val, int
     }
     int threshold = (int)long_threshold;
     bool returnVal = CheckCollisionPointLine(point, p1, p2, threshold);
-    JSValue ret = JS_NewBool(ctx, returnVal);
-    return ret;
-}
-
-static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
-    if(ptr_center == NULL) {
-        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
-        return JS_EXCEPTION;
-    }
-    Vector2 center = *ptr_center;
-    double double_radius;
-    int err_radius = JS_ToFloat64(ctx, &double_radius, argv[1]);
-    if(err_radius<0) {
-        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
-        return JS_EXCEPTION;
-    }
-    float radius = (float)double_radius;
-    Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[2], js_Vector2_class_id);
-    if(ptr_p1 == NULL) {
-        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
-        return JS_EXCEPTION;
-    }
-    Vector2 p1 = *ptr_p1;
-    Vector2* ptr_p2 = (Vector2*)JS_GetOpaque(argv[3], js_Vector2_class_id);
-    if(ptr_p2 == NULL) {
-        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
-        return JS_EXCEPTION;
-    }
-    Vector2 p2 = *ptr_p2;
-    bool returnVal = CheckCollisionCircleLine(center, radius, p1, p2);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -9810,97 +10068,6 @@ static JSValue js_loadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSVa
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
         if(classid_fileName==JS_CLASS_INT8_ARRAY) {
             js_free(ctx, &da_fileName);
-        }
-    }
-    Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
-    *ptr_ret = returnVal;
-    JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
-    JS_SetOpaque(ret, ptr_ret);
-    return ret;
-}
-
-static JSValue js_loadImageSvg(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    char * fileNameOrString;
-    JSValue da_fileNameOrString;
-    if(JS_IsString(argv[0]) == 1) {
-        fileNameOrString = (char *)JS_ToCString(ctx, argv[0]);
-    }
-    else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileNameOrString = JS_DupValue(ctx,argv[0]);
-        size_t size_fileNameOrString;
-        fileNameOrString = (char *)JS_GetArrayBuffer(ctx, &size_fileNameOrString, da_fileNameOrString);
-    }
-    else {
-        JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
-        if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
-            size_t offset_fileNameOrString;
-            size_t size_fileNameOrString;
-            da_fileNameOrString = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileNameOrString,&size_fileNameOrString,NULL);
-            fileNameOrString = (char *)JS_GetArrayBuffer(ctx, &size_fileNameOrString, da_fileNameOrString);
-        }
-        else {
-            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
-            return JS_EXCEPTION;
-        }
-    }
-    int32_t long_width;
-    int err_width = JS_ToInt32(ctx, &long_width, argv[1]);
-    if(err_width<0) {
-        if(JS_IsArray(ctx,argv[0]) == 1) {
-            js_free(ctx, fileNameOrString);
-        }
-        else if(JS_IsString(argv[0]) == 1) {
-            JS_FreeCString(ctx, fileNameOrString);
-        }
-        else if(JS_IsArrayBuffer(argv[0]) == 1) {
-            JS_FreeValue(ctx, da_fileNameOrString);
-        }
-        else {
-            JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
-            if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
-                js_free(ctx, &da_fileNameOrString);
-            }
-        }
-        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
-        return JS_EXCEPTION;
-    }
-    int width = (int)long_width;
-    int32_t long_height;
-    int err_height = JS_ToInt32(ctx, &long_height, argv[2]);
-    if(err_height<0) {
-        if(JS_IsArray(ctx,argv[0]) == 1) {
-            js_free(ctx, fileNameOrString);
-        }
-        else if(JS_IsString(argv[0]) == 1) {
-            JS_FreeCString(ctx, fileNameOrString);
-        }
-        else if(JS_IsArrayBuffer(argv[0]) == 1) {
-            JS_FreeValue(ctx, da_fileNameOrString);
-        }
-        else {
-            JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
-            if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
-                js_free(ctx, &da_fileNameOrString);
-            }
-        }
-        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
-        return JS_EXCEPTION;
-    }
-    int height = (int)long_height;
-    Image returnVal = LoadImageSvg((const char *)fileNameOrString, width, height);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
-        js_free(ctx, fileNameOrString);
-    }
-    else if(JS_IsString(argv[0]) == 1) {
-        JS_FreeCString(ctx, fileNameOrString);
-    }
-    else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JS_FreeValue(ctx, da_fileNameOrString);
-    }
-    else {
-        JSClassID classid_fileNameOrString = JS_GetClassID(argv[0]);
-        if(classid_fileNameOrString==JS_CLASS_INT8_ARRAY) {
-            js_free(ctx, &da_fileNameOrString);
         }
     }
     Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
@@ -10157,14 +10324,14 @@ static JSValue js_loadImageFromScreen(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_isImageReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isImageValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Image image = *ptr_image;
-    bool returnVal = IsImageReady(image);
+    bool returnVal = IsImageValid(image);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -12701,14 +12868,14 @@ static JSValue js_loadRenderTexture(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isTextureReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Texture2D texture = *ptr_texture;
-    bool returnVal = IsTextureReady(texture);
+    bool returnVal = IsTextureValid(texture);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -12724,14 +12891,14 @@ static JSValue js_unloadTexture(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_isRenderTextureReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isRenderTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* ptr_target = (RenderTexture2D*)JS_GetOpaque(argv[0], js_RenderTexture_class_id);
     if(ptr_target == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     RenderTexture2D target = *ptr_target;
-    bool returnVal = IsRenderTextureReady(target);
+    bool returnVal = IsRenderTextureValid(target);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -13549,14 +13716,14 @@ static JSValue js_loadFontFromImage(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isFontReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isFontValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Font font = *ptr_font;
-    bool returnVal = IsFontReady(font);
+    bool returnVal = IsFontValid(font);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -14459,63 +14626,359 @@ static JSValue js_textLength(JSContext * ctx, JSValue this_val, int argc, JSValu
 static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;;
-    size_t size_text = argc;
-    if(size_text>4)size_text=4;
-    char * * text = js_malloc(ctx, size_text * sizeof(char *));
-    memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, text);
-    for(int i0=0; i0 < size_text; i0++){
-        if(JS_IsString(argv[i0]) == 1) {
-            text[i0] = (char *)JS_ToCString(ctx, argv[i0]);
-            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text[i0]);
-        }
-        else if(JS_IsArrayBuffer(argv[i0]) == 1) {
-            JSValue da_texti0 = JS_DupValue(ctx,argv[i0]);
-            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
-            size_t size_texti0;
-            text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
+    size_t char_ptrlen = 10;
+    char * char_ptr = (char *)js_calloc(ctx, char_ptrlen, sizeof(char));
+    size_t formatlen;
+    if(JS_GetLength(ctx,argv[0],&formatlen)==-1) {
+        memoryClear(ctx, memoryHead);
+        js_free(ctx, char_ptr);
+        return JS_EXCEPTION;
+    }
+    char * format;
+    if(JS_IsString(argv[0]) == 1) {
+        format = (char *)JS_ToCString(ctx, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, format);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JSValue da_format = JS_DupValue(ctx,argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_format);
+        size_t size_format;
+        format = (char *)JS_GetArrayBuffer(ctx, &size_format, da_format);
+    }
+    else {
+        JSClassID classid_format = JS_GetClassID(argv[0]);
+        if(classid_format==JS_CLASS_INT8_ARRAY) {
+            size_t offset_format;
+            size_t size_format;
+            JSValue da_format = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_format,&size_format,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_format);
+            format = (char *)JS_GetArrayBuffer(ctx, &size_format, da_format);
         }
         else {
-            JSClassID classid_texti0 = JS_GetClassID(argv[i0]);
-            if(classid_texti0==JS_CLASS_INT8_ARRAY) {
-                size_t offset_texti0;
-                size_t size_texti0;
-                JSValue da_texti0 = JS_GetTypedArrayBuffer(ctx,argv[i0],&offset_texti0,&size_texti0,NULL);
-                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
-                text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
-            }
-            else {
-                JS_ThrowTypeError(ctx, "argv[i0] does not match type char *");
-                return JS_EXCEPTION;
-            }
-        }
-    }
-    const char * returnVal;
-    switch(size_text) {
-        case 0:{
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
-            break;
-        }
-        case 1:{
-             returnVal = TextFormat((const char *)text[0]);
-            break;
-        }
-        case 2:{
-             returnVal = TextFormat((const char *)text[0], (const char *)text[1]);
-            break;
-        }
-        case 3:{
-             returnVal = TextFormat((const char *)text[0], (const char *)text[1], (const char *)text[2]);
-            break;
-        }
-        case 4:{
-             returnVal = TextFormat((const char *)text[0], (const char *)text[1], (const char *)text[2], (const char *)text[3]);
-            break;
         }
     }
-    memoryClear(ctx, memoryHead);
-    JSValue ret;
-    ret = JS_NewString(ctx, returnVal);
-    return ret;
+    char * subformat = format;
+    size_t subformatlen = 0;
+    char subformatlenh;
+    size_t bufferlen = formatlen*2;
+    char * buffer = (char *)js_calloc(ctx, bufferlen, sizeof(char));
+    int l = 0;
+    int c = 1;
+    int ilen = 0;
+    for(int i=0; i < formatlen; i++){
+        if(format[i]!='%') {
+            buffer[l]=format[i];;
+            i++;
+        }
+        else {
+            int firsth = i+1;
+            char har = format[firsth];
+            if(har==0) {
+                JSValue ret;
+                ret = JS_NewString(ctx, buffer);
+                memoryClear(ctx, memoryHead);
+                js_free(ctx, char_ptr);
+                js_free(ctx, buffer);
+                return ret;
+            }
+            while(!(har>=97&&har<=122)&&!(har>=65&&har<=90)&&har!='%'){
+                firsth++;
+                har=format[firsth];
+                if(har==0) {
+                    JSValue ret;
+                    ret = JS_NewString(ctx, buffer);
+                    memoryClear(ctx, memoryHead);
+                    js_free(ctx, char_ptr);
+                    js_free(ctx, buffer);
+                    return ret;
+                }
+            }
+            int lasth = firsth;
+            har=format[lasth];
+            while(strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL){
+                lasth++;
+                har = format[lasth];
+                if(har==0) {
+                    JSValue ret;
+                    ret = JS_NewString(ctx, buffer);
+                    memoryClear(ctx, memoryHead);
+                    js_free(ctx, char_ptr);
+                    js_free(ctx, buffer);
+                    return ret;
+                }
+            }
+            subformatlen = lasth-i+1;
+            subformatlenh = format[lasth+1];
+            subformat = format+i;
+            subformat[subformatlen]=0;
+            if(format[lasth]=='%') {
+                i = lasth;
+                buffer[l]='%';;
+                i++;
+                continue;
+            }
+            memset(char_ptr,0,ilen * sizeof(char));
+            switch(har) {
+                case 'd':
+                case 'i':{
+                    int64_t a;
+                    int err_a = JS_ToInt64(ctx, &a, argv[c]);
+                    if(err_a<0) {
+                        memoryClear(ctx, memoryHead);
+                        js_free(ctx, char_ptr);
+                        js_free(ctx, buffer);
+                        JS_ThrowTypeError(ctx, "argv[c] is not numeric");
+                        return JS_EXCEPTION;
+                    }
+                    if(firsth==lasth) {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (int)a);
+                    }
+                    else {
+                        switch(format[lasth-1]) {
+                            case 'h':{
+                                if(subformat[lasth-i-2]=='h') {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (signed char)a);
+                                }
+                                else {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (short int)a);
+                                }
+                                break;
+                            }
+                            case 'l':{
+                                if(subformat[lasth-i-2]=='l') {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long long int)a);
+                                }
+                                else {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long int)a);
+                                }
+                                break;
+                            }
+                            case 'j':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (intmax_t)a);
+                                break;
+                            }
+                            case 'z':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (size_t)a);
+                                break;
+                            }
+                            case 't':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (ptrdiff_t)a);
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case 'u':
+                case 'o':
+                case 'x':
+                case 'X':{
+                    uint32_t a;
+                    int err_a = JS_ToUint32(ctx, &a, argv[c]);
+                    if(err_a<0) {
+                        memoryClear(ctx, memoryHead);
+                        js_free(ctx, char_ptr);
+                        js_free(ctx, buffer);
+                        JS_ThrowTypeError(ctx, "argv[c] is not numeric");
+                        return JS_EXCEPTION;
+                    }
+                    if(firsth==lasth) {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned int)a);
+                    }
+                    else {
+                        switch(subformat[lasth-i-1]) {
+                            case 'h':{
+                                if(subformat[lasth-i-2]=='h') {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned char)a);
+                                }
+                                else {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned short int)a);
+                                }
+                                break;
+                            }
+                            case 'l':{
+                                if(subformat[lasth-i-2]=='l') {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned long long int)a);
+                                }
+                                else {
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned long int)a);
+                                }
+                                break;
+                            }
+                            case 'j':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (uintmax_t)a);
+                                break;
+                            }
+                            case 'z':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (size_t)a);
+                                break;
+                            }
+                            case 't':{
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (ptrdiff_t)a);
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case 'f':
+                case 'F':
+                case 'e':
+                case 'E':
+                case 'g':
+                case 'G':
+                case 'a':
+                case 'A':{
+                    double a;
+                    int err_a = JS_ToFloat64(ctx, &a, argv[c]);
+                    if(err_a<0) {
+                        memoryClear(ctx, memoryHead);
+                        js_free(ctx, char_ptr);
+                        js_free(ctx, buffer);
+                        JS_ThrowTypeError(ctx, "argv[c] is not numeric");
+                        return JS_EXCEPTION;
+                    }
+                    if(firsth==lasth) {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (double)a);
+                    }
+                    else {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long double)a);
+                    }
+                    break;
+                }
+                case 'c':{
+                    int32_t long_a;
+                    int err_a = JS_ToInt32(ctx, &long_a, argv[c]);
+                    if(err_a<0) {
+                        memoryClear(ctx, memoryHead);
+                        js_free(ctx, char_ptr);
+                        js_free(ctx, buffer);
+                        JS_ThrowTypeError(ctx, "argv[c] is not numeric");
+                        return JS_EXCEPTION;
+                    }
+                    int a = (int)long_a;
+                    if(firsth==lasth) {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (int)a);
+                    }
+                    else {
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (wint_t)a);
+                    }
+                    break;
+                }
+                case 's':{
+                    if(firsth==lasth) {
+                        char * a;
+                        if(JS_IsString(argv[c]) == 1) {
+                            a = (char *)JS_ToCString(ctx, argv[c]);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, a);
+                        }
+                        else if(JS_IsArrayBuffer(argv[c]) == 1) {
+                            JSValue da_a = JS_DupValue(ctx,argv[c]);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                            size_t size_a;
+                            a = (char *)JS_GetArrayBuffer(ctx, &size_a, da_a);
+                        }
+                        else {
+                            JSClassID classid_a = JS_GetClassID(argv[c]);
+                            if(classid_a==JS_CLASS_INT8_ARRAY) {
+                                size_t offset_a;
+                                size_t size_a;
+                                JSValue da_a = JS_GetTypedArrayBuffer(ctx,argv[c],&offset_a,&size_a,NULL);
+                                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                                a = (char *)JS_GetArrayBuffer(ctx, &size_a, da_a);
+                            }
+                            else {
+                                memoryClear(ctx, memoryHead);
+                                js_free(ctx, char_ptr);
+                                js_free(ctx, buffer);
+                                JS_ThrowTypeError(ctx, "argv[c] does not match type char *");
+                                return JS_EXCEPTION;
+                            }
+                        }
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, a);
+                    }
+                    else {
+                        wchar_t * a;
+                        if(JS_IsArray(ctx,argv[c]) == 1) {
+                            size_t size_a;
+                            if(JS_GetLength(ctx,argv[c],&size_a)==-1) {
+                                memoryClear(ctx, memoryHead);
+                                js_free(ctx, char_ptr);
+                                js_free(ctx, buffer);
+                                return JS_EXCEPTION;
+                            }
+                            a = (wchar_t *)js_malloc(ctx, size_a * sizeof(wchar_t));
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, a);
+                            for(int i0=0; i0 < size_a; i0++){
+                                JSValue js_a = JS_GetPropertyUint32(ctx,argv[c],i0);
+                                uint32_t long_ai0;
+                                int err_ai0 = JS_ToUint32(ctx, &long_ai0, js_a);
+                                if(err_ai0<0) {
+                                    JS_ThrowTypeError(ctx, "js_a is not numeric");
+                                    return JS_EXCEPTION;
+                                }
+                                a[i0] = (wchar_t)long_ai0;
+                                JS_FreeValue(ctx, js_a);
+                            }
+                        }
+                        else if(JS_IsArrayBuffer(argv[c]) == 1) {
+                            JSValue da_a = JS_DupValue(ctx,argv[c]);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                            size_t size_a;
+                            a = (wchar_t *)JS_GetArrayBuffer(ctx, &size_a, da_a);
+                        }
+                        else {
+                            JSClassID classid_a = JS_GetClassID(argv[c]);
+                            if(classid_a==JS_CLASS_UINT32_ARRAY) {
+                                size_t offset_a;
+                                size_t size_a;
+                                JSValue da_a = JS_GetTypedArrayBuffer(ctx,argv[c],&offset_a,&size_a,NULL);
+                                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                                a = (wchar_t *)JS_GetArrayBuffer(ctx, &size_a, da_a);
+                            }
+                            else {
+                                memoryClear(ctx, memoryHead);
+                                js_free(ctx, char_ptr);
+                                js_free(ctx, buffer);
+                                JS_ThrowTypeError(ctx, "argv[c] does not match type wchar_t *");
+                                return JS_EXCEPTION;
+                            }
+                        }
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, a);
+                    }
+                    break;
+                }
+                case 'p':{
+                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (void *)&argv[c]);
+                    break;
+                }
+                case 'n':{
+                    if(JS_IsArray(ctx,argv[c]) == 1) {
+                        JSValue js_argvc = JS_NewInt32(ctx, (long)(&l)[0]);
+                        JS_DefinePropertyValueUint32(ctx,argv[c],0,js_argvc,JS_PROP_C_W_E);
+                    }
+                    break;
+                }
+            }
+            subformat[subformatlen]=subformatlenh;
+            c++;
+            ilen = strlen(char_ptr);
+            int maxstrlen = formatlen+l+ilen-lasth;
+            if(bufferlen<maxstrlen) {
+                buffer = js_realloc(ctx,buffer,maxstrlen);
+                memset(buffer+bufferlen, 0, maxstrlen-bufferlen);
+                bufferlen = maxstrlen;
+            }
+            strncpy(buffer+l, char_ptr, ilen);
+            l+=ilen;
+            i = lasth;
+        }
+    }
+    JSValue js_buffer;
+    js_buffer = JS_NewString(ctx, buffer);
+    return js_buffer;
 }
 
 static JSValue js_textSubtext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -16173,14 +16636,14 @@ static JSValue js_loadModelFromMesh(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isModelReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isModelValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Model model = *ptr_model;
-    bool returnVal = IsModelReady(model);
+    bool returnVal = IsModelValid(model);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -17208,14 +17671,14 @@ static JSValue js_loadMaterialDefault(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_isMaterialReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isMaterialValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* ptr_material = (Material*)JS_GetOpaque(argv[0], js_Material_class_id);
     if(ptr_material == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Material material = *ptr_material;
-    bool returnVal = IsMaterialReady(material);
+    bool returnVal = IsMaterialValid(material);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -17280,7 +17743,7 @@ static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateModelAnimationBoneMatrices(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_updateModelAnimationBones(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17300,7 +17763,7 @@ static JSValue js_updateModelAnimationBoneMatrices(JSContext * ctx, JSValue this
         return JS_EXCEPTION;
     }
     int frame = (int)long_frame;
-    UpdateModelAnimationBoneMatrices(model, anim, frame);
+    UpdateModelAnimationBones(model, anim, frame);
     return JS_UNDEFINED;
 }
 
@@ -17696,14 +18159,14 @@ static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_isWaveReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isWaveValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Wave wave = *ptr_wave;
-    bool returnVal = IsWaveReady(wave);
+    bool returnVal = IsWaveValid(wave);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -17785,14 +18248,14 @@ static JSValue js_loadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_isSoundReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_isSoundValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Sound sound = *ptr_sound;
-    bool returnVal = IsSoundReady(sound);
+    bool returnVal = IsSoundValid(sound);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -18097,6 +18560,85 @@ static JSValue js_waveFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
+static JSValue js_loadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
+    if(ptr_wave == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Wave wave = *ptr_wave;
+    float * returnVal = LoadWaveSamples(wave);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(float);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_unloadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    float * samples;
+    JSValue da_samples;
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        samples = (float *)js_malloc(ctx, 1 * sizeof(float));
+        for(int i0=0; i0 < 1; i0++){
+            JSValue js_samples = JS_GetPropertyUint32(ctx,argv[0],i0);
+            double double_samplesi0;
+            int err_samplesi0 = JS_ToFloat64(ctx, &double_samplesi0, js_samples);
+            if(err_samplesi0<0) {
+                JS_ThrowTypeError(ctx, "js_samples is not numeric");
+                return JS_EXCEPTION;
+            }
+            samples[i0] = (float)double_samplesi0;
+            JS_FreeValue(ctx, js_samples);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        da_samples = JS_DupValue(ctx,argv[0]);
+        size_t size_samples;
+        samples = (float *)JS_GetArrayBuffer(ctx, &size_samples, da_samples);
+    }
+    else {
+        JSClassID classid_samples = JS_GetClassID(argv[0]);
+        if(classid_samples==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_samples;
+            size_t size_samples;
+            da_samples = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_samples,&size_samples,NULL);
+            samples = (float *)JS_GetArrayBuffer(ctx, &size_samples, da_samples);
+        }
+        else {
+            double double_js_samples;
+            int err_js_samples = JS_ToFloat64(ctx, &double_js_samples, argv[0]);
+            if(err_js_samples<0) {
+                JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+                return JS_EXCEPTION;
+            }
+            float js_samples = (float)double_js_samples;
+            samples = &js_samples;
+        }
+    }
+    UnloadWaveSamples(samples);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        JSValue js_argv0 = JS_NewFloat64(ctx, (double)samples[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[0],0,js_argv0,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, samples);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_samples);
+    }
+    else {
+        JSClassID classid_samples = JS_GetClassID(argv[0]);
+        if(classid_samples==JS_CLASS_FLOAT32_ARRAY) {
+            js_free(ctx, &da_samples);
+        }
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_loadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
@@ -18144,14 +18686,102 @@ static JSValue js_loadMusicStream(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_isMusicReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_loadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;;
+    char * fileType;
+    if(JS_IsString(argv[0]) == 1) {
+        fileType = (char *)JS_ToCString(ctx, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JSValue da_fileType = JS_DupValue(ctx,argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            JSValue da_fileType = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileType,&size_fileType,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * data;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_data;
+        if(JS_GetLength(ctx,argv[1],&size_data)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[1],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JSValue da_data = JS_DupValue(ctx,argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[1]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_data,&size_data,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[2]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    Music returnVal = LoadMusicStreamFromMemory((const char *)fileType, (const unsigned char *)data, dataSize);
+    memoryClear(ctx, memoryHead);
+    Music* ptr_ret = (Music*)js_malloc(ctx, sizeof(Music));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_Music_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_isMusicValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
         return JS_EXCEPTION;
     }
     Music music = *ptr_music;
-    bool returnVal = IsMusicReady(music);
+    bool returnVal = IsMusicValid(music);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -18328,6 +18958,228 @@ static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValue this_val, int argc
     float returnVal = GetMusicTimePlayed(music);
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
+}
+
+static JSValue js_loadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    uint32_t long_sampleRate;
+    int err_sampleRate = JS_ToUint32(ctx, &long_sampleRate, argv[0]);
+    if(err_sampleRate<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleRate = (unsigned int)long_sampleRate;
+    uint32_t long_sampleSize;
+    int err_sampleSize = JS_ToUint32(ctx, &long_sampleSize, argv[1]);
+    if(err_sampleSize<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleSize = (unsigned int)long_sampleSize;
+    uint32_t long_channels;
+    int err_channels = JS_ToUint32(ctx, &long_channels, argv[2]);
+    if(err_channels<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int channels = (unsigned int)long_channels;
+    AudioStream returnVal = LoadAudioStream(sampleRate, sampleSize, channels);
+    AudioStream* ptr_ret = (AudioStream*)js_malloc(ctx, sizeof(AudioStream));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_AudioStream_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_isAudioStreamValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    bool returnVal = IsAudioStreamValid(stream);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_unloadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    UnloadAudioStream(stream);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_updateAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    void * data;
+    JSValue da_data;
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        da_data = JS_DupValue(ctx,argv[1]);
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+    }
+    else {
+        JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    int32_t long_frameCount;
+    int err_frameCount = JS_ToInt32(ctx, &long_frameCount, argv[2]);
+    if(err_frameCount<0) {
+        if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_data);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int frameCount = (int)long_frameCount;
+    UpdateAudioStream(stream, (const void *)data, frameCount);
+    if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_data);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_isAudioStreamProcessed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    bool returnVal = IsAudioStreamProcessed(stream);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_playAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    PlayAudioStream(stream);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_pauseAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    PauseAudioStream(stream);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_resumeAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    ResumeAudioStream(stream);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_isAudioStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    bool returnVal = IsAudioStreamPlaying(stream);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_stopAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    StopAudioStream(stream);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setAudioStreamVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    double double_volume;
+    int err_volume = JS_ToFloat64(ctx, &double_volume, argv[1]);
+    if(err_volume<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float volume = (float)double_volume;
+    SetAudioStreamVolume(stream, volume);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setAudioStreamPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    double double_pitch;
+    int err_pitch = JS_ToFloat64(ctx, &double_pitch, argv[1]);
+    if(err_pitch<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float pitch = (float)double_pitch;
+    SetAudioStreamPitch(stream, pitch);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setAudioStreamPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    double double_pan;
+    int err_pan = JS_ToFloat64(ctx, &double_pan, argv[1]);
+    if(err_pan<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float pan = (float)double_pan;
+    SetAudioStreamPan(stream, pan);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int32_t long_size;
+    int err_size = JS_ToInt32(ctx, &long_size, argv[0]);
+    if(err_size<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int size = (int)long_size;
+    SetAudioStreamBufferSizeDefault(size);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -19460,6 +20312,23 @@ static JSValue js_vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSV
     JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
     JS_SetOpaque(ret, ptr_ret);
     return ret;
+}
+
+static JSValue js_vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector3 * v1;
+    v1 = (Vector3 *)JS_GetOpaque(argv[0], js_Vector3_class_id);
+    if(v1 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Vector3");
+        return JS_EXCEPTION;
+    }
+    Vector3 * v2;
+    v2 = (Vector3 *)JS_GetOpaque(argv[1], js_Vector3_class_id);
+    if(v2 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not match type Vector3");
+        return JS_EXCEPTION;
+    }
+    Vector3OrthoNormalize(v1, v2);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_vector3Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -20939,6 +21808,93 @@ static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValue this_val, int
     JSValue ret = JS_NewObjectClass(ctx, js_Vector4_class_id);
     JS_SetOpaque(ret, ptr_ret);
     return ret;
+}
+
+static JSValue js_quaternionToAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;;
+    Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
+    if(ptr_q == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Quaternion q = *ptr_q;
+    Vector3 * outAxis;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_outAxis;
+        if(JS_GetLength(ctx,argv[1],&size_outAxis)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        outAxis = (Vector3 *)js_malloc(ctx, size_outAxis * sizeof(Vector3));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, outAxis);
+        for(int i0=0; i0 < size_outAxis; i0++){
+            JSValue js_outAxis = JS_GetPropertyUint32(ctx,argv[1],i0);
+            Vector3* ptr_outAxisi0 = (Vector3*)JS_GetOpaque(js_outAxis, js_Vector3_class_id);
+            if(ptr_outAxisi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_outAxis does not allow null");
+                return JS_EXCEPTION;
+            }
+            outAxis[i0] = *ptr_outAxisi0;
+            JS_FreeValue(ctx, js_outAxis);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JSValue da_outAxis = JS_DupValue(ctx,argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outAxis);
+        size_t size_outAxis;
+        outAxis = (Vector3 *)JS_GetArrayBuffer(ctx, &size_outAxis, da_outAxis);
+    }
+    else {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] does not match type Vector3 *");
+        return JS_EXCEPTION;
+    }
+    float * outAngle;
+    if(JS_IsArray(ctx,argv[2]) == 1) {
+        size_t size_outAngle;
+        if(JS_GetLength(ctx,argv[2],&size_outAngle)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        outAngle = (float *)js_malloc(ctx, size_outAngle * sizeof(float));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, outAngle);
+        for(int i0=0; i0 < size_outAngle; i0++){
+            JSValue js_outAngle = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_outAnglei0;
+            int err_outAnglei0 = JS_ToFloat64(ctx, &double_outAnglei0, js_outAngle);
+            if(err_outAnglei0<0) {
+                JS_ThrowTypeError(ctx, "js_outAngle is not numeric");
+                return JS_EXCEPTION;
+            }
+            outAngle[i0] = (float)double_outAnglei0;
+            JS_FreeValue(ctx, js_outAngle);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        JSValue da_outAngle = JS_DupValue(ctx,argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outAngle);
+        size_t size_outAngle;
+        outAngle = (float *)JS_GetArrayBuffer(ctx, &size_outAngle, da_outAngle);
+    }
+    else {
+        JSClassID classid_outAngle = JS_GetClassID(argv[2]);
+        if(classid_outAngle==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_outAngle;
+            size_t size_outAngle;
+            JSValue da_outAngle = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_outAngle,&size_outAngle,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outAngle);
+            outAngle = (float *)JS_GetArrayBuffer(ctx, &size_outAngle, da_outAngle);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
+            return JS_EXCEPTION;
+        }
+    }
+    QuaternionToAxisAngle(q, outAxis, outAngle);
+    memoryClear(ctx, memoryHead);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_quaternionFromEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -24321,6 +25277,208 @@ static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
+static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;;
+    Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
+    if(ptr_bounds == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Rectangle bounds = *ptr_bounds;
+    char * * text;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        size_t size_text;
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        text = (char * *)js_malloc(ctx, size_text * sizeof(char *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, text);
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            if(JS_IsString(js_text) == 1) {
+                text[i0] = (char *)JS_ToCString(ctx, js_text);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text[i0]);
+            }
+            else if(JS_IsArrayBuffer(js_text) == 1) {
+                JSValue da_texti0 = JS_DupValue(ctx,js_text);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
+                size_t size_texti0;
+                text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
+            }
+            else {
+                JSClassID classid_texti0 = JS_GetClassID(js_text);
+                if(classid_texti0==JS_CLASS_INT8_ARRAY) {
+                    size_t offset_texti0;
+                    size_t size_texti0;
+                    JSValue da_texti0 = JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti0,&size_texti0,NULL);
+                    memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
+                    text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
+                }
+                else {
+                    JS_ThrowTypeError(ctx, "js_text does not match type char *");
+                    return JS_EXCEPTION;
+                }
+            }
+            JS_FreeValue(ctx, js_text);
+        }
+    }
+    else {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] does not match type char * *");
+        return JS_EXCEPTION;
+    }
+    int32_t long_count;
+    int err_count = JS_ToInt32(ctx, &long_count, argv[2]);
+    if(err_count<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int count = (int)long_count;
+    int * scrollIndex;
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        scrollIndex = (int *)js_malloc(ctx, 1 * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, scrollIndex);
+        for(int i0=0; i0 < 1; i0++){
+            JSValue js_scrollIndex = JS_GetPropertyUint32(ctx,argv[3],i0);
+            int32_t long_scrollIndexi0;
+            int err_scrollIndexi0 = JS_ToInt32(ctx, &long_scrollIndexi0, js_scrollIndex);
+            if(err_scrollIndexi0<0) {
+                JS_ThrowTypeError(ctx, "js_scrollIndex is not numeric");
+                return JS_EXCEPTION;
+            }
+            scrollIndex[i0] = (int)long_scrollIndexi0;
+            JS_FreeValue(ctx, js_scrollIndex);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        JSValue da_scrollIndex = JS_DupValue(ctx,argv[3]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_scrollIndex);
+        size_t size_scrollIndex;
+        scrollIndex = (int *)JS_GetArrayBuffer(ctx, &size_scrollIndex, da_scrollIndex);
+    }
+    else {
+        JSClassID classid_scrollIndex = JS_GetClassID(argv[3]);
+        if(classid_scrollIndex==JS_CLASS_INT16_ARRAY) {
+            size_t offset_scrollIndex;
+            size_t size_scrollIndex;
+            JSValue da_scrollIndex = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_scrollIndex,&size_scrollIndex,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_scrollIndex);
+            scrollIndex = (int *)JS_GetArrayBuffer(ctx, &size_scrollIndex, da_scrollIndex);
+        }
+        else {
+            int32_t long_js_scrollIndex;
+            int err_js_scrollIndex = JS_ToInt32(ctx, &long_js_scrollIndex, argv[3]);
+            if(err_js_scrollIndex<0) {
+                memoryClear(ctx, memoryHead);
+                JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_scrollIndex = (int)long_js_scrollIndex;
+            scrollIndex = &js_scrollIndex;
+        }
+    }
+    int * active;
+    if(JS_IsArray(ctx,argv[4]) == 1) {
+        active = (int *)js_malloc(ctx, 1 * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, active);
+        for(int i0=0; i0 < 1; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[4],i0);
+            int32_t long_activei0;
+            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
+            if(err_activei0<0) {
+                JS_ThrowTypeError(ctx, "js_active is not numeric");
+                return JS_EXCEPTION;
+            }
+            active[i0] = (int)long_activei0;
+            JS_FreeValue(ctx, js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        JSValue da_active = JS_DupValue(ctx,argv[4]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_active);
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, da_active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[4]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            JSValue da_active = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_active,&size_active,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_active);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, da_active);
+        }
+        else {
+            int32_t long_js_active;
+            int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[4]);
+            if(err_js_active<0) {
+                memoryClear(ctx, memoryHead);
+                JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_active = (int)long_js_active;
+            active = &js_active;
+        }
+    }
+    int * focus;
+    if(JS_IsArray(ctx,argv[5]) == 1) {
+        size_t size_focus;
+        if(JS_GetLength(ctx,argv[5],&size_focus)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        focus = (int *)js_malloc(ctx, size_focus * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, focus);
+        for(int i0=0; i0 < size_focus; i0++){
+            JSValue js_focus = JS_GetPropertyUint32(ctx,argv[5],i0);
+            int32_t long_focusi0;
+            int err_focusi0 = JS_ToInt32(ctx, &long_focusi0, js_focus);
+            if(err_focusi0<0) {
+                JS_ThrowTypeError(ctx, "js_focus is not numeric");
+                return JS_EXCEPTION;
+            }
+            focus[i0] = (int)long_focusi0;
+            JS_FreeValue(ctx, js_focus);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[5]) == 1) {
+        JSValue da_focus = JS_DupValue(ctx,argv[5]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_focus);
+        size_t size_focus;
+        focus = (int *)JS_GetArrayBuffer(ctx, &size_focus, da_focus);
+    }
+    else {
+        JSClassID classid_focus = JS_GetClassID(argv[5]);
+        if(classid_focus==JS_CLASS_INT16_ARRAY) {
+            size_t offset_focus;
+            size_t size_focus;
+            JSValue da_focus = JS_GetTypedArrayBuffer(ctx,argv[5],&offset_focus,&size_focus,NULL);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_focus);
+            focus = (int *)JS_GetArrayBuffer(ctx, &size_focus, da_focus);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[5] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GuiListViewEx(bounds, (const char * *)text, count, scrollIndex, active, focus);
+    memoryClear(ctx, memoryHead);
+    if(JS_IsArray(ctx,argv[3]) == 1) {
+        JSValue js_argv3 = JS_NewInt32(ctx, (long)scrollIndex[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(ctx,argv[4]) == 1) {
+        JSValue js_argv4 = JS_NewInt32(ctx, (long)active[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[4],0,js_argv4,JS_PROP_C_W_E);
+    }
+    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
 static JSValue js_guiMessageBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;;
@@ -26310,7 +27468,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("unloadVrStereoConfig",1,js_unloadVrStereoConfig),
     JS_CFUNC_DEF("loadShader",2,js_loadShader),
     JS_CFUNC_DEF("loadShaderFromMemory",2,js_loadShaderFromMemory),
-    JS_CFUNC_DEF("isShaderReady",1,js_isShaderReady),
+    JS_CFUNC_DEF("isShaderValid",1,js_isShaderValid),
     JS_CFUNC_DEF("getShaderLocation",2,js_getShaderLocation),
     JS_CFUNC_DEF("getShaderLocationAttrib",2,js_getShaderLocationAttrib),
     JS_CFUNC_DEF("setShaderValue",4,js_setShaderValue),
@@ -26363,6 +27521,9 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("isFileDropped",0,js_isFileDropped),
     JS_CFUNC_DEF("loadDroppedFiles",0,js_loadDroppedFiles),
     JS_CFUNC_DEF("getFileModTime",1,js_getFileModTime),
+    JS_CFUNC_DEF("computeCRC32",2,js_computeCRC32),
+    JS_CFUNC_DEF("computeMD5",2,js_computeMD5),
+    JS_CFUNC_DEF("computeSHA1",2,js_computeSHA1),
     JS_CFUNC_DEF("loadAutomationEventList",1,js_loadAutomationEventList),
     JS_CFUNC_DEF("unloadAutomationEventList",1,js_unloadAutomationEventList),
     JS_CFUNC_DEF("exportAutomationEventList",2,js_exportAutomationEventList),
@@ -26389,7 +27550,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("getGamepadAxisCount",1,js_getGamepadAxisCount),
     JS_CFUNC_DEF("getGamepadAxisMovement",2,js_getGamepadAxisMovement),
     JS_CFUNC_DEF("setGamepadMappings",1,js_setGamepadMappings),
-    JS_CFUNC_DEF("setGamepadVibration",3,js_setGamepadVibration),
+    JS_CFUNC_DEF("setGamepadVibration",4,js_setGamepadVibration),
     JS_CFUNC_DEF("isMouseButtonPressed",1,js_isMouseButtonPressed),
     JS_CFUNC_DEF("isMouseButtonDown",1,js_isMouseButtonDown),
     JS_CFUNC_DEF("isMouseButtonReleased",1,js_isMouseButtonReleased),
@@ -26474,20 +27635,19 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("checkCollisionRecs",2,js_checkCollisionRecs),
     JS_CFUNC_DEF("checkCollisionCircles",4,js_checkCollisionCircles),
     JS_CFUNC_DEF("checkCollisionCircleRec",3,js_checkCollisionCircleRec),
+    JS_CFUNC_DEF("checkCollisionCircleLine",4,js_checkCollisionCircleLine),
     JS_CFUNC_DEF("checkCollisionPointRec",2,js_checkCollisionPointRec),
     JS_CFUNC_DEF("checkCollisionPointCircle",3,js_checkCollisionPointCircle),
     JS_CFUNC_DEF("checkCollisionPointTriangle",4,js_checkCollisionPointTriangle),
     JS_CFUNC_DEF("checkCollisionPointLine",4,js_checkCollisionPointLine),
-    JS_CFUNC_DEF("checkCollisionCircleLine",4,js_checkCollisionCircleLine),
     JS_CFUNC_DEF("getCollisionRec",2,js_getCollisionRec),
     JS_CFUNC_DEF("loadImage",1,js_loadImage),
     JS_CFUNC_DEF("loadImageRaw",5,js_loadImageRaw),
-    JS_CFUNC_DEF("loadImageSvg",3,js_loadImageSvg),
     JS_CFUNC_DEF("loadImageAnimFromMemory",4,js_loadImageAnimFromMemory),
     JS_CFUNC_DEF("loadImageFromMemory",3,js_loadImageFromMemory),
     JS_CFUNC_DEF("loadImageFromTexture",1,js_loadImageFromTexture),
     JS_CFUNC_DEF("loadImageFromScreen",0,js_loadImageFromScreen),
-    JS_CFUNC_DEF("isImageReady",1,js_isImageReady),
+    JS_CFUNC_DEF("isImageValid",1,js_isImageValid),
     JS_CFUNC_DEF("unloadImage",1,js_unloadImage),
     JS_CFUNC_DEF("exportImage",2,js_exportImage),
     JS_CFUNC_DEF("exportImageToMemory",3,js_exportImageToMemory),
@@ -26559,9 +27719,9 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("loadTextureFromImage",1,js_loadTextureFromImage),
     JS_CFUNC_DEF("loadTextureCubemap",2,js_loadTextureCubemap),
     JS_CFUNC_DEF("loadRenderTexture",2,js_loadRenderTexture),
-    JS_CFUNC_DEF("isTextureReady",1,js_isTextureReady),
+    JS_CFUNC_DEF("isTextureValid",1,js_isTextureValid),
     JS_CFUNC_DEF("unloadTexture",1,js_unloadTexture),
-    JS_CFUNC_DEF("isRenderTextureReady",1,js_isRenderTextureReady),
+    JS_CFUNC_DEF("isRenderTextureValid",1,js_isRenderTextureValid),
     JS_CFUNC_DEF("unloadRenderTexture",1,js_unloadRenderTexture),
     JS_CFUNC_DEF("updateTexture",2,js_updateTexture),
     JS_CFUNC_DEF("updateTextureRec",3,js_updateTextureRec),
@@ -26593,7 +27753,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("loadFont",1,js_loadFont),
     JS_CFUNC_DEF("loadFontEx",4,js_loadFontEx),
     JS_CFUNC_DEF("loadFontFromImage",3,js_loadFontFromImage),
-    JS_CFUNC_DEF("isFontReady",1,js_isFontReady),
+    JS_CFUNC_DEF("isFontValid",1,js_isFontValid),
     JS_CFUNC_DEF("unloadFont",1,js_unloadFont),
     JS_CFUNC_DEF("drawFPS",2,js_drawFPS),
     JS_CFUNC_DEF("drawText",5,js_drawText),
@@ -26608,7 +27768,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("textCopy",2,js_textCopy),
     JS_CFUNC_DEF("textIsEqual",2,js_textIsEqual),
     JS_CFUNC_DEF("textLength",1,js_textLength),
-    JS_CFUNC_DEF("textFormat",0,js_textFormat),
+    JS_CFUNC_DEF("textFormat",2,js_textFormat),
     JS_CFUNC_DEF("textSubtext",3,js_textSubtext),
     JS_CFUNC_DEF("textReplace",3,js_textReplace),
     JS_CFUNC_DEF("textInsert",3,js_textInsert),
@@ -26645,7 +27805,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("drawGrid",2,js_drawGrid),
     JS_CFUNC_DEF("loadModel",1,js_loadModel),
     JS_CFUNC_DEF("loadModelFromMesh",1,js_loadModelFromMesh),
-    JS_CFUNC_DEF("isModelReady",1,js_isModelReady),
+    JS_CFUNC_DEF("isModelValid",1,js_isModelValid),
     JS_CFUNC_DEF("unloadModel",1,js_unloadModel),
     JS_CFUNC_DEF("getModelBoundingBox",1,js_getModelBoundingBox),
     JS_CFUNC_DEF("drawModel",4,js_drawModel),
@@ -26679,11 +27839,11 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("genMeshHeightmap",2,js_genMeshHeightmap),
     JS_CFUNC_DEF("genMeshCubicmap",2,js_genMeshCubicmap),
     JS_CFUNC_DEF("loadMaterialDefault",0,js_loadMaterialDefault),
-    JS_CFUNC_DEF("isMaterialReady",1,js_isMaterialReady),
+    JS_CFUNC_DEF("isMaterialValid",1,js_isMaterialValid),
     JS_CFUNC_DEF("unloadMaterial",1,js_unloadMaterial),
     JS_CFUNC_DEF("setMaterialTexture",3,js_setMaterialTexture),
     JS_CFUNC_DEF("setModelMeshMaterial",3,js_setModelMeshMaterial),
-    JS_CFUNC_DEF("updateModelAnimationBoneMatrices",3,js_updateModelAnimationBoneMatrices),
+    JS_CFUNC_DEF("updateModelAnimationBones",3,js_updateModelAnimationBones),
     JS_CFUNC_DEF("checkCollisionSpheres",4,js_checkCollisionSpheres),
     JS_CFUNC_DEF("checkCollisionBoxes",2,js_checkCollisionBoxes),
     JS_CFUNC_DEF("checkCollisionBoxSphere",3,js_checkCollisionBoxSphere),
@@ -26699,11 +27859,11 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("getMasterVolume",0,js_getMasterVolume),
     JS_CFUNC_DEF("loadWave",1,js_loadWave),
     JS_CFUNC_DEF("loadWaveFromMemory",3,js_loadWaveFromMemory),
-    JS_CFUNC_DEF("isWaveReady",1,js_isWaveReady),
+    JS_CFUNC_DEF("isWaveValid",1,js_isWaveValid),
     JS_CFUNC_DEF("loadSound",1,js_loadSound),
     JS_CFUNC_DEF("loadSoundFromWave",1,js_loadSoundFromWave),
     JS_CFUNC_DEF("loadSoundAlias",1,js_loadSoundAlias),
-    JS_CFUNC_DEF("isSoundReady",1,js_isSoundReady),
+    JS_CFUNC_DEF("isSoundValid",1,js_isSoundValid),
     JS_CFUNC_DEF("updateSound",3,js_updateSound),
     JS_CFUNC_DEF("unloadWave",1,js_unloadWave),
     JS_CFUNC_DEF("unloadSound",1,js_unloadSound),
@@ -26720,8 +27880,11 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("waveCopy",1,js_waveCopy),
     JS_CFUNC_DEF("waveCrop",3,js_waveCrop),
     JS_CFUNC_DEF("waveFormat",4,js_waveFormat),
+    JS_CFUNC_DEF("loadWaveSamples",1,js_loadWaveSamples),
+    JS_CFUNC_DEF("unloadWaveSamples",1,js_unloadWaveSamples),
     JS_CFUNC_DEF("loadMusicStream",1,js_loadMusicStream),
-    JS_CFUNC_DEF("isMusicReady",1,js_isMusicReady),
+    JS_CFUNC_DEF("loadMusicStreamFromMemory",3,js_loadMusicStreamFromMemory),
+    JS_CFUNC_DEF("isMusicValid",1,js_isMusicValid),
     JS_CFUNC_DEF("unloadMusicStream",1,js_unloadMusicStream),
     JS_CFUNC_DEF("playMusicStream",1,js_playMusicStream),
     JS_CFUNC_DEF("isMusicStreamPlaying",1,js_isMusicStreamPlaying),
@@ -26735,6 +27898,20 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("setMusicPan",2,js_setMusicPan),
     JS_CFUNC_DEF("getMusicTimeLength",1,js_getMusicTimeLength),
     JS_CFUNC_DEF("getMusicTimePlayed",1,js_getMusicTimePlayed),
+    JS_CFUNC_DEF("loadAudioStream",3,js_loadAudioStream),
+    JS_CFUNC_DEF("isAudioStreamValid",1,js_isAudioStreamValid),
+    JS_CFUNC_DEF("unloadAudioStream",1,js_unloadAudioStream),
+    JS_CFUNC_DEF("updateAudioStream",3,js_updateAudioStream),
+    JS_CFUNC_DEF("isAudioStreamProcessed",1,js_isAudioStreamProcessed),
+    JS_CFUNC_DEF("playAudioStream",1,js_playAudioStream),
+    JS_CFUNC_DEF("pauseAudioStream",1,js_pauseAudioStream),
+    JS_CFUNC_DEF("resumeAudioStream",1,js_resumeAudioStream),
+    JS_CFUNC_DEF("isAudioStreamPlaying",1,js_isAudioStreamPlaying),
+    JS_CFUNC_DEF("stopAudioStream",1,js_stopAudioStream),
+    JS_CFUNC_DEF("setAudioStreamVolume",2,js_setAudioStreamVolume),
+    JS_CFUNC_DEF("setAudioStreamPitch",2,js_setAudioStreamPitch),
+    JS_CFUNC_DEF("setAudioStreamPan",2,js_setAudioStreamPan),
+    JS_CFUNC_DEF("setAudioStreamBufferSizeDefault",1,js_setAudioStreamBufferSizeDefault),
     JS_CFUNC_DEF("clamp",3,js_clamp),
     JS_CFUNC_DEF("lerp",3,js_lerp),
     JS_CFUNC_DEF("normalize",3,js_normalize),
@@ -26792,6 +27969,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("vector3Normalize",1,js_vector3Normalize),
     JS_CFUNC_DEF("vector3Project",2,js_vector3Project),
     JS_CFUNC_DEF("vector3Reject",2,js_vector3Reject),
+    JS_CFUNC_DEF("vector3OrthoNormalize",2,js_vector3OrthoNormalize),
     JS_CFUNC_DEF("vector3Transform",2,js_vector3Transform),
     JS_CFUNC_DEF("vector3RotateByQuaternion",2,js_vector3RotateByQuaternion),
     JS_CFUNC_DEF("vector3RotateByAxisAngle",3,js_vector3RotateByAxisAngle),
@@ -26859,6 +28037,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("quaternionFromMatrix",1,js_quaternionFromMatrix),
     JS_CFUNC_DEF("quaternionToMatrix",1,js_quaternionToMatrix),
     JS_CFUNC_DEF("quaternionFromAxisAngle",2,js_quaternionFromAxisAngle),
+    JS_CFUNC_DEF("quaternionToAxisAngle",3,js_quaternionToAxisAngle),
     JS_CFUNC_DEF("quaternionFromEuler",3,js_quaternionFromEuler),
     JS_CFUNC_DEF("quaternionToEuler",1,js_quaternionToEuler),
     JS_CFUNC_DEF("quaternionTransform",2,js_quaternionTransform),
@@ -26921,6 +28100,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("guiDummyRec",2,js_guiDummyRec),
     JS_CFUNC_DEF("guiGrid",5,js_guiGrid),
     JS_CFUNC_DEF("guiListView",4,js_guiListView),
+    JS_CFUNC_DEF("guiListViewEx",6,js_guiListViewEx),
     JS_CFUNC_DEF("guiMessageBox",4,js_guiMessageBox),
     JS_CFUNC_DEF("guiTextInputBox",7,js_guiTextInputBox),
     JS_CFUNC_DEF("guiColorPicker",3,js_guiColorPicker),
@@ -27463,7 +28643,6 @@ static int js_raylib_core_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExport(ctx, m, "CUBEMAP_LAYOUT_LINE_HORIZONTAL", JS_NewInt32(ctx, CUBEMAP_LAYOUT_LINE_HORIZONTAL));
     JS_SetModuleExport(ctx, m, "CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR", JS_NewInt32(ctx, CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR));
     JS_SetModuleExport(ctx, m, "CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE", JS_NewInt32(ctx, CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE));
-    JS_SetModuleExport(ctx, m, "CUBEMAP_LAYOUT_PANORAMA", JS_NewInt32(ctx, CUBEMAP_LAYOUT_PANORAMA));
     JS_SetModuleExport(ctx, m, "FONT_DEFAULT", JS_NewInt32(ctx, FONT_DEFAULT));
     JS_SetModuleExport(ctx, m, "FONT_BITMAP", JS_NewInt32(ctx, FONT_BITMAP));
     JS_SetModuleExport(ctx, m, "FONT_SDF", JS_NewInt32(ctx, FONT_SDF));
@@ -28154,7 +29333,6 @@ JSModuleDef * js_init_module_raylib_core(JSContext * ctx, const char * module_na
     JS_AddModuleExport(ctx, m, "CUBEMAP_LAYOUT_LINE_HORIZONTAL");
     JS_AddModuleExport(ctx, m, "CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR");
     JS_AddModuleExport(ctx, m, "CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE");
-    JS_AddModuleExport(ctx, m, "CUBEMAP_LAYOUT_PANORAMA");
     JS_AddModuleExport(ctx, m, "FONT_DEFAULT");
     JS_AddModuleExport(ctx, m, "FONT_BITMAP");
     JS_AddModuleExport(ctx, m, "FONT_SDF");

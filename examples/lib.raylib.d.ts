@@ -420,37 +420,37 @@ declare function windowShouldClose(): boolean;
 declare function isWindowReady(): boolean;
 /** Check if window is currently fullscreen */
 declare function isWindowFullscreen(): boolean;
-/** Check if window is currently hidden (only PLATFORM_DESKTOP) */
+/** Check if window is currently hidden */
 declare function isWindowHidden(): boolean;
-/** Check if window is currently minimized (only PLATFORM_DESKTOP) */
+/** Check if window is currently minimized */
 declare function isWindowMinimized(): boolean;
-/** Check if window is currently maximized (only PLATFORM_DESKTOP) */
+/** Check if window is currently maximized */
 declare function isWindowMaximized(): boolean;
-/** Check if window is currently focused (only PLATFORM_DESKTOP) */
+/** Check if window is currently focused */
 declare function isWindowFocused(): boolean;
 /** Check if window has been resized last frame */
 declare function isWindowResized(): boolean;
 /** Check if one specific window flag is enabled */
 declare function isWindowState(flag: number): boolean;
-/** Set window configuration state using flags (only PLATFORM_DESKTOP) */
+/** Set window configuration state using flags */
 declare function setWindowState(flags: number): void;
 /** Clear window configuration state flags */
 declare function clearWindowState(flags: number): void;
-/** Toggle window state: fullscreen/windowed [resizes monitor to match window resolution] (only PLATFORM_DESKTOP) */
+/** Toggle window state: fullscreen/windowed, resizes monitor to match window resolution */
 declare function toggleFullscreen(): void;
-/** Toggle window state: borderless windowed [resizes window to match monitor resolution] (only PLATFORM_DESKTOP) */
+/** Toggle window state: borderless windowed, resizes window to match monitor resolution */
 declare function toggleBorderlessWindowed(): void;
-/** Set window state: maximized, if resizable (only PLATFORM_DESKTOP) */
+/** Set window state: maximized, if resizable */
 declare function maximizeWindow(): void;
-/** Set window state: minimized, if resizable (only PLATFORM_DESKTOP) */
+/** Set window state: minimized, if resizable */
 declare function minimizeWindow(): void;
-/** Set window state: not minimized/maximized (only PLATFORM_DESKTOP) */
+/** Set window state: not minimized/maximized */
 declare function restoreWindow(): void;
-/** Set icon for window (single image, RGBA 32bit, only PLATFORM_DESKTOP) */
+/** Set icon for window (single image, RGBA 32bit) */
 declare function setWindowIcon(image: Image): void;
-/** Set title for window (only PLATFORM_DESKTOP and PLATFORM_WEB) */
+/** Set title for window */
 declare function setWindowTitle(title: string | undefined | null): void;
-/** Set window position on screen (only PLATFORM_DESKTOP) */
+/** Set window position on screen */
 declare function setWindowPosition(x: number, y: number): void;
 /** Set monitor for the current window */
 declare function setWindowMonitor(monitor: number): void;
@@ -460,9 +460,9 @@ declare function setWindowMinSize(width: number, height: number): void;
 declare function setWindowMaxSize(width: number, height: number): void;
 /** Set window dimensions */
 declare function setWindowSize(width: number, height: number): void;
-/** Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP) */
+/** Set window opacity [0.0f..1.0f] */
 declare function setWindowOpacity(opacity: number): void;
-/** Set window focused (only PLATFORM_DESKTOP) */
+/** Set window focused */
 declare function setWindowFocused(): void;
 /** Get current screen width */
 declare function getScreenWidth(): number;
@@ -474,7 +474,7 @@ declare function getRenderWidth(): number;
 declare function getRenderHeight(): number;
 /** Get number of connected monitors */
 declare function getMonitorCount(): number;
-/** Get current connected monitor */
+/** Get current monitor where window is placed */
 declare function getCurrentMonitor(): number;
 /** Get specified monitor position */
 declare function getMonitorPosition(monitor: number): Vector2;
@@ -556,8 +556,8 @@ declare function unloadVrStereoConfig(config: VrStereoConfig): void;
 declare function loadShader(vsFileName: string | undefined | null, fsFileName: string | undefined | null): Shader;
 /** Load shader from code strings and bind default locations */
 declare function loadShaderFromMemory(vsCode: string | undefined | null, fsCode: string | undefined | null): Shader;
-/** Check if a shader is ready */
-declare function isShaderReady(shader: Shader): boolean;
+/** Check if a shader is valid (loaded on GPU) */
+declare function isShaderValid(shader: Shader): boolean;
 /** Get shader uniform location */
 declare function getShaderLocation(shader: Shader, uniformName: string | undefined | null): number;
 /** Get shader attribute location */
@@ -662,6 +662,12 @@ declare function isFileDropped(): boolean;
 declare function loadDroppedFiles(): string[];
 /** Get file modification time (last write time) */
 declare function getFileModTime(fileName: string | undefined | null): number;
+/** Compute CRC32 hash code */
+declare function computeCRC32(data: ArrayBuffer, dataSize: number): number;
+/** Compute MD5 hash code, returns static int[4] (16 bytes) */
+declare function computeMD5(data: ArrayBuffer, dataSize: number): unsigned int;
+/** Compute SHA1 hash code, returns static int[5] (20 bytes) */
+declare function computeSHA1(data: ArrayBuffer, dataSize: number): unsigned int;
 /** Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS */
 declare function loadAutomationEventList(fileName: string | undefined | null): AutomationEventList;
 /** Unload automation events list from file */
@@ -680,7 +686,7 @@ declare function stopAutomationEventRecording(): void;
 declare function playAutomationEvent(event: AutomationEvent): void;
 /** Check if a key has been pressed once */
 declare function isKeyPressed(key: number): boolean;
-/** Check if a key has been pressed again (Only PLATFORM_DESKTOP) */
+/** Check if a key has been pressed again */
 declare function isKeyPressedRepeat(key: number): boolean;
 /** Check if a key is being pressed */
 declare function isKeyDown(key: number): boolean;
@@ -714,8 +720,8 @@ declare function getGamepadAxisCount(gamepad: number): number;
 declare function getGamepadAxisMovement(gamepad: number, axis: number): number;
 /** Set internal gamepad mappings (SDL_GameControllerDB) */
 declare function setGamepadMappings(mappings: string | undefined | null): number;
-/** Set gamepad vibration for both motors */
-declare function setGamepadVibration(gamepad: number, leftMotor: number, rightMotor: number): void;
+/** Set gamepad vibration for both motors (duration in seconds) */
+declare function setGamepadVibration(gamepad: number, leftMotor: number, rightMotor: number, duration: number): void;
 /** Check if a mouse button has been pressed once */
 declare function isMouseButtonPressed(button: number): boolean;
 /** Check if a mouse button is being pressed */
@@ -760,7 +766,7 @@ declare function setGesturesEnabled(flags: number): void;
 declare function isGestureDetected(gesture: number): boolean;
 /** Get latest detected gesture */
 declare function getGestureDetected(): number;
-/** Get gesture hold time in milliseconds */
+/** Get gesture hold time in seconds */
 declare function getGestureHoldDuration(): number;
 /** Get gesture drag vector */
 declare function getGestureDragVector(): Vector2;
@@ -884,6 +890,8 @@ declare function checkCollisionRecs(rec1: Rectangle, rec2: Rectangle): boolean;
 declare function checkCollisionCircles(center1: Vector2, radius1: number, center2: Vector2, radius2: number): boolean;
 /** Check collision between circle and rectangle */
 declare function checkCollisionCircleRec(center: Vector2, radius: number, rec: Rectangle): boolean;
+/** Check if circle collides with a line created betweeen two points [p1] and [p2] */
+declare function checkCollisionCircleLine(center: Vector2, radius: number, p1: Vector2, p2: Vector2): boolean;
 /** Check if point is inside rectangle */
 declare function checkCollisionPointRec(point: Vector2, rec: Rectangle): boolean;
 /** Check if point is inside circle */
@@ -892,16 +900,12 @@ declare function checkCollisionPointCircle(point: Vector2, center: Vector2, radi
 declare function checkCollisionPointTriangle(point: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): boolean;
 /** Check if point belongs to line created between two points [p1] and [p2] with defined margin in pixels [threshold] */
 declare function checkCollisionPointLine(point: Vector2, p1: Vector2, p2: Vector2, threshold: number): boolean;
-/** Check if circle collides with a line created betweeen two points [p1] and [p2] */
-declare function checkCollisionCircleLine(center: Vector2, radius: number, p1: Vector2, p2: Vector2): boolean;
 /** Get collision rectangle for two rectangles collision */
 declare function getCollisionRec(rec1: Rectangle, rec2: Rectangle): Rectangle;
 /** Load image from file into CPU memory (RAM) */
 declare function loadImage(fileName: string | undefined | null): Image;
 /** Load image from RAW file data */
 declare function loadImageRaw(fileName: string | undefined | null, width: number, height: number, format: number, headerSize: number): Image;
-/** Load image from SVG file data or string with specified size */
-declare function loadImageSvg(fileNameOrString: string | undefined | null, width: number, height: number): Image;
 /** Load image sequence from memory buffer */
 declare function loadImageAnimFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number, frames: int &): Image;
 /** Load image from memory buffer, fileType refers to extension: i.e. '.png' */
@@ -910,8 +914,8 @@ declare function loadImageFromMemory(fileType: string | undefined | null, fileDa
 declare function loadImageFromTexture(texture: Texture): Image;
 /** Load image from screen buffer and (screenshot) */
 declare function loadImageFromScreen(): Image;
-/** Check if an image is ready */
-declare function isImageReady(image: Image): boolean;
+/** Check if an image is valid (data and parameters) */
+declare function isImageValid(image: Image): boolean;
 /** Unload image from CPU memory (RAM) */
 declare function unloadImage(image: Image): void;
 /** Export image data to file, returns true on success */
@@ -1054,12 +1058,12 @@ declare function loadTextureFromImage(image: Image): Texture;
 declare function loadTextureCubemap(image: Image, layout: number): Texture;
 /** Load texture for rendering (framebuffer) */
 declare function loadRenderTexture(width: number, height: number): RenderTexture;
-/** Check if a texture is ready */
-declare function isTextureReady(texture: Texture): boolean;
+/** Check if a texture is valid (loaded in GPU) */
+declare function isTextureValid(texture: Texture): boolean;
 /** Unload texture from GPU memory (VRAM) */
 declare function unloadTexture(texture: Texture): void;
-/** Check if a render texture is ready */
-declare function isRenderTextureReady(target: RenderTexture): boolean;
+/** Check if a render texture is valid (loaded in GPU) */
+declare function isRenderTextureValid(target: RenderTexture): boolean;
 /** Unload render texture from GPU memory (VRAM) */
 declare function unloadRenderTexture(target: RenderTexture): void;
 /** Update GPU texture with new data */
@@ -1122,8 +1126,8 @@ declare function loadFont(fileName: string | undefined | null): Font;
 declare function loadFontEx(fileName: string | undefined | null, fontSize: number, codepoints: int, codepointCount: number): Font;
 /** Load font from Image (XNA style) */
 declare function loadFontFromImage(image: Image, key: Color, firstChar: number): Font;
-/** Check if a font is ready */
-declare function isFontReady(font: Font): boolean;
+/** Check if a font is valid (font data loaded, WARNING: GPU texture not checked) */
+declare function isFontValid(font: Font): boolean;
 /** Unload font from GPU memory (VRAM) */
 declare function unloadFont(font: Font): void;
 /** Draw current FPS */
@@ -1153,7 +1157,7 @@ declare function textIsEqual(text1: string | undefined | null, text2: string | u
 /** Get text length, checks for '\0' ending */
 declare function textLength(text: string | undefined | null): number;
 /** Text formatting with variables (sprintf() style) */
-declare function textFormat(): string | undefined | null;
+declare function textFormat(text: string | undefined | null, args: ...): string | undefined | null;
 /** Get a piece of a text string */
 declare function textSubtext(text: string | undefined | null, position: number, length: number): string | undefined | null;
 /** Replace text string (WARNING: memory must be freed!) */
@@ -1226,8 +1230,8 @@ declare function drawGrid(slices: number, spacing: number): void;
 declare function loadModel(fileName: string | undefined | null): Model;
 /** Load model from generated mesh (default material) */
 declare function loadModelFromMesh(mesh: Mesh): Model;
-/** Check if a model is ready */
-declare function isModelReady(model: Model): boolean;
+/** Check if a model is valid (loaded in GPU, VAO/VBOs) */
+declare function isModelValid(model: Model): boolean;
 /** Unload model (including meshes) from memory (RAM and/or VRAM) */
 declare function unloadModel(model: Model): void;
 /** Compute model bounding box limits (considers all meshes) */
@@ -1294,16 +1298,16 @@ declare function genMeshHeightmap(heightmap: Image, size: Vector3): Mesh;
 declare function genMeshCubicmap(cubicmap: Image, cubeSize: Vector3): Mesh;
 /** Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps) */
 declare function loadMaterialDefault(): Material;
-/** Check if a material is ready */
-declare function isMaterialReady(material: Material): boolean;
+/** Check if a material is valid (shader assigned, map textures loaded in GPU) */
+declare function isMaterialValid(material: Material): boolean;
 /** Unload material from GPU memory (VRAM) */
 declare function unloadMaterial(material: Material): void;
 /** Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...) */
 declare function setMaterialTexture(material: Material &, mapType: number, texture: Texture): void;
 /** Set material for a mesh */
 declare function setModelMeshMaterial(model: Model &, meshId: number, materialId: number): void;
-/** Update model animation mesh bone matrices (Note GPU skinning does not work on Mac) */
-declare function updateModelAnimationBoneMatrices(model: Model, anim: ModelAnimation, frame: number): void;
+/** Update model animation mesh bone matrices (GPU skinning) */
+declare function updateModelAnimationBones(model: Model, anim: ModelAnimation, frame: number): void;
 /** Check collision between two spheres */
 declare function checkCollisionSpheres(center1: Vector3, radius1: number, center2: Vector3, radius2: number): boolean;
 /** Check collision between two bounding boxes */
@@ -1334,16 +1338,16 @@ declare function getMasterVolume(): number;
 declare function loadWave(fileName: string | undefined | null): Wave;
 /** Load wave from memory buffer, fileType refers to extension: i.e. '.wav' */
 declare function loadWaveFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Wave;
-/** Checks if wave data is ready */
-declare function isWaveReady(wave: Wave): boolean;
+/** Checks if wave data is valid (data loaded and parameters) */
+declare function isWaveValid(wave: Wave): boolean;
 /** Load sound from file */
 declare function loadSound(fileName: string | undefined | null): Sound;
 /** Load sound from wave data */
 declare function loadSoundFromWave(wave: Wave): Sound;
 /** Create a new sound that shares the same sample data as the source sound, does not own the sound data */
 declare function loadSoundAlias(source: Sound): Sound;
-/** Checks if a sound is ready */
-declare function isSoundReady(sound: Sound): boolean;
+/** Checks if a sound is valid (data loaded and buffers initialized) */
+declare function isSoundValid(sound: Sound): boolean;
 /** Update sound buffer with new data */
 declare function updateSound(sound: Sound, data: any, sampleCount: number): void;
 /** Unload wave data */
@@ -1376,10 +1380,16 @@ declare function waveCopy(wave: Wave): Wave;
 declare function waveCrop(wave: Wave &, initFrame: number, finalFrame: number): void;
 /** Convert wave data to desired format */
 declare function waveFormat(wave: Wave &, sampleRate: number, sampleSize: number, channels: number): void;
+/** Load samples data from wave as a 32bit float data array */
+declare function loadWaveSamples(wave: Wave): ArrayBuffer;
+/** Unload samples data loaded with LoadWaveSamples() */
+declare function unloadWaveSamples(samples: float &): void;
 /** Load music stream from file */
 declare function loadMusicStream(fileName: string | undefined | null): Music;
-/** Checks if a music stream is ready */
-declare function isMusicReady(music: Music): boolean;
+/** Load music stream from data */
+declare function loadMusicStreamFromMemory(fileType: string | undefined | null, data: ArrayBuffer, dataSize: number): Music;
+/** Checks if a music stream is valid (context and buffers initialized) */
+declare function isMusicValid(music: Music): boolean;
 /** Unload music stream */
 declare function unloadMusicStream(music: Music): void;
 /** Start music playing */
@@ -1406,6 +1416,34 @@ declare function setMusicPan(music: Music, pan: number): void;
 declare function getMusicTimeLength(music: Music): number;
 /** Get current music time played (in seconds) */
 declare function getMusicTimePlayed(music: Music): number;
+/** Load audio stream (to stream raw audio pcm data) */
+declare function loadAudioStream(sampleRate: number, sampleSize: number, channels: number): AudioStream;
+/** Checks if an audio stream is valid (buffers initialized) */
+declare function isAudioStreamValid(stream: AudioStream): boolean;
+/** Unload audio stream and free memory */
+declare function unloadAudioStream(stream: AudioStream): void;
+/** Update audio stream buffers with data */
+declare function updateAudioStream(stream: AudioStream, data: any, frameCount: number): void;
+/** Check if any audio stream buffers requires refill */
+declare function isAudioStreamProcessed(stream: AudioStream): boolean;
+/** Play audio stream */
+declare function playAudioStream(stream: AudioStream): void;
+/** Pause audio stream */
+declare function pauseAudioStream(stream: AudioStream): void;
+/** Resume audio stream */
+declare function resumeAudioStream(stream: AudioStream): void;
+/** Check if audio stream is playing */
+declare function isAudioStreamPlaying(stream: AudioStream): boolean;
+/** Stop audio stream */
+declare function stopAudioStream(stream: AudioStream): void;
+/** Set volume for audio stream (1.0 is max level) */
+declare function setAudioStreamVolume(stream: AudioStream, volume: number): void;
+/** Set pitch for audio stream (1.0 is base level) */
+declare function setAudioStreamPitch(stream: AudioStream, pitch: number): void;
+/** Set pan for audio stream (0.5 is centered) */
+declare function setAudioStreamPan(stream: AudioStream, pan: number): void;
+/** Default size for new audio streams */
+declare function setAudioStreamBufferSizeDefault(size: number): void;
 /** Clamp float value */
 declare function clamp(value: number, min: number, max: number): number;
 /** Calculate linear interpolation between two floats */
@@ -1528,6 +1566,10 @@ declare function vector3Normalize(v: Vector3): Vector3;
 declare function vector3Project(v1: Vector3, v2: Vector3): Vector3;
 /** //Calculate the rejection of the vector v1 on to v2 */
 declare function vector3Reject(v1: Vector3, v2: Vector3): Vector3;
+/** Orthonormalize provided vectors
+Makes vectors normalized and orthogonal to each other
+Gram-Schmidt function implementation */
+declare function vector3OrthoNormalize(v1: Vector3 &, v2: Vector3 &): void;
 /** Transforms a Vector3 by a given Matrix */
 declare function vector3Transform(v: Vector3, mat: Matrix): Vector3;
 /** Transform a vector by quaternion rotation */
@@ -1680,6 +1722,8 @@ declare function quaternionToMatrix(q: Vector4): Matrix;
 /** Get rotation quaternion for an angle and axis
 NOTE: Angle must be provided in radians */
 declare function quaternionFromAxisAngle(axis: Vector3, angle: number): Vector4;
+/** Get the rotation angle and axis for a given quaternion */
+declare function quaternionToAxisAngle(q: Vector4, outAxis: Vector3, outAngle: ArrayBuffer): void;
 /** Get the quaternion equivalent to Euler angles
 NOTE: Rotation order is ZYX */
 declare function quaternionFromEuler(pitch: number, yaw: number, roll: number): Vector4;
@@ -1806,6 +1850,8 @@ declare function guiDummyRec(bounds: Rectangle, text: string | undefined | null)
 declare function guiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2 &): number;
 /** List View control */
 declare function guiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: int &, active: int &): number;
+/** List View with extended parameters */
+declare function guiListViewEx(bounds: Rectangle, text: char *, count: number, scrollIndex: int &, active: int &, focus: int): number;
 /** Message Box control, displays a message */
 declare function guiMessageBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null): number;
 /** Text Input Box control, ask for text, supports secret */
@@ -2498,8 +2544,6 @@ declare var CUBEMAP_LAYOUT_LINE_HORIZONTAL: number;
 declare var CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR: number;
 /** Layout is defined by a 4x3 cross with cubemap faces */
 declare var CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE: number;
-/** Layout is defined by a panorama image (equirrectangular map) */
-declare var CUBEMAP_LAYOUT_PANORAMA: number;
 /** Default font generation, anti-aliased */
 declare var FONT_DEFAULT: number;
 /** Bitmap font generation, no anti-aliasing */

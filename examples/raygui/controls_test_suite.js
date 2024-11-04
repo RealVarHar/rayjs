@@ -33,7 +33,7 @@
 *
 **********************************************************************************************/
 
-import * as rl from 'raylib';
+import * as rl from 'rayjs:raylib';
 for (const key in rl) { globalThis[key] = rl[key] };
 
 // Initialization

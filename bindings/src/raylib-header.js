@@ -58,8 +58,8 @@ export class RayLibHeader extends QuickJsHeader {
             allocLen=0;//re-use allocation length, now used to count the current state
             if(dynamicAlloc){
                 //console.log('dynamicAlloc',dynamicAlloc,JSON.stringify(activeParams.map(param=>param.spread+param.type)));
-                fun.declare('memoryHead','memoryNode *',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
-                fun.declare('memoryCurrent','memoryNode *',false,'memoryHead;');
+                fun.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+                fun.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
             }
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
@@ -100,7 +100,7 @@ export class RayLibHeader extends QuickJsHeader {
                 if(hasspread){
                     //functions with bigger spread use more memory, but are less likely that user will run into limitations
                     //spreadSize Min 2, Max 127
-                    fun.declare("returnVal",api.returnType);
+                    fun.declare(api.returnType, "returnVal");
                     let last=api.params.pop();
                     params.pop();
                     let sw =fun.switch('size_'+last.name);

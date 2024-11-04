@@ -91,13 +91,17 @@ export class GenericCodeGenerator {
         this.line("// " + text);
     }
     call(name, params, returnVal = null) {
-        if (returnVal)
-            this.inline(`${returnVal.type} ${returnVal.name} = `);
+        if (returnVal){
+            if(returnVal.type){
+                this.inline(`${returnVal.type} `);
+            }
+            this.inline(`${returnVal.name} = `);
+        }
         this.inline(name + "(");
         this.inline(params.join(", "));
         this.statement(")");
     }
-    declare(name, type, isStatic = false, initValue = null, supressDeclaration = false) {
+    declare(type, name, isStatic = false, initValue = undefined, supressDeclaration = false) {
         if(!supressDeclaration){
             if (isStatic)
                 this.inline("static ");
@@ -105,7 +109,7 @@ export class GenericCodeGenerator {
         }else{
             this.inline(name);
         }
-        if (initValue)
+        if (initValue!==undefined)
             this.inline(" = " + initValue);
         this.statement("");
     }
@@ -199,6 +203,14 @@ export class GenericCodeGenerator {
     }
     for(indexVar, lengthVar, iter='i') {
         this.line(`for(int ${iter}=${indexVar}; ${iter} < ${lengthVar}; ${iter}++){`);
+        this.indent();
+        const child = this.child();
+        this.unindent();
+        this.line("}");
+        return child;
+    }
+    while(statement){
+        this.line(`while(${statement}){`);
         this.indent();
         const child = this.child();
         this.unindent();

@@ -20,7 +20,7 @@ export class QuickJsHeader {
         body.line("#endif");
         body.line("#ifndef dynamidMemoryAlloc");
         body.line("#define dynamidMemoryAlloc");
-        this.includeMemoryAlloc(body);
+        this.includeText(body);
         body.line("#endif");
         body.breakLine();
         this.definitions = body.child();
@@ -40,14 +40,14 @@ export class QuickJsHeader {
         moduleEntry.statement(`JS_AddModuleExportList(ctx, m, ${this.moduleFunctionList.getTag("_name")}, countof(${this.moduleFunctionList.getTag("_name")}))`);
         moduleEntryFunc.statement("return m");
     }
-    includeMemoryAlloc(body){
+    includeText(body){
         //define an allocation linked list
         //define struct
         body.line('typedef struct memoryNode{');
         body.indent();
-        body.declare('length','int');
-        body.declare('pointers[6]','void *');
-        body.declare('next','struct memoryNode *');
+        body.declare('int', 'length');
+        body.declare('void *','pointers[6]');
+        body.declare('struct memoryNode *','next');
         body.unindent();
         body.line('} memoryNode;');
         //define store function
@@ -152,6 +152,20 @@ export class QuickJsHeader {
 
     JS_CLASS_INIT_COUNT, /* last entry for predefined classes */
 };`);
+        body.line(`char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, ...){
+    va_list args;
+    va_start(args, format);
+    int len=vsnprintf(buffer,*maxsize,format,args);
+    if(len>*maxsize){
+        len++;
+        buffer=js_realloc(ctx,buffer,len * sizeof(char));
+        memset(buffer+*maxsize,0,len-*maxsize);
+        maxsize[0]=len;
+        len=vsnprintf(buffer,len,format,args);
+    }
+    va_end(args);
+    return buffer;
+};`);
     }
     registerStruct(struct, classId) {
         this.structLookup[struct] = classId;
@@ -214,6 +228,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             case "signed long":
             case "signed long int":
                 return ["JS_CLASS_INT32_ARRAY"];
+            case "wchar_t":
             case "unsigned long":
             case "unsigned long int":
                 return ["JS_CLASS_UINT32_ARRAY"];
@@ -240,7 +255,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         function getArray(ctx,type,name,src,srclen,overrideElse=false){
             //define
             if(!flags.supressDeclaration){
-                ctx.declare(name,type);
+                ctx.declare(type,name);
             }
             let tmpname=name.replace(/[[\]]/g,'');
             let ctxif='if';
@@ -250,7 +265,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             let addTypedArray=typedClassIds!==false;
             let topDefineJs=!flags.dynamicAlloc && (addBuffer||addTypedArray);
             if( topDefineJs ){
-                ctx.declare(`da_${tmpname}`,'JSValue');//for de-allocation
+                ctx.declare('JSValue',`da_${tmpname}`);//for de-allocation
             }
 
             //Check if NULL
@@ -269,19 +284,19 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 let size=srclen;
                 if (srclen == undefined) {
                     size="size_" + tmpname;
-                    arr.declare("size_" + tmpname, "size_t");
+                    arr.declare("size_t","size_" + tmpname);
                     let fi = arr.if(`JS_GetLength(ctx,${src},&size_${tmpname})==-1`);
                     errorCleanupFn(fi);
                     fi.returnExp("JS_EXCEPTION");
                 }
                 let subtype=getsubtype(type);
-                arr.declare(name,type,false,`(${type})js_malloc(ctx, ${size} * sizeof(${subtype}))`,true);
+                arr.declare(type,name,false,`(${type})js_malloc(ctx, ${size} * sizeof(${subtype}))`,true);
                 if (flags.dynamicAlloc) {
                     arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
                 }
                 let iter = 'i' + depth;
                 let arrf = arr.for('0', size, iter);//TODO: fastpath if size==1
-                arrf.declare(`js_${tmpname}`, 'JSValue', false, `JS_GetPropertyUint32(ctx,${src},${iter})`);
+                arrf.declare('JSValue',`js_${tmpname}`, false, `JS_GetPropertyUint32(ctx,${src},${iter})`);
                 arrf.jsToC(subtype, `${name}[${iter}]`, `js_${tmpname}`, classIds, {
                     supressDeclaration: true,
                     dynamicAlloc: true
@@ -303,12 +318,12 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             //Check if Buffer
             if(addBuffer) {//check for arrayBuffer only if [] but not [][]
                 arr = ctx[ctxif](`JS_IsArrayBuffer(${src}) == 1`);
-                arr.declare(`da_${tmpname}`,'JSValue',false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
+                arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
                 if(flags.dynamicAlloc){
                     arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_${tmpname})`);
                 }
-                arr.declare("size_" + tmpname, "size_t");
-                arr.declare(`${name}`, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
+                arr.declare("size_t","size_" + tmpname);
+                arr.declare(type,name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
                 ctxif='elsif';
             }
 
@@ -317,16 +332,16 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 if(ctxif!='if'){
                     ctx = ctx.else();
                 }
-                ctx.declare('classid_'+tmpname,'JSClassID',false,`JS_GetClassID(${src})`);
+                ctx.declare('JSClassID','classid_'+tmpname,false,`JS_GetClassID(${src})`);
                 arr = ctx.if('classid_'+tmpname+'=='+typedClassIds.join(' || classid_'+tmpname+'=='));
-                arr.declare('offset_'+tmpname,'size_t',false);
-                arr.declare('size_'+tmpname,'size_t',false);
-                arr.declare('da_'+tmpname,'JSValue',false,`JS_GetTypedArrayBuffer(ctx,${src},&offset_${tmpname},&size_${tmpname},NULL)`,!flags.dynamicAlloc);//calls js_dup, free this
+                arr.declare('size_t','offset_'+tmpname,false);
+                arr.declare('size_t','size_'+tmpname,false);
+                arr.declare('JSValue','da_'+tmpname,false,`JS_GetTypedArrayBuffer(ctx,${src},&offset_${tmpname},&size_${tmpname},NULL)`,!flags.dynamicAlloc);//calls js_dup, free this
                 if(flags.dynamicAlloc){
                     arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_${tmpname})`);
                 }
                 //TODO: respect buffer offset
-                arr.declare(name, type, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
+                arr.declare(type, name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
                 ctxif='elsif';
             }
             const fi=ctx.else();
@@ -357,10 +372,10 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             if(start>0){
                 initValue+='-'+String(start);
             }
-            this.declare(`size_${tmpname}`, "size_t",false,initValue);
+            this.declare("size_t", `size_${tmpname}`,false,initValue);
             this.statement(`if(size_${tmpname}>${config.spreadSize})size_${tmpname}=${config.spreadSize}`);
             //[]=[].map()
-            this.declare(name,type+' *',false,`js_malloc(ctx, size_` + tmpname + ` * sizeof(${type}))`,flags.supressDeclaration);
+            this.declare(type+' *', name,false,`js_malloc(ctx, size_` + tmpname + ` * sizeof(${type}))`,flags.supressDeclaration);
             if(flags.dynamicAlloc){
                 this.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
             }
@@ -383,9 +398,9 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             const classId = classIds[subtype];
             if (classId){
                 if(!flags.supressDeclaration){
-                    this.declare(name,subtype+' *');
+                    this.declare(subtype+' *', name);
                 }
-                this.declare(name, subtype+' *', false, `(${subtype} *)JS_GetOpaque(${src}, ${classId})`,true);
+                this.declare(subtype+' *', name, false, `(${subtype} *)JS_GetOpaque(${src}, ${classId})`,true);
                 const fi=this.if(`${name} == NULL`);
                 errorCleanupFn(fi);
                 fi.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${subtype}"`]);
@@ -399,13 +414,13 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                     els = getArray(this,subtype+' *',name,src,1,true);
                     //Or direct
                     els.jsToC(subtype,'js_'+tmpname,src,classIds,flags,depth,errorCleanupFn);
-                    els.declare(name,subtype+' *',false,'&js_'+tmpname,true);
+                    els.declare(subtype+' *', name,false,'&js_'+tmpname,true);
                 }
             }
         }else{
             switch (type) {
                 case "bool": {
-                    this.declare(name, type, false, `JS_ToBool(ctx, ${src})`, flags.supressDeclaration);
+                    this.declare(type, name, false, `JS_ToBool(ctx, ${src})`, flags.supressDeclaration);
                     const fi = this.if(`${name}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not a bool"`]);
@@ -413,8 +428,8 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                     break;
                 }
                 case "char":{
-                    this.declare('js_' + tmpname, "char *", false, `(char *)JS_ToCString(ctx, ${src})`);
-                    this.declare(name, "char", false, `(char)js_${tmpname}[0]`, flags.supressDeclaration);
+                    this.declare("char *", 'js_' + tmpname, false, `(char *)JS_ToCString(ctx, ${src})`);
+                    this.declare("char", name, false, `(char)js_${tmpname}[0]`, flags.supressDeclaration);
                     this.call('JS_FreeCString', ['ctx', 'js_' + tmpname]);
                     break;
                 }
@@ -428,12 +443,12 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "signed short int":
                 case "signed char":{//too small, needs to be cast
                     this.statement(`int32_t long_${tmpname}`);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt32(ctx, &long_${tmpname}, ${src})`);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToInt32(ctx, &long_${tmpname}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
                     fi.returnExp("JS_EXCEPTION");
-                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
+                    this.declare(type, name, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
                     break;
                 }
                 case "int32_t":
@@ -442,8 +457,8 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "signed long":
                 case "signed long int": {
                     if (!flags.supressDeclaration)
-                        this.declare(name,type);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt32(ctx, &${name}, ${src})`);
+                        this.declare(type, name);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToInt32(ctx, &${name}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
@@ -451,18 +466,19 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                     break;
                 }
                 case "uint8_t":
+                case 'wchar_t':
                 case "unsigned char":
                 case "unsigned short":
                 case "unsigned short int":
                 case "unsigned":
                 case "unsigned int":{//too small, needs to be cast
                     this.statement(`uint32_t long_${tmpname}`);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToUint32(ctx, &long_${tmpname}, ${src})`);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToUint32(ctx, &long_${tmpname}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
                     fi.returnExp("JS_EXCEPTION");
-                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
+                    this.declare(type, name, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
                     break;
                 }
                 case "uint32_t":
@@ -470,7 +486,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "unsigned long int": {
                     if (!flags.supressDeclaration)
                         this.statement(`${type} ${name}`);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToUint32(ctx, &${name}, ${src})`);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToUint32(ctx, &${name}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
@@ -483,8 +499,8 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "signed long long":
                 case "signed long long int":{
                     if (!flags.supressDeclaration)
-                        this.declare(name,type);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt64(ctx, &${name}, ${src})`);
+                        this.declare(type, name);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToInt64(ctx, &${name}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
@@ -495,28 +511,28 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "unsigned long long":
                 case "unsigned long long int":
                     this.statement(`uint64_t long_${tmpname}`);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToInt64(ctx, &long_${tmpname}, ${src})`);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToInt64(ctx, &long_${tmpname}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
                     fi.returnExp("JS_EXCEPTION");
-                    this.declare(name, type, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
+                    this.declare(type, name, false, `(${type})long_${tmpname}`, flags.supressDeclaration);
                     break;
                 case "float": {
                     this.statement("double double_" + tmpname);
-                    this.declare('err_' + tmpname, 'int', false, `JS_ToFloat64(ctx, &double_${tmpname}, ${src})`);
+                    this.declare('int', 'err_' + tmpname, false, `JS_ToFloat64(ctx, &double_${tmpname}, ${src})`);
                     const fi = this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
                     fi.returnExp("JS_EXCEPTION");
-                    this.declare(name, type, false, `(${type})double_${tmpname}`, flags.supressDeclaration);
+                    this.declare(type, name, false, `(${type})double_${tmpname}`, flags.supressDeclaration);
                     break;
                 }
                 case "double":
                 case "long double":{
                     if (!flags.supressDeclaration)
                         this.statement(`${type} ${name}`);
-                    this.declare('err_'+tmpname, 'int', false, `JS_ToFloat64(ctx, &${name}, ${src})`);
+                    this.declare('int', 'err_'+tmpname, false, `JS_ToFloat64(ctx, &${name}, ${src})`);
                     const fi=this.if(`err_${tmpname}<0`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} is not numeric"`]);
@@ -526,13 +542,13 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 default: {
                     const classId = classIds[type];
                     if (!classId) throw new Error("Cannot convert into parameter type: " + type);
-                    this.declare('ptr_'+tmpname, type + "*", false, `(${type}*)JS_GetOpaque(${src}, ${classId})`);
+                    this.declare(type + "*", 'ptr_'+tmpname, false, `(${type}*)JS_GetOpaque(${src}, ${classId})`);
                     //AllowNull unsupported for direct types
                     const fi = this.if(`ptr_${tmpname} == NULL`);
                     errorCleanupFn(fi);
                     fi.call('JS_ThrowTypeError',['ctx',`"${src} does not allow null"`]);
                     fi.returnExp("JS_EXCEPTION");
-                    this.declare(name, type, false, `*ptr_${tmpname}`,flags.supressDeclaration);
+                    this.declare(type, name, false, `*ptr_${tmpname}`,flags.supressDeclaration);
                 }
             }
         }
@@ -558,14 +574,14 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 let srclen=sizeVars.pop();
                 if(srclen==undefined){
                     //TODO: remove sizeof() based length
-                    ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
-                    ctx.declare('size_'+name,'size_t',false,`sizeof(${src})/sizeof(${subtype})`);
+                    ctx.declare('JSValue', name, false, `JS_NewArray(ctx)`,true);
+                    ctx.declare('size_t','size_'+name,false,`sizeof(${src})/sizeof(${subtype})`);
                     let child=ctx.for('0', 'size_'+name,'i'+depth);
                     child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
                     child.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
 
                 }else if(typeof(srclen)=="number"){
-                    ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
+                    ctx.declare('JSValue', name, false, `JS_NewArray(ctx)`,true);
                     for(let i=0;i<srclen;i++){
                         ctx.cToJs(subtype,'js_'+tmpname,src+'['+i+']',classIds,flags,depth+1,sizeVars);
                         ctx.statement(`JS_DefinePropertyValueUint32(ctx,${name},${i},js_${tmpname},JS_PROP_C_W_E)`);
@@ -578,11 +594,11 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                         return;
                     }else if(srclen=='&'){
                         sizeVars.push('&');
-                        ctx.declare("size_" + tmpname, "size_t");
+                        ctx.declare("size_t", "size_" + tmpname);
                         ctx.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
                         child=ctx.for('0', "size_" + tmpname,'i'+depth);
                     }else{
-                        ctx.declare(name, 'JSValue', false, `JS_NewArray(ctx)`,true);
+                        ctx.declare('JSValue', name, false, `JS_NewArray(ctx)`,true);
                         child=ctx.for('0', srclen,'i'+depth);
                     }
                     child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
@@ -603,7 +619,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             let len=type.substring(strpos+1,type.length-1).trim();
             //define
             if(!flags.supressDeclaration){
-                this.declare(name+'['+len+']','JSValue');
+                this.declare('JSValue', name+'['+len+']');
             }
             sizeVars.push(Number(len));
             setArray(this,type,name,src);
@@ -611,7 +627,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         }else if(type.endsWith('*')){
             //define name as (any)[] using setArray
             if(!flags.supressDeclaration){
-                this.declare(name,'JSValue');
+                this.declare('JSValue', name);
             }
             setArray(this,type,name,src);
         }else if(type.endsWith('&')){
@@ -643,7 +659,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             setArray(arr,subtype,name,src);
             /*
             if(getsubtype(subtype)!='char'){
-                arr.declare("size_" + tmpname, "size_t");
+                arr.declare("size_t", "size_" + tmpname);
                 arr.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
                 arr=arr.for('0', "size_" + tmpname,'i'+depth);
                 arr.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
@@ -660,11 +676,11 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
             //Normal type return
             switch (type) {
                 case "bool": {
-                    this.declare(name, 'JSValue', false, `JS_NewBool(ctx, ${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewBool(ctx, ${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "char":{
-                    this.declare('js_' + name, "JSValue", false, `JS_NewStringLen(ctx, &${src},1)`, flags.supressDeclaration);
+                    this.declare("JSValue", 'js_' + name, false, `JS_NewStringLen(ctx, &${src},1)`, flags.supressDeclaration);
                     break;
                 }
                 case "int8_t":
@@ -676,7 +692,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "signed short":
                 case "signed short int":
                 case "signed char":{//too small, needs to be cast
-                    this.declare(name, 'JSValue', false, `JS_NewInt32(ctx, (long)${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewInt32(ctx, (long)${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "int32_t":
@@ -684,7 +700,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "long int":
                 case "signed long":
                 case "signed long int": {
-                    this.declare(name, 'JSValue', false, `JS_NewInt32(ctx, ${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewInt32(ctx, ${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "uint8_t":
@@ -693,13 +709,13 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "unsigned short int":
                 case "unsigned":
                 case "unsigned int":{//too small, needs to be cast
-                    this.declare(name, 'JSValue', false, `JS_NewUint32(ctx, (unsigned long)${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewUint32(ctx, (unsigned long)${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "uint32_t":
                 case "unsigned long":
                 case "unsigned long int": {
-                    this.declare(name, 'JSValue', false, `JS_NewUint32(ctx,  ${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewUint32(ctx,  ${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "int64_t":
@@ -707,21 +723,21 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 case "long long int":
                 case "signed long long":
                 case "signed long long int":{
-                    this.declare(name, 'JSValue', false, `JS_NewInt64(ctx, ${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewInt64(ctx, ${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "uint64_t":
                 case "unsigned long long":
                 case "unsigned long long int":
-                    this.declare(name, 'JSValue', false, `JS_NewInt64(ctx, (long long)${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewInt64(ctx, (long long)${src})`, flags.supressDeclaration);
                     break;
                 case "float":
                 case "long double":{
-                    this.declare(name, 'JSValue', false, `JS_NewFloat64(ctx, (double)${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewFloat64(ctx, (double)${src})`, flags.supressDeclaration);
                     break;
                 }
                 case "double":{
-                    this.declare(name, 'JSValue', false, `JS_NewFloat64(ctx, ${src})`, flags.supressDeclaration);
+                    this.declare('JSValue', name, false, `JS_NewFloat64(ctx, ${src})`, flags.supressDeclaration);
                     break;
                 }
                 default: {
@@ -734,9 +750,9 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         }
     }
     jsStructToOpq(structType, jsVar, srcVar, classId) {
-        this.declare('ptr_'+jsVar, structType + "*", false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
+        this.declare(structType + "*", 'ptr_'+jsVar, false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
         this.statement("*ptr_" + jsVar + " = " + srcVar);
-        this.declare(jsVar, "JSValue", false, `JS_NewObjectClass(ctx, ${classId})`);
+        this.declare("JSValue", jsVar, false, `JS_NewObjectClass(ctx, ${classId})`);
         this.call("JS_SetOpaque", [jsVar, "ptr_"+jsVar]);
     }
     jsCleanUpParameter(type, name, src, classIds = {}, flags = {}) {
@@ -776,7 +792,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 if(ctxif!='if'){
                     ctx = ctx.else();
                 }
-                ctx.declare('classid_'+tmpname,'JSClassID',false,`JS_GetClassID(${src})`);
+                ctx.declare('JSClassID', 'classid_'+tmpname,false,`JS_GetClassID(${src})`);
                 arr = ctx.if('classid_'+tmpname+'=='+typedClassIds.join(' && classid_'+tmpname+'=='));
                 arr.call('js_free',['ctx','&da_'+tmpname]);
                 ctxif='elsif';
@@ -814,7 +830,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         this.line(`JS_CFUNC_DEF("${jsName}",${numArgs},${cName}),`);
     }
     jsClassId(id) {
-        this.declare(id, "JSClassID", true);
+        this.declare("JSClassID", id, true);
         return id;
     }
     jsPropStringDef(key, value) {
@@ -836,13 +852,13 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         return body;
     }
     jsClassDeclaration(structName, classId, finalizerName, funcListName) {
-        const body = this.function("js_declare_" + structName, "int", [{ type: "JSContext *", name: "ctx" }, { type: "JSModuleDef *", name: "m" }], true);
-        body.declare("rt","JSRuntime *",false,`JS_GetRuntime(ctx)`);
+        const body = this.function("js_declare_" + structName, "int",  [{ type: "JSContext *", name: "ctx" }, { type: "JSModuleDef *", name: "m" }], true);
+        body.declare("JSRuntime *", "rt",false,`JS_GetRuntime(ctx)`);
         body.call("JS_NewClassID", ["rt","&" + classId]);
         const classDefName = `js_${structName}_def`;
-        body.declare(classDefName, "JSClassDef", false, `{ .class_name = "${structName}", .finalizer = ${finalizerName} }`);
+        body.declare("JSClassDef", classDefName,  false, `{ .class_name = "${structName}", .finalizer = ${finalizerName} }`);
         body.call("JS_NewClass", ["rt", classId, "&" + classDefName]);
-        body.declare("proto", "JSValue", false, "JS_NewObject(ctx)");
+        body.declare("JSValue", "proto", false, "JS_NewObject(ctx)");
         body.call("JS_SetPropertyFunctionList", ["ctx", "proto", funcListName, `countof(${funcListName})`]);
         body.call("JS_SetClassProto", ["ctx", classId, "proto"]);
         body.statement("return 0");
@@ -851,7 +867,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
     jsStructGetter(structName, classId, field, type, classIds, overrideRead) {
         const args = [{ type: "JSContext*", name: "ctx" }, { type: "JSValue", name: "this_val" }];
         const fun = this.function(`js_${structName}_get_${field}`, "JSValue", args, true);
-        fun.declare("ptr", structName + "*", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
+        fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
         if (overrideRead) {
             overrideRead(fun);
         } else {
@@ -859,9 +875,9 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 let type2=type.split('[');
                 let amount='['+type2[1];
                 type2=type2[0];
-                fun.declare(field+amount, type2, false, "ptr->" + field);
+                fun.declare(type2, field+amount, false, "ptr->" + field);
             }else{
-                fun.declare(field, type, false, "ptr->" + field);
+                fun.declare(type, field, false, "ptr->" + field);
             }
         }
         fun.cToJs(type, "ret", field, classIds);
@@ -872,7 +888,7 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         //console.log('jsStructSetter',structName, classId, field, type, classIds, overrideWrite);
         const args = [{ type: "JSContext*", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
         const fun = this.function(`js_${structName}_set_${field}`, "JSValue", args, true);
-        fun.declare("ptr", structName + "*", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
+        fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
         fun.jsToC(type, "value", "v", classIds);
         if (overrideWrite) {
             overrideWrite(fun);

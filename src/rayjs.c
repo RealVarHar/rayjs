@@ -194,10 +194,10 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt){
     if (!ctx)
         return NULL;
     /* system modules */
-    js_init_module_std(ctx, "std");
-    js_init_module_os(ctx, "os");
-    js_init_module_bjson(ctx, "bjson");
-    js_init_module_raylib_core(ctx, "raylib");
+    js_init_module_std(ctx, "qjs:std");
+    js_init_module_os(ctx, "qjs:os");
+    js_init_module_bjson(ctx, "qjs:bjson");
+    js_init_module_raylib_core(ctx, "rayjs:raylib");
 
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyFunctionList(ctx, global, global_obj, countof(global_obj));
@@ -346,7 +346,7 @@ void help(void){
            "-m  --module       load as ES6 module (default=autodetect)\n"
            "    --script       load as ES6 script (default=autodetect)\n"
            "-I  --include file include an additional file\n"
-           "    --std          make 'std' and 'os' available to the loaded script\n"
+           "    --std          make 'std','os','bjson','raylib' available to the loaded script\n"
            "-T  --trace        trace memory allocation\n"
            "-d  --dump         dump the memory usage stats\n"
            "-D  --dump-flags   flags for dumping debug data -D=<bitmask> (see DUMP_* defines)\n"
@@ -380,7 +380,7 @@ int main(int argc, char** argv){
 
     argv0 = (JSCFunctionListEntry)JS_PROP_STRING_DEF("argv0", argv[0],JS_PROP_C_W_E);
 
-    dump_flags_str = getenv("QJS_DUMP_FLAGS");
+    dump_flags_str = getenv("RAYJS_DUMP_FLAGS");
     dump_flags = dump_flags_str ? strtol(dump_flags_str, NULL, 16) : 0;
 
     /* cannot use getopt because we want to pass the command line to
@@ -418,7 +418,7 @@ int main(int argc, char** argv){
             if (opt == 'e' || !strcmp(longopt, "eval")) {
                 if (!opt_arg) {
                     if (optind >= argc) {
-                        fprintf(stderr, "qjs: missing expression for -e\n");
+                        fprintf(stderr, "rayjs: missing expression for -e\n");
                         exit(2);
                     }
                     opt_arg = argv[optind++];
@@ -497,9 +497,9 @@ int main(int argc, char** argv){
                 break;
             }
             if (opt) {
-                fprintf(stderr, "qjs: unknown option '-%c'\n", opt);
+                fprintf(stderr, "rayjs: unknown option '-%c'\n", opt);
             } else {
-                fprintf(stderr, "qjs: unknown option '--%s'\n", longopt);
+                fprintf(stderr, "rayjs: unknown option '--%s'\n", longopt);
             }
             help();
         }
@@ -516,7 +516,7 @@ int main(int argc, char** argv){
 #endif
     }
     if (!rt) {
-        fprintf(stderr, "qjs: cannot allocate JS runtime\n");
+        fprintf(stderr, "rayjs: cannot allocate JS runtime\n");
         exit(2);
     }
     if (memory_limit >= 0)
@@ -529,7 +529,7 @@ int main(int argc, char** argv){
     js_std_init_handlers(rt);
     ctx = JS_NewCustomContext(rt);
     if (!ctx) {
-        fprintf(stderr, "qjs: cannot allocate JS context\n");
+        fprintf(stderr, "rayjs: cannot allocate JS context\n");
         exit(2);
     }
 
@@ -545,9 +545,12 @@ int main(int argc, char** argv){
 
         /* make 'std' and 'os' visible to non module code */
         if (load_std) {
-            const char *str = "import * as std from 'std';\n"
-                "import * as os from 'os';\n"
-                "import * as raylib from 'raylib';\n"
+            const char *str =
+                "import * as bjson from 'qjs:bjson';\n"
+                "import * as std from 'qjs:std';\n"
+                "import * as os from 'qjs:os';\n"
+                "import * as raylib from 'rayjs:raylib';\n"
+                "globalThis.bjson = bjson;\n"
                 "globalThis.std = std;\n"
                 "globalThis.os = os;\n";
                 "globalThis.raylib = raylib;\n";

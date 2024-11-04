@@ -51,10 +51,10 @@ export class HeaderParser {
     }
     parseFunctionArgs(input) {
         return input.split(',').filter(x => x !== 'void').map(arg => {
-            arg = arg.trim().replaceAll(" *", "* ");
+            arg = arg.replaceAll("*", " * ").replaceAll('[',' [ ').replace(new RegExp("\\s+",'g'),' ').trim();
             const frags = arg.split(' ');
             const name = frags.pop();
-            const type = frags.join(' ').replaceAll("*", " *").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ');
+            const type = frags.join(' ');
             return { name: name || "", type: type.trim(), binding:{} };
         });
     }
