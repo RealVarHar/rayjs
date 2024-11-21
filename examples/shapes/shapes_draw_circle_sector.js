@@ -57,11 +57,11 @@ while (!windowShouldClose())    // Detect window close button or ESC key
         //------------------------------------------------------------------------------
 		try{
 		let r=new Rectangle(600, 40, 120, 20);
-        guiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", textFormat("%.2f", String(startAngle[0])), startAngle, 0, 720);
-        guiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", textFormat("%.2f", String(endAngle[0])), endAngle, 0, 720);
+        guiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", textFormat("%.2f", startAngle[0]), startAngle, 0, 720);
+        guiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", textFormat("%.2f", endAngle[0]), endAngle, 0, 720);
 
-        guiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", textFormat("%.2f", String(outerRadius[0])), outerRadius, 0, 200);
-        guiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", textFormat("%.2f", String(segments[0])), segments, 0, 100);
+        guiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", textFormat("%.2f", outerRadius[0]), outerRadius, 0, 200);
+        guiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", textFormat("%.2f", segments[0]), segments, 0, 100);
         //------------------------------------------------------------------------------
 
         minSegments = Math.ceil((endAngle[0] - startAngle[0]) / 90);

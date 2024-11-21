@@ -94,7 +94,7 @@ export class RayLibHeader extends QuickJsHeader {
                 fun.line(options.customizeCall);
             }else{
                 for(let param of api.params){
-                    param.cast=param.type.includes('const ')?'('+param.type+')':'';
+                    param.cast=param.type.includes('const ')?'('+param.type.replaceAll('&','*')+')':'';
                 }
                 let params=api.params.map(x => x.cast+x.name);
                 if(hasspread){
@@ -202,6 +202,7 @@ export class RayLibHeader extends QuickJsHeader {
         this.typings.constants.tsDeclareConstant(exportName, structName, description);
     }
     exportGlobalInt(name, description) {
+        if(name==='')debugger;
         this.moduleInit.statement(`JS_SetModuleExport(ctx, m, "${name}", JS_NewInt32(ctx, ${name}))`);
         this.moduleEntry.statement(`JS_AddModuleExport(ctx, m, "${name}")`);
         this.typings.constants.tsDeclareConstant(name, "number", description);

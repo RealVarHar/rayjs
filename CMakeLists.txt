@@ -78,8 +78,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB files src/*.c)
 #add_executable(${CMAKE_PROJECT_NAME} MACOSX_BUNDLE ${files})
 add_executable(${CMAKE_PROJECT_NAME} ${files})
+set_target_properties(${CMAKE_PROJECT_NAME}
+    PROPERTIES
+    COMPILE_DEFINITIONS GRAPHICS_API_OPENGL_33=1
+)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${quickjs_sources_root})
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE include)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE thirdparty/raygui/src)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/shaders)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/others)
 target_link_libraries(${CMAKE_PROJECT_NAME} quickjs raylib lightmapper)

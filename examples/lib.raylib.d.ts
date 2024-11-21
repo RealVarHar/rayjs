@@ -379,6 +379,21 @@ interface AutomationEventList {
 declare var AutomationEventList: {
     prototype: AutomationEventList;
 }
+interface rlVertexBuffer {
+}
+declare var rlVertexBuffer: {
+    prototype: rlVertexBuffer;
+}
+interface rlDrawCall {
+}
+declare var rlDrawCall: {
+    prototype: rlDrawCall;
+}
+interface rlRenderBatch {
+}
+declare var rlRenderBatch: {
+    prototype: rlRenderBatch;
+}
 interface Light {
     type: number,
     enabled: boolean,
@@ -498,6 +513,8 @@ declare function getMonitorName(monitor: number): string | undefined | null;
 declare function setClipboardText(text: string | undefined | null): void;
 /** Get clipboard text content */
 declare function getClipboardText(): string | undefined | null;
+/** Get clipboard image content */
+declare function getClipboardImage(): Image;
 /** Enable waiting for events on EndDrawing(), no automatic event polling */
 declare function enableEventWaiting(): void;
 /** Disable waiting for events on EndDrawing(), automatic events polling */
@@ -1444,513 +1461,815 @@ declare function setAudioStreamPitch(stream: AudioStream, pitch: number): void;
 declare function setAudioStreamPan(stream: AudioStream, pan: number): void;
 /** Default size for new audio streams */
 declare function setAudioStreamBufferSizeDefault(size: number): void;
-/** Clamp float value */
+/** undefined */
 declare function clamp(value: number, min: number, max: number): number;
-/** Calculate linear interpolation between two floats */
+/** undefined */
 declare function lerp(start: number, end: number, amount: number): number;
-/** Normalize input value within input range */
+/** undefined */
 declare function normalize(value: number, start: number, end: number): number;
-/** Remap input value within input range to output range */
+/** undefined */
 declare function remap(value: number, inputStart: number, inputEnd: number, outputStart: number, outputEnd: number): number;
-/** Wrap input value from min to max */
+/** undefined */
 declare function wrap(value: number, min: number, max: number): number;
-/** Check whether two given floats are almost equal */
+/** undefined */
 declare function floatEquals(x: number, y: number): number;
-/** Vector with components value 0.0f */
+/** undefined */
 declare function vector2Zero(): Vector2;
-/** Vector with components value 1.0f */
+/** undefined */
 declare function vector2One(): Vector2;
-/** Add two vectors (v1 + v2) */
+/** undefined */
 declare function vector2Add(v1: Vector2, v2: Vector2): Vector2;
-/** Add vector and float value */
+/** undefined */
 declare function vector2AddValue(v: Vector2, add: number): Vector2;
-/** Subtract two vectors (v1 - v2) */
+/** undefined */
 declare function vector2Subtract(v1: Vector2, v2: Vector2): Vector2;
-/** Subtract vector by float value */
+/** undefined */
 declare function vector2SubtractValue(v: Vector2, sub: number): Vector2;
-/** Calculate vector length */
+/** undefined */
 declare function vector2Length(v: Vector2): number;
-/** Calculate vector square length */
+/** undefined */
 declare function vector2LengthSqr(v: Vector2): number;
-/** Calculate two vectors dot product */
+/** undefined */
 declare function vector2DotProduct(v1: Vector2, v2: Vector2): number;
-/** Calculate distance between two vectors */
+/** undefined */
+declare function vector2CrossProduct(v1: Vector2, v2: Vector2): number;
+/** undefined */
 declare function vector2Distance(v1: Vector2, v2: Vector2): number;
-/** Calculate square distance between two vectors */
+/** undefined */
 declare function vector2DistanceSqr(v1: Vector2, v2: Vector2): number;
-/** Calculate angle between two vectors
-NOTE: Angle is calculated from origin point (0, 0) */
+/** undefined */
 declare function vector2Angle(v1: Vector2, v2: Vector2): number;
-/** Calculate angle defined by a two vectors line
-NOTE: Parameters need to be normalized
-Current implementation should be aligned with glm::angle */
+/** undefined */
 declare function vector2LineAngle(start: Vector2, end: Vector2): number;
-/** Scale vector (multiply by value) */
+/** undefined */
 declare function vector2Scale(v: Vector2, scale: number): Vector2;
-/** Multiply vector by vector */
+/** undefined */
 declare function vector2Multiply(v1: Vector2, v2: Vector2): Vector2;
-/** Negate vector */
+/** undefined */
 declare function vector2Negate(v: Vector2): Vector2;
-/** Divide vector by vector */
+/** undefined */
 declare function vector2Divide(v1: Vector2, v2: Vector2): Vector2;
-/** Normalize provided vector */
+/** undefined */
 declare function vector2Normalize(v: Vector2): Vector2;
-/** Transforms a Vector2 by a given Matrix */
+/** undefined */
 declare function vector2Transform(v: Vector2, mat: Matrix): Vector2;
-/** Calculate linear interpolation between two vectors */
+/** undefined */
 declare function vector2Lerp(v1: Vector2, v2: Vector2, amount: number): Vector2;
-/** Calculate reflected vector to normal */
+/** undefined */
 declare function vector2Reflect(v: Vector2, normal: Vector2): Vector2;
-/** Get min value for each pair of components */
+/** undefined */
 declare function vector2Min(v1: Vector2, v2: Vector2): Vector2;
-/** Get max value for each pair of components */
+/** undefined */
 declare function vector2Max(v1: Vector2, v2: Vector2): Vector2;
-/** Rotate vector by angle */
+/** undefined */
 declare function vector2Rotate(v: Vector2, angle: number): Vector2;
-/** Move Vector towards target */
+/** undefined */
 declare function vector2MoveTowards(v: Vector2, target: Vector2, maxDistance: number): Vector2;
-/** Invert the given vector */
+/** undefined */
 declare function vector2Invert(v: Vector2): Vector2;
-/** Clamp the components of the vector between
-min and max values specified by the given vectors */
+/** undefined */
 declare function vector2Clamp(v: Vector2, min: Vector2, max: Vector2): Vector2;
-/** Clamp the magnitude of the vector between two min and max values */
+/** undefined */
 declare function vector2ClampValue(v: Vector2, min: number, max: number): Vector2;
-/** Check whether two given vectors are almost equal */
+/** undefined */
 declare function vector2Equals(p: Vector2, q: Vector2): number;
-/** Compute the direction of a refracted ray
-v: normalized direction of the incoming ray
-n: normalized normal vector of the interface of two optical media
-r: ratio of the refractive index of the medium from where the ray comes
-   to the refractive index of the medium on the other side of the surface */
+/** undefined */
 declare function vector2Refract(v: Vector2, n: Vector2, r: number): Vector2;
-/** Vector with components value 0.0f */
+/** undefined */
 declare function vector3Zero(): Vector3;
-/** Vector with components value 1.0f */
+/** undefined */
 declare function vector3One(): Vector3;
-/** Add two vectors */
+/** undefined */
 declare function vector3Add(v1: Vector3, v2: Vector3): Vector3;
-/** Add vector and float value */
+/** undefined */
 declare function vector3AddValue(v: Vector3, add: number): Vector3;
-/** Subtract two vectors */
+/** undefined */
 declare function vector3Subtract(v1: Vector3, v2: Vector3): Vector3;
-/** Subtract vector by float value */
+/** undefined */
 declare function vector3SubtractValue(v: Vector3, sub: number): Vector3;
-/** Multiply vector by scalar */
+/** undefined */
 declare function vector3Scale(v: Vector3, scalar: number): Vector3;
-/** Multiply vector by vector */
+/** undefined */
 declare function vector3Multiply(v1: Vector3, v2: Vector3): Vector3;
-/** Calculate two vectors cross product */
+/** undefined */
 declare function vector3CrossProduct(v1: Vector3, v2: Vector3): Vector3;
-/** Calculate one vector perpendicular vector */
+/** undefined */
 declare function vector3Perpendicular(v: Vector3): Vector3;
-/** Calculate vector length */
+/** undefined */
 declare function vector3Length(v: Vector3): number;
-/** Calculate vector square length */
+/** undefined */
 declare function vector3LengthSqr(v: Vector3): number;
-/** Calculate two vectors dot product */
+/** undefined */
 declare function vector3DotProduct(v1: Vector3, v2: Vector3): number;
-/** Calculate distance between two vectors */
+/** undefined */
 declare function vector3Distance(v1: Vector3, v2: Vector3): number;
-/** Calculate square distance between two vectors */
+/** undefined */
 declare function vector3DistanceSqr(v1: Vector3, v2: Vector3): number;
-/** Calculate angle between two vectors */
+/** undefined */
 declare function vector3Angle(v1: Vector3, v2: Vector3): number;
-/** Negate provided vector (invert direction) */
+/** undefined */
 declare function vector3Negate(v: Vector3): Vector3;
-/** Divide vector by vector */
+/** undefined */
 declare function vector3Divide(v1: Vector3, v2: Vector3): Vector3;
-/** Normalize provided vector */
+/** undefined */
 declare function vector3Normalize(v: Vector3): Vector3;
-/** //Calculate the projection of the vector v1 on to v2 */
+/** undefined */
 declare function vector3Project(v1: Vector3, v2: Vector3): Vector3;
-/** //Calculate the rejection of the vector v1 on to v2 */
+/** undefined */
 declare function vector3Reject(v1: Vector3, v2: Vector3): Vector3;
-/** Orthonormalize provided vectors
-Makes vectors normalized and orthogonal to each other
-Gram-Schmidt function implementation */
+/** undefined */
 declare function vector3OrthoNormalize(v1: Vector3 &, v2: Vector3 &): void;
-/** Transforms a Vector3 by a given Matrix */
+/** undefined */
 declare function vector3Transform(v: Vector3, mat: Matrix): Vector3;
-/** Transform a vector by quaternion rotation */
+/** undefined */
 declare function vector3RotateByQuaternion(v: Vector3, q: Vector4): Vector3;
-/** Rotates a vector around an axis */
+/** undefined */
 declare function vector3RotateByAxisAngle(v: Vector3, axis: Vector3, angle: number): Vector3;
-/** Move Vector towards target */
+/** undefined */
 declare function vector3MoveTowards(v: Vector3, target: Vector3, maxDistance: number): Vector3;
-/** Calculate linear interpolation between two vectors */
+/** undefined */
 declare function vector3Lerp(v1: Vector3, v2: Vector3, amount: number): Vector3;
-/** Calculate cubic hermite interpolation between two vectors and their tangents
-as described in the GLTF 2.0 specification: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#interpolation-cubic */
+/** undefined */
 declare function vector3CubicHermite(v1: Vector3, tangent1: Vector3, v2: Vector3, tangent2: Vector3, amount: number): Vector3;
-/** Calculate reflected vector to normal */
+/** undefined */
 declare function vector3Reflect(v: Vector3, normal: Vector3): Vector3;
-/** Get min value for each pair of components */
+/** undefined */
 declare function vector3Min(v1: Vector3, v2: Vector3): Vector3;
-/** Get max value for each pair of components */
+/** undefined */
 declare function vector3Max(v1: Vector3, v2: Vector3): Vector3;
-/** Compute barycenter coordinates (u, v, w) for point p with respect to triangle (a, b, c)
-NOTE: Assumes P is on the plane of the triangle */
+/** undefined */
 declare function vector3Barycenter(p: Vector3, a: Vector3, b: Vector3, c: Vector3): Vector3;
-/** Projects a Vector3 from screen space into object space
-NOTE: We are avoiding calling other raymath functions despite available */
+/** undefined */
 declare function vector3Unproject(source: Vector3, projection: Matrix, view: Matrix): Vector3;
-/** Invert the given vector */
+/** undefined */
 declare function vector3Invert(v: Vector3): Vector3;
-/** Clamp the components of the vector between
-min and max values specified by the given vectors */
+/** undefined */
 declare function vector3Clamp(v: Vector3, min: Vector3, max: Vector3): Vector3;
-/** Clamp the magnitude of the vector between two values */
+/** undefined */
 declare function vector3ClampValue(v: Vector3, min: number, max: number): Vector3;
-/** Check whether two given vectors are almost equal */
+/** undefined */
 declare function vector3Equals(p: Vector3, q: Vector3): number;
-/** Compute the direction of a refracted ray
-v: normalized direction of the incoming ray
-n: normalized normal vector of the interface of two optical media
-r: ratio of the refractive index of the medium from where the ray comes
-   to the refractive index of the medium on the other side of the surface */
+/** undefined */
 declare function vector3Refract(v: Vector3, n: Vector3, r: number): Vector3;
-/** Calculate distance between two vectors */
+/** undefined */
+declare function vector4Zero(): Vector4;
+/** undefined */
+declare function vector4One(): Vector4;
+/** undefined */
+declare function vector4Add(v1: Vector4, v2: Vector4): Vector4;
+/** undefined */
+declare function vector4AddValue(v: Vector4, add: number): Vector4;
+/** undefined */
+declare function vector4Subtract(v1: Vector4, v2: Vector4): Vector4;
+/** undefined */
+declare function vector4SubtractValue(v: Vector4, add: number): Vector4;
+/** undefined */
+declare function vector4Length(v: Vector4): number;
+/** undefined */
+declare function vector4LengthSqr(v: Vector4): number;
+/** undefined */
+declare function vector4DotProduct(v1: Vector4, v2: Vector4): number;
+/** undefined */
 declare function vector4Distance(v1: Vector4, v2: Vector4): number;
-/** Calculate square distance between two vectors */
+/** undefined */
 declare function vector4DistanceSqr(v1: Vector4, v2: Vector4): number;
-/** Multiply vector by vector */
+/** undefined */
+declare function vector4Scale(v: Vector4, scale: number): Vector4;
+/** undefined */
 declare function vector4Multiply(v1: Vector4, v2: Vector4): Vector4;
-/** Negate vector */
+/** undefined */
 declare function vector4Negate(v: Vector4): Vector4;
-/** Divide vector by vector */
+/** undefined */
 declare function vector4Divide(v1: Vector4, v2: Vector4): Vector4;
-/** Normalize provided vector */
+/** undefined */
 declare function vector4Normalize(v: Vector4): Vector4;
-/** Get min value for each pair of components */
+/** undefined */
 declare function vector4Min(v1: Vector4, v2: Vector4): Vector4;
-/** Get max value for each pair of components */
+/** undefined */
 declare function vector4Max(v1: Vector4, v2: Vector4): Vector4;
-/** Calculate linear interpolation between two vectors */
+/** undefined */
 declare function vector4Lerp(v1: Vector4, v2: Vector4, amount: number): Vector4;
-/** Move Vector towards target */
+/** undefined */
 declare function vector4MoveTowards(v: Vector4, target: Vector4, maxDistance: number): Vector4;
-/** Invert the given vector */
+/** undefined */
 declare function vector4Invert(v: Vector4): Vector4;
-/** Check whether two given vectors are almost equal */
+/** undefined */
 declare function vector4Equals(p: Vector4, q: Vector4): number;
-/** Compute matrix determinant */
+/** undefined */
 declare function matrixDeterminant(mat: Matrix): number;
-/** Get the trace of the matrix (sum of the values along the diagonal) */
+/** undefined */
 declare function matrixTrace(mat: Matrix): number;
-/** Transposes provided matrix */
+/** undefined */
 declare function matrixTranspose(mat: Matrix): Matrix;
-/** Invert provided matrix */
+/** undefined */
 declare function matrixInvert(mat: Matrix): Matrix;
-/** Get identity matrix */
+/** undefined */
 declare function matrixIdentity(): Matrix;
-/** Add two matrices */
+/** undefined */
 declare function matrixAdd(left: Matrix, right: Matrix): Matrix;
-/** Subtract two matrices (left - right) */
+/** undefined */
 declare function matrixSubtract(left: Matrix, right: Matrix): Matrix;
-/** Get two matrix multiplication
-NOTE: When multiplying matrices... the order matters! */
+/** undefined */
 declare function matrixMultiply(left: Matrix, right: Matrix): Matrix;
-/** Get translation matrix */
+/** undefined */
 declare function matrixTranslate(x: number, y: number, z: number): Matrix;
-/** Create rotation matrix from axis and angle
-NOTE: Angle should be provided in radians */
+/** undefined */
 declare function matrixRotate(axis: Vector3, angle: number): Matrix;
-/** Get x-rotation matrix
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function matrixRotateX(angle: number): Matrix;
-/** Get y-rotation matrix
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function matrixRotateY(angle: number): Matrix;
-/** Get z-rotation matrix
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function matrixRotateZ(angle: number): Matrix;
-/** Get xyz-rotation matrix
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function matrixRotateXYZ(angle: Vector3): Matrix;
-/** Get zyx-rotation matrix
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function matrixRotateZYX(angle: Vector3): Matrix;
-/** Get scaling matrix */
+/** undefined */
 declare function matrixScale(x: number, y: number, z: number): Matrix;
-/** Get perspective projection matrix */
+/** undefined */
 declare function matrixFrustum(left: number, right: number, bottom: number, top: number, nearPlane: number, farPlane: number): Matrix;
-/** Get perspective projection matrix
-NOTE: Fovy angle must be provided in radians */
+/** undefined */
 declare function matrixPerspective(fovY: number, aspect: number, nearPlane: number, farPlane: number): Matrix;
-/** Get orthographic projection matrix */
+/** undefined */
 declare function matrixOrtho(left: number, right: number, bottom: number, top: number, nearPlane: number, farPlane: number): Matrix;
-/** Get camera look-at matrix (view matrix) */
+/** undefined */
 declare function matrixLookAt(eye: Vector3, target: Vector3, up: Vector3): Matrix;
-/** Add two quaternions */
+/** undefined */
 declare function quaternionAdd(q1: Vector4, q2: Vector4): Vector4;
-/** Add quaternion and float value */
+/** undefined */
 declare function quaternionAddValue(q: Vector4, add: number): Vector4;
-/** Subtract two quaternions */
+/** undefined */
 declare function quaternionSubtract(q1: Vector4, q2: Vector4): Vector4;
-/** Subtract quaternion and float value */
+/** undefined */
 declare function quaternionSubtractValue(q: Vector4, sub: number): Vector4;
-/** Get identity quaternion */
+/** undefined */
 declare function quaternionIdentity(): Vector4;
-/** Computes the length of a quaternion */
+/** undefined */
 declare function quaternionLength(q: Vector4): number;
-/** Normalize provided quaternion */
+/** undefined */
 declare function quaternionNormalize(q: Vector4): Vector4;
-/** Invert provided quaternion */
+/** undefined */
 declare function quaternionInvert(q: Vector4): Vector4;
-/** Calculate two quaternion multiplication */
+/** undefined */
 declare function quaternionMultiply(q1: Vector4, q2: Vector4): Vector4;
-/** Scale quaternion by float value */
+/** undefined */
 declare function quaternionScale(q: Vector4, mul: number): Vector4;
-/** Divide two quaternions */
+/** undefined */
 declare function quaternionDivide(q1: Vector4, q2: Vector4): Vector4;
-/** Calculate linear interpolation between two quaternions */
+/** undefined */
 declare function quaternionLerp(q1: Vector4, q2: Vector4, amount: number): Vector4;
-/** Calculate slerp-optimized interpolation between two quaternions */
+/** undefined */
 declare function quaternionNlerp(q1: Vector4, q2: Vector4, amount: number): Vector4;
-/** Calculates spherical linear interpolation between two quaternions */
+/** undefined */
 declare function quaternionSlerp(q1: Vector4, q2: Vector4, amount: number): Vector4;
-/** Calculate quaternion cubic spline interpolation using Cubic Hermite Spline algorithm
-as described in the GLTF 2.0 specification: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#interpolation-cubic */
+/** undefined */
 declare function quaternionCubicHermiteSpline(q1: Vector4, outTangent1: Vector4, q2: Vector4, inTangent2: Vector4, t: number): Vector4;
-/** Calculate quaternion based on the rotation from one vector to another */
+/** undefined */
 declare function quaternionFromVector3ToVector3(from: Vector3, to: Vector3): Vector4;
-/** Get a quaternion for a given rotation matrix */
+/** undefined */
 declare function quaternionFromMatrix(mat: Matrix): Vector4;
-/** Get a matrix for a given quaternion */
+/** undefined */
 declare function quaternionToMatrix(q: Vector4): Matrix;
-/** Get rotation quaternion for an angle and axis
-NOTE: Angle must be provided in radians */
+/** undefined */
 declare function quaternionFromAxisAngle(axis: Vector3, angle: number): Vector4;
-/** Get the rotation angle and axis for a given quaternion */
+/** undefined */
 declare function quaternionToAxisAngle(q: Vector4, outAxis: Vector3, outAngle: ArrayBuffer): void;
-/** Get the quaternion equivalent to Euler angles
-NOTE: Rotation order is ZYX */
+/** undefined */
 declare function quaternionFromEuler(pitch: number, yaw: number, roll: number): Vector4;
-/** Get the Euler angles equivalent to quaternion (roll, pitch, yaw)
-NOTE: Angles are returned in a Vector3 struct in radians */
+/** undefined */
 declare function quaternionToEuler(q: Vector4): Vector3;
-/** Transform a quaternion given a transformation matrix */
+/** undefined */
 declare function quaternionTransform(q: Vector4, mat: Matrix): Vector4;
-/** Check whether two given quaternions are almost equal */
+/** undefined */
 declare function quaternionEquals(p: Vector4, q: Vector4): number;
-/** Decompose a transformation matrix into its rotational, translational and scaling components */
+/** undefined */
 declare function matrixDecompose(mat: Matrix, translation: Vector3 &, rotation: Quaternion &, scale: Vector3 &): void;
-/**  */
+/** undefined */
+declare function rlMatrixMode(mode: number): void;
+/** undefined */
+declare function rlPushMatrix(): void;
+/** undefined */
+declare function rlPopMatrix(): void;
+/** undefined */
+declare function rlLoadIdentity(): void;
+/** undefined */
+declare function rlTranslatef(x: number, y: number, z: number): void;
+/** undefined */
+declare function rlRotatef(angle: number, x: number, y: number, z: number): void;
+/** undefined */
+declare function rlScalef(x: number, y: number, z: number): void;
+/** undefined */
+declare function rlMultMatrixf(matf: float &): void;
+/** undefined */
+declare function rlFrustum(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): void;
+/** undefined */
+declare function rlOrtho(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): void;
+/** undefined */
+declare function rlViewport(x: number, y: number, width: number, height: number): void;
+/** undefined */
+declare function rlSetClipPlanes(nearPlane: number, farPlane: number): void;
+/** undefined */
+declare function rlGetCullDistanceNear(): number;
+/** undefined */
+declare function rlGetCullDistanceFar(): number;
+/** undefined */
+declare function rlBegin(mode: number): void;
+/** undefined */
+declare function rlEnd(): void;
+/** undefined */
+declare function rlVertex2i(x: number, y: number): void;
+/** undefined */
+declare function rlVertex2f(x: number, y: number): void;
+/** undefined */
+declare function rlVertex3f(x: number, y: number, z: number): void;
+/** undefined */
+declare function rlTexCoord2f(x: number, y: number): void;
+/** undefined */
+declare function rlNormal3f(x: number, y: number, z: number): void;
+/** undefined */
+declare function rlColor4ub(r: number, g: number, b: number, a: number): void;
+/** undefined */
+declare function rlColor3f(x: number, y: number, z: number): void;
+/** undefined */
+declare function rlColor4f(x: number, y: number, z: number, w: number): void;
+/** undefined */
+declare function rlEnableVertexArray(vaoId: number): boolean;
+/** undefined */
+declare function rlDisableVertexArray(): void;
+/** undefined */
+declare function rlEnableVertexBuffer(id: number): void;
+/** undefined */
+declare function rlDisableVertexBuffer(): void;
+/** undefined */
+declare function rlEnableVertexBufferElement(id: number): void;
+/** undefined */
+declare function rlDisableVertexBufferElement(): void;
+/** undefined */
+declare function rlEnableVertexAttribute(index: number): void;
+/** undefined */
+declare function rlDisableVertexAttribute(index: number): void;
+/** undefined */
+declare function rlActiveTextureSlot(slot: number): void;
+/** undefined */
+declare function rlEnableTexture(id: number): void;
+/** undefined */
+declare function rlDisableTexture(): void;
+/** undefined */
+declare function rlEnableTextureCubemap(id: number): void;
+/** undefined */
+declare function rlDisableTextureCubemap(): void;
+/** undefined */
+declare function rlTextureParameters(id: number, param: number, value: number): void;
+/** undefined */
+declare function rlCubemapParameters(id: number, param: number, value: number): void;
+/** undefined */
+declare function rlEnableShader(id: number): void;
+/** undefined */
+declare function rlDisableShader(): void;
+/** undefined */
+declare function rlEnableFramebuffer(id: number): void;
+/** undefined */
+declare function rlDisableFramebuffer(): void;
+/** undefined */
+declare function rlGetActiveFramebuffer(): number;
+/** undefined */
+declare function rlActiveDrawBuffers(count: number): void;
+/** undefined */
+declare function rlBlitFramebuffer(srcX: number, srcY: number, srcWidth: number, srcHeight: number, dstX: number, dstY: number, dstWidth: number, dstHeight: number, bufferMask: number): void;
+/** undefined */
+declare function rlBindFramebuffer(target: number, framebuffer: number): void;
+/** undefined */
+declare function rlEnableColorBlend(): void;
+/** undefined */
+declare function rlDisableColorBlend(): void;
+/** undefined */
+declare function rlEnableDepthTest(): void;
+/** undefined */
+declare function rlDisableDepthTest(): void;
+/** undefined */
+declare function rlEnableDepthMask(): void;
+/** undefined */
+declare function rlDisableDepthMask(): void;
+/** undefined */
+declare function rlEnableBackfaceCulling(): void;
+/** undefined */
+declare function rlDisableBackfaceCulling(): void;
+/** undefined */
+declare function rlColorMask(r: boolean, g: boolean, b: boolean, a: boolean): void;
+/** undefined */
+declare function rlSetCullFace(mode: number): void;
+/** undefined */
+declare function rlEnableScissorTest(): void;
+/** undefined */
+declare function rlDisableScissorTest(): void;
+/** undefined */
+declare function rlScissor(x: number, y: number, width: number, height: number): void;
+/** undefined */
+declare function rlEnableWireMode(): void;
+/** undefined */
+declare function rlEnablePointMode(): void;
+/** undefined */
+declare function rlDisableWireMode(): void;
+/** undefined */
+declare function rlSetLineWidth(width: number): void;
+/** undefined */
+declare function rlGetLineWidth(): number;
+/** undefined */
+declare function rlEnableSmoothLines(): void;
+/** undefined */
+declare function rlDisableSmoothLines(): void;
+/** undefined */
+declare function rlEnableStereoRender(): void;
+/** undefined */
+declare function rlDisableStereoRender(): void;
+/** undefined */
+declare function rlIsStereoRenderEnabled(): boolean;
+/** undefined */
+declare function rlClearColor(r: number, g: number, b: number, a: number): void;
+/** undefined */
+declare function rlClearScreenBuffers(): void;
+/** undefined */
+declare function rlCheckErrors(): void;
+/** undefined */
+declare function rlSetBlendMode(mode: number): void;
+/** undefined */
+declare function rlSetBlendFactors(glSrcFactor: number, glDstFactor: number, glEquation: number): void;
+/** undefined */
+declare function rlSetBlendFactorsSeparate(glSrcRGB: number, glDstRGB: number, glSrcAlpha: number, glDstAlpha: number, glEqRGB: number, glEqAlpha: number): void;
+/** undefined */
+declare function rlglInit(width: number, height: number): void;
+/** undefined */
+declare function rlglClose(): void;
+/** undefined */
+declare function rlGetVersion(): number;
+/** undefined */
+declare function rlSetFramebufferWidth(width: number): void;
+/** undefined */
+declare function rlGetFramebufferWidth(): number;
+/** undefined */
+declare function rlSetFramebufferHeight(height: number): void;
+/** undefined */
+declare function rlGetFramebufferHeight(): number;
+/** undefined */
+declare function rlGetTextureIdDefault(): number;
+/** undefined */
+declare function rlGetShaderIdDefault(): number;
+/** undefined */
+declare function rlGetShaderLocsDefault(): int;
+/** undefined */
+declare function rlLoadRenderBatch(numBuffers: number, bufferElements: number): rlRenderBatch;
+/** undefined */
+declare function rlUnloadRenderBatch(batch: rlRenderBatch): void;
+/** undefined */
+declare function rlDrawRenderBatch(batch: rlRenderBatch &): void;
+/** undefined */
+declare function rlSetRenderBatchActive(batch: rlRenderBatch &): void;
+/** undefined */
+declare function rlDrawRenderBatchActive(): void;
+/** undefined */
+declare function rlCheckRenderBatchLimit(vCount: number): boolean;
+/** undefined */
+declare function rlSetTexture(id: number): void;
+/** undefined */
+declare function rlLoadVertexArray(): number;
+/** undefined */
+declare function rlLoadVertexBuffer(buffer: any, size: number, dynamic: boolean): number;
+/** undefined */
+declare function rlLoadVertexBufferElement(buffer: any, size: number, dynamic: boolean): number;
+/** undefined */
+declare function rlUpdateVertexBuffer(bufferId: number, data: any, dataSize: number, offset: number): void;
+/** undefined */
+declare function rlUpdateVertexBufferElements(id: number, data: any, dataSize: number, offset: number): void;
+/** undefined */
+declare function rlUnloadVertexArray(vaoId: number): void;
+/** undefined */
+declare function rlUnloadVertexBuffer(vboId: number): void;
+/** undefined */
+declare function rlSetVertexAttribute(index: number, compSize: number, type: number, normalized: boolean, stride: number, offset: number): void;
+/** undefined */
+declare function rlSetVertexAttributeDivisor(index: number, divisor: number): void;
+/** undefined */
+declare function rlDrawVertexArray(offset: number, count: number): void;
+/** undefined */
+declare function rlDrawVertexArrayElements(offset: number, count: number, buffer: any): void;
+/** undefined */
+declare function rlDrawVertexArrayInstanced(offset: number, count: number, instances: number): void;
+/** undefined */
+declare function rlDrawVertexArrayElementsInstanced(offset: number, count: number, buffer: any, instances: number): void;
+/** undefined */
+declare function rlLoadTexture(data: any, width: number, height: number, format: number, mipmapCount: number): number;
+/** undefined */
+declare function rlLoadTextureDepth(width: number, height: number, useRenderBuffer: boolean): number;
+/** undefined */
+declare function rlLoadTextureCubemap(data: any, size: number, format: number, mipmapCount: number): number;
+/** undefined */
+declare function rlUpdateTexture(id: number, offsetX: number, offsetY: number, width: number, height: number, format: number, data: any): void;
+/** undefined */
+declare function rlGetGlTextureFormats(format: number, glInternalFormat: unsigned int, glFormat: unsigned int, glType: unsigned int): void;
+/** undefined */
+declare function rlGetPixelFormatName(format: number): string | undefined | null;
+/** undefined */
+declare function rlUnloadTexture(id: number): void;
+/** undefined */
+declare function rlGenTextureMipmaps(id: number, width: number, height: number, format: number, mipmaps: int): void;
+/** undefined */
+declare function rlReadTexturePixels(id: number, width: number, height: number, format: number): any;
+/** undefined */
+declare function rlReadScreenPixels(width: number, height: number): string | undefined | null;
+/** undefined */
+declare function rlLoadFramebuffer(): number;
+/** undefined */
+declare function rlFramebufferAttach(fboId: number, texId: number, attachType: number, texType: number, mipLevel: number): void;
+/** undefined */
+declare function rlFramebufferComplete(id: number): boolean;
+/** undefined */
+declare function rlUnloadFramebuffer(id: number): void;
+/** undefined */
+declare function rlLoadShaderCode(vsCode: string | undefined | null, fsCode: string | undefined | null): number;
+/** undefined */
+declare function rlCompileShader(shaderCode: string | undefined | null, type: number): number;
+/** undefined */
+declare function rlLoadShaderProgram(vShaderId: number, fShaderId: number): number;
+/** undefined */
+declare function rlUnloadShaderProgram(id: number): void;
+/** undefined */
+declare function rlGetLocationUniform(shaderId: number, uniformName: string | undefined | null): number;
+/** undefined */
+declare function rlGetLocationAttrib(shaderId: number, attribName: string | undefined | null): number;
+/** undefined */
+declare function rlSetUniformMatrix(locIndex: number, mat: Matrix): void;
+/** undefined */
+declare function rlSetUniformMatrices(locIndex: number, mat: Matrix, count: number): void;
+/** undefined */
+declare function rlSetUniformSampler(locIndex: number, textureId: number): void;
+/** undefined */
+declare function rlSetShader(id: number, locs: int): void;
+/** undefined */
+declare function rlLoadComputeShaderProgram(shaderId: number): number;
+/** undefined */
+declare function rlComputeShaderDispatch(groupX: number, groupY: number, groupZ: number): void;
+/** undefined */
+declare function rlLoadShaderBuffer(size: number, data: any, usageHint: number): number;
+/** undefined */
+declare function rlUnloadShaderBuffer(ssboId: number): void;
+/** undefined */
+declare function rlUpdateShaderBuffer(id: number, data: any, dataSize: number, offset: number): void;
+/** undefined */
+declare function rlBindShaderBuffer(id: number, index: number): void;
+/** undefined */
+declare function rlReadShaderBuffer(id: number, dest: any, count: number, offset: number): void;
+/** undefined */
+declare function rlCopyShaderBuffer(destId: number, srcId: number, destOffset: number, srcOffset: number, count: number): void;
+/** undefined */
+declare function rlGetShaderBufferSize(id: number): number;
+/** undefined */
+declare function rlBindImageTexture(id: number, index: number, format: number, readonly: boolean): void;
+/** undefined */
+declare function rlGetMatrixModelview(): Matrix;
+/** undefined */
+declare function rlGetMatrixProjection(): Matrix;
+/** undefined */
+declare function rlGetMatrixTransform(): Matrix;
+/** undefined */
+declare function rlGetMatrixProjectionStereo(eye: number): Matrix;
+/** undefined */
+declare function rlGetMatrixViewOffsetStereo(eye: number): Matrix;
+/** undefined */
+declare function rlSetMatrixProjection(proj: Matrix): void;
+/** undefined */
+declare function rlSetMatrixModelview(view: Matrix): void;
+/** undefined */
+declare function rlSetMatrixProjectionStereo(right: Matrix, left: Matrix): void;
+/** undefined */
+declare function rlSetMatrixViewOffsetStereo(right: Matrix, left: Matrix): void;
+/** undefined */
+declare function rlLoadDrawCube(): void;
+/** undefined */
+declare function rlLoadDrawQuad(): void;
+/** undefined */
 declare function getCameraForward(camera: Camera &): Vector3;
-/**  */
+/** undefined */
 declare function getCameraUp(camera: Camera &): Vector3;
-/**  */
+/** undefined */
 declare function getCameraRight(camera: Camera &): Vector3;
-/**  */
+/** undefined */
 declare function cameraMoveForward(camera: Camera &, distance: number, moveInWorldPlane: boolean): void;
-/**  */
+/** undefined */
 declare function cameraMoveUp(camera: Camera &, distance: number): void;
-/**  */
+/** undefined */
 declare function cameraMoveRight(camera: Camera &, distance: number, moveInWorldPlane: boolean): void;
-/**  */
+/** undefined */
 declare function cameraMoveToTarget(camera: Camera &, delta: number): void;
-/**  */
+/** undefined */
 declare function cameraYaw(camera: Camera &, angle: number, rotateAroundTarget: boolean): void;
-/**  */
+/** undefined */
 declare function cameraPitch(camera: Camera &, angle: number, lockView: boolean, rotateAroundTarget: boolean, rotateUp: boolean): void;
-/**  */
+/** undefined */
 declare function cameraRoll(camera: Camera &, angle: number): void;
-/**  */
+/** undefined */
 declare function getCameraViewMatrix(camera: Camera &): Matrix;
-/**  */
+/** undefined */
 declare function getCameraProjectionMatrix(camera: Camera &, aspect: number): Matrix;
-/** Enable gui controls (global state) */
+/** undefined */
 declare function guiEnable(): void;
-/** Disable gui controls (global state) */
+/** undefined */
 declare function guiDisable(): void;
-/** Lock gui controls (global state) */
+/** undefined */
 declare function guiLock(): void;
-/** Unlock gui controls (global state) */
+/** undefined */
 declare function guiUnlock(): void;
-/** Check if gui is locked (global state) */
+/** undefined */
 declare function guiIsLocked(): boolean;
-/** Set gui controls alpha (global state), alpha goes from 0.0f to 1.0f */
+/** undefined */
 declare function guiSetAlpha(alpha: number): void;
-/** Set gui state (global state) */
+/** undefined */
 declare function guiSetState(state: number): void;
-/** Get gui state (global state) */
+/** undefined */
 declare function guiGetState(): number;
-/** Set gui custom font (global state) */
+/** undefined */
 declare function guiSetFont(font: Font): void;
-/** Get gui custom font (global state) */
+/** undefined */
 declare function guiGetFont(): Font;
-/** Set one style property */
+/** undefined */
 declare function guiSetStyle(control: number, property: number, value: number): void;
-/** Get one style property */
+/** undefined */
 declare function guiGetStyle(control: number, property: number): number;
-/** Load style file over global style variable (.rgs) */
+/** undefined */
 declare function guiLoadStyle(fileName: string | undefined | null): void;
-/** Load style default over global style */
+/** undefined */
 declare function guiLoadStyleDefault(): void;
-/** Enable gui tooltips (global state) */
+/** undefined */
 declare function guiEnableTooltip(): void;
-/** Disable gui tooltips (global state) */
+/** undefined */
 declare function guiDisableTooltip(): void;
-/** Set tooltip string */
+/** undefined */
 declare function guiSetTooltip(tooltip: string | undefined | null): void;
-/** Get text with icon id prepended (if supported) */
+/** undefined */
 declare function guiIconText(iconId: number, text: string | undefined | null): string | undefined | null;
-/** Set default icon drawing size */
+/** undefined */
 declare function guiSetIconScale(scale: number): void;
-/** Draw icon using pixel size at specified position */
+/** undefined */
 declare function guiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void;
-/** Window Box control, shows a window that can be closed */
+/** undefined */
 declare function guiWindowBox(bounds: Rectangle, title: string | undefined | null): number;
-/** Group Box control with text name */
+/** undefined */
 declare function guiGroupBox(bounds: Rectangle, text: string | undefined | null): number;
-/** Line separator control, could contain text */
+/** undefined */
 declare function guiLine(bounds: Rectangle, text: string | undefined | null): number;
-/** Panel control, useful to group controls */
+/** undefined */
 declare function guiPanel(bounds: Rectangle, text: string | undefined | null): number;
-/** Scroll Panel control */
+/** undefined */
 declare function guiScrollPanel(bounds: Rectangle, text: string | undefined | null, content: Rectangle, scroll: Vector2 &, view: Rectangle &): number;
-/** Label control */
+/** undefined */
 declare function guiLabel(bounds: Rectangle, text: string | undefined | null): number;
-/** Button control, returns true when clicked */
+/** undefined */
 declare function guiButton(bounds: Rectangle, text: string | undefined | null): number;
-/** Label button control, returns true when clicked */
+/** undefined */
 declare function guiLabelButton(bounds: Rectangle, text: string | undefined | null): number;
-/** Toggle Button control */
+/** undefined */
 declare function guiToggle(bounds: Rectangle, text: string | undefined | null, active: bool &): number;
-/** Toggle Group control */
+/** undefined */
 declare function guiToggleGroup(bounds: Rectangle, text: string | undefined | null, active: int &): number;
-/** Toggle Slider control */
+/** undefined */
 declare function guiToggleSlider(bounds: Rectangle, text: string | undefined | null, active: int &): number;
-/** Check Box control, returns true when active */
+/** undefined */
 declare function guiCheckBox(bounds: Rectangle, text: string | undefined | null, checked: bool &): number;
-/** Combo Box control */
+/** undefined */
 declare function guiComboBox(bounds: Rectangle, text: string | undefined | null, active: int &): number;
-/** Dropdown Box control */
+/** undefined */
 declare function guiDropdownBox(bounds: Rectangle, text: string | undefined | null, active: int &, editMode: boolean): number;
-/** Spinner control */
+/** undefined */
 declare function guiSpinner(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
-/** Value Box control, updates input text with numbers */
+/** undefined */
 declare function guiValueBox(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
-/** Value box control for float values */
+/** undefined */
 declare function guiValueBoxFloat(bounds: Rectangle, text: string | undefined | null, textValue: string | undefined | null, value: float &, editMode: boolean): number;
-/** Text Box control, updates input text */
+/** undefined */
 declare function guiTextBox(bounds: Rectangle, text: string | undefined | null, textSize: number, editMode: boolean): number;
-/** Slider control */
+/** undefined */
 declare function guiSlider(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
-/** Slider Bar control */
+/** undefined */
 declare function guiSliderBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
-/** Progress Bar control */
+/** undefined */
 declare function guiProgressBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
-/** Status Bar control, shows info text */
+/** undefined */
 declare function guiStatusBar(bounds: Rectangle, text: string | undefined | null): number;
-/** Dummy control for placeholders */
+/** undefined */
 declare function guiDummyRec(bounds: Rectangle, text: string | undefined | null): number;
-/** Grid control */
+/** undefined */
 declare function guiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2 &): number;
-/** List View control */
+/** undefined */
 declare function guiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: int &, active: int &): number;
-/** List View with extended parameters */
+/** undefined */
 declare function guiListViewEx(bounds: Rectangle, text: char *, count: number, scrollIndex: int &, active: int &, focus: int): number;
-/** Message Box control, displays a message */
+/** undefined */
 declare function guiMessageBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null): number;
-/** Text Input Box control, ask for text, supports secret */
+/** undefined */
 declare function guiTextInputBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null, text: string | undefined | null, textMaxSize: number, secretViewActive: bool): number;
-/** Color Picker control (multiple color controls) */
+/** undefined */
 declare function guiColorPicker(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
-/** Color Panel control */
+/** undefined */
 declare function guiColorPanel(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
-/** Color Bar Alpha control */
+/** undefined */
 declare function guiColorBarAlpha(bounds: Rectangle, text: string | undefined | null, alpha: float &): number;
-/** Color Bar Hue control */
+/** undefined */
 declare function guiColorBarHue(bounds: Rectangle, text: string | undefined | null, value: float &): number;
-/** Color Picker control that avoids conversion to RGB on each call (multiple color controls) */
+/** undefined */
 declare function guiColorPickerHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
-/** Color Panel control that updates Hue-Saturation-Value color value, used by GuiColorPickerHSV() */
+/** undefined */
 declare function guiColorPanelHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
-/** //----------------------------------------------------------------------------------
-Module Functions Declaration
-//---------------------------------------------------------------------------------- */
+/** undefined */
 declare function createLight(type: number, position: Vector3, target: Vector3, color: Color, shader: Shader): Light;
-/** Create a light and get shader locations */
+/** undefined */
 declare function updateLightValues(shader: Shader, light: Light): void;
-/** Linear Easing functions */
+/** undefined */
 declare function easeLinearNone(t: number, b: number, c: number, d: number): number;
-/** Ease: Linear */
+/** undefined */
 declare function easeLinearIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Linear In */
+/** undefined */
 declare function easeLinearOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Linear Out */
+/** undefined */
 declare function easeLinearInOut(t: number, b: number, c: number, d: number): number;
-/** Sine Easing functions */
+/** undefined */
 declare function easeSineIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Sine In */
+/** undefined */
 declare function easeSineOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Sine Out */
+/** undefined */
 declare function easeSineInOut(t: number, b: number, c: number, d: number): number;
-/** Circular Easing functions */
+/** undefined */
 declare function easeCircIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Circular In */
+/** undefined */
 declare function easeCircOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Circular Out */
+/** undefined */
 declare function easeCircInOut(t: number, b: number, c: number, d: number): number;
-/** Cubic Easing functions */
+/** undefined */
 declare function easeCubicIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Cubic In */
+/** undefined */
 declare function easeCubicOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Cubic Out */
+/** undefined */
 declare function easeCubicInOut(t: number, b: number, c: number, d: number): number;
-/** Quadratic Easing functions */
+/** undefined */
 declare function easeQuadIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Quadratic In */
+/** undefined */
 declare function easeQuadOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Quadratic Out */
+/** undefined */
 declare function easeQuadInOut(t: number, b: number, c: number, d: number): number;
-/** Exponential Easing functions */
+/** undefined */
 declare function easeExpoIn(t: number, b: number, c: number, d: number): number;
-/** Ease: Exponential In */
+/** undefined */
 declare function easeExpoOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Exponential Out */
+/** undefined */
 declare function easeExpoInOut(t: number, b: number, c: number, d: number): number;
-/** Back Easing functions */
+/** undefined */
 declare function easeBackIn(t: number, b: number, c: number, d: number): number;
-/** Bounce Easing functions */
+/** undefined */
+declare function easeBackOut(t: number, b: number, c: number, d: number): number;
+/** undefined */
+declare function easeBackInOut(t: number, b: number, c: number, d: number): number;
+/** undefined */
 declare function easeBounceOut(t: number, b: number, c: number, d: number): number;
-/** Ease: Bounce In */
+/** undefined */
+declare function easeBounceIn(t: number, b: number, c: number, d: number): number;
+/** undefined */
 declare function easeBounceInOut(t: number, b: number, c: number, d: number): number;
-/** Elastic Easing functions */
+/** undefined */
 declare function easeElasticIn(t: number, b: number, c: number, d: number): number;
-/**  */
+/** undefined */
+declare function easeElasticOut(t: number, b: number, c: number, d: number): number;
+/** undefined */
+declare function easeElasticInOut(t: number, b: number, c: number, d: number): number;
+/** undefined */
 declare function getDefaultLightmapperConfig(): LightmapperConfig;
-/**  */
+/** undefined */
 declare function loadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper;
-/**  */
+/** undefined */
 declare function loadMaterialLightmapper(emissiveColor: Color, intensity: number): Material;
-/**  */
+/** undefined */
 declare function unloadLightmapper(lm: Lightmapper): void;
-/**  */
+/** undefined */
 declare function beginLightmap(): void;
-/**  */
+/** undefined */
 declare function endLightmap(): void;
-/**  */
+/** undefined */
 declare function beginLightmapFragment(lm: Lightmapper &): boolean;
-/**  */
+/** undefined */
 declare function endLightmapFragment(lm: Lightmapper &): void;
-/**  */
+/** undefined */
 declare function loadImageFromLightmapper(lm: Lightmapper): Image;
-/** Replace material in slot materialIndex (Material is NOT unloaded) */
+/** undefined */
 declare function setModelMaterial(model: Model &, materialIndex: number, material: Material): void;
-/** Get material in slot materialIndex */
+/** undefined */
 declare function getModelMaterial(model: Model &, materialIndex: number): Material;
-/** Get a single mesh from a model */
+/** undefined */
 declare function getModelMesh(model: Model &, meshIndex: number): Mesh;
-/** Set shader constant in shader locations array */
+/** undefined */
 declare function setShaderLocation(shader: Shader &, constant: number, location: number): void;
-/** Read a single pixel from an image */
+/** undefined */
 declare function imageReadPixel(image: Image &, x: number, y: number): Color;
-/** Make a deep-copy of an existing mesh */
+/** undefined */
 declare function meshCopy(mesh: Mesh): Mesh;
-/** Create a new mesh that contains combined attributes of two meshes */
+/** undefined */
 declare function meshMerge(a: Mesh, b: Mesh): Mesh;
 /** (PI/180.0) */
 declare var DEG2RAD: number;
@@ -2608,683 +2927,683 @@ declare var NPATCH_NINE_PATCH: number;
 declare var NPATCH_THREE_PATCH_VERTICAL: number;
 /** Npatch layout: 3x1 tiles */
 declare var NPATCH_THREE_PATCH_HORIZONTAL: number;
-/**  */
+/** undefined */
 declare var STATE_NORMAL: number;
-/**  */
+/** undefined */
 declare var STATE_FOCUSED: number;
-/**  */
+/** undefined */
 declare var STATE_PRESSED: number;
-/**  */
+/** undefined */
 declare var STATE_DISABLED: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_LEFT: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_CENTER: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_RIGHT: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_TOP: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_MIDDLE: number;
-/**  */
+/** undefined */
 declare var TEXT_ALIGN_BOTTOM: number;
-/**  */
+/** undefined */
 declare var TEXT_WRAP_NONE: number;
-/**  */
+/** undefined */
 declare var TEXT_WRAP_CHAR: number;
-/**  */
+/** undefined */
 declare var TEXT_WRAP_WORD: number;
-/**  */
+/** undefined */
 declare var DEFAULT: number;
-/** Used also for: LABELBUTTON */
+/** undefined */
 declare var LABEL: number;
-/**  */
+/** undefined */
 declare var BUTTON: number;
-/** Used also for: TOGGLEGROUP */
+/** undefined */
 declare var TOGGLE: number;
-/** Used also for: SLIDERBAR, TOGGLESLIDER */
+/** undefined */
 declare var SLIDER: number;
-/**  */
+/** undefined */
 declare var PROGRESSBAR: number;
-/**  */
+/** undefined */
 declare var CHECKBOX: number;
-/**  */
+/** undefined */
 declare var COMBOBOX: number;
-/**  */
+/** undefined */
 declare var DROPDOWNBOX: number;
-/** Used also for: TEXTBOXMULTI */
+/** undefined */
 declare var TEXTBOX: number;
-/**  */
+/** undefined */
 declare var VALUEBOX: number;
-/** Uses: BUTTON, VALUEBOX */
+/** undefined */
 declare var SPINNER: number;
-/**  */
+/** undefined */
 declare var LISTVIEW: number;
-/**  */
+/** undefined */
 declare var COLORPICKER: number;
-/**  */
+/** undefined */
 declare var SCROLLBAR: number;
-/**  */
+/** undefined */
 declare var STATUSBAR: number;
-/** Control border color in STATE_NORMAL */
+/** undefined */
 declare var BORDER_COLOR_NORMAL: number;
-/** Control base color in STATE_NORMAL */
+/** undefined */
 declare var BASE_COLOR_NORMAL: number;
-/** Control text color in STATE_NORMAL */
+/** undefined */
 declare var TEXT_COLOR_NORMAL: number;
-/** Control border color in STATE_FOCUSED */
+/** undefined */
 declare var BORDER_COLOR_FOCUSED: number;
-/** Control base color in STATE_FOCUSED */
+/** undefined */
 declare var BASE_COLOR_FOCUSED: number;
-/** Control text color in STATE_FOCUSED */
+/** undefined */
 declare var TEXT_COLOR_FOCUSED: number;
-/** Control border color in STATE_PRESSED */
+/** undefined */
 declare var BORDER_COLOR_PRESSED: number;
-/** Control base color in STATE_PRESSED */
+/** undefined */
 declare var BASE_COLOR_PRESSED: number;
-/** Control text color in STATE_PRESSED */
+/** undefined */
 declare var TEXT_COLOR_PRESSED: number;
-/** Control border color in STATE_DISABLED */
+/** undefined */
 declare var BORDER_COLOR_DISABLED: number;
-/** Control base color in STATE_DISABLED */
+/** undefined */
 declare var BASE_COLOR_DISABLED: number;
-/** Control text color in STATE_DISABLED */
+/** undefined */
 declare var TEXT_COLOR_DISABLED: number;
-/** Control border size, 0 for no border */
+/** undefined */
 declare var BORDER_WIDTH: number;
-/** Control text padding, not considering border */
+/** undefined */
 declare var TEXT_PADDING: number;
-/** Control text horizontal alignment inside control text bound (after border and padding) */
+/** undefined */
 declare var TEXT_ALIGNMENT: number;
-/** Text size (glyphs max height) */
+/** undefined */
 declare var TEXT_SIZE: number;
-/** Text spacing between glyphs */
+/** undefined */
 declare var TEXT_SPACING: number;
-/** Line control color */
+/** undefined */
 declare var LINE_COLOR: number;
-/** Background color */
+/** undefined */
 declare var BACKGROUND_COLOR: number;
-/** Text spacing between lines */
+/** undefined */
 declare var TEXT_LINE_SPACING: number;
-/** Text vertical alignment inside text bounds (after border and padding) */
+/** undefined */
 declare var TEXT_ALIGNMENT_VERTICAL: number;
-/** Text wrap-mode inside text bounds */
+/** undefined */
 declare var TEXT_WRAP_MODE: number;
-/** ToggleGroup separation between toggles */
+/** undefined */
 declare var GROUP_PADDING: number;
-/** Slider size of internal bar */
+/** undefined */
 declare var SLIDER_WIDTH: number;
-/** Slider/SliderBar internal bar padding */
+/** undefined */
 declare var SLIDER_PADDING: number;
-/** ProgressBar internal padding */
+/** undefined */
 declare var PROGRESS_PADDING: number;
-/** ScrollBar arrows size */
+/** undefined */
 declare var ARROWS_SIZE: number;
-/** ScrollBar arrows visible */
+/** undefined */
 declare var ARROWS_VISIBLE: number;
-/** ScrollBar slider internal padding */
+/** undefined */
 declare var SCROLL_SLIDER_PADDING: number;
-/** ScrollBar slider size */
+/** undefined */
 declare var SCROLL_SLIDER_SIZE: number;
-/** ScrollBar scroll padding from arrows */
+/** undefined */
 declare var SCROLL_PADDING: number;
-/** ScrollBar scrolling speed */
+/** undefined */
 declare var SCROLL_SPEED: number;
-/** CheckBox internal check padding */
+/** undefined */
 declare var CHECK_PADDING: number;
-/** ComboBox right button width */
+/** undefined */
 declare var COMBO_BUTTON_WIDTH: number;
-/** ComboBox button separation */
+/** undefined */
 declare var COMBO_BUTTON_SPACING: number;
-/** DropdownBox arrow separation from border and items */
+/** undefined */
 declare var ARROW_PADDING: number;
-/** DropdownBox items separation */
+/** undefined */
 declare var DROPDOWN_ITEMS_SPACING: number;
-/** DropdownBox arrow hidden */
+/** undefined */
 declare var DROPDOWN_ARROW_HIDDEN: number;
-/** DropdownBox roll up flag (default rolls down) */
+/** undefined */
 declare var DROPDOWN_ROLL_UP: number;
-/** TextBox in read-only mode: 0-text editable, 1-text no-editable */
+/** undefined */
 declare var TEXT_READONLY: number;
-/** Spinner left/right buttons width */
+/** undefined */
 declare var SPIN_BUTTON_WIDTH: number;
-/** Spinner buttons separation */
+/** undefined */
 declare var SPIN_BUTTON_SPACING: number;
-/** ListView items height */
+/** undefined */
 declare var LIST_ITEMS_HEIGHT: number;
-/** ListView items separation */
+/** undefined */
 declare var LIST_ITEMS_SPACING: number;
-/** ListView scrollbar size (usually width) */
+/** undefined */
 declare var SCROLLBAR_WIDTH: number;
-/** ListView scrollbar side (0-SCROLLBAR_LEFT_SIDE, 1-SCROLLBAR_RIGHT_SIDE) */
+/** undefined */
 declare var SCROLLBAR_SIDE: number;
-/** ListView items border width */
+/** undefined */
 declare var LIST_ITEMS_BORDER_WIDTH: number;
-/**  */
+/** undefined */
 declare var COLOR_SELECTOR_SIZE: number;
-/** ColorPicker right hue bar width */
+/** undefined */
 declare var HUEBAR_WIDTH: number;
-/** ColorPicker right hue bar separation from panel */
+/** undefined */
 declare var HUEBAR_PADDING: number;
-/** ColorPicker right hue bar selector height */
+/** undefined */
 declare var HUEBAR_SELECTOR_HEIGHT: number;
-/** ColorPicker right hue bar selector overflow */
+/** undefined */
 declare var HUEBAR_SELECTOR_OVERFLOW: number;
-/**  */
+/** undefined */
 declare var ICON_NONE: number;
-/**  */
+/** undefined */
 declare var ICON_FOLDER_FILE_OPEN: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_SAVE_CLASSIC: number;
-/**  */
+/** undefined */
 declare var ICON_FOLDER_OPEN: number;
-/**  */
+/** undefined */
 declare var ICON_FOLDER_SAVE: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_OPEN: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_SAVE: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_EXPORT: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_ADD: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_DELETE: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_TEXT: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_AUDIO: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_IMAGE: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_PLAY: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_VIDEO: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_INFO: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_COPY: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_CUT: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_PASTE: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_HAND: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_POINTER: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_CLASSIC: number;
-/**  */
+/** undefined */
 declare var ICON_PENCIL: number;
-/**  */
+/** undefined */
 declare var ICON_PENCIL_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_BRUSH_CLASSIC: number;
-/**  */
+/** undefined */
 declare var ICON_BRUSH_PAINTER: number;
-/**  */
+/** undefined */
 declare var ICON_WATER_DROP: number;
-/**  */
+/** undefined */
 declare var ICON_COLOR_PICKER: number;
-/**  */
+/** undefined */
 declare var ICON_RUBBER: number;
-/**  */
+/** undefined */
 declare var ICON_COLOR_BUCKET: number;
-/**  */
+/** undefined */
 declare var ICON_TEXT_T: number;
-/**  */
+/** undefined */
 declare var ICON_TEXT_A: number;
-/**  */
+/** undefined */
 declare var ICON_SCALE: number;
-/**  */
+/** undefined */
 declare var ICON_RESIZE: number;
-/**  */
+/** undefined */
 declare var ICON_FILTER_POINT: number;
-/**  */
+/** undefined */
 declare var ICON_FILTER_BILINEAR: number;
-/**  */
+/** undefined */
 declare var ICON_CROP: number;
-/**  */
+/** undefined */
 declare var ICON_CROP_ALPHA: number;
-/**  */
+/** undefined */
 declare var ICON_SQUARE_TOGGLE: number;
-/**  */
+/** undefined */
 declare var ICON_SYMMETRY: number;
-/**  */
+/** undefined */
 declare var ICON_SYMMETRY_HORIZONTAL: number;
-/**  */
+/** undefined */
 declare var ICON_SYMMETRY_VERTICAL: number;
-/**  */
+/** undefined */
 declare var ICON_LENS: number;
-/**  */
+/** undefined */
 declare var ICON_LENS_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_EYE_ON: number;
-/**  */
+/** undefined */
 declare var ICON_EYE_OFF: number;
-/**  */
+/** undefined */
 declare var ICON_FILTER_TOP: number;
-/**  */
+/** undefined */
 declare var ICON_FILTER: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_POINT: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_MOVE: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_MOVE: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_UNDO: number;
-/**  */
+/** undefined */
 declare var ICON_REDO: number;
-/**  */
+/** undefined */
 declare var ICON_REREDO: number;
-/**  */
+/** undefined */
 declare var ICON_MUTATE: number;
-/**  */
+/** undefined */
 declare var ICON_ROTATE: number;
-/**  */
+/** undefined */
 declare var ICON_REPEAT: number;
-/**  */
+/** undefined */
 declare var ICON_SHUFFLE: number;
-/**  */
+/** undefined */
 declare var ICON_EMPTYBOX: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_SMALL_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_BIG_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_TARGET_MOVE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_MOVE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE_RIGHT_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_CURSOR_SCALE_LEFT_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_UNDO_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_REDO_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_REREDO_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_MUTATE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_ROTATE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_REPEAT_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_SHUFFLE_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_EMPTYBOX_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_BOX: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_TOP: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_TOP_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_BOTTOM_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_BOTTOM: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_BOTTOM_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_TOP_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_CENTER: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_CIRCLE_MASK: number;
-/**  */
+/** undefined */
 declare var ICON_POT: number;
-/**  */
+/** undefined */
 declare var ICON_ALPHA_MULTIPLY: number;
-/**  */
+/** undefined */
 declare var ICON_ALPHA_CLEAR: number;
-/**  */
+/** undefined */
 declare var ICON_DITHERING: number;
-/**  */
+/** undefined */
 declare var ICON_MIPMAPS: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_GRID: number;
-/**  */
+/** undefined */
 declare var ICON_GRID: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_CORNERS_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_CORNERS_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_FOUR_BOXES: number;
-/**  */
+/** undefined */
 declare var ICON_GRID_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_MULTISIZE: number;
-/**  */
+/** undefined */
 declare var ICON_ZOOM_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_ZOOM_MEDIUM: number;
-/**  */
+/** undefined */
 declare var ICON_ZOOM_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_ZOOM_ALL: number;
-/**  */
+/** undefined */
 declare var ICON_ZOOM_CENTER: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_DOTS_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_DOTS_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_CONCENTRIC: number;
-/**  */
+/** undefined */
 declare var ICON_BOX_GRID_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_OK_TICK: number;
-/**  */
+/** undefined */
 declare var ICON_CROSS: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_DOWN: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_UP: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_LEFT_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_RIGHT_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_DOWN_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_ARROW_UP_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_AUDIO: number;
-/**  */
+/** undefined */
 declare var ICON_FX: number;
-/**  */
+/** undefined */
 declare var ICON_WAVE: number;
-/**  */
+/** undefined */
 declare var ICON_WAVE_SINUS: number;
-/**  */
+/** undefined */
 declare var ICON_WAVE_SQUARE: number;
-/**  */
+/** undefined */
 declare var ICON_WAVE_TRIANGULAR: number;
-/**  */
+/** undefined */
 declare var ICON_CROSS_SMALL: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_PREVIOUS: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_PLAY_BACK: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_PLAY: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_PAUSE: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_STOP: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_NEXT: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_RECORD: number;
-/**  */
+/** undefined */
 declare var ICON_MAGNET: number;
-/**  */
+/** undefined */
 declare var ICON_LOCK_CLOSE: number;
-/**  */
+/** undefined */
 declare var ICON_LOCK_OPEN: number;
-/**  */
+/** undefined */
 declare var ICON_CLOCK: number;
-/**  */
+/** undefined */
 declare var ICON_TOOLS: number;
-/**  */
+/** undefined */
 declare var ICON_GEAR: number;
-/**  */
+/** undefined */
 declare var ICON_GEAR_BIG: number;
-/**  */
+/** undefined */
 declare var ICON_BIN: number;
-/**  */
+/** undefined */
 declare var ICON_HAND_POINTER: number;
-/**  */
+/** undefined */
 declare var ICON_LASER: number;
-/**  */
+/** undefined */
 declare var ICON_COIN: number;
-/**  */
+/** undefined */
 declare var ICON_EXPLOSION: number;
-/**  */
+/** undefined */
 declare var ICON_1UP: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER: number;
-/**  */
+/** undefined */
 declare var ICON_PLAYER_JUMP: number;
-/**  */
+/** undefined */
 declare var ICON_KEY: number;
-/**  */
+/** undefined */
 declare var ICON_DEMON: number;
-/**  */
+/** undefined */
 declare var ICON_TEXT_POPUP: number;
-/**  */
+/** undefined */
 declare var ICON_GEAR_EX: number;
-/**  */
+/** undefined */
 declare var ICON_CRACK: number;
-/**  */
+/** undefined */
 declare var ICON_CRACK_POINTS: number;
-/**  */
+/** undefined */
 declare var ICON_STAR: number;
-/**  */
+/** undefined */
 declare var ICON_DOOR: number;
-/**  */
+/** undefined */
 declare var ICON_EXIT: number;
-/**  */
+/** undefined */
 declare var ICON_MODE_2D: number;
-/**  */
+/** undefined */
 declare var ICON_MODE_3D: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_TOP: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_LEFT: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_FRONT: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_BOTTOM: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_RIGHT: number;
-/**  */
+/** undefined */
 declare var ICON_CUBE_FACE_BACK: number;
-/**  */
+/** undefined */
 declare var ICON_CAMERA: number;
-/**  */
+/** undefined */
 declare var ICON_SPECIAL: number;
-/**  */
+/** undefined */
 declare var ICON_LINK_NET: number;
-/**  */
+/** undefined */
 declare var ICON_LINK_BOXES: number;
-/**  */
+/** undefined */
 declare var ICON_LINK_MULTI: number;
-/**  */
+/** undefined */
 declare var ICON_LINK: number;
-/**  */
+/** undefined */
 declare var ICON_LINK_BROKE: number;
-/**  */
+/** undefined */
 declare var ICON_TEXT_NOTES: number;
-/**  */
+/** undefined */
 declare var ICON_NOTEBOOK: number;
-/**  */
+/** undefined */
 declare var ICON_SUITCASE: number;
-/**  */
+/** undefined */
 declare var ICON_SUITCASE_ZIP: number;
-/**  */
+/** undefined */
 declare var ICON_MAILBOX: number;
-/**  */
+/** undefined */
 declare var ICON_MONITOR: number;
-/**  */
+/** undefined */
 declare var ICON_PRINTER: number;
-/**  */
+/** undefined */
 declare var ICON_PHOTO_CAMERA: number;
-/**  */
+/** undefined */
 declare var ICON_PHOTO_CAMERA_FLASH: number;
-/**  */
+/** undefined */
 declare var ICON_HOUSE: number;
-/**  */
+/** undefined */
 declare var ICON_HEART: number;
-/**  */
+/** undefined */
 declare var ICON_CORNER: number;
-/**  */
+/** undefined */
 declare var ICON_VERTICAL_BARS: number;
-/**  */
+/** undefined */
 declare var ICON_VERTICAL_BARS_FILL: number;
-/**  */
+/** undefined */
 declare var ICON_LIFE_BARS: number;
-/**  */
+/** undefined */
 declare var ICON_INFO: number;
-/**  */
+/** undefined */
 declare var ICON_CROSSLINE: number;
-/**  */
+/** undefined */
 declare var ICON_HELP: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_ALPHA: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_HOME: number;
-/**  */
+/** undefined */
 declare var ICON_LAYERS_VISIBLE: number;
-/**  */
+/** undefined */
 declare var ICON_LAYERS: number;
-/**  */
+/** undefined */
 declare var ICON_WINDOW: number;
-/**  */
+/** undefined */
 declare var ICON_HIDPI: number;
-/**  */
+/** undefined */
 declare var ICON_FILETYPE_BINARY: number;
-/**  */
+/** undefined */
 declare var ICON_HEX: number;
-/**  */
+/** undefined */
 declare var ICON_SHIELD: number;
-/**  */
+/** undefined */
 declare var ICON_FILE_NEW: number;
-/**  */
+/** undefined */
 declare var ICON_FOLDER_ADD: number;
-/**  */
+/** undefined */
 declare var ICON_ALARM: number;
-/**  */
+/** undefined */
 declare var ICON_CPU: number;
-/**  */
+/** undefined */
 declare var ICON_ROM: number;
-/**  */
+/** undefined */
 declare var ICON_STEP_OVER: number;
-/**  */
+/** undefined */
 declare var ICON_STEP_INTO: number;
-/**  */
+/** undefined */
 declare var ICON_STEP_OUT: number;
-/**  */
+/** undefined */
 declare var ICON_RESTART: number;
-/**  */
+/** undefined */
 declare var ICON_BREAKPOINT_ON: number;
-/**  */
+/** undefined */
 declare var ICON_BREAKPOINT_OFF: number;
-/**  */
+/** undefined */
 declare var ICON_BURGER_MENU: number;
-/**  */
+/** undefined */
 declare var ICON_CASE_SENSITIVE: number;
-/**  */
+/** undefined */
 declare var ICON_REG_EXP: number;
-/**  */
+/** undefined */
 declare var ICON_FOLDER: number;
-/**  */
+/** undefined */
 declare var ICON_FILE: number;
-/**  */
+/** undefined */
 declare var ICON_SAND_TIMER: number;
-/**  */
+/** undefined */
 declare var ICON_WARNING: number;
-/**  */
+/** undefined */
 declare var ICON_HELP_BOX: number;
-/**  */
+/** undefined */
 declare var ICON_INFO_BOX: number;
-/**  */
+/** undefined */
 declare var ICON_PRIORITY: number;
-/**  */
+/** undefined */
 declare var ICON_LAYERS_ISO: number;
-/**  */
+/** undefined */
 declare var ICON_LAYERS2: number;
-/**  */
+/** undefined */
 declare var ICON_MLAYERS: number;
-/**  */
+/** undefined */
 declare var ICON_MAPS: number;
-/**  */
+/** undefined */
 declare var ICON_HOT: number;
-/**  */
+/** undefined */
 declare var ICON_229: number;
-/**  */
+/** undefined */
 declare var ICON_230: number;
-/**  */
+/** undefined */
 declare var ICON_231: number;
-/**  */
+/** undefined */
 declare var ICON_232: number;
-/**  */
+/** undefined */
 declare var ICON_233: number;
-/**  */
+/** undefined */
 declare var ICON_234: number;
-/**  */
+/** undefined */
 declare var ICON_235: number;
-/**  */
+/** undefined */
 declare var ICON_236: number;
-/**  */
+/** undefined */
 declare var ICON_237: number;
-/**  */
+/** undefined */
 declare var ICON_238: number;
-/**  */
+/** undefined */
 declare var ICON_239: number;
-/**  */
+/** undefined */
 declare var ICON_240: number;
-/**  */
+/** undefined */
 declare var ICON_241: number;
-/**  */
+/** undefined */
 declare var ICON_242: number;
-/**  */
+/** undefined */
 declare var ICON_243: number;
-/**  */
+/** undefined */
 declare var ICON_244: number;
-/**  */
+/** undefined */
 declare var ICON_245: number;
-/**  */
+/** undefined */
 declare var ICON_246: number;
-/**  */
+/** undefined */
 declare var ICON_247: number;
-/**  */
+/** undefined */
 declare var ICON_248: number;
-/**  */
+/** undefined */
 declare var ICON_249: number;
-/**  */
+/** undefined */
 declare var ICON_250: number;
-/**  */
+/** undefined */
 declare var ICON_251: number;
-/**  */
+/** undefined */
 declare var ICON_252: number;
-/**  */
+/** undefined */
 declare var ICON_253: number;
-/**  */
+/** undefined */
 declare var ICON_254: number;
-/**  */
+/** undefined */
 declare var ICON_255: number;
-/**  */
+/** undefined */
 declare var LIGHT_DIRECTIONAL: number;
-/**  */
+/** undefined */
 declare var LIGHT_POINT: number;
 /** Albedo material (same as: MATERIAL_MAP_DIFFUSE */
 declare var MATERIAL_MAP_DIFFUSE: number;

@@ -1,6 +1,6 @@
 import * as fs from "./fs.js";
 import * as raylib_header from "./raylib-header.js";
-import * as header_parser from "./header-parser.js";
+import source_parser from "./source_parser.js";
 const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
 
 String.prototype.replaceAt = function(index, replacement) {
@@ -23,6 +23,21 @@ function ignore(name) {
 function normalizeType(type=''){
     return type.replaceAll("*", " * ").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ').trim();
 }
+function deduplicateName(arr){
+    let dedup=new Set();let j=0;
+    for(let i=0;i<arr.length;i++){
+        let f=arr[i];
+        if(dedup.has(f.name)){
+            continue;
+        }else{
+            dedup.add(f.name);
+            arr[j]=f;
+            j++;
+        }
+    }
+    arr.splice(j,arr.length-j);
+    return arr;
+}
 function main() {
     // Load the pre-generated raylib api
     api = JSON.parse(fs.readFileSync("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
@@ -42,27 +57,22 @@ function main() {
             binding:{}
         };
     });
-    const parser = new header_parser.HeaderParser();
-    const rmathHeader = fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8");
-    const mathApi = parser.parseFunctions(rmathHeader);
-    mathApi.forEach(x => api.functions.push(x));
-    const rcameraHeader = fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8");
-    const cameraApi = parser.parseFunctionDefinitions(rcameraHeader);
-    cameraApi.forEach(x => api.functions.push(x));
-    const rguiHeader = fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8");
-    const rguiFunctions = parser.parseFunctionDefinitions(rguiHeader);
-    const rguiEnums = parser.parseEnums(rguiHeader);
-    //rguiApi.forEach(x => console.log(`core.addApiFunctionByName("${x.name}")`))
-    rguiFunctions.forEach(x => api.functions.push(x));
-    rguiEnums.forEach(x => api.enums.push(x));
-    const rlightsHeader = fs.readFileSync("include/rlights.h", "utf8");
-    const rlightsFunctions = parser.parseFunctions(rlightsHeader, true);
-    api.functions.push(rlightsFunctions[0]);
-    api.functions.push(rlightsFunctions[1]);
-    const rlightsEnums = parser.parseEnums(rlightsHeader);
-    rlightsEnums.forEach(x => api.enums.push(x));
-    const rlightsStructs = parser.parseStructs(rlightsHeader);
-    rlightsStructs[0].binding = {
+    let mathSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"));
+    api.functions=api.functions.concat(mathSource.functions);
+    let rlglSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"));
+    api.functions=api.functions.concat(rlglSource.functions);
+    api.structs=api.structs.concat(rlglSource.structs);
+    let rcameraSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"));
+    api.functions=api.functions.concat(rcameraSource.functions);
+    api.structs=api.structs.concat(rcameraSource.structs);
+    let rguiSource=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"));
+    api.functions=api.functions.concat(rguiSource.functions);
+    api.enums=api.enums.concat(rguiSource.enums);
+    let rlightsSource=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"));
+    api.functions=api.functions.concat(rlightsSource.functions);
+    api.enums=api.enums.concat(rlightsSource.enums);
+    api.structs=api.structs.concat(rlightsSource.structs);
+    api.structs.find(a=>a.name=='Light').binding = {
         properties: {
             type: { get: true, set: true },
             enabled: { get: true, set: true },
@@ -72,23 +82,19 @@ function main() {
             attenuation: { get: true, set: true },
         },
     };
-    api.structs.push(rlightsStructs[0]);
-    const reasingsHeader = fs.readFileSync("include/reasings.h", "utf8");
-    const reasingsFunctions = parser.parseFunctions(reasingsHeader);
-    reasingsFunctions.forEach(x => api.functions.push(x));
-    const rlightmapperHeader = fs.readFileSync("src/rlightmapper.h", "utf8");
-    const rlightmapperFunctions = parser.parseFunctionDefinitions(rlightmapperHeader);
-    const rlightmapperStructs = parser.parseStructs(rlightmapperHeader);
-    rlightmapperFunctions.forEach(x => api.functions.push(x));
-    rlightmapperStructs.forEach(x => api.structs.push(x));
-    rlightmapperStructs[0].binding = {
+    let reasingsSource=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"));
+    api.functions=api.functions.concat(reasingsSource.functions);
+    let rlightmapperSource=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"));
+    api.functions=api.functions.concat(rlightmapperSource.functions);
+    api.structs=api.structs.concat(rlightmapperSource.structs);
+    api.structs.find(a=>a.name=='Lightmapper').binding = {
         properties: {
             w: { get: true },
             h: { get: true },
             progress: { get: true }
         }
     };
-    rlightmapperStructs[1].binding = {
+    api.structs.find(a=>a.name=='LightmapperConfig').binding = {
         properties: {
             hemisphereSize: { get: true, set: true },
             zNear: { get: true, set: true },
@@ -99,9 +105,23 @@ function main() {
             cameraToSurfaceDistanceModifier: { get: true, set: true },
         }
     };
-    const rextensionsHeader = (0, fs.readFileSync)("src/rextensions.h", "utf8");
-    const rextensionsFunctions = parser.parseFunctionDefinitions(rextensionsHeader);
-    rextensionsFunctions.forEach(x => api.functions.push(x));
+    let rextensionsSource=new source_parser(fs.readFileSync("src/rextensions.h", "utf8"));
+    api.functions=api.functions.concat(rextensionsSource.functions);
+    // Deduplicate functions and structs
+    let dedup=new Set();let j=0;
+    for(let i=0;i<api.functions.length;i++){
+        let f=api.functions[i];
+        if(dedup.has(f.name)){
+            continue;
+        }else{
+            dedup.add(f.name);
+            api.functions[j]=f;
+            j++;
+        }
+    }
+    api.functions=deduplicateName(api.functions);
+    api.structs=deduplicateName(api.structs);
+    api.enums=deduplicateName(api.enums);
     // Define a new header
     const core = new raylib_header.RayLibHeader("raylib_core");
     core.includes.include("raymath.h");
@@ -113,6 +133,8 @@ function main() {
     core.includes.include("reasings.h");
     core.includes.line("#define RLIGHTMAPPER_IMPLEMENTATION");
     core.includes.include("rlightmapper.h");
+    //core.includes.line("#define RLGL_IMPLEMENTATION");
+    core.includes.include("rlgl.h");
     getStruct(api.structs, "Color").binding = {
         properties: {
             r: { get: true, set: true },
@@ -741,6 +763,9 @@ function main() {
     ignore("GuiTabBar");
     ignore("GuiGetIcons");
     ignore("GuiLoadIcons");
+    ignore("rlLoadExtensions");
+    ignore("rlSetVertexAttributeDefault");
+    ignore("rlSetUniform");
     api.structs.forEach(x => core.addApiStruct(x));
     api.functions.forEach(fn => {//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
         for(let i=0;i<fn.params.length;i++){

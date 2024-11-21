@@ -1,4 +1,3 @@
-import { writeFileSync } from "./fs.js";
 import { CodeWriter, GenericCodeGenerator } from "./generation.js"
 import * as fs from "./fs.js";
 const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
@@ -173,7 +172,7 @@ export class QuickJsHeader {
     writeTo(filename) {
         const writer = new CodeWriter();
         writer.writeGenerator(this.root);
-        (0, writeFileSync)(filename, writer.toString());
+        (0, fs.writeFileSync)(filename, writer.toString());
     }
 }
 function getsubtype(type){
@@ -657,21 +656,6 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
                 subtype+=' *';
             }
             setArray(arr,subtype,name,src);
-            /*
-            if(getsubtype(subtype)!='char'){
-                arr.declare("size_t", "size_" + tmpname);
-                arr.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
-                arr=arr.for('0', "size_" + tmpname,'i'+depth);
-                arr.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,classIds,flags,depth+1,sizeVars);
-                arr.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
-            }else{
-                setArray(arr,type,name,src);
-                arr.cToJs('char *','js_'+tmpname,`${src}[0]`,classIds,flags,depth+1,sizeVars);
-                arr.statement(`JS_DefinePropertyValueUint32(ctx,${name},0,js_${tmpname},JS_PROP_C_W_E)`);
-            }//*/
-
-            //check if array, if so, set
-            //typedArrays and buffers need nothing
         }else{
             //Normal type return
             switch (type) {
@@ -899,15 +883,20 @@ export class GenericQuickJsGenerator extends GenericCodeGenerator {
         fun.returnExp("JS_UNDEFINED");
         return fun;
     }
-    jsStructConstructor(structName, fields, classId, classIds) {
-        //console.log('jsStructConstructor',structName, fields, classId, classIds);
-        const body = this.jsBindingFunction(structName + "_constructor");
-        for (let i = 0; i < fields.length; i++) {
+    jsStructConstructor(structType, fields, classId, classIds) {
+        //console.log('jsStructConstructor',structType, fields, classId, classIds);
+        const body = this.jsBindingFunction(structType + "_constructor");
+        let r1=body.if('argc==0');
+            r1.declare(structType + "*", 'ptr__return', false, `(${structType}*)js_calloc(ctx, 1, sizeof(${structType}))`);
+            r1.declare("JSValue", '_return', false, `JS_NewObjectClass(ctx, ${classId})`);
+            r1.call("JS_SetOpaque", ['_return', "ptr__return"]);
+            r1.returnExp("_return");
+        for(let i = 0; i < fields.length; i++) {
             const para = fields[i];
             body.jsToC(para.type, para.name, "argv[" + i + "]", classIds);
         }
-        body.declareStruct(structName, "_struct", fields.map(x => x.name));
-        body.jsStructToOpq(structName, "_return", "_struct", classId);
+        body.declareStruct(structType, "_struct", fields.map(x => x.name));
+        body.jsStructToOpq(structType, "_return", "_struct", classId);
         body.returnExp("_return");
         return body;
     }

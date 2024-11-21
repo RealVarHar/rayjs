@@ -1,4 +1,7 @@
 {
   "bindText": true,
-  "spreadSize": 4
+  "spreadSize": 4,
+  "defined": {
+    "GRAPHICS_API_OPENGL_33": true
+  }
 }

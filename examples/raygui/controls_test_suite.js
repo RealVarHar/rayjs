@@ -224,10 +224,10 @@ while (!exitWindow)    // Detect window close button or ESC key
         guiColorPicker(new Rectangle(320, 185, 196, 192), null, colorPickerValue);
 
 		//GuiDisable();
-        guiSlider(new Rectangle(355, 400, 165, 20), "TEST", textFormat("%2.2f", String(sliderValue[0])), sliderValue, -50, 100);
-        guiSliderBar(new Rectangle(320, 430, 200, 20), null, textFormat("%i", String(sliderBarValue[0])), sliderBarValue, 0, 100);
+        guiSlider(new Rectangle(355, 400, 165, 20), "TEST", textFormat("%2.2f", sliderValue[0]), sliderValue, -50, 100);
+        guiSliderBar(new Rectangle(320, 430, 200, 20), null, textFormat("%i", sliderBarValue[0]), sliderBarValue, 0, 100);
         
-		guiProgressBar(new Rectangle(320, 460, 200, 20), null, textFormat("%i%%", String(progressValue[0]*100)), progressValue, 0, 1);
+		guiProgressBar(new Rectangle(320, 460, 200, 20), null, textFormat("%i%%", progressValue[0]*100), progressValue, 0, 1);
 		guiEnable();
 
         // NOTE: View rectangle could be used to perform some scissor test
