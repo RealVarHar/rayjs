@@ -1,4 +1,4 @@
-import { GenericCodeGenerator, CodeWriter } from "./generation.js"
+import { CodeGenerator, CodeWriter } from "./generation.js"
 import { writeFileSync } from "./fs.js";
 
 export class TypeScriptDeclaration {
@@ -61,10 +61,10 @@ export class TypeScriptDeclaration {
     writeTo(filename) {
         const writer = new CodeWriter();
         writer.writeGenerator(this.root);
-        (0, writeFileSync)(filename, writer.toString());
+        writeFileSync(filename, writer.toString());
     }
 }
-class GenericTypescriptGenerator extends GenericCodeGenerator {
+class TypescriptGenerator extends CodeGenerator {
     tsDeclareFunction(name, parameters, returnType, description) {
         this.tsDocComment(description);
         this.statement(`declare function ${name}(${parameters.map(x => x.name + ': ' + x.type).join(', ')}): ${returnType}`);
@@ -95,11 +95,5 @@ class GenericTypescriptGenerator extends GenericCodeGenerator {
     }
     tsDocComment(comment) {
         this.line(`/** ${comment} */`);
-    }
-}
-
-export class TypescriptGenerator extends GenericTypescriptGenerator {
-    createGenerator() {
-        return new TypescriptGenerator();
     }
 }

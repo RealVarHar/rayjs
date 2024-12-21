@@ -552,7 +552,7 @@ int main(int argc, char** argv){
                 "import * as raylib from 'rayjs:raylib';\n"
                 "globalThis.bjson = bjson;\n"
                 "globalThis.std = std;\n"
-                "globalThis.os = os;\n";
+                "globalThis.os = os;\n"
                 "globalThis.raylib = raylib;\n";
             eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
         }

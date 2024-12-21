@@ -64,19 +64,19 @@ while (!windowShouldClose())        // Detect window close button or ESC key
     
     if (isKeyPressed(KEY_TWO))
     {
-        cameraMode = CAMERA_FIRST_PERSON;
+        cameraMode = CAMERA_ORBITAL;
         camera.up = new Vector3(0.0, 1.0, 0.0); // Reset roll
     }
 
     if (isKeyPressed(KEY_THREE))
     {
-        cameraMode = CAMERA_THIRD_PERSON;
+        cameraMode = CAMERA_FIRST_PERSON;
         camera.up = new Vector3(0.0, 1.0, 0.0); // Reset roll
     }
 
     if (isKeyPressed(KEY_FOUR))
     {
-        cameraMode = CAMERA_ORBITAL;
+        cameraMode = CAMERA_THIRD_PERSON;
         camera.up = new Vector3(0.0, 1.0, 0.0); // Reset roll
     }
 

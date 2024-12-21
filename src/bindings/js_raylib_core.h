@@ -62,68 +62,12 @@ void memoryClear(JSContext * ctx, memoryNode *head) {
 void JS_FreeValuePtr(JSContext *ctx, JSValue * v){
     JS_FreeValue(ctx,*v);
 }
+typedef struct trampolineContext {
+    JSContext * ctx;
+    JSValue func_obj;
+} trampolineContext;
 enum {
-    /* classid tag        */    /* union usage   | properties */
-    JS_CLASS_OBJECT = 1,        /* must be first */
-    JS_CLASS_ARRAY,             /* u.array       | length */
-    JS_CLASS_ERROR,
-    JS_CLASS_NUMBER,            /* u.object_data */
-    JS_CLASS_STRING,            /* u.object_data */
-    JS_CLASS_BOOLEAN,           /* u.object_data */
-    JS_CLASS_SYMBOL,            /* u.object_data */
-    JS_CLASS_ARGUMENTS,         /* u.array       | length */
-    JS_CLASS_MAPPED_ARGUMENTS,  /*               | length */
-    JS_CLASS_DATE,              /* u.object_data */
-    JS_CLASS_MODULE_NS,
-    JS_CLASS_C_FUNCTION,        /* u.cfunc */
-    JS_CLASS_BYTECODE_FUNCTION, /* u.func */
-    JS_CLASS_BOUND_FUNCTION,    /* u.bound_function */
-    JS_CLASS_C_FUNCTION_DATA,   /* u.c_function_data_record */
-    JS_CLASS_GENERATOR_FUNCTION, /* u.func */
-    JS_CLASS_FOR_IN_ITERATOR,   /* u.for_in_iterator */
-    JS_CLASS_REGEXP,            /* u.regexp */
-    JS_CLASS_ARRAY_BUFFER,      /* u.array_buffer */
-    JS_CLASS_SHARED_ARRAY_BUFFER, /* u.array_buffer */
-    JS_CLASS_UINT8C_ARRAY,      /* u.array (typed_array) */
-    JS_CLASS_INT8_ARRAY,        /* u.array (typed_array) */
-    JS_CLASS_UINT8_ARRAY,       /* u.array (typed_array) */
-    JS_CLASS_INT16_ARRAY,       /* u.array (typed_array) */
-    JS_CLASS_UINT16_ARRAY,      /* u.array (typed_array) */
-    JS_CLASS_INT32_ARRAY,       /* u.array (typed_array) */
-    JS_CLASS_UINT32_ARRAY,      /* u.array (typed_array) */
-    JS_CLASS_BIG_INT64_ARRAY,   /* u.array (typed_array) */
-    JS_CLASS_BIG_UINT64_ARRAY,  /* u.array (typed_array) */
-    JS_CLASS_FLOAT16_ARRAY,     /* u.array (typed_array) */
-    JS_CLASS_FLOAT32_ARRAY,     /* u.array (typed_array) */
-    JS_CLASS_FLOAT64_ARRAY,     /* u.array (typed_array) */
-    JS_CLASS_DATAVIEW,          /* u.typed_array */
-    JS_CLASS_BIG_INT,           /* u.object_data */
-    JS_CLASS_MAP,               /* u.map_state */
-    JS_CLASS_SET,               /* u.map_state */
-    JS_CLASS_WEAKMAP,           /* u.map_state */
-    JS_CLASS_WEAKSET,           /* u.map_state */
-    JS_CLASS_ITERATOR,
-    JS_CLASS_MAP_ITERATOR,      /* u.map_iterator_data */
-    JS_CLASS_SET_ITERATOR,      /* u.map_iterator_data */
-    JS_CLASS_ARRAY_ITERATOR,    /* u.array_iterator_data */
-    JS_CLASS_STRING_ITERATOR,   /* u.array_iterator_data */
-    JS_CLASS_REGEXP_STRING_ITERATOR,   /* u.regexp_string_iterator_data */
-    JS_CLASS_GENERATOR,         /* u.generator_data */
-    JS_CLASS_PROXY,             /* u.proxy_data */
-    JS_CLASS_PROMISE,           /* u.promise_data */
-    JS_CLASS_PROMISE_RESOLVE_FUNCTION,  /* u.promise_function_data */
-    JS_CLASS_PROMISE_REJECT_FUNCTION,   /* u.promise_function_data */
-    JS_CLASS_ASYNC_FUNCTION,            /* u.func */
-    JS_CLASS_ASYNC_FUNCTION_RESOLVE,    /* u.async_function_data */
-    JS_CLASS_ASYNC_FUNCTION_REJECT,     /* u.async_function_data */
-    JS_CLASS_ASYNC_FROM_SYNC_ITERATOR,  /* u.async_from_sync_iterator_data */
-    JS_CLASS_ASYNC_GENERATOR_FUNCTION,  /* u.func */
-    JS_CLASS_ASYNC_GENERATOR,   /* u.async_generator_data */
-    JS_CLASS_WEAK_REF,
-    JS_CLASS_FINALIZATION_REGISTRY,
-    JS_CLASS_CALL_SITE,
-
-    JS_CLASS_INIT_COUNT, /* last entry for predefined classes */
+JS_CLASS_OBJECT = 1,JS_CLASS_ARRAY = 2,JS_CLASS_ERROR = 3,JS_CLASS_NUMBER = 4,JS_CLASS_STRING = 5,JS_CLASS_BOOLEAN = 6,JS_CLASS_SYMBOL = 7,JS_CLASS_ARGUMENTS = 8,JS_CLASS_MAPPED_ARGUMENTS = 9,JS_CLASS_DATE = 10,JS_CLASS_MODULE_NS = 11,JS_CLASS_C_FUNCTION = 12,JS_CLASS_BYTECODE_FUNCTION = 13,JS_CLASS_BOUND_FUNCTION = 14,JS_CLASS_C_FUNCTION_DATA = 15,JS_CLASS_GENERATOR_FUNCTION = 16,JS_CLASS_FOR_IN_ITERATOR = 17,JS_CLASS_REGEXP = 18,JS_CLASS_ARRAY_BUFFER = 19,JS_CLASS_SHARED_ARRAY_BUFFER = 20,JS_CLASS_UINT8C_ARRAY = 21,JS_CLASS_INT8_ARRAY = 22,JS_CLASS_UINT8_ARRAY = 23,JS_CLASS_INT16_ARRAY = 24,JS_CLASS_UINT16_ARRAY = 25,JS_CLASS_INT32_ARRAY = 26,JS_CLASS_UINT32_ARRAY = 27,JS_CLASS_BIG_INT64_ARRAY = 28,JS_CLASS_BIG_UINT64_ARRAY = 29,JS_CLASS_FLOAT16_ARRAY = 30,JS_CLASS_FLOAT32_ARRAY = 31,JS_CLASS_FLOAT64_ARRAY = 32,JS_CLASS_DATAVIEW = 33,JS_CLASS_BIG_INT = 34,JS_CLASS_MAP = 35,JS_CLASS_SET = 36,JS_CLASS_WEAKMAP = 37,JS_CLASS_WEAKSET = 38,JS_CLASS_ITERATOR = 39,JS_CLASS_ITERATOR_HELPER = 40,JS_CLASS_ITERATOR_WRAP = 41,JS_CLASS_MAP_ITERATOR = 42,JS_CLASS_SET_ITERATOR = 43,JS_CLASS_ARRAY_ITERATOR = 44,JS_CLASS_STRING_ITERATOR = 45,JS_CLASS_REGEXP_STRING_ITERATOR = 46,JS_CLASS_GENERATOR = 47,JS_CLASS_PROXY = 48,JS_CLASS_PROMISE = 49,JS_CLASS_PROMISE_RESOLVE_FUNCTION = 50,JS_CLASS_PROMISE_REJECT_FUNCTION = 51,JS_CLASS_ASYNC_FUNCTION = 52,JS_CLASS_ASYNC_FUNCTION_RESOLVE = 53,JS_CLASS_ASYNC_FUNCTION_REJECT = 54,JS_CLASS_ASYNC_FROM_SYNC_ITERATOR = 55,JS_CLASS_ASYNC_GENERATOR_FUNCTION = 56,JS_CLASS_ASYNC_GENERATOR = 57,JS_CLASS_WEAK_REF = 58,JS_CLASS_FINALIZATION_REGISTRY = 59,JS_CLASS_CALL_SITE = 60,JS_CLASS_INIT_COUNT = 61,
 };
 char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, ...){
     va_list args;
@@ -691,6 +635,9 @@ static JSValue js_Image_set_data(JSContext* ctx, JSValue this_val, JSValue v) {
     else {
         JS_ThrowTypeError(ctx, "v does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(ptr->data!=NULL) {
+        js_free(ctx, ptr->data);
     }
     ptr->data = value;
     return JS_UNDEFINED;
@@ -1416,8 +1363,7 @@ static JSValue js_Mesh_get_vertices(JSContext* ctx, JSValue this_val) {
     float * vertices = ptr->vertices;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(vertices)/sizeof(float);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->vertexCount*3; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)vertices[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -1429,7 +1375,7 @@ static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v)
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1464,6 +1410,9 @@ static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v)
             return JS_EXCEPTION;
         }
     }
+    if(ptr->vertices!=NULL) {
+        js_free(ctx, ptr->vertices);
+    }
     ptr->vertices = value;
     return JS_UNDEFINED;
 }
@@ -1473,8 +1422,7 @@ static JSValue js_Mesh_get_texcoords(JSContext* ctx, JSValue this_val) {
     float * texcoords = ptr->texcoords;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(texcoords)/sizeof(float);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->vertexCount*2; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)texcoords[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -1486,7 +1434,7 @@ static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1520,6 +1468,9 @@ static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+    }
+    if(ptr->texcoords!=NULL) {
+        js_free(ctx, ptr->texcoords);
     }
     ptr->texcoords = value;
     return JS_UNDEFINED;
@@ -1530,7 +1481,7 @@ static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue 
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1565,6 +1516,9 @@ static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue 
             return JS_EXCEPTION;
         }
     }
+    if(ptr->texcoords2!=NULL) {
+        js_free(ctx, ptr->texcoords2);
+    }
     ptr->texcoords2 = value;
     return JS_UNDEFINED;
 }
@@ -1574,8 +1528,7 @@ static JSValue js_Mesh_get_normals(JSContext* ctx, JSValue this_val) {
     float * normals = ptr->normals;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(normals)/sizeof(float);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->vertexCount*3; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)normals[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -1587,7 +1540,7 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1621,6 +1574,9 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+    }
+    if(ptr->normals!=NULL) {
+        js_free(ctx, ptr->normals);
     }
     ptr->normals = value;
     return JS_UNDEFINED;
@@ -1631,7 +1587,7 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1666,6 +1622,9 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
             return JS_EXCEPTION;
         }
     }
+    if(ptr->tangents!=NULL) {
+        js_free(ctx, ptr->tangents);
+    }
     ptr->tangents = value;
     return JS_UNDEFINED;
 }
@@ -1675,7 +1634,7 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
     unsigned char * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1710,6 +1669,9 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
             return JS_EXCEPTION;
         }
     }
+    if(ptr->colors!=NULL) {
+        js_free(ctx, ptr->colors);
+    }
     ptr->colors = value;
     return JS_UNDEFINED;
 }
@@ -1719,7 +1681,7 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
     unsigned short * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1754,6 +1716,9 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
             return JS_EXCEPTION;
         }
     }
+    if(ptr->indices!=NULL) {
+        js_free(ctx, ptr->indices);
+    }
     ptr->indices = value;
     return JS_UNDEFINED;
 }
@@ -1763,7 +1728,7 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1797,6 +1762,9 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+    }
+    if(ptr->animVertices!=NULL) {
+        js_free(ctx, ptr->animVertices);
     }
     ptr->animVertices = value;
     return JS_UNDEFINED;
@@ -1807,7 +1775,7 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1842,6 +1810,9 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
             return JS_EXCEPTION;
         }
     }
+    if(ptr->animNormals!=NULL) {
+        js_free(ctx, ptr->animNormals);
+    }
     ptr->animNormals = value;
     return JS_UNDEFINED;
 }
@@ -1851,7 +1822,7 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
     unsigned char * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1886,6 +1857,9 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
             return JS_EXCEPTION;
         }
     }
+    if(ptr->boneIds!=NULL) {
+        js_free(ctx, ptr->boneIds);
+    }
     ptr->boneIds = value;
     return JS_UNDEFINED;
 }
@@ -1895,7 +1869,7 @@ static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue
     float * value;
     JSValue da_value;
     if(JS_IsArray(ctx,v) == 1) {
-        size_t size_value;
+        int64_t size_value;
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
@@ -1929,6 +1903,9 @@ static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+    }
+    if(ptr->boneWeights!=NULL) {
+        js_free(ctx, ptr->boneWeights);
     }
     ptr->boneWeights = value;
     return JS_UNDEFINED;
@@ -2105,14 +2082,66 @@ static JSValue js_Material_get_maps(JSContext* ctx, JSValue this_val) {
     MaterialMap * maps = ptr->maps;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(maps)/sizeof(MaterialMap);
-    for(int i0=0; i0 < size_ret; i0++){
-        MaterialMap* ptr_js_ret = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-        *ptr_js_ret = maps[i0];
-        JSValue js_ret = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-        JS_SetOpaque(js_ret, ptr_js_ret);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
+    MaterialMap* ptr_js_ret0 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret0 = maps[0];
+    JSValue js_ret0 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret0, ptr_js_ret0);
+    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret1 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret1 = maps[1];
+    JSValue js_ret1 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret1, ptr_js_ret1);
+    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret2 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret2 = maps[2];
+    JSValue js_ret2 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret2, ptr_js_ret2);
+    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret3 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret3 = maps[3];
+    JSValue js_ret3 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret3, ptr_js_ret3);
+    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret4 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret4 = maps[4];
+    JSValue js_ret4 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret4, ptr_js_ret4);
+    JS_DefinePropertyValueUint32(ctx,ret,4,js_ret4,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret5 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret5 = maps[5];
+    JSValue js_ret5 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret5, ptr_js_ret5);
+    JS_DefinePropertyValueUint32(ctx,ret,5,js_ret5,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret6 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret6 = maps[6];
+    JSValue js_ret6 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret6, ptr_js_ret6);
+    JS_DefinePropertyValueUint32(ctx,ret,6,js_ret6,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret7 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret7 = maps[7];
+    JSValue js_ret7 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret7, ptr_js_ret7);
+    JS_DefinePropertyValueUint32(ctx,ret,7,js_ret7,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret8 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret8 = maps[8];
+    JSValue js_ret8 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret8, ptr_js_ret8);
+    JS_DefinePropertyValueUint32(ctx,ret,8,js_ret8,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret9 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret9 = maps[9];
+    JSValue js_ret9 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret9, ptr_js_ret9);
+    JS_DefinePropertyValueUint32(ctx,ret,9,js_ret9,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret10 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret10 = maps[10];
+    JSValue js_ret10 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret10, ptr_js_ret10);
+    JS_DefinePropertyValueUint32(ctx,ret,10,js_ret10,JS_PROP_C_W_E);
+    MaterialMap* ptr_js_ret11 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr_js_ret11 = maps[11];
+    JSValue js_ret11 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(js_ret11, ptr_js_ret11);
+    JS_DefinePropertyValueUint32(ctx,ret,11,js_ret11,JS_PROP_C_W_E);
     return ret;
 }
 
@@ -2225,8 +2254,7 @@ static JSValue js_Model_get_meshes(JSContext* ctx, JSValue this_val) {
     Mesh * meshes = ptr->meshes;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(meshes)/sizeof(Mesh);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->meshCount; i0++){
         Mesh* ptr_js_ret = (Mesh*)js_malloc(ctx, sizeof(Mesh));
         *ptr_js_ret = meshes[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_Mesh_class_id);
@@ -2241,8 +2269,7 @@ static JSValue js_Model_get_materials(JSContext* ctx, JSValue this_val) {
     Material * materials = ptr->materials;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(materials)/sizeof(Material);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->materialCount; i0++){
         Material* ptr_js_ret = (Material*)js_malloc(ctx, sizeof(Material));
         *ptr_js_ret = materials[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_Material_class_id);
@@ -2257,8 +2284,7 @@ static JSValue js_Model_get_meshMaterial(JSContext* ctx, JSValue this_val) {
     int * meshMaterial = ptr->meshMaterial;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(meshMaterial)/sizeof(int);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->meshCount; i0++){
         JSValue js_ret = JS_NewInt32(ctx, (long)meshMaterial[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -2277,8 +2303,7 @@ static JSValue js_Model_get_bones(JSContext* ctx, JSValue this_val) {
     BoneInfo * bones = ptr->bones;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(bones)/sizeof(BoneInfo);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->boneCount; i0++){
         BoneInfo* ptr_js_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
         *ptr_js_ret = bones[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
@@ -2293,8 +2318,7 @@ static JSValue js_Model_get_bindPose(JSContext* ctx, JSValue this_val) {
     Transform * bindPose = ptr->bindPose;
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(bindPose)/sizeof(Transform);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < ptr->boneCount; i0++){
         Transform* ptr_js_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
         *ptr_js_ret = bindPose[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_Transform_class_id);
@@ -2655,11 +2679,12 @@ static JSValue js_Music_get_looping(JSContext* ctx, JSValue this_val) {
 
 static JSValue js_Music_set_looping(JSContext* ctx, JSValue this_val, JSValue v) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
-    bool value = JS_ToBool(ctx, v);
-    if(value<0) {
+    int js_value = JS_ToBool(ctx, v);
+    if(js_value<0) {
         JS_ThrowTypeError(ctx, "v is not a bool");
         return JS_EXCEPTION;
     }
+    bool value = js_value;
     ptr->looping = value;
     return JS_UNDEFINED;
 }
@@ -3048,11 +3073,12 @@ static JSValue js_Light_get_enabled(JSContext* ctx, JSValue this_val) {
 
 static JSValue js_Light_set_enabled(JSContext* ctx, JSValue this_val, JSValue v) {
     Light* ptr = JS_GetOpaque2(ctx, this_val, js_Light_class_id);
-    bool value = JS_ToBool(ctx, v);
-    if(value<0) {
+    int js_value = JS_ToBool(ctx, v);
+    if(js_value<0) {
         JS_ThrowTypeError(ctx, "v is not a bool");
         return JS_EXCEPTION;
     }
+    bool value = js_value;
     ptr->enabled = value;
     return JS_UNDEFINED;
 }
@@ -3379,6 +3405,185 @@ static int js_declare_LightmapperConfig(JSContext * ctx, JSModuleDef * m) {
     JS_SetPropertyFunctionList(ctx, proto, js_LightmapperConfig_proto_funcs, countof(js_LightmapperConfig_proto_funcs));
     JS_SetClassProto(ctx, js_LightmapperConfig_class_id, proto);
     return 0;
+}
+
+static trampolineContext * LoadFileDataCallback_callback_arr = NULL;
+static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName, int * arg_dataSize) {
+    JSValue func1;
+    trampolineContext tctx = *LoadFileDataCallback_callback_arr;
+    JSContext * ctx = tctx.ctx;
+    JSValue js0;
+    js0 = JS_NewString(ctx, arg_fileName);
+    JSValue js1 = JS_NewArray(ctx);
+    JSValue js_js1 = JS_NewInt32(ctx, (long)arg_dataSize[0]);
+    JS_DefinePropertyValueUint32(ctx,js1,0,js_js1,JS_PROP_C_W_E);
+    JSValue argv[] = {js0,js1};
+    func1 = JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
+    JS_FreeValue(ctx, func1);
+    JS_FreeValue(ctx, argv[0]);
+    JS_FreeValue(ctx, argv[1]);
+    unsigned char * resp;
+    JSValue da_resp;
+    if(JS_IsArray(ctx,js_ret) == 1) {
+        int64_t size_resp;
+        if(JS_GetLength(ctx,js_ret,&size_resp)==-1) {
+            return NULL;
+        }
+        resp = (unsigned char *)js_malloc(ctx, size_resp * sizeof(unsigned char));
+        for(int i0=0; i0 < size_resp; i0++){
+            JSValue js_resp = JS_GetPropertyUint32(ctx,js_ret,i0);
+            uint32_t long_respi0;
+            int err_respi0 = JS_ToUint32(ctx, &long_respi0, js_resp);
+            if(err_respi0<0) {
+                JS_ThrowTypeError(ctx, "js_resp is not numeric");
+                return NULL;
+            }
+            resp[i0] = (unsigned char)long_respi0;
+            JS_FreeValue(ctx, js_resp);
+        }
+    }
+    else if(JS_IsArrayBuffer(js_ret) == 1) {
+        da_resp = JS_DupValue(ctx,js_ret);
+        size_t size_resp;
+        resp = (unsigned char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+    }
+    else {
+        JSClassID classid_resp = JS_GetClassID(js_ret);
+        if(classid_resp==JS_CLASS_UINT8_ARRAY || classid_resp==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_resp;
+            size_t size_resp;
+            da_resp = JS_GetTypedArrayBuffer(ctx,js_ret,&offset_resp,&size_resp,NULL);
+            resp = (unsigned char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+        }
+        else {
+            JS_ThrowTypeError(ctx, "js_ret does not match type unsigned char *");
+            return NULL;
+        }
+    }
+    JS_FreeValue(ctx, js_ret);
+    return resp;
+}
+
+static trampolineContext * SaveFileDataCallback_callback_arr = NULL;
+static bool SaveFileDataCallback_callback_c(const char * arg_fileName, unsigned char * arg_data, int arg_dataSize) {
+    JSValue func1;
+    trampolineContext tctx = *SaveFileDataCallback_callback_arr;
+    JSContext * ctx = tctx.ctx;
+    JSValue js0;
+    js0 = JS_NewString(ctx, arg_fileName);
+    JSValue js1;
+    js1 = JS_NewArray(ctx);
+    for(int i0=0; i0 < arg_dataSize; i0++){
+        JSValue js_js1 = JS_NewUint32(ctx, (unsigned long)arg_data[i0]);
+        JS_DefinePropertyValueUint32(ctx,js1,i0,js_js1,JS_PROP_C_W_E);
+    }
+    JSValue js2 = JS_NewInt32(ctx, (long)arg_dataSize);
+    JSValue argv[] = {js0,js1,js2};
+    func1 = JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 3, argv);
+    JS_FreeValue(ctx, func1);
+    JS_FreeValue(ctx, argv[0]);
+    JS_FreeValue(ctx, argv[1]);
+    JS_FreeValue(ctx, argv[2]);
+    int js_resp = JS_ToBool(ctx, js_ret);
+    if(js_resp<0) {
+        JS_ThrowTypeError(ctx, "js_ret is not a bool");
+        return false;
+    }
+    bool resp = js_resp;
+    JS_FreeValue(ctx, js_ret);
+    return resp;
+}
+
+static trampolineContext * LoadFileTextCallback_callback_arr = NULL;
+static char * LoadFileTextCallback_callback_c(const char * arg_fileName) {
+    JSValue func1;
+    trampolineContext tctx = *LoadFileTextCallback_callback_arr;
+    JSContext * ctx = tctx.ctx;
+    JSValue js0;
+    js0 = JS_NewString(ctx, arg_fileName);
+    JSValue argv[] = {js0};
+    func1 = JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 1, argv);
+    JS_FreeValue(ctx, func1);
+    JS_FreeValue(ctx, argv[0]);
+    char * resp;
+    JSValue da_resp;
+    if(JS_IsString(js_ret) == 1) {
+        resp = (char *)JS_ToCString(ctx, js_ret);
+    }
+    else if(JS_IsArrayBuffer(js_ret) == 1) {
+        da_resp = JS_DupValue(ctx,js_ret);
+        size_t size_resp;
+        resp = (char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+    }
+    else {
+        JSClassID classid_resp = JS_GetClassID(js_ret);
+        if(classid_resp==JS_CLASS_INT8_ARRAY) {
+            size_t offset_resp;
+            size_t size_resp;
+            da_resp = JS_GetTypedArrayBuffer(ctx,js_ret,&offset_resp,&size_resp,NULL);
+            resp = (char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+        }
+        else {
+            JS_ThrowTypeError(ctx, "js_ret does not match type char *");
+            return NULL;
+        }
+    }
+    JS_FreeValue(ctx, js_ret);
+    return resp;
+}
+
+static trampolineContext * SaveFileTextCallback_callback_arr = NULL;
+static bool SaveFileTextCallback_callback_c(const char * arg_fileName, char * arg_text) {
+    JSValue func1;
+    trampolineContext tctx = *SaveFileTextCallback_callback_arr;
+    JSContext * ctx = tctx.ctx;
+    JSValue js0;
+    js0 = JS_NewString(ctx, arg_fileName);
+    JSValue js1;
+    js1 = JS_NewString(ctx, arg_text);
+    JSValue argv[] = {js0,js1};
+    func1 = JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
+    JS_FreeValue(ctx, func1);
+    JS_FreeValue(ctx, argv[0]);
+    JS_FreeValue(ctx, argv[1]);
+    int js_resp = JS_ToBool(ctx, js_ret);
+    if(js_resp<0) {
+        JS_ThrowTypeError(ctx, "js_ret is not a bool");
+        return false;
+    }
+    bool resp = js_resp;
+    JS_FreeValue(ctx, js_ret);
+    return resp;
+}
+
+static trampolineContext * AudioMixedProcessor_processor_arr = NULL;
+static size_t AudioMixedProcessor_processor_size = 0;
+static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int arg_frames) {
+    JSValue func1;
+    trampolineContext * tctx;
+    JSContext * ctx;
+    for(int i=0; i < AudioMixedProcessor_processor_size; i++){
+        trampolineContext tctx = AudioMixedProcessor_processor_arr[i];
+        JSContext * ctx = tctx.ctx;
+        JSValue js0;
+        js0 = JS_NewArray(ctx);
+        for(int i0=0; i0 < arg_frames*2; i0++){
+            JSValue js_js0 = JS_NewFloat64(ctx, (double)arg_bufferData[i0]);
+            JS_DefinePropertyValueUint32(ctx,js0,i0,js_js0,JS_PROP_C_W_E);
+        }
+        JSValue js1 = JS_NewUint32(ctx, (unsigned long)arg_frames);
+        JSValue argv[] = {js0,js1};
+        func1 = JS_DupValue(ctx, tctx.func_obj);
+        JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
+        JS_FreeValue(ctx, func1);
+        JS_FreeValue(ctx, argv[0]);
+        JS_FreeValue(ctx, argv[1]);
+        JS_FreeValue(ctx, js_ret);
+    }
 }
 
 static JSValue js_Vector2_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -4854,17 +5059,15 @@ static JSValue js_setShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
             JSValue da_val;
             if(JS_IsArray(ctx,argv[2]) == 1) {
                 val = (float *)js_malloc(ctx, 1 * sizeof(float));
-                for(int i0=0; i0 < 1; i0++){
-                    JSValue js_val = JS_GetPropertyUint32(ctx,argv[2],i0);
-                    double double_vali0;
-                    int err_vali0 = JS_ToFloat64(ctx, &double_vali0, js_val);
-                    if(err_vali0<0) {
-                        JS_ThrowTypeError(ctx, "js_val is not numeric");
-                        return JS_EXCEPTION;
-                    }
-                    val[i0] = (float)double_vali0;
-                    JS_FreeValue(ctx, js_val);
+                JSValue js_val = JS_GetPropertyUint32(ctx,argv[2],0);
+                double double_val0;
+                int err_val0 = JS_ToFloat64(ctx, &double_val0, js_val);
+                if(err_val0<0) {
+                    JS_ThrowTypeError(ctx, "js_val is not numeric");
+                    return JS_EXCEPTION;
                 }
+                val[0] = (float)double_val0;
+                JS_FreeValue(ctx, js_val);
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
                 da_val = JS_DupValue(ctx,argv[2]);
@@ -5017,17 +5220,15 @@ static JSValue js_setShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
             JSValue da_val;
             if(JS_IsArray(ctx,argv[2]) == 1) {
                 val = (int *)js_malloc(ctx, 1 * sizeof(int));
-                for(int i0=0; i0 < 1; i0++){
-                    JSValue js_val = JS_GetPropertyUint32(ctx,argv[2],i0);
-                    int32_t long_vali0;
-                    int err_vali0 = JS_ToInt32(ctx, &long_vali0, js_val);
-                    if(err_vali0<0) {
-                        JS_ThrowTypeError(ctx, "js_val is not numeric");
-                        return JS_EXCEPTION;
-                    }
-                    val[i0] = (int)long_vali0;
-                    JS_FreeValue(ctx, js_val);
+                JSValue js_val = JS_GetPropertyUint32(ctx,argv[2],0);
+                int32_t long_val0;
+                int err_val0 = JS_ToInt32(ctx, &long_val0, js_val);
+                if(err_val0<0) {
+                    JS_ThrowTypeError(ctx, "js_val is not numeric");
+                    return JS_EXCEPTION;
                 }
+                val[0] = (int)long_val0;
+                JS_FreeValue(ctx, js_val);
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
                 da_val = JS_DupValue(ctx,argv[2]);
@@ -5225,7 +5426,7 @@ static JSValue js_setShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
             float * val;
             JSValue da_val;
             if(JS_IsArray(ctx,argv[2]) == 1) {
-                size_t size_val;
+                int64_t size_val;
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
                 }
@@ -5272,7 +5473,7 @@ static JSValue js_setShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
             int * val;
             JSValue da_val;
             if(JS_IsArray(ctx,argv[2]) == 1) {
-                size_t size_val;
+                int64_t size_val;
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
                 }
@@ -5654,67 +5855,12 @@ static JSValue js_loadRandomSequence(JSContext * ctx, JSValue this_val, int argc
     int * returnVal = LoadRandomSequence(count, min, max);
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(int);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < count; i0++){
         JSValue js_ret = JS_NewInt32(ctx, (long)returnVal[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    UnloadRandomSequence(returnVal);
     return ret;
-}
-
-static JSValue js_unloadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int * sequence;
-    JSValue da_sequence;
-    if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_sequence;
-        if(JS_GetLength(ctx,argv[0],&size_sequence)==-1) {
-            return JS_EXCEPTION;
-        }
-        sequence = (int *)js_malloc(ctx, size_sequence * sizeof(int));
-        for(int i0=0; i0 < size_sequence; i0++){
-            JSValue js_sequence = JS_GetPropertyUint32(ctx,argv[0],i0);
-            int32_t long_sequencei0;
-            int err_sequencei0 = JS_ToInt32(ctx, &long_sequencei0, js_sequence);
-            if(err_sequencei0<0) {
-                JS_ThrowTypeError(ctx, "js_sequence is not numeric");
-                return JS_EXCEPTION;
-            }
-            sequence[i0] = (int)long_sequencei0;
-            JS_FreeValue(ctx, js_sequence);
-        }
-    }
-    else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_sequence = JS_DupValue(ctx,argv[0]);
-        size_t size_sequence;
-        sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, da_sequence);
-    }
-    else {
-        JSClassID classid_sequence = JS_GetClassID(argv[0]);
-        if(classid_sequence==JS_CLASS_INT16_ARRAY) {
-            size_t offset_sequence;
-            size_t size_sequence;
-            da_sequence = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_sequence,&size_sequence,NULL);
-            sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, da_sequence);
-        }
-        else {
-            JS_ThrowTypeError(ctx, "argv[0] does not match type int *");
-            return JS_EXCEPTION;
-        }
-    }
-    UnloadRandomSequence(sequence);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
-        js_free(ctx, sequence);
-    }
-    else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JS_FreeValue(ctx, da_sequence);
-    }
-    else {
-        JSClassID classid_sequence = JS_GetClassID(argv[0]);
-        if(classid_sequence==JS_CLASS_INT16_ARRAY) {
-            js_free(ctx, &da_sequence);
-        }
-    }
-    return JS_UNDEFINED;
 }
 
 static JSValue js_takeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -5877,6 +6023,102 @@ static JSValue js_setTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
+static JSValue js_setLoadFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_callback;
+    ctx_callback.ctx = ctx;
+    ctx_callback.func_obj = argv[0];
+    if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
+        LoadFileDataCallback_callback_arr = NULL;
+    }
+    else if(JS_IsFunction(ctx,argv[0])==1) {
+        LoadFileDataCallback_callback_arr = &ctx_callback;
+    }
+    else {
+        return JS_EXCEPTION;
+    }
+    void * callback;
+    if(LoadFileDataCallback_callback_arr == NULL) {
+        callback = NULL;
+    }
+    else {
+        callback = LoadFileDataCallback_callback_c;
+    }
+    SetLoadFileDataCallback(callback);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setSaveFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_callback;
+    ctx_callback.ctx = ctx;
+    ctx_callback.func_obj = argv[0];
+    if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
+        SaveFileDataCallback_callback_arr = NULL;
+    }
+    else if(JS_IsFunction(ctx,argv[0])==1) {
+        SaveFileDataCallback_callback_arr = &ctx_callback;
+    }
+    else {
+        return JS_EXCEPTION;
+    }
+    void * callback;
+    if(SaveFileDataCallback_callback_arr == NULL) {
+        callback = NULL;
+    }
+    else {
+        callback = SaveFileDataCallback_callback_c;
+    }
+    SetSaveFileDataCallback(callback);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setLoadFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_callback;
+    ctx_callback.ctx = ctx;
+    ctx_callback.func_obj = argv[0];
+    if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
+        LoadFileTextCallback_callback_arr = NULL;
+    }
+    else if(JS_IsFunction(ctx,argv[0])==1) {
+        LoadFileTextCallback_callback_arr = &ctx_callback;
+    }
+    else {
+        return JS_EXCEPTION;
+    }
+    void * callback;
+    if(LoadFileTextCallback_callback_arr == NULL) {
+        callback = NULL;
+    }
+    else {
+        callback = LoadFileTextCallback_callback_c;
+    }
+    SetLoadFileTextCallback(callback);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_setSaveFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_callback;
+    ctx_callback.ctx = ctx;
+    ctx_callback.func_obj = argv[0];
+    if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
+        SaveFileTextCallback_callback_arr = NULL;
+    }
+    else if(JS_IsFunction(ctx,argv[0])==1) {
+        SaveFileTextCallback_callback_arr = &ctx_callback;
+    }
+    else {
+        return JS_EXCEPTION;
+    }
+    void * callback;
+    if(SaveFileTextCallback_callback_arr == NULL) {
+        callback = NULL;
+    }
+    else {
+        callback = SaveFileTextCallback_callback_c;
+    }
+    SetSaveFileTextCallback(callback);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_loadFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
@@ -5901,12 +6143,99 @@ static JSValue js_loadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
             return JS_EXCEPTION;
         }
     }
-    unsigned int bytesRead;
-    unsigned char * retVal = LoadFileData(fileName, &bytesRead);
-    JSValue buffer = JS_NewArrayBufferCopy(ctx, (const uint8_t*)retVal, bytesRead);
-    UnloadFileData(retVal);
-    JS_FreeCString(ctx, fileName);
-    return buffer;
+    int * dataSize;
+    JSValue da_dataSize;
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        dataSize = (int *)js_malloc(ctx, 1 * sizeof(int));
+        JSValue js_dataSize = JS_GetPropertyUint32(ctx,argv[1],0);
+        int32_t long_dataSize0;
+        int err_dataSize0 = JS_ToInt32(ctx, &long_dataSize0, js_dataSize);
+        if(err_dataSize0<0) {
+            JS_ThrowTypeError(ctx, "js_dataSize is not numeric");
+            return JS_EXCEPTION;
+        }
+        dataSize[0] = (int)long_dataSize0;
+        JS_FreeValue(ctx, js_dataSize);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        da_dataSize = JS_DupValue(ctx,argv[1]);
+        size_t size_dataSize;
+        dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, da_dataSize);
+    }
+    else {
+        JSClassID classid_dataSize = JS_GetClassID(argv[1]);
+        if(classid_dataSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_dataSize;
+            size_t size_dataSize;
+            da_dataSize = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_dataSize,&size_dataSize,NULL);
+            dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, da_dataSize);
+        }
+        else {
+            int32_t long_js_dataSize;
+            int err_js_dataSize = JS_ToInt32(ctx, &long_js_dataSize, argv[1]);
+            if(err_js_dataSize<0) {
+                if(JS_IsArray(ctx,argv[0]) == 1) {
+                    js_free(ctx, fileName);
+                }
+                else if(JS_IsString(argv[0]) == 1) {
+                    JS_FreeCString(ctx, fileName);
+                }
+                else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                    JS_FreeValue(ctx, da_fileName);
+                }
+                else {
+                    JSClassID classid_fileName = JS_GetClassID(argv[0]);
+                    if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+                        js_free(ctx, &da_fileName);
+                    }
+                }
+                JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_dataSize = (int)long_js_dataSize;
+            dataSize = &js_dataSize;
+        }
+    }
+    unsigned char * returnVal = LoadFileData((const char *)fileName, dataSize);
+    if(JS_IsArray(ctx,argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        JSValue js_argv1 = JS_NewInt32(ctx, (long)dataSize[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[1],0,js_argv1,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(ctx,argv[1]) == 1) {
+        js_free(ctx, dataSize);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_dataSize);
+    }
+    else {
+        JSClassID classid_dataSize = JS_GetClassID(argv[1]);
+        if(classid_dataSize==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_dataSize);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < dataSize[0]; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    UnloadFileData(returnVal);
+    return ret;
 }
 
 static JSValue js_saveFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -6760,11 +7089,12 @@ static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int ar
             return JS_EXCEPTION;
         }
     }
-    bool scanSubdirs = JS_ToBool(ctx, argv[2]);
-    if(scanSubdirs<0) {
+    int js_scanSubdirs = JS_ToBool(ctx, argv[2]);
+    if(js_scanSubdirs<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
+    bool scanSubdirs = js_scanSubdirs;
     FilePathList files = LoadDirectoryFilesEx(basePath, filter, scanSubdirs);
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < files.count; i++){
@@ -6840,7 +7170,7 @@ static JSValue js_computeCRC32(JSContext * ctx, JSValue this_val, int argc, JSVa
     unsigned char * data;
     JSValue da_data;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_data;
+        int64_t size_data;
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
         }
@@ -6915,7 +7245,7 @@ static JSValue js_computeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
     unsigned char * data;
     JSValue da_data;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_data;
+        int64_t size_data;
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
         }
@@ -6984,11 +7314,14 @@ static JSValue js_computeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(unsigned int);
-    for(int i0=0; i0 < size_ret; i0++){
-        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
+    JSValue js_ret0 = JS_NewUint32(ctx, (unsigned long)returnVal[0]);
+    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
+    JSValue js_ret1 = JS_NewUint32(ctx, (unsigned long)returnVal[1]);
+    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
+    JSValue js_ret2 = JS_NewUint32(ctx, (unsigned long)returnVal[2]);
+    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
+    JSValue js_ret3 = JS_NewUint32(ctx, (unsigned long)returnVal[3]);
+    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
     return ret;
 }
 
@@ -6996,7 +7329,7 @@ static JSValue js_computeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
     unsigned char * data;
     JSValue da_data;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_data;
+        int64_t size_data;
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
         }
@@ -7065,11 +7398,16 @@ static JSValue js_computeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(unsigned int);
-    for(int i0=0; i0 < size_ret; i0++){
-        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
+    JSValue js_ret0 = JS_NewUint32(ctx, (unsigned long)returnVal[0]);
+    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
+    JSValue js_ret1 = JS_NewUint32(ctx, (unsigned long)returnVal[1]);
+    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
+    JSValue js_ret2 = JS_NewUint32(ctx, (unsigned long)returnVal[2]);
+    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
+    JSValue js_ret3 = JS_NewUint32(ctx, (unsigned long)returnVal[3]);
+    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
+    JSValue js_ret4 = JS_NewUint32(ctx, (unsigned long)returnVal[4]);
+    JS_DefinePropertyValueUint32(ctx,ret,4,js_ret4,JS_PROP_C_W_E);
     return ret;
 }
 
@@ -7182,8 +7520,7 @@ static JSValue js_exportAutomationEventList(JSContext * ctx, JSValue this_val, i
 }
 
 static JSValue js_setAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    AutomationEventList * list;
-    list = (AutomationEventList *)JS_GetOpaque(argv[0], js_AutomationEventList_class_id);
+    AutomationEventList * list = (AutomationEventList *)JS_GetOpaque(argv[0], js_AutomationEventList_class_id);
     if(list == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type AutomationEventList");
         return JS_EXCEPTION;
@@ -7818,8 +8155,7 @@ static JSValue js_getGesturePinchAngle(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_updateCamera(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -7836,8 +8172,7 @@ static JSValue js_updateCamera(JSContext * ctx, JSValue this_val, int argc, JSVa
 }
 
 static JSValue js_updateCameraPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -9066,7 +9401,7 @@ static JSValue js_drawSplineLinear(JSContext * ctx, JSValue this_val, int argc, 
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -9143,7 +9478,7 @@ static JSValue js_drawSplineBasis(JSContext * ctx, JSValue this_val, int argc, J
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -9220,7 +9555,7 @@ static JSValue js_drawSplineCatmullRom(JSContext * ctx, JSValue this_val, int ar
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -9297,7 +9632,7 @@ static JSValue js_drawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, i
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -9374,7 +9709,7 @@ static JSValue js_drawSplineBezierCubic(JSContext * ctx, JSValue this_val, int a
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -10265,7 +10600,7 @@ static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
     }
     unsigned char * fileData;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_fileData;
+        int64_t size_fileData;
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -10317,17 +10652,15 @@ static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
     if(JS_IsArray(ctx,argv[3]) == 1) {
         frames = (int *)js_malloc(ctx, 1 * sizeof(int));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, frames);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_frames = JS_GetPropertyUint32(ctx,argv[3],i0);
-            int32_t long_framesi0;
-            int err_framesi0 = JS_ToInt32(ctx, &long_framesi0, js_frames);
-            if(err_framesi0<0) {
-                JS_ThrowTypeError(ctx, "js_frames is not numeric");
-                return JS_EXCEPTION;
-            }
-            frames[i0] = (int)long_framesi0;
-            JS_FreeValue(ctx, js_frames);
+        JSValue js_frames = JS_GetPropertyUint32(ctx,argv[3],0);
+        int32_t long_frames0;
+        int err_frames0 = JS_ToInt32(ctx, &long_frames0, js_frames);
+        if(err_frames0<0) {
+            JS_ThrowTypeError(ctx, "js_frames is not numeric");
+            return JS_EXCEPTION;
         }
+        frames[0] = (int)long_frames0;
+        JS_FreeValue(ctx, js_frames);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_frames = JS_DupValue(ctx,argv[3]);
@@ -10400,7 +10733,7 @@ static JSValue js_loadImageFromMemory(JSContext * ctx, JSValue this_val, int arg
     }
     unsigned char * fileData;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_fileData;
+        int64_t size_fileData;
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -10588,17 +10921,15 @@ static JSValue js_exportImageToMemory(JSContext * ctx, JSValue this_val, int arg
     JSValue da_fileSize;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         fileSize = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_fileSize = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_fileSizei0;
-            int err_fileSizei0 = JS_ToInt32(ctx, &long_fileSizei0, js_fileSize);
-            if(err_fileSizei0<0) {
-                JS_ThrowTypeError(ctx, "js_fileSize is not numeric");
-                return JS_EXCEPTION;
-            }
-            fileSize[i0] = (int)long_fileSizei0;
-            JS_FreeValue(ctx, js_fileSize);
+        JSValue js_fileSize = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_fileSize0;
+        int err_fileSize0 = JS_ToInt32(ctx, &long_fileSize0, js_fileSize);
+        if(err_fileSize0<0) {
+            JS_ThrowTypeError(ctx, "js_fileSize is not numeric");
+            return JS_EXCEPTION;
         }
+        fileSize[0] = (int)long_fileSize0;
+        JS_FreeValue(ctx, js_fileSize);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_fileSize = JS_DupValue(ctx,argv[2]);
@@ -10673,8 +11004,7 @@ static JSValue js_exportImageToMemory(JSContext * ctx, JSValue this_val, int arg
     }
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(unsigned char);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < fileSize[0]; i0++){
         JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -11317,8 +11647,7 @@ static JSValue js_imageTextEx(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_imageFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11335,8 +11664,7 @@ static JSValue js_imageFormat(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_imageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11352,8 +11680,7 @@ static JSValue js_imageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValu
 }
 
 static JSValue js_imageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11369,8 +11696,7 @@ static JSValue js_imageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue
 }
 
 static JSValue js_imageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11387,8 +11713,7 @@ static JSValue js_imageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageAlphaClear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11411,8 +11736,7 @@ static JSValue js_imageAlphaClear(JSContext * ctx, JSValue this_val, int argc, J
 }
 
 static JSValue js_imageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11428,8 +11752,7 @@ static JSValue js_imageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11439,8 +11762,7 @@ static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValue this_val, int a
 }
 
 static JSValue js_imageBlurGaussian(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11457,8 +11779,7 @@ static JSValue js_imageBlurGaussian(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11466,7 +11787,7 @@ static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int 
     float * kernel;
     JSValue da_kernel;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_kernel;
+        int64_t size_kernel;
         if(JS_GetLength(ctx,argv[1],&size_kernel)==-1) {
             return JS_EXCEPTION;
         }
@@ -11537,8 +11858,7 @@ static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int 
 }
 
 static JSValue js_imageResize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11562,8 +11882,7 @@ static JSValue js_imageResize(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_imageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11587,8 +11906,7 @@ static JSValue js_imageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_imageResizeCanvas(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11632,8 +11950,7 @@ static JSValue js_imageResizeCanvas(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_imageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11643,8 +11960,7 @@ static JSValue js_imageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSVa
 }
 
 static JSValue js_imageDither(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11682,8 +11998,7 @@ static JSValue js_imageDither(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_imageFlipVertical(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11693,8 +12008,7 @@ static JSValue js_imageFlipVertical(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11704,8 +12018,7 @@ static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_imageRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11722,8 +12035,7 @@ static JSValue js_imageRotate(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_imageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11733,8 +12045,7 @@ static JSValue js_imageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_imageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11744,8 +12055,7 @@ static JSValue js_imageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageColorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11761,8 +12071,7 @@ static JSValue js_imageColorTint(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageColorInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11772,8 +12081,7 @@ static JSValue js_imageColorInvert(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_imageColorGrayscale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11783,8 +12091,7 @@ static JSValue js_imageColorGrayscale(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_imageColorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11801,8 +12108,7 @@ static JSValue js_imageColorContrast(JSContext * ctx, JSValue this_val, int argc
 }
 
 static JSValue js_imageColorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11819,8 +12125,7 @@ static JSValue js_imageColorBrightness(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_imageColorReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11906,8 +12211,7 @@ static JSValue js_getImageColor(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_imageClearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11923,8 +12227,7 @@ static JSValue js_imageClearBackground(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_imageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11954,8 +12257,7 @@ static JSValue js_imageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -11977,8 +12279,7 @@ static JSValue js_imageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, J
 }
 
 static JSValue js_imageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12022,8 +12323,7 @@ static JSValue js_imageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_imageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12051,8 +12351,7 @@ static JSValue js_imageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_imageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12087,8 +12386,7 @@ static JSValue js_imageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, J
 }
 
 static JSValue js_imageDrawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12125,8 +12423,7 @@ static JSValue js_imageDrawCircle(JSContext * ctx, JSValue this_val, int argc, J
 }
 
 static JSValue js_imageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12155,8 +12452,7 @@ static JSValue js_imageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12193,8 +12489,7 @@ static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12223,8 +12518,7 @@ static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int a
 }
 
 static JSValue js_imageDrawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12268,8 +12562,7 @@ static JSValue js_imageDrawRectangle(JSContext * ctx, JSValue this_val, int argc
 }
 
 static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12297,8 +12590,7 @@ static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12320,8 +12612,7 @@ static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValue this_val, int a
 }
 
 static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12350,8 +12641,7 @@ static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValue this_val, int
 }
 
 static JSValue js_imageDrawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12385,8 +12675,7 @@ static JSValue js_imageDrawTriangle(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12432,8 +12721,7 @@ static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12467,8 +12755,7 @@ static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValue this_val, int 
 }
 
 static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12476,7 +12763,7 @@ static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[1],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -12537,8 +12824,7 @@ static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12546,7 +12832,7 @@ static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
     Vector2 * points;
     JSValue da_points;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_points;
+        int64_t size_points;
         if(JS_GetLength(ctx,argv[1],&size_points)==-1) {
             return JS_EXCEPTION;
         }
@@ -12607,8 +12893,7 @@ static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
 }
 
 static JSValue js_imageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12642,8 +12927,7 @@ static JSValue js_imageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue
 }
 
 static JSValue js_imageDrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -12778,8 +13062,7 @@ static JSValue js_imageDrawText(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_imageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * dst;
-    dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -13128,8 +13411,7 @@ static JSValue js_updateTextureRec(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_genTextureMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Texture2D * texture;
-    texture = (Texture2D *)JS_GetOpaque(argv[0], js_Texture_class_id);
+    Texture2D * texture = (Texture2D *)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Texture2D");
         return JS_EXCEPTION;
@@ -13788,7 +14070,7 @@ static JSValue js_loadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValu
         codepoints = NULL;
     }
     else if(JS_IsArray(ctx,argv[2]) == 1) {
-        size_t size_codepoints;
+        int64_t size_codepoints;
         if(JS_GetLength(ctx,argv[2],&size_codepoints)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -14785,7 +15067,7 @@ static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     memoryNode * memoryCurrent = memoryHead;;
     size_t char_ptrlen = 10;
     char * char_ptr = (char *)js_calloc(ctx, char_ptrlen, sizeof(char));
-    size_t formatlen;
+    int64_t formatlen;
     if(JS_GetLength(ctx,argv[0],&formatlen)==-1) {
         memoryClear(ctx, memoryHead);
         js_free(ctx, char_ptr);
@@ -15059,7 +15341,7 @@ static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                     else {
                         wchar_t * a;
                         if(JS_IsArray(ctx,argv[c]) == 1) {
-                            size_t size_a;
+                            int64_t size_a;
                             if(JS_GetLength(ctx,argv[c],&size_a)==-1) {
                                 memoryClear(ctx, memoryHead);
                                 js_free(ctx, char_ptr);
@@ -15390,7 +15672,7 @@ static JSValue js_textJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
     memoryNode * memoryCurrent = memoryHead;;
     char * * textList;
     if(JS_IsArray(ctx,argv[0]) == 1) {
-        size_t size_textList;
+        int64_t size_textList;
         if(JS_GetLength(ctx,argv[0],&size_textList)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -15503,17 +15785,15 @@ static JSValue js_textSplit(JSContext * ctx, JSValue this_val, int argc, JSValue
     JSValue da_count;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         count = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_count = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_counti0;
-            int err_counti0 = JS_ToInt32(ctx, &long_counti0, js_count);
-            if(err_counti0<0) {
-                JS_ThrowTypeError(ctx, "js_count is not numeric");
-                return JS_EXCEPTION;
-            }
-            count[i0] = (int)long_counti0;
-            JS_FreeValue(ctx, js_count);
+        JSValue js_count = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_count0;
+        int err_count0 = JS_ToInt32(ctx, &long_count0, js_count);
+        if(err_count0<0) {
+            JS_ThrowTypeError(ctx, "js_count is not numeric");
+            return JS_EXCEPTION;
         }
+        count[0] = (int)long_count0;
+        JS_FreeValue(ctx, js_count);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_count = JS_DupValue(ctx,argv[2]);
@@ -15656,17 +15936,15 @@ static JSValue js_textAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
     if(JS_IsArray(ctx,argv[2]) == 1) {
         position = (int *)js_malloc(ctx, 1 * sizeof(int));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, position);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_position = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_positioni0;
-            int err_positioni0 = JS_ToInt32(ctx, &long_positioni0, js_position);
-            if(err_positioni0<0) {
-                JS_ThrowTypeError(ctx, "js_position is not numeric");
-                return JS_EXCEPTION;
-            }
-            position[i0] = (int)long_positioni0;
-            JS_FreeValue(ctx, js_position);
+        JSValue js_position = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_position0;
+        int err_position0 = JS_ToInt32(ctx, &long_position0, js_position);
+        if(err_position0<0) {
+            JS_ThrowTypeError(ctx, "js_position is not numeric");
+            return JS_EXCEPTION;
         }
+        position[0] = (int)long_position0;
+        JS_FreeValue(ctx, js_position);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         JSValue da_position = JS_DupValue(ctx,argv[2]);
@@ -17202,17 +17480,17 @@ static JSValue js_drawBillboardPro(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_uploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Mesh * mesh;
-    mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
+    Mesh * mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Mesh");
         return JS_EXCEPTION;
     }
-    bool dynamic = JS_ToBool(ctx, argv[1]);
-    if(dynamic<0) {
+    int js_dynamic = JS_ToBool(ctx, argv[1]);
+    if(js_dynamic<0) {
         JS_ThrowTypeError(ctx, "argv[1] is not a bool");
         return JS_EXCEPTION;
     }
+    bool dynamic = js_dynamic;
     UploadMesh(mesh, dynamic);
     return JS_UNDEFINED;
 }
@@ -17319,7 +17597,7 @@ static JSValue js_drawMeshInstanced(JSContext * ctx, JSValue this_val, int argc,
     Matrix * transforms;
     JSValue da_transforms;
     if(JS_IsArray(ctx,argv[2]) == 1) {
-        size_t size_transforms;
+        int64_t size_transforms;
         if(JS_GetLength(ctx,argv[2],&size_transforms)==-1) {
             return JS_EXCEPTION;
         }
@@ -17383,8 +17661,7 @@ static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValue this_val, int argc
 }
 
 static JSValue js_genMeshTangents(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Mesh * mesh;
-    mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
+    Mesh * mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Mesh");
         return JS_EXCEPTION;
@@ -17852,8 +18129,7 @@ static JSValue js_unloadMaterial(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_setMaterialTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Material * material;
-    material = (Material *)JS_GetOpaque(argv[0], js_Material_class_id);
+    Material * material = (Material *)JS_GetOpaque(argv[0], js_Material_class_id);
     if(material == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Material");
         return JS_EXCEPTION;
@@ -17876,8 +18152,7 @@ static JSValue js_setMaterialTexture(JSContext * ctx, JSValue this_val, int argc
 }
 
 static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Model * model;
-    model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
+    Model * model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
     if(model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Model");
         return JS_EXCEPTION;
@@ -18259,7 +18534,7 @@ static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
     }
     unsigned char * fileData;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_fileData;
+        int64_t size_fileData;
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -18661,8 +18936,7 @@ static JSValue js_waveCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
 }
 
 static JSValue js_waveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Wave * wave;
-    wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
+    Wave * wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Wave");
         return JS_EXCEPTION;
@@ -18686,8 +18960,7 @@ static JSValue js_waveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue 
 }
 
 static JSValue js_waveFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Wave * wave;
-    wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
+    Wave * wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Wave");
         return JS_EXCEPTION;
@@ -18727,11 +19000,11 @@ static JSValue js_loadWaveSamples(JSContext * ctx, JSValue this_val, int argc, J
     float * returnVal = LoadWaveSamples(wave);
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(float);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < wave.frameCount*wave.channels; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)returnVal[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    UnloadWaveSamples(returnVal);
     return ret;
 }
 
@@ -18740,17 +19013,15 @@ static JSValue js_unloadWaveSamples(JSContext * ctx, JSValue this_val, int argc,
     JSValue da_samples;
     if(JS_IsArray(ctx,argv[0]) == 1) {
         samples = (float *)js_malloc(ctx, 1 * sizeof(float));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_samples = JS_GetPropertyUint32(ctx,argv[0],i0);
-            double double_samplesi0;
-            int err_samplesi0 = JS_ToFloat64(ctx, &double_samplesi0, js_samples);
-            if(err_samplesi0<0) {
-                JS_ThrowTypeError(ctx, "js_samples is not numeric");
-                return JS_EXCEPTION;
-            }
-            samples[i0] = (float)double_samplesi0;
-            JS_FreeValue(ctx, js_samples);
+        JSValue js_samples = JS_GetPropertyUint32(ctx,argv[0],0);
+        double double_samples0;
+        int err_samples0 = JS_ToFloat64(ctx, &double_samples0, js_samples);
+        if(err_samples0<0) {
+            JS_ThrowTypeError(ctx, "js_samples is not numeric");
+            return JS_EXCEPTION;
         }
+        samples[0] = (float)double_samples0;
+        JS_FreeValue(ctx, js_samples);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
         da_samples = JS_DupValue(ctx,argv[0]);
@@ -18874,7 +19145,7 @@ static JSValue js_loadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, i
     }
     unsigned char * data;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_data;
+        int64_t size_data;
         if(JS_GetLength(ctx,argv[1],&size_data)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -19336,6 +19607,54 @@ static JSValue js_setAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_
     }
     int size = (int)long_size;
     SetAudioStreamBufferSizeDefault(size);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_attachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_processor;
+    ctx_processor.ctx = ctx;
+    ctx_processor.func_obj = argv[0];
+    void * processor = AudioMixedProcessor_processor_c;
+    if(JS_IsFunction(ctx,argv[0])==0) {
+        return JS_EXCEPTION;
+        void * processor = AudioMixedProcessor_processor_c;
+    }
+    if(AudioMixedProcessor_processor_size==0) {
+        AudioMixedProcessor_processor_arr = js_malloc(ctx, sizeof(void *) * 3);
+        AudioMixedProcessor_processor_arr[AudioMixedProcessor_processor_size] = ctx_processor;
+        AudioMixedProcessor_processor_size++;
+    }
+    else {
+        AudioMixedProcessor_processor_arr = js_realloc(ctx, AudioMixedProcessor_processor_arr, sizeof(void *) * AudioMixedProcessor_processor_size);
+        AudioMixedProcessor_processor_arr[AudioMixedProcessor_processor_size] = ctx_processor;
+        AudioMixedProcessor_processor_size++;
+        return JS_UNDEFINED;
+    }
+    AttachAudioMixedProcessor(processor);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_detachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    trampolineContext ctx_processor;
+    ctx_processor.ctx = ctx;
+    ctx_processor.func_obj = argv[0];
+    int processor_pos;
+    void * processor = AudioMixedProcessor_processor_c;
+    void * processor_ptr = argv[0].u.ptr;
+    for(int i0=0; i0 < AudioMixedProcessor_processor_size; i0++){
+        if(AudioMixedProcessor_processor_arr[i0].func_obj.u.ptr == processor_ptr) {
+            for(; i0 < AudioMixedProcessor_processor_size-1; i0++){
+                AudioMixedProcessor_processor_arr[i0]=AudioMixedProcessor_processor_arr[i0+1];
+            }
+            AudioMixedProcessor_processor_size--;
+            AudioMixedProcessor_processor_arr = js_realloc(ctx, AudioMixedProcessor_processor_arr, sizeof(void *) * AudioMixedProcessor_processor_size);
+            break;
+        }
+    }
+    if(AudioMixedProcessor_processor_size!=0) {
+        return JS_UNDEFINED;
+    }
+    DetachAudioMixedProcessor(processor);
     return JS_UNDEFINED;
 }
 
@@ -20490,14 +20809,12 @@ static JSValue js_vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSV
 }
 
 static JSValue js_vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Vector3 * v1;
-    v1 = (Vector3 *)JS_GetOpaque(argv[0], js_Vector3_class_id);
+    Vector3 * v1 = (Vector3 *)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector3");
         return JS_EXCEPTION;
     }
-    Vector3 * v2;
-    v2 = (Vector3 *)JS_GetOpaque(argv[1], js_Vector3_class_id);
+    Vector3 * v2 = (Vector3 *)JS_GetOpaque(argv[1], js_Vector3_class_id);
     if(v2 == NULL) {
         JS_ThrowTypeError(ctx, "argv[1] does not match type Vector3");
         return JS_EXCEPTION;
@@ -22164,7 +22481,7 @@ static JSValue js_quaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     Quaternion q = *ptr_q;
     Vector3 * outAxis;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_outAxis;
+        int64_t size_outAxis;
         if(JS_GetLength(ctx,argv[1],&size_outAxis)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -22195,7 +22512,7 @@ static JSValue js_quaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     }
     float * outAngle;
     if(JS_IsArray(ctx,argv[2]) == 1) {
-        size_t size_outAngle;
+        int64_t size_outAngle;
         if(JS_GetLength(ctx,argv[2],&size_outAngle)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -22331,20 +22648,17 @@ static JSValue js_matrixDecompose(JSContext * ctx, JSValue this_val, int argc, J
         return JS_EXCEPTION;
     }
     Matrix mat = *ptr_mat;
-    Vector3 * translation;
-    translation = (Vector3 *)JS_GetOpaque(argv[1], js_Vector3_class_id);
+    Vector3 * translation = (Vector3 *)JS_GetOpaque(argv[1], js_Vector3_class_id);
     if(translation == NULL) {
         JS_ThrowTypeError(ctx, "argv[1] does not match type Vector3");
         return JS_EXCEPTION;
     }
-    Quaternion * rotation;
-    rotation = (Quaternion *)JS_GetOpaque(argv[2], js_Vector4_class_id);
+    Quaternion * rotation = (Quaternion *)JS_GetOpaque(argv[2], js_Vector4_class_id);
     if(rotation == NULL) {
         JS_ThrowTypeError(ctx, "argv[2] does not match type Quaternion");
         return JS_EXCEPTION;
     }
-    Vector3 * scale;
-    scale = (Vector3 *)JS_GetOpaque(argv[3], js_Vector3_class_id);
+    Vector3 * scale = (Vector3 *)JS_GetOpaque(argv[3], js_Vector3_class_id);
     if(scale == NULL) {
         JS_ThrowTypeError(ctx, "argv[3] does not match type Vector3");
         return JS_EXCEPTION;
@@ -22470,17 +22784,15 @@ static JSValue js_rlMultMatrixf(JSContext * ctx, JSValue this_val, int argc, JSV
     JSValue da_matf;
     if(JS_IsArray(ctx,argv[0]) == 1) {
         matf = (float *)js_malloc(ctx, 1 * sizeof(float));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_matf = JS_GetPropertyUint32(ctx,argv[0],i0);
-            double double_matfi0;
-            int err_matfi0 = JS_ToFloat64(ctx, &double_matfi0, js_matf);
-            if(err_matfi0<0) {
-                JS_ThrowTypeError(ctx, "js_matf is not numeric");
-                return JS_EXCEPTION;
-            }
-            matf[i0] = (float)double_matfi0;
-            JS_FreeValue(ctx, js_matf);
+        JSValue js_matf = JS_GetPropertyUint32(ctx,argv[0],0);
+        double double_matf0;
+        int err_matf0 = JS_ToFloat64(ctx, &double_matf0, js_matf);
+        if(err_matf0<0) {
+            JS_ThrowTypeError(ctx, "js_matf is not numeric");
+            return JS_EXCEPTION;
         }
+        matf[0] = (float)double_matf0;
+        JS_FreeValue(ctx, js_matf);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
         da_matf = JS_DupValue(ctx,argv[0]);
@@ -23097,8 +23409,8 @@ static JSValue js_rlDisableFramebuffer(JSContext * ctx, JSValue this_val, int ar
 }
 
 static JSValue js_rlGetActiveFramebuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int returnVal = rlGetActiveFramebuffer();
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlGetActiveFramebuffer();
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -23242,26 +23554,30 @@ static JSValue js_rlDisableBackfaceCulling(JSContext * ctx, JSValue this_val, in
 }
 
 static JSValue js_rlColorMask(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    bool r = JS_ToBool(ctx, argv[0]);
-    if(r<0) {
+    int js_r = JS_ToBool(ctx, argv[0]);
+    if(js_r<0) {
         JS_ThrowTypeError(ctx, "argv[0] is not a bool");
         return JS_EXCEPTION;
     }
-    bool g = JS_ToBool(ctx, argv[1]);
-    if(g<0) {
+    bool r = js_r;
+    int js_g = JS_ToBool(ctx, argv[1]);
+    if(js_g<0) {
         JS_ThrowTypeError(ctx, "argv[1] is not a bool");
         return JS_EXCEPTION;
     }
-    bool b = JS_ToBool(ctx, argv[2]);
-    if(b<0) {
+    bool g = js_g;
+    int js_b = JS_ToBool(ctx, argv[2]);
+    if(js_b<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
-    bool a = JS_ToBool(ctx, argv[3]);
-    if(a<0) {
+    bool b = js_b;
+    int js_a = JS_ToBool(ctx, argv[3]);
+    if(js_a<0) {
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
+    bool a = js_a;
     rlColorMask(r, g, b, a);
     return JS_UNDEFINED;
 }
@@ -23575,14 +23891,14 @@ static JSValue js_rlGetFramebufferHeight(JSContext * ctx, JSValue this_val, int 
 }
 
 static JSValue js_rlGetTextureIdDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int returnVal = rlGetTextureIdDefault();
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlGetTextureIdDefault();
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
 static JSValue js_rlGetShaderIdDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int returnVal = rlGetShaderIdDefault();
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlGetShaderIdDefault();
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -23590,8 +23906,7 @@ static JSValue js_rlGetShaderLocsDefault(JSContext * ctx, JSValue this_val, int 
     int * returnVal = rlGetShaderLocsDefault();
     JSValue ret;
     ret = JS_NewArray(ctx);
-    size_t size_ret = sizeof(returnVal)/sizeof(int);
-    for(int i0=0; i0 < size_ret; i0++){
+    for(int i0=0; i0 < 32; i0++){
         JSValue js_ret = JS_NewInt32(ctx, (long)returnVal[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -23633,8 +23948,7 @@ static JSValue js_rlUnloadRenderBatch(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_rlDrawRenderBatch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    rlRenderBatch * batch;
-    batch = (rlRenderBatch *)JS_GetOpaque(argv[0], js_rlRenderBatch_class_id);
+    rlRenderBatch * batch = (rlRenderBatch *)JS_GetOpaque(argv[0], js_rlRenderBatch_class_id);
     if(batch == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type rlRenderBatch");
         return JS_EXCEPTION;
@@ -23644,8 +23958,7 @@ static JSValue js_rlDrawRenderBatch(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_rlSetRenderBatchActive(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    rlRenderBatch * batch;
-    batch = (rlRenderBatch *)JS_GetOpaque(argv[0], js_rlRenderBatch_class_id);
+    rlRenderBatch * batch = (rlRenderBatch *)JS_GetOpaque(argv[0], js_rlRenderBatch_class_id);
     if(batch == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type rlRenderBatch");
         return JS_EXCEPTION;
@@ -23685,8 +23998,8 @@ static JSValue js_rlSetTexture(JSContext * ctx, JSValue this_val, int argc, JSVa
 }
 
 static JSValue js_rlLoadVertexArray(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int returnVal = rlLoadVertexArray();
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlLoadVertexArray();
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -23712,19 +24025,20 @@ static JSValue js_rlLoadVertexBuffer(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     int size = (int)long_size;
-    bool dynamic = JS_ToBool(ctx, argv[2]);
-    if(dynamic<0) {
+    int js_dynamic = JS_ToBool(ctx, argv[2]);
+    if(js_dynamic<0) {
         if(JS_IsArrayBuffer(argv[0]) == 1) {
             JS_FreeValue(ctx, da_buffer);
         }
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
-    int returnVal = rlLoadVertexBuffer((const void *)buffer, size, dynamic);
+    bool dynamic = js_dynamic;
+    unsigned int returnVal = rlLoadVertexBuffer((const void *)buffer, size, dynamic);
     if(JS_IsArrayBuffer(argv[0]) == 1) {
         JS_FreeValue(ctx, da_buffer);
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -23750,19 +24064,20 @@ static JSValue js_rlLoadVertexBufferElement(JSContext * ctx, JSValue this_val, i
         return JS_EXCEPTION;
     }
     int size = (int)long_size;
-    bool dynamic = JS_ToBool(ctx, argv[2]);
-    if(dynamic<0) {
+    int js_dynamic = JS_ToBool(ctx, argv[2]);
+    if(js_dynamic<0) {
         if(JS_IsArrayBuffer(argv[0]) == 1) {
             JS_FreeValue(ctx, da_buffer);
         }
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
-    int returnVal = rlLoadVertexBufferElement((const void *)buffer, size, dynamic);
+    bool dynamic = js_dynamic;
+    unsigned int returnVal = rlLoadVertexBufferElement((const void *)buffer, size, dynamic);
     if(JS_IsArrayBuffer(argv[0]) == 1) {
         JS_FreeValue(ctx, da_buffer);
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -23904,11 +24219,12 @@ static JSValue js_rlSetVertexAttribute(JSContext * ctx, JSValue this_val, int ar
         return JS_EXCEPTION;
     }
     int type = (int)long_type;
-    bool normalized = JS_ToBool(ctx, argv[3]);
-    if(normalized<0) {
+    int js_normalized = JS_ToBool(ctx, argv[3]);
+    if(js_normalized<0) {
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
+    bool normalized = js_normalized;
     int32_t long_stride;
     int err_stride = JS_ToInt32(ctx, &long_stride, argv[4]);
     if(err_stride<0) {
@@ -24119,11 +24435,11 @@ static JSValue js_rlLoadTexture(JSContext * ctx, JSValue this_val, int argc, JSV
         return JS_EXCEPTION;
     }
     int mipmapCount = (int)long_mipmapCount;
-    int returnVal = rlLoadTexture((const void *)data, width, height, format, mipmapCount);
+    unsigned int returnVal = rlLoadTexture((const void *)data, width, height, format, mipmapCount);
     if(JS_IsArrayBuffer(argv[0]) == 1) {
         JS_FreeValue(ctx, da_data);
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24142,13 +24458,14 @@ static JSValue js_rlLoadTextureDepth(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     int height = (int)long_height;
-    bool useRenderBuffer = JS_ToBool(ctx, argv[2]);
-    if(useRenderBuffer<0) {
+    int js_useRenderBuffer = JS_ToBool(ctx, argv[2]);
+    if(js_useRenderBuffer<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
-    int returnVal = rlLoadTextureDepth(width, height, useRenderBuffer);
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    bool useRenderBuffer = js_useRenderBuffer;
+    unsigned int returnVal = rlLoadTextureDepth(width, height, useRenderBuffer);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24194,11 +24511,11 @@ static JSValue js_rlLoadTextureCubemap(JSContext * ctx, JSValue this_val, int ar
         return JS_EXCEPTION;
     }
     int mipmapCount = (int)long_mipmapCount;
-    int returnVal = rlLoadTextureCubemap((const void *)data, size, format, mipmapCount);
+    unsigned int returnVal = rlLoadTextureCubemap((const void *)data, size, format, mipmapCount);
     if(JS_IsArrayBuffer(argv[0]) == 1) {
         JS_FreeValue(ctx, da_data);
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24275,7 +24592,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     int format = (int)long_format;
     unsigned int * glInternalFormat;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_glInternalFormat;
+        int64_t size_glInternalFormat;
         if(JS_GetLength(ctx,argv[1],&size_glInternalFormat)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -24317,7 +24634,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glFormat;
     if(JS_IsArray(ctx,argv[2]) == 1) {
-        size_t size_glFormat;
+        int64_t size_glFormat;
         if(JS_GetLength(ctx,argv[2],&size_glFormat)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -24359,7 +24676,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glType;
     if(JS_IsArray(ctx,argv[3]) == 1) {
-        size_t size_glType;
+        int64_t size_glType;
         if(JS_GetLength(ctx,argv[3],&size_glType)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -24462,7 +24779,7 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
     int * mipmaps;
     JSValue da_mipmaps;
     if(JS_IsArray(ctx,argv[4]) == 1) {
-        size_t size_mipmaps;
+        int64_t size_mipmaps;
         if(JS_GetLength(ctx,argv[4],&size_mipmaps)==-1) {
             return JS_EXCEPTION;
         }
@@ -24513,40 +24830,6 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_rlReadTexturePixels(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    uint32_t long_id;
-    int err_id = JS_ToUint32(ctx, &long_id, argv[0]);
-    if(err_id<0) {
-        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
-        return JS_EXCEPTION;
-    }
-    unsigned int id = (unsigned int)long_id;
-    int32_t long_width;
-    int err_width = JS_ToInt32(ctx, &long_width, argv[1]);
-    if(err_width<0) {
-        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
-        return JS_EXCEPTION;
-    }
-    int width = (int)long_width;
-    int32_t long_height;
-    int err_height = JS_ToInt32(ctx, &long_height, argv[2]);
-    if(err_height<0) {
-        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
-        return JS_EXCEPTION;
-    }
-    int height = (int)long_height;
-    int32_t long_format;
-    int err_format = JS_ToInt32(ctx, &long_format, argv[3]);
-    if(err_format<0) {
-        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
-        return JS_EXCEPTION;
-    }
-    int format = (int)long_format;
-    void * returnVal = rlReadTexturePixels(id, width, height, format);
-    JSValue ret;
-    return ret;
-}
-
 static JSValue js_rlReadScreenPixels(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
@@ -24562,15 +24845,19 @@ static JSValue js_rlReadScreenPixels(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     int height = (int)long_height;
-    char * returnVal = rlReadScreenPixels(width, height);
+    unsigned char * returnVal = rlReadScreenPixels(width, height);
     JSValue ret;
-    ret = JS_NewString(ctx, returnVal);
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < width*height*4; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
     return ret;
 }
 
 static JSValue js_rlLoadFramebuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    int returnVal = rlLoadFramebuffer();
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlLoadFramebuffer();
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24694,9 +24981,9 @@ static JSValue js_rlLoadShaderCode(JSContext * ctx, JSValue this_val, int argc, 
             return JS_EXCEPTION;
         }
     }
-    int returnVal = rlLoadShaderCode((const char *)vsCode, (const char *)fsCode);
+    unsigned int returnVal = rlLoadShaderCode((const char *)vsCode, (const char *)fsCode);
     memoryClear(ctx, memoryHead);
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24746,7 +25033,7 @@ static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, J
         return JS_EXCEPTION;
     }
     int type = (int)long_type;
-    int returnVal = rlCompileShader((const char *)shaderCode, type);
+    unsigned int returnVal = rlCompileShader((const char *)shaderCode, type);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, shaderCode);
     }
@@ -24762,7 +25049,7 @@ static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, J
             js_free(ctx, &da_shaderCode);
         }
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24781,8 +25068,8 @@ static JSValue js_rlLoadShaderProgram(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     unsigned int fShaderId = (unsigned int)long_fShaderId;
-    int returnVal = rlLoadShaderProgram(vShaderId, fShaderId);
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlLoadShaderProgram(vShaderId, fShaderId);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -24929,7 +25216,7 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
     Matrix * mat;
     JSValue da_mat;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_mat;
+        int64_t size_mat;
         if(JS_GetLength(ctx,argv[1],&size_mat)==-1) {
             return JS_EXCEPTION;
         }
@@ -25007,7 +25294,7 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * locs;
     JSValue da_locs;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_locs;
+        int64_t size_locs;
         if(JS_GetLength(ctx,argv[1],&size_locs)==-1) {
             return JS_EXCEPTION;
         }
@@ -25066,8 +25353,8 @@ static JSValue js_rlLoadComputeShaderProgram(JSContext * ctx, JSValue this_val, 
         return JS_EXCEPTION;
     }
     unsigned int shaderId = (unsigned int)long_shaderId;
-    int returnVal = rlLoadComputeShaderProgram(shaderId);
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlLoadComputeShaderProgram(shaderId);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -25126,11 +25413,11 @@ static JSValue js_rlLoadShaderBuffer(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     int usageHint = (int)long_usageHint;
-    int returnVal = rlLoadShaderBuffer(size, (const void *)data, usageHint);
+    unsigned int returnVal = rlLoadShaderBuffer(size, (const void *)data, usageHint);
     if(JS_IsArrayBuffer(argv[1]) == 1) {
         JS_FreeValue(ctx, da_data);
     }
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -25305,8 +25592,8 @@ static JSValue js_rlGetShaderBufferSize(JSContext * ctx, JSValue this_val, int a
         return JS_EXCEPTION;
     }
     unsigned int id = (unsigned int)long_id;
-    int returnVal = rlGetShaderBufferSize(id);
-    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    unsigned int returnVal = rlGetShaderBufferSize(id);
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)returnVal);
     return ret;
 }
 
@@ -25332,11 +25619,12 @@ static JSValue js_rlBindImageTexture(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     int format = (int)long_format;
-    bool readonly = JS_ToBool(ctx, argv[3]);
-    if(readonly<0) {
+    int js_readonly = JS_ToBool(ctx, argv[3]);
+    if(js_readonly<0) {
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
+    bool readonly = js_readonly;
     rlBindImageTexture(id, index, format, readonly);
     return JS_UNDEFINED;
 }
@@ -25467,8 +25755,7 @@ static JSValue js_rlLoadDrawQuad(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_getCameraForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25482,8 +25769,7 @@ static JSValue js_getCameraForward(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_getCameraUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25497,8 +25783,7 @@ static JSValue js_getCameraUp(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_getCameraRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25512,8 +25797,7 @@ static JSValue js_getCameraRight(JSContext * ctx, JSValue this_val, int argc, JS
 }
 
 static JSValue js_cameraMoveForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25525,18 +25809,18 @@ static JSValue js_cameraMoveForward(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     float distance = (float)double_distance;
-    bool moveInWorldPlane = JS_ToBool(ctx, argv[2]);
-    if(moveInWorldPlane<0) {
+    int js_moveInWorldPlane = JS_ToBool(ctx, argv[2]);
+    if(js_moveInWorldPlane<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
+    bool moveInWorldPlane = js_moveInWorldPlane;
     CameraMoveForward(camera, distance, moveInWorldPlane);
     return JS_UNDEFINED;
 }
 
 static JSValue js_cameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25553,8 +25837,7 @@ static JSValue js_cameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSVa
 }
 
 static JSValue js_cameraMoveRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25566,18 +25849,18 @@ static JSValue js_cameraMoveRight(JSContext * ctx, JSValue this_val, int argc, J
         return JS_EXCEPTION;
     }
     float distance = (float)double_distance;
-    bool moveInWorldPlane = JS_ToBool(ctx, argv[2]);
-    if(moveInWorldPlane<0) {
+    int js_moveInWorldPlane = JS_ToBool(ctx, argv[2]);
+    if(js_moveInWorldPlane<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
+    bool moveInWorldPlane = js_moveInWorldPlane;
     CameraMoveRight(camera, distance, moveInWorldPlane);
     return JS_UNDEFINED;
 }
 
 static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25594,8 +25877,7 @@ static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc
 }
 
 static JSValue js_cameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25607,18 +25889,18 @@ static JSValue js_cameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue
         return JS_EXCEPTION;
     }
     float angle = (float)double_angle;
-    bool rotateAroundTarget = JS_ToBool(ctx, argv[2]);
-    if(rotateAroundTarget<0) {
+    int js_rotateAroundTarget = JS_ToBool(ctx, argv[2]);
+    if(js_rotateAroundTarget<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
+    bool rotateAroundTarget = js_rotateAroundTarget;
     CameraYaw(camera, angle, rotateAroundTarget);
     return JS_UNDEFINED;
 }
 
 static JSValue js_cameraPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25630,28 +25912,30 @@ static JSValue js_cameraPitch(JSContext * ctx, JSValue this_val, int argc, JSVal
         return JS_EXCEPTION;
     }
     float angle = (float)double_angle;
-    bool lockView = JS_ToBool(ctx, argv[2]);
-    if(lockView<0) {
+    int js_lockView = JS_ToBool(ctx, argv[2]);
+    if(js_lockView<0) {
         JS_ThrowTypeError(ctx, "argv[2] is not a bool");
         return JS_EXCEPTION;
     }
-    bool rotateAroundTarget = JS_ToBool(ctx, argv[3]);
-    if(rotateAroundTarget<0) {
+    bool lockView = js_lockView;
+    int js_rotateAroundTarget = JS_ToBool(ctx, argv[3]);
+    if(js_rotateAroundTarget<0) {
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
-    bool rotateUp = JS_ToBool(ctx, argv[4]);
-    if(rotateUp<0) {
+    bool rotateAroundTarget = js_rotateAroundTarget;
+    int js_rotateUp = JS_ToBool(ctx, argv[4]);
+    if(js_rotateUp<0) {
         JS_ThrowTypeError(ctx, "argv[4] is not a bool");
         return JS_EXCEPTION;
     }
+    bool rotateUp = js_rotateUp;
     CameraPitch(camera, angle, lockView, rotateAroundTarget, rotateUp);
     return JS_UNDEFINED;
 }
 
 static JSValue js_cameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25668,8 +25952,7 @@ static JSValue js_cameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValu
 }
 
 static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -25683,8 +25966,7 @@ static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValue this_val, int arg
 }
 
 static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Camera * camera;
-    camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
+    Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
         return JS_EXCEPTION;
@@ -26265,9 +26547,7 @@ static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Rectangle* ptr_content = (Rectangle*)JS_GetOpaque(argv[2], js_Rectangle_class_id);
     if(ptr_content == NULL) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -26286,12 +26566,9 @@ static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
         return JS_EXCEPTION;
     }
     Rectangle content = *ptr_content;
-    Vector2 * scroll;
-    scroll = (Vector2 *)JS_GetOpaque(argv[3], js_Vector2_class_id);
+    Vector2 * scroll = (Vector2 *)JS_GetOpaque(argv[3], js_Vector2_class_id);
     if(scroll == NULL) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -26309,12 +26586,9 @@ static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
         JS_ThrowTypeError(ctx, "argv[3] does not match type Vector2");
         return JS_EXCEPTION;
     }
-    Rectangle * view;
-    view = (Rectangle *)JS_GetOpaque(argv[4], js_Rectangle_class_id);
+    Rectangle * view = (Rectangle *)JS_GetOpaque(argv[4], js_Rectangle_class_id);
     if(view == NULL) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -26538,15 +26812,14 @@ static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
     JSValue da_active;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         active = (bool *)js_malloc(ctx, 1 * sizeof(bool));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
-            active[i0] = JS_ToBool(ctx, js_active);
-            if(active[i0]<0) {
-                JS_ThrowTypeError(ctx, "js_active is not a bool");
-                return JS_EXCEPTION;
-            }
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],0);
+        int js_active0 = JS_ToBool(ctx, js_active);
+        if(js_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not a bool");
+            return JS_EXCEPTION;
         }
+        active[0] = js_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_active = JS_DupValue(ctx,argv[2]);
@@ -26554,8 +26827,8 @@ static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
         active = (bool *)JS_GetArrayBuffer(ctx, &size_active, da_active);
     }
     else {
-        bool js_active = JS_ToBool(ctx, argv[2]);
-        if(js_active<0) {
+        int js_js_active = JS_ToBool(ctx, argv[2]);
+        if(js_js_active<0) {
             if(JS_IsArray(ctx,argv[1]) == 1) {
                 js_free(ctx, text);
             }
@@ -26574,6 +26847,7 @@ static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
             JS_ThrowTypeError(ctx, "argv[2] is not a bool");
             return JS_EXCEPTION;
         }
+        bool js_active = js_js_active;
         active = &js_active;
     }
     int returnVal = GuiToggle(bounds, (const char *)text, active);
@@ -26640,17 +26914,15 @@ static JSValue js_guiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
     JSValue da_active;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_active = JS_DupValue(ctx,argv[2]);
@@ -26761,17 +27033,15 @@ static JSValue js_guiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
     JSValue da_active;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_active = JS_DupValue(ctx,argv[2]);
@@ -26882,15 +27152,14 @@ static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     JSValue da_checked;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         checked = (bool *)js_malloc(ctx, 1 * sizeof(bool));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_checked = JS_GetPropertyUint32(ctx,argv[2],i0);
-            checked[i0] = JS_ToBool(ctx, js_checked);
-            if(checked[i0]<0) {
-                JS_ThrowTypeError(ctx, "js_checked is not a bool");
-                return JS_EXCEPTION;
-            }
-            JS_FreeValue(ctx, js_checked);
+        JSValue js_checked = JS_GetPropertyUint32(ctx,argv[2],0);
+        int js_checked0 = JS_ToBool(ctx, js_checked);
+        if(js_checked0<0) {
+            JS_ThrowTypeError(ctx, "js_checked is not a bool");
+            return JS_EXCEPTION;
         }
+        checked[0] = js_checked0;
+        JS_FreeValue(ctx, js_checked);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_checked = JS_DupValue(ctx,argv[2]);
@@ -26898,8 +27167,8 @@ static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         checked = (bool *)JS_GetArrayBuffer(ctx, &size_checked, da_checked);
     }
     else {
-        bool js_checked = JS_ToBool(ctx, argv[2]);
-        if(js_checked<0) {
+        int js_js_checked = JS_ToBool(ctx, argv[2]);
+        if(js_js_checked<0) {
             if(JS_IsArray(ctx,argv[1]) == 1) {
                 js_free(ctx, text);
             }
@@ -26918,6 +27187,7 @@ static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             JS_ThrowTypeError(ctx, "argv[2] is not a bool");
             return JS_EXCEPTION;
         }
+        bool js_checked = js_js_checked;
         checked = &js_checked;
     }
     int returnVal = GuiCheckBox(bounds, (const char *)text, checked);
@@ -26984,17 +27254,15 @@ static JSValue js_guiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     JSValue da_active;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_active = JS_DupValue(ctx,argv[2]);
@@ -27105,17 +27373,15 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
     JSValue da_active;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_active = JS_DupValue(ctx,argv[2]);
@@ -27156,8 +27422,8 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
             active = &js_active;
         }
     }
-    bool editMode = JS_ToBool(ctx, argv[3]);
-    if(editMode<0) {
+    int js_editMode = JS_ToBool(ctx, argv[3]);
+    if(js_editMode<0) {
         if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
@@ -27188,6 +27454,7 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
+    bool editMode = js_editMode;
     int returnVal = GuiDropdownBox(bounds, (const char *)text, active, editMode);
     if(JS_IsArray(ctx,argv[1]) == 1) {
         js_free(ctx, text);
@@ -27261,17 +27528,15 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     JSValue da_value;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         value = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_valuei0;
-            int err_valuei0 = JS_ToInt32(ctx, &long_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (int)long_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_value0;
+        int err_value0 = JS_ToInt32(ctx, &long_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (int)long_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_value = JS_DupValue(ctx,argv[2]);
@@ -27290,9 +27555,7 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
             int32_t long_js_value;
             int err_js_value = JS_ToInt32(ctx, &long_js_value, argv[2]);
             if(err_js_value<0) {
-                if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-                }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(ctx,argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -27317,9 +27580,7 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     int32_t long_minValue;
     int err_minValue = JS_ToInt32(ctx, &long_minValue, argv[3]);
     if(err_minValue<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27353,9 +27614,7 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     int32_t long_maxValue;
     int err_maxValue = JS_ToInt32(ctx, &long_maxValue, argv[4]);
     if(err_maxValue<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27386,11 +27645,9 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
         return JS_EXCEPTION;
     }
     int maxValue = (int)long_maxValue;
-    bool editMode = JS_ToBool(ctx, argv[5]);
-    if(editMode<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+    int js_editMode = JS_ToBool(ctx, argv[5]);
+    if(js_editMode<0) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27420,6 +27677,7 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
         JS_ThrowTypeError(ctx, "argv[5] is not a bool");
         return JS_EXCEPTION;
     }
+    bool editMode = js_editMode;
     int returnVal = GuiSpinner(bounds, (const char *)text, value, minValue, maxValue, editMode);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
@@ -27495,17 +27753,15 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     JSValue da_value;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         value = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_valuei0;
-            int err_valuei0 = JS_ToInt32(ctx, &long_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (int)long_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_value0;
+        int err_value0 = JS_ToInt32(ctx, &long_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (int)long_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_value = JS_DupValue(ctx,argv[2]);
@@ -27524,9 +27780,7 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             int32_t long_js_value;
             int err_js_value = JS_ToInt32(ctx, &long_js_value, argv[2]);
             if(err_js_value<0) {
-                if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-                }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(ctx,argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -27551,9 +27805,7 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     int32_t long_minValue;
     int err_minValue = JS_ToInt32(ctx, &long_minValue, argv[3]);
     if(err_minValue<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27587,9 +27839,7 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     int32_t long_maxValue;
     int err_maxValue = JS_ToInt32(ctx, &long_maxValue, argv[4]);
     if(err_maxValue<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27620,11 +27870,9 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         return JS_EXCEPTION;
     }
     int maxValue = (int)long_maxValue;
-    bool editMode = JS_ToBool(ctx, argv[5]);
-    if(editMode<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+    int js_editMode = JS_ToBool(ctx, argv[5]);
+    if(js_editMode<0) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -27654,6 +27902,7 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         JS_ThrowTypeError(ctx, "argv[5] is not a bool");
         return JS_EXCEPTION;
     }
+    bool editMode = js_editMode;
     int returnVal = GuiValueBox(bounds, (const char *)text, value, minValue, maxValue, editMode);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
@@ -27757,17 +28006,15 @@ static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, 
     if(JS_IsArray(ctx,argv[3]) == 1) {
         value = (float *)js_malloc(ctx, 1 * sizeof(float));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, value);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
-            double double_valuei0;
-            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (float)double_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],0);
+        double double_value0;
+        int err_value0 = JS_ToFloat64(ctx, &double_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (float)double_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_value = JS_DupValue(ctx,argv[3]);
@@ -27796,12 +28043,13 @@ static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, 
             value = &js_value;
         }
     }
-    bool editMode = JS_ToBool(ctx, argv[4]);
-    if(editMode<0) {
+    int js_editMode = JS_ToBool(ctx, argv[4]);
+    if(js_editMode<0) {
         memoryClear(ctx, memoryHead);
         JS_ThrowTypeError(ctx, "argv[4] is not a bool");
         return JS_EXCEPTION;
     }
+    bool editMode = js_editMode;
     int returnVal = GuiValueBoxFloat(bounds, (const char *)text, textValue, value, editMode);
     memoryClear(ctx, memoryHead);
     if(JS_IsArray(ctx,argv[3]) == 1) {
@@ -27864,8 +28112,8 @@ static JSValue js_guiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
         return JS_EXCEPTION;
     }
     int textSize = (int)long_textSize;
-    bool editMode = JS_ToBool(ctx, argv[3]);
-    if(editMode<0) {
+    int js_editMode = JS_ToBool(ctx, argv[3]);
+    if(js_editMode<0) {
         if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
@@ -27884,6 +28132,7 @@ static JSValue js_guiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
+    bool editMode = js_editMode;
     int returnVal = GuiTextBox(bounds, text, textSize, editMode);
     if(JS_IsArray(ctx,argv[1]) == 1) {
         js_free(ctx, text);
@@ -27972,17 +28221,15 @@ static JSValue js_guiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue
     if(JS_IsArray(ctx,argv[3]) == 1) {
         value = (float *)js_malloc(ctx, 1 * sizeof(float));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, value);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
-            double double_valuei0;
-            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (float)double_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],0);
+        double double_value0;
+        int err_value0 = JS_ToFloat64(ctx, &double_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (float)double_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_value = JS_DupValue(ctx,argv[3]);
@@ -28105,17 +28352,15 @@ static JSValue js_guiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSVa
     if(JS_IsArray(ctx,argv[3]) == 1) {
         value = (float *)js_malloc(ctx, 1 * sizeof(float));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, value);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
-            double double_valuei0;
-            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (float)double_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],0);
+        double double_value0;
+        int err_value0 = JS_ToFloat64(ctx, &double_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (float)double_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_value = JS_DupValue(ctx,argv[3]);
@@ -28238,17 +28483,15 @@ static JSValue js_guiProgressBar(JSContext * ctx, JSValue this_val, int argc, JS
     if(JS_IsArray(ctx,argv[3]) == 1) {
         value = (float *)js_malloc(ctx, 1 * sizeof(float));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, value);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],i0);
-            double double_valuei0;
-            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (float)double_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[3],0);
+        double double_value0;
+        int err_value0 = JS_ToFloat64(ctx, &double_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (float)double_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_value = JS_DupValue(ctx,argv[3]);
@@ -28439,9 +28682,7 @@ static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     double double_spacing;
     int err_spacing = JS_ToFloat64(ctx, &double_spacing, argv[2]);
     if(err_spacing<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -28463,9 +28704,7 @@ static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     int32_t long_subdivs;
     int err_subdivs = JS_ToInt32(ctx, &long_subdivs, argv[3]);
     if(err_subdivs<0) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -28484,12 +28723,9 @@ static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
         return JS_EXCEPTION;
     }
     int subdivs = (int)long_subdivs;
-    Vector2 * mouseCell;
-    mouseCell = (Vector2 *)JS_GetOpaque(argv[4], js_Vector2_class_id);
+    Vector2 * mouseCell = (Vector2 *)JS_GetOpaque(argv[4], js_Vector2_class_id);
     if(mouseCell == NULL) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -28563,17 +28799,15 @@ static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     JSValue da_scrollIndex;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         scrollIndex = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_scrollIndex = JS_GetPropertyUint32(ctx,argv[2],i0);
-            int32_t long_scrollIndexi0;
-            int err_scrollIndexi0 = JS_ToInt32(ctx, &long_scrollIndexi0, js_scrollIndex);
-            if(err_scrollIndexi0<0) {
-                JS_ThrowTypeError(ctx, "js_scrollIndex is not numeric");
-                return JS_EXCEPTION;
-            }
-            scrollIndex[i0] = (int)long_scrollIndexi0;
-            JS_FreeValue(ctx, js_scrollIndex);
+        JSValue js_scrollIndex = JS_GetPropertyUint32(ctx,argv[2],0);
+        int32_t long_scrollIndex0;
+        int err_scrollIndex0 = JS_ToInt32(ctx, &long_scrollIndex0, js_scrollIndex);
+        if(err_scrollIndex0<0) {
+            JS_ThrowTypeError(ctx, "js_scrollIndex is not numeric");
+            return JS_EXCEPTION;
         }
+        scrollIndex[0] = (int)long_scrollIndex0;
+        JS_FreeValue(ctx, js_scrollIndex);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_scrollIndex = JS_DupValue(ctx,argv[2]);
@@ -28618,17 +28852,15 @@ static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     JSValue da_active;
     if(JS_IsArray(ctx,argv[3]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[3],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[3],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         da_active = JS_DupValue(ctx,argv[3]);
@@ -28744,7 +28976,7 @@ static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     Rectangle bounds = *ptr_bounds;
     char * * text;
     if(JS_IsArray(ctx,argv[1]) == 1) {
-        size_t size_text;
+        int64_t size_text;
         if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -28797,17 +29029,15 @@ static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     if(JS_IsArray(ctx,argv[3]) == 1) {
         scrollIndex = (int *)js_malloc(ctx, 1 * sizeof(int));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, scrollIndex);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_scrollIndex = JS_GetPropertyUint32(ctx,argv[3],i0);
-            int32_t long_scrollIndexi0;
-            int err_scrollIndexi0 = JS_ToInt32(ctx, &long_scrollIndexi0, js_scrollIndex);
-            if(err_scrollIndexi0<0) {
-                JS_ThrowTypeError(ctx, "js_scrollIndex is not numeric");
-                return JS_EXCEPTION;
-            }
-            scrollIndex[i0] = (int)long_scrollIndexi0;
-            JS_FreeValue(ctx, js_scrollIndex);
+        JSValue js_scrollIndex = JS_GetPropertyUint32(ctx,argv[3],0);
+        int32_t long_scrollIndex0;
+        int err_scrollIndex0 = JS_ToInt32(ctx, &long_scrollIndex0, js_scrollIndex);
+        if(err_scrollIndex0<0) {
+            JS_ThrowTypeError(ctx, "js_scrollIndex is not numeric");
+            return JS_EXCEPTION;
         }
+        scrollIndex[0] = (int)long_scrollIndex0;
+        JS_FreeValue(ctx, js_scrollIndex);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
         JSValue da_scrollIndex = JS_DupValue(ctx,argv[3]);
@@ -28840,17 +29070,15 @@ static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     if(JS_IsArray(ctx,argv[4]) == 1) {
         active = (int *)js_malloc(ctx, 1 * sizeof(int));
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, active);
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_active = JS_GetPropertyUint32(ctx,argv[4],i0);
-            int32_t long_activei0;
-            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
-            if(err_activei0<0) {
-                JS_ThrowTypeError(ctx, "js_active is not numeric");
-                return JS_EXCEPTION;
-            }
-            active[i0] = (int)long_activei0;
-            JS_FreeValue(ctx, js_active);
+        JSValue js_active = JS_GetPropertyUint32(ctx,argv[4],0);
+        int32_t long_active0;
+        int err_active0 = JS_ToInt32(ctx, &long_active0, js_active);
+        if(err_active0<0) {
+            JS_ThrowTypeError(ctx, "js_active is not numeric");
+            return JS_EXCEPTION;
         }
+        active[0] = (int)long_active0;
+        JS_FreeValue(ctx, js_active);
     }
     else if(JS_IsArrayBuffer(argv[4]) == 1) {
         JSValue da_active = JS_DupValue(ctx,argv[4]);
@@ -28881,7 +29109,7 @@ static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     int * focus;
     if(JS_IsArray(ctx,argv[5]) == 1) {
-        size_t size_focus;
+        int64_t size_focus;
         if(JS_GetLength(ctx,argv[5],&size_focus)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -29154,7 +29382,7 @@ static JSValue js_guiTextInputBox(JSContext * ctx, JSValue this_val, int argc, J
         secretViewActive = NULL;
     }
     else if(JS_IsArray(ctx,argv[6]) == 1) {
-        size_t size_secretViewActive;
+        int64_t size_secretViewActive;
         if(JS_GetLength(ctx,argv[6],&size_secretViewActive)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -29163,11 +29391,12 @@ static JSValue js_guiTextInputBox(JSContext * ctx, JSValue this_val, int argc, J
         memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, secretViewActive);
         for(int i0=0; i0 < size_secretViewActive; i0++){
             JSValue js_secretViewActive = JS_GetPropertyUint32(ctx,argv[6],i0);
-            secretViewActive[i0] = JS_ToBool(ctx, js_secretViewActive);
-            if(secretViewActive[i0]<0) {
+            int js_secretViewActivei0 = JS_ToBool(ctx, js_secretViewActive);
+            if(js_secretViewActivei0<0) {
                 JS_ThrowTypeError(ctx, "js_secretViewActive is not a bool");
                 return JS_EXCEPTION;
             }
+            secretViewActive[i0] = js_secretViewActivei0;
             JS_FreeValue(ctx, js_secretViewActive);
         }
     }
@@ -29221,12 +29450,9 @@ static JSValue js_guiColorPicker(JSContext * ctx, JSValue this_val, int argc, JS
             return JS_EXCEPTION;
         }
     }
-    Color * color;
-    color = (Color *)JS_GetOpaque(argv[2], js_Color_class_id);
+    Color * color = (Color *)JS_GetOpaque(argv[2], js_Color_class_id);
     if(color == NULL) {
-        if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-        }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -29296,8 +29522,7 @@ static JSValue js_guiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSV
             return JS_EXCEPTION;
         }
     }
-    Color * color;
-    color = (Color *)JS_GetOpaque(argv[2], js_Color_class_id);
+    Color * color = (Color *)JS_GetOpaque(argv[2], js_Color_class_id);
     if(color == NULL) {
         if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
@@ -29374,17 +29599,15 @@ static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
     JSValue da_alpha;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         alpha = (float *)js_malloc(ctx, 1 * sizeof(float));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_alpha = JS_GetPropertyUint32(ctx,argv[2],i0);
-            double double_alphai0;
-            int err_alphai0 = JS_ToFloat64(ctx, &double_alphai0, js_alpha);
-            if(err_alphai0<0) {
-                JS_ThrowTypeError(ctx, "js_alpha is not numeric");
-                return JS_EXCEPTION;
-            }
-            alpha[i0] = (float)double_alphai0;
-            JS_FreeValue(ctx, js_alpha);
+        JSValue js_alpha = JS_GetPropertyUint32(ctx,argv[2],0);
+        double double_alpha0;
+        int err_alpha0 = JS_ToFloat64(ctx, &double_alpha0, js_alpha);
+        if(err_alpha0<0) {
+            JS_ThrowTypeError(ctx, "js_alpha is not numeric");
+            return JS_EXCEPTION;
         }
+        alpha[0] = (float)double_alpha0;
+        JS_FreeValue(ctx, js_alpha);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_alpha = JS_DupValue(ctx,argv[2]);
@@ -29403,9 +29626,7 @@ static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
             double double_js_alpha;
             int err_js_alpha = JS_ToFloat64(ctx, &double_js_alpha, argv[2]);
             if(err_js_alpha<0) {
-                if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
-                }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(ctx,argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -29499,17 +29720,15 @@ static JSValue js_guiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
     JSValue da_value;
     if(JS_IsArray(ctx,argv[2]) == 1) {
         value = (float *)js_malloc(ctx, 1 * sizeof(float));
-        for(int i0=0; i0 < 1; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],i0);
-            double double_valuei0;
-            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
-            if(err_valuei0<0) {
-                JS_ThrowTypeError(ctx, "js_value is not numeric");
-                return JS_EXCEPTION;
-            }
-            value[i0] = (float)double_valuei0;
-            JS_FreeValue(ctx, js_value);
+        JSValue js_value = JS_GetPropertyUint32(ctx,argv[2],0);
+        double double_value0;
+        int err_value0 = JS_ToFloat64(ctx, &double_value0, js_value);
+        if(err_value0<0) {
+            JS_ThrowTypeError(ctx, "js_value is not numeric");
+            return JS_EXCEPTION;
         }
+        value[0] = (float)double_value0;
+        JS_FreeValue(ctx, js_value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         da_value = JS_DupValue(ctx,argv[2]);
@@ -29616,8 +29835,7 @@ static JSValue js_guiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc,
             return JS_EXCEPTION;
         }
     }
-    Vector3 * colorHsv;
-    colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
+    Vector3 * colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) {
         if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
@@ -29687,8 +29905,7 @@ static JSValue js_guiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
             return JS_EXCEPTION;
         }
     }
-    Vector3 * colorHsv;
-    colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
+    Vector3 * colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) {
         if(JS_IsArray(ctx,argv[1]) == 1) {
             js_free(ctx, text);
@@ -30825,8 +31042,7 @@ static JSValue js_endLightmap(JSContext * ctx, JSValue this_val, int argc, JSVal
 }
 
 static JSValue js_beginLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Lightmapper * lm;
-    lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
+    Lightmapper * lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Lightmapper");
         return JS_EXCEPTION;
@@ -30837,8 +31053,7 @@ static JSValue js_beginLightmapFragment(JSContext * ctx, JSValue this_val, int a
 }
 
 static JSValue js_endLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Lightmapper * lm;
-    lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
+    Lightmapper * lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Lightmapper");
         return JS_EXCEPTION;
@@ -30863,8 +31078,7 @@ static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValue this_val, in
 }
 
 static JSValue js_setModelMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Model * model;
-    model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
+    Model * model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
     if(model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Model");
         return JS_EXCEPTION;
@@ -30887,8 +31101,7 @@ static JSValue js_setModelMaterial(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_getModelMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Model * model;
-    model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
+    Model * model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
     if(model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Model");
         return JS_EXCEPTION;
@@ -30909,8 +31122,7 @@ static JSValue js_getModelMaterial(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static JSValue js_getModelMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Model * model;
-    model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
+    Model * model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
     if(model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Model");
         return JS_EXCEPTION;
@@ -30931,8 +31143,7 @@ static JSValue js_getModelMesh(JSContext * ctx, JSValue this_val, int argc, JSVa
 }
 
 static JSValue js_setShaderLocation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Shader * shader;
-    shader = (Shader *)JS_GetOpaque(argv[0], js_Shader_class_id);
+    Shader * shader = (Shader *)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Shader");
         return JS_EXCEPTION;
@@ -30956,8 +31167,7 @@ static JSValue js_setShaderLocation(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static JSValue js_imageReadPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    Image * image;
-    image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
+    Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
         return JS_EXCEPTION;
@@ -31118,13 +31328,16 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("setRandomSeed",1,js_setRandomSeed),
     JS_CFUNC_DEF("getRandomValue",2,js_getRandomValue),
     JS_CFUNC_DEF("loadRandomSequence",3,js_loadRandomSequence),
-    JS_CFUNC_DEF("unloadRandomSequence",1,js_unloadRandomSequence),
     JS_CFUNC_DEF("takeScreenshot",1,js_takeScreenshot),
     JS_CFUNC_DEF("setConfigFlags",1,js_setConfigFlags),
     JS_CFUNC_DEF("openURL",1,js_openURL),
     JS_CFUNC_DEF("traceLog",2,js_traceLog),
     JS_CFUNC_DEF("setTraceLogLevel",1,js_setTraceLogLevel),
-    JS_CFUNC_DEF("loadFileData",1,js_loadFileData),
+    JS_CFUNC_DEF("setLoadFileDataCallback",1,js_setLoadFileDataCallback),
+    JS_CFUNC_DEF("setSaveFileDataCallback",1,js_setSaveFileDataCallback),
+    JS_CFUNC_DEF("setLoadFileTextCallback",1,js_setLoadFileTextCallback),
+    JS_CFUNC_DEF("setSaveFileTextCallback",1,js_setSaveFileTextCallback),
+    JS_CFUNC_DEF("loadFileData",2,js_loadFileData),
     JS_CFUNC_DEF("saveFileData",3,js_saveFileData),
     JS_CFUNC_DEF("loadFileText",1,js_loadFileText),
     JS_CFUNC_DEF("saveFileText",2,js_saveFileText),
@@ -31539,6 +31752,8 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("setAudioStreamPitch",2,js_setAudioStreamPitch),
     JS_CFUNC_DEF("setAudioStreamPan",2,js_setAudioStreamPan),
     JS_CFUNC_DEF("setAudioStreamBufferSizeDefault",1,js_setAudioStreamBufferSizeDefault),
+    JS_CFUNC_DEF("attachAudioMixedProcessor",1,js_attachAudioMixedProcessor),
+    JS_CFUNC_DEF("detachAudioMixedProcessor",1,js_detachAudioMixedProcessor),
     JS_CFUNC_DEF("clamp",3,js_clamp),
     JS_CFUNC_DEF("lerp",3,js_lerp),
     JS_CFUNC_DEF("normalize",3,js_normalize),
@@ -31795,7 +32010,6 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("rlGetPixelFormatName",1,js_rlGetPixelFormatName),
     JS_CFUNC_DEF("rlUnloadTexture",1,js_rlUnloadTexture),
     JS_CFUNC_DEF("rlGenTextureMipmaps",5,js_rlGenTextureMipmaps),
-    JS_CFUNC_DEF("rlReadTexturePixels",4,js_rlReadTexturePixels),
     JS_CFUNC_DEF("rlReadScreenPixels",2,js_rlReadScreenPixels),
     JS_CFUNC_DEF("rlLoadFramebuffer",0,js_rlLoadFramebuffer),
     JS_CFUNC_DEF("rlFramebufferAttach",5,js_rlFramebufferAttach),

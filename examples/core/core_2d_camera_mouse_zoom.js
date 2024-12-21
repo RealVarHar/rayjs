@@ -66,7 +66,7 @@ while (!windowShouldClose())        // Detect window close button or ESC key
             camera.target = mouseWorldPos;
 
             // Zoom increment
-            let scaleFactor = 1 + (0.25*fabsf(wheel));
+            let scaleFactor = 1 + (0.25*Math.abs(wheel));
             if (wheel < 0) scaleFactor = 1.0/scaleFactor;
             camera.zoom = clamp(camera.zoom*scaleFactor, 0.125, 64);
         }
@@ -89,8 +89,8 @@ while (!windowShouldClose())        // Detect window close button or ESC key
         if (isMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
             // Zoom increment
-            let deltaX = GetMouseDelta().x;
-            let scaleFactor = 1 + (0.01*fabsf(deltaX));
+            let deltaX = getMouseDelta().x;
+            let scaleFactor = 1 + (0.01*Math.abs(deltaX));
             if (deltaX < 0) scaleFactor = 1/scaleFactor;
             camera.zoom = clamp(camera.zoom*scaleFactor, 0.125, 64);
         }

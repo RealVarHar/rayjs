@@ -619,8 +619,6 @@ declare function setRandomSeed(seed: number): void;
 declare function getRandomValue(min: number, max: number): number;
 /** Load random values sequence, no values repeated */
 declare function loadRandomSequence(count: number, min: number, max: number): int;
-/** Unload random values sequence */
-declare function unloadRandomSequence(sequence: int): void;
 /** Takes a screenshot of current screen (filename extension defines format) */
 declare function takeScreenshot(fileName: string | undefined | null): void;
 /** Setup init configuration flags (view FLAGS) */
@@ -631,8 +629,16 @@ declare function openURL(url: string | undefined | null): void;
 declare function traceLog(logLevel: number, text: string | undefined | null): void;
 /** Set the current threshold (minimum) log level */
 declare function setTraceLogLevel(logLevel: number): void;
+/** Set custom file binary data loader */
+declare function setLoadFileDataCallback(callback: LoadFileDataCallback): void;
+/** Set custom file binary data saver */
+declare function setSaveFileDataCallback(callback: SaveFileDataCallback): void;
+/** Set custom file text data loader */
+declare function setLoadFileTextCallback(callback: LoadFileTextCallback): void;
+/** Set custom file text data saver */
+declare function setSaveFileTextCallback(callback: SaveFileTextCallback): void;
 /** Load file data as byte array (read) */
-declare function loadFileData(fileName: string | undefined | null): ArrayBuffer;
+declare function loadFileData(fileName: string | undefined | null, dataSize: int &): ArrayBuffer;
 /** Save data to file from byte array (write), returns true on success */
 declare function saveFileData(fileName: string | undefined | null, data: any, dataSize: number): boolean;
 /** Load text data from file (read), returns a '\0' terminated string */
@@ -1461,6 +1467,10 @@ declare function setAudioStreamPitch(stream: AudioStream, pitch: number): void;
 declare function setAudioStreamPan(stream: AudioStream, pan: number): void;
 /** Default size for new audio streams */
 declare function setAudioStreamBufferSizeDefault(size: number): void;
+/** Attach audio stream processor to the entire audio pipeline, receives the samples as 'float' */
+declare function attachAudioMixedProcessor(processor: AudioMixedProcessor): void;
+/** Detach audio stream processor from the entire audio pipeline */
+declare function detachAudioMixedProcessor(processor: AudioCallback): void;
 /** undefined */
 declare function clamp(value: number, min: number, max: number): number;
 /** undefined */
@@ -1974,9 +1984,7 @@ declare function rlUnloadTexture(id: number): void;
 /** undefined */
 declare function rlGenTextureMipmaps(id: number, width: number, height: number, format: number, mipmaps: int): void;
 /** undefined */
-declare function rlReadTexturePixels(id: number, width: number, height: number, format: number): any;
-/** undefined */
-declare function rlReadScreenPixels(width: number, height: number): string | undefined | null;
+declare function rlReadScreenPixels(width: number, height: number): ArrayBuffer;
 /** undefined */
 declare function rlLoadFramebuffer(): number;
 /** undefined */

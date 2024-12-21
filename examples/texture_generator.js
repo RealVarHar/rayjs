@@ -8,7 +8,7 @@ initWindow(100,100,"Gen")
 
 const input = [["orange",ORANGE],["green", LIME], ["purple", PURPLE],["red", MAROON], ["lightgrey", LIGHTGRAY], ["grey", GRAY], ["blue", BLUE]]
 
-const outDir = "../build/out/"
+const outDir = "out/"
 input.forEach(t => {
     const [name, color] = t
     createPlaceholder(128,128,color, 64, 32, `${outDir}grid_128_${name}.png`)
@@ -76,7 +76,9 @@ function createWindow(sizex, sizey, color, filename){
     imageDrawText(img, `Window 32x48`, 2, 1, 10, WHITE)
     imageDrawRectangle(img, 48, 48, 32, 48, blend(color, BLACK, 0.5))
     imageDrawRectangleLines(img, new Rectangle(48,48,32,48),1,WHITE)
+	console.log(filename);
     exportImage(img, filename)
+	console.log(filename,2);
     unloadImage(img)
 }
 

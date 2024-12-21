@@ -61,8 +61,12 @@ const Token={
     "UNINDENT":3,
     "GOSUB":4
 };
-export class GenericCodeGenerator {
-    constructor() {
+export class CodeGenerator {
+    constructor(parent) {
+        this.parent=parent;
+        if(parent){
+            this.root=parent.root || parent;
+        }
         this.children = [];
         this.text = [];
         this.tokens = [];
@@ -115,10 +119,17 @@ export class GenericCodeGenerator {
     }
     child(sub) {
         if (!sub)
-            sub = this.createGenerator();
+            sub = new this.constructor(this);
         this.tokens.push(Token.GOSUB);
         this.children.push(sub);
         return sub;
+    }
+    inlineBefore(str,i){
+        let n=this.tokens.length;
+        this.tokens=this.tokens.slice(0, n-i).concat(Token.STRING,this.tokens.slice(n-i, n));
+        i=this.tokens.slice(n-i, n).filter(a=> a==Token.STRING).length;
+        n=this.text.length;
+        this.text=this.text.slice(0, n-i).concat(str,this.text.slice(n-i, n));
     }
     inline(str) {
         this.tokens.push(Token.STRING);
@@ -137,15 +148,17 @@ export class GenericCodeGenerator {
         this.tokens.push(Token.UNINDENT);
     }
     function(name, returnType, args, isStatic, func) {
-        const sub = this.createGenerator();
+        const sub = new this.constructor(this);
         sub.setTag("_type", "function-body");
         sub.setTag("_name", name);
         sub.setTag("_isStatic", isStatic);
         sub.setTag("_returnType", returnType);
-        if (isStatic)
-            this.inline("static ");
-        this.inline(returnType + " " + name + "(");
-        this.inline(args.map(x => x.type + " " + x.name).join(", "));
+        let cstatic='';
+        if (isStatic){
+            cstatic='static '
+        }
+        this.inline(cstatic+returnType + " " + name + "(");
+        this.inline(args.map(x => x.type.replaceAll('&','*') + " " + x.name).join(", "));
         this.inline(") {");
         this.breakLine();
         this.indent();
@@ -160,7 +173,7 @@ export class GenericCodeGenerator {
     if(condition, funIf) {
         this.line("if(" + condition + ") {");
         this.indent();
-        const sub = this.createGenerator();
+        const sub = new this.constructor(this);
         sub.setTag("_type", "if-body");
         sub.setTag("_condition", condition);
         this.child(sub);
@@ -173,7 +186,7 @@ export class GenericCodeGenerator {
     elsif(condition, funIf){
         this.line("else if(" + condition + ") {");
         this.indent();
-        const sub = this.createGenerator();
+        const sub = new this.constructor(this);
         sub.setTag("_type", "if-body");
         sub.setTag("_condition", condition);
         this.child(sub);
@@ -186,7 +199,7 @@ export class GenericCodeGenerator {
     else(funElse) {
         this.line("else {");
         this.indent();
-        const sub = this.createGenerator();
+        const sub = new this.constructor(this);
         sub.setTag("_type", "else-body");
         this.child(sub);
         this.unindent();
@@ -201,8 +214,10 @@ export class GenericCodeGenerator {
     include(name) {
         this.line("#include <" + name + ">");
     }
-    for(indexVar, lengthVar, iter='i') {
-        this.line(`for(int ${iter}=${indexVar}; ${iter} < ${lengthVar}; ${iter}++){`);
+    for(indexVar, lengthVar, iter='i',increase='++') {
+        let start=``;
+        if(indexVar!=undefined)start=`int ${iter}=${indexVar}`;
+        this.line(`for(${start}; ${iter} < ${lengthVar}; ${iter}${increase}){`);
         this.indent();
         const child = this.child();
         this.unindent();
@@ -262,10 +277,5 @@ export class GenericCodeGenerator {
         this.unindent();
         this.line("}");
         return body;
-    }
-}
-export class CodeGenerator extends GenericCodeGenerator {
-    createGenerator() {
-        return new CodeGenerator();
     }
 }

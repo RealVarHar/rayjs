@@ -1,12 +1,10 @@
-import * as fs from "./fs.js";
-const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
-let defined=config.defined;//get from config
+let defined=globalThis.config.defined;
 let az='abcdefghijklmnoprstuvqwxyz';
 let aZ='ABCDEFGHIJKLMNOPRSTUVQWXYZ';
 let a0='1234567890';
 let azZ=az+aZ;
 let azZ0=az+aZ+a0+'_-';
-export default class source_parser {
+export class source_parser {
     //sets (avoids re-declaration)
     nameSet={};
     //parsed
@@ -17,6 +15,10 @@ export default class source_parser {
     comments=[];
     //define
     defineName(name,type,contents){
+        if(name===''||name===undefined){
+            this[type].push(contents);
+            return;
+        }
         let info=this.nameSet[name];
         if(info==undefined){
             this[type].push(contents);
@@ -218,8 +220,8 @@ export default class source_parser {
         let ret=this.simpleregex(input,['s',mode,'r*',' \t\n','s','{'],pos,capture);
         if(ret===false)return pos;
         let tmp=this.skipDepth(input,ret-1)+1;
-        capture.push(input.substring(ret,tmp));
-        ret=this.simpleregex(input,['r*',' \t\n','r+',azZ0,'r*',' \t\n','s',';'],tmp,capture);
+        capture.push(input.substring(ret,tmp-1));
+        ret=this.simpleregex(input,['r*',' \t\n','r*',azZ0,'r*',' \t\n','s',';'],tmp,capture);
         if(ret===false)return pos;
         if(save){
             if(mode=='struct'){
@@ -339,8 +341,9 @@ export default class source_parser {
         //((?:\/\/.+\n)+)^[A-Z]+ (.+?)(\w+)\(([^\)]+)\)
         //Search argsStart,' (',name,' ',type
         let capture=[];
-        let ret=this.simpleregex(input,['bos'," ",'br+',azZ0,'br*',' *','br+',azZ0,'bos',"const ",'bos',"static ","br+","\n \t}"],pos-1,capture);
+        let ret=this.simpleregex(input,['bos'," ",'br+',azZ0,'br*',' *','br+',azZ0,'bos',"unsigned ",'bos',"const ",'bos',"static ","br+","\n \t}"],pos-1,capture);
         if(ret===false)return pos;
+        if(capture[1]=='GuiSpinner'){debugger;}
         ret=this.simpleregex(input,['r*',', *[]'+azZ0,'s',')','r*'," \t\n",'os','/','os','{','os',';'],pos+1,capture);
         if(ret===false)return pos;
         if(capture[capture.length-3]==='/'){//some comment, remove it
@@ -357,9 +360,9 @@ export default class source_parser {
         }
         if(save){
             this.defineName(capture[1],'functions',{
-                returnType: this.normalizeType(capture[4]+capture[3]+capture[2]),
+                returnType: this.normalizeType(capture[5]+capture[4]+capture[3]+capture[2]),
                 name: capture[1],
-                params: this.parseFunctionArgs(capture[7]),
+                params: this.parseFunctionArgs(capture[8]),
                 binding:{}
             });
         }

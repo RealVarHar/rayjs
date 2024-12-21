@@ -1,21 +1,93 @@
 import { QuickJsHeader } from "./quickjs.js"
 import { TypeScriptDeclaration } from "./typescript.js"
-import * as fs from "./fs.js";
-const config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
 export class RayLibHeader extends QuickJsHeader {
     constructor(name) {
-        super(name);
+        super(undefined,name);
         this.typings = new TypeScriptDeclaration();
-        this.includes.include("raylib.h");
+        this.includeGen.include("raylib.h");
         //this.includes.line("#define RAYMATH_IMPLEMENTATION")
+    }
+    paramAllocLen(param){
+        let match= param.type.match(/\*/g);
+        if(match==null)return 0;
+        let len=match.length;
+        if(param.spread=='...')len++;
+        //Do not remove length for opaque, pointers need to be re-evaluated manually
+        return len;
+    };
+    defineCallback(api){
+        const options = api.binding || {};
+        if (options.ignore) return;
+        console.log("Binding callback " + api.name);
+        let args=[];
+        args.returnType=api.returnType;
+        for(let i=0;i<api.params.length;i++){
+            let arg={ type: api.params[i].type, name: "arg_"+api.params[i].name, sizeVars:api.params[i].sizeVars||[] };
+            args.push(arg);
+        }
+        this.callbackArgs["callback_" + api.name]=args;
+        this.callbackLookup[api.name]="callback_" + api.name;
+    }
+    addCallback(apiName,callbackName,attachMultiple=false){
+        //TODO: transform their (void *) types into proper ones (for fucks sake)
+        this.callbackGen.statement(`static trampolineContext * ${callbackName}_arr = NULL`);
+        if(attachMultiple){
+            this.callbackGen.statement(`static size_t ${callbackName}_size = 0`);
+        }
+        let api=this.callbackArgs[apiName];
+        const sub = this.callbackGen.function(callbackName+'_c', api.returnType, api, true);
+        let dynamicAlloc=false;
+        let allocLen=0;
+        for(let i=0;i<api.length;i++){
+            allocLen=Math.max(allocLen , this.paramAllocLen(api[i]));
+        }
+        if(allocLen>=2){
+            dynamicAlloc=true;
+            sub.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+            sub.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
+        }
+
+        function addcall(sub,arr,inArray=false){
+            sub.declare('trampolineContext','tctx',false,`${arr}`);
+            sub.declare('JSContext *','ctx',false,'tctx.ctx');
+            for(let i=0;i<api.length;i++){
+                sub.cToJs(api[i].type,'js'+i,api[i].name,{dynamicAlloc,altReturn:sub.getDefaultReturn(api.returnType)},0,api[i].sizeVars);
+            }
+            sub.declare('JSValue','argv[]',false,'{'+api.map((el,i)=>'js'+i).join(',')+'}');
+            sub.declare('JSValue','func1',false,'JS_DupValue(ctx, tctx.func_obj)',true);//fix for inline functions derefferencing after call
+            sub.call('JS_Call',['ctx', 'func1', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
+            sub.call('JS_FreeValue',['ctx','func1']);
+            let finish=sub;
+            if(inArray){
+                finish=sub.if(`i==${callbackName}_size-1`);
+            }
+            for(let i=0;i<api.length;i++){
+                sub.call('JS_FreeValue',['ctx',`argv[${i}]`]);
+            }
+            if(api.returnType!=='void'){
+                finish.jsToC(api.returnType, `resp`, 'js_ret',{altReturn:sub.getDefaultReturn(api.returnType)});
+                finish.call('JS_FreeValue',['ctx','js_ret']);
+                finish.returnExp('resp');
+            }else{
+                finish.call('JS_FreeValue',['ctx','js_ret']);
+            }
+        }
+        sub.declare('JSValue','func1');
+        if(attachMultiple){
+            sub.declare('trampolineContext *','tctx');
+            sub.declare('JSContext *','ctx');
+            let fo=sub.for(0, `${callbackName}_size`);
+                addcall(fo,`${callbackName}_arr[i]`);
+        }else{
+            addcall(sub,`*${callbackName}_arr`);
+        }
     }
     addApiFunction(api) {
         const options = api.binding || {};
-        if (options.ignore)
-            return;
+        if (options.ignore) return;
         const jName = options.jsName || api.name.charAt(0).toLowerCase() + api.name.slice(1);
         console.log("Binding function " + api.name);
-        const fun = this.functions.jsBindingFunction(jName);
+        const fun = this.functionGen.jsBindingFunction(jName);
         if (options.body) {
             options.body(fun);
         } else {
@@ -41,29 +113,18 @@ export class RayLibHeader extends QuickJsHeader {
             //Arrays in arrays require inefficient type test code in cleanup
             let dynamicAlloc=false;
             let allocLen=0;
-            const paramAllocLen=(param)=>{
-                let match= param.type.match(/\*/g);
-                if(match==null)return 0;
-                let len=match.length;
-                if(param.spread=='...')len++;
-                //Do not remove length for opaque, pointers need to be re-evaluated manually
-                return len;
-            };
             for(let i=0;i<len;i++){
-                allocLen+=paramAllocLen(activeParams[i]);
+                allocLen+=this.paramAllocLen(activeParams[i]);
             }
             if(allocLen>=2){
                 dynamicAlloc=true;
-            }
-            allocLen=0;//re-use allocation length, now used to count the current state
-            if(dynamicAlloc){
-                //console.log('dynamicAlloc',dynamicAlloc,JSON.stringify(activeParams.map(param=>param.spread+param.type)));
                 fun.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
                 fun.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
             }
+            allocLen=0;//re-use allocation length, now used to count the current state
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
-                allocLen+=paramAllocLen(param);
+                allocLen+=this.paramAllocLen(param);
                 if (param.binding.customConverter) {
                     param.binding.customConverter(fun, "argv[" + i + "]");
                 } else {
@@ -86,7 +147,7 @@ export class RayLibHeader extends QuickJsHeader {
                             ctx.call('memoryClear',['ctx','memoryHead']);
                         }
                     };
-                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup, {allowNull:param.binding.allowNull,dynamicAlloc},0,errorCleanupFn);
+                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc},0,errorCleanupFn);
                 }
             }
             // call c function
@@ -97,6 +158,7 @@ export class RayLibHeader extends QuickJsHeader {
                     param.cast=param.type.includes('const ')?'('+param.type.replaceAll('&','*')+')':'';
                 }
                 let params=api.params.map(x => x.cast+x.name);
+                this.functionArgs[api.name]=params;
                 if(hasspread){
                     //functions with bigger spread use more memory, but are less likely that user will run into limitations
                     //spreadSize Min 2, Max 127
@@ -107,7 +169,7 @@ export class RayLibHeader extends QuickJsHeader {
                     //0 Arguments will not compile
                     let s1=sw.caseBreak(0);
                     s1.statement(`return JS_EXCEPTION`);
-                    for(let i=0;i<config.spreadSize;i++){
+                    for(let i=0;i<globalThis.config.spreadSize;i++){
                         s1=sw.caseBreak(i+1);
                         params[params.length]=last.cast+last.name+'['+i+']';
                         s1.call(api.name, params, api.returnType === "void" ? null : { type: '', name: "returnVal" });
@@ -124,12 +186,12 @@ export class RayLibHeader extends QuickJsHeader {
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
                 if(param.type.endsWith('&')){
-                    fun.cToJs(param.type,"argv[" + i + "]",param.name,this.structLookup,{allowNull:param.binding.allowNull});
+                    fun.cToJs(param.type,"argv[" + i + "]",param.name,{allowNull:param.binding.allowNull,supressDeclaration:true});
                 }
                 if(param.binding.customCleanup){
                     param.binding.customCleanup(fun, "argv[" + i + "]");
                 } else if(!dynamicAlloc){
-                    fun.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + i + "]", this.structLookup,{allowNull:param.binding.allowNull});
+                    fun.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + i + "]",{allowNull:param.binding.allowNull});
                 }
             }
             // return result
@@ -139,7 +201,7 @@ export class RayLibHeader extends QuickJsHeader {
                 fun.statement("return JS_UNDEFINED");
             }
             else {
-                fun.cToJs(api.returnType, "ret", "returnVal", this.structLookup);
+                fun.cToJs(api.returnType, "ret", "returnVal", {}, 0, api.returnSizeVars);
                 if (options.after)
                     options.after(fun);
                 fun.returnExp("ret");
@@ -155,12 +217,14 @@ export class RayLibHeader extends QuickJsHeader {
     }
     addApiStruct(struct) {
         const options = struct.binding || {};
+        if (options.ignore) return;
         console.log("Binding struct " + struct.name);
         const classId = this.definitions.jsClassId(`js_${struct.name}_class_id`);
-        this.registerStruct(struct.name, classId);
-        options.aliases?.forEach(x => this.registerStruct(x, classId));
-        const finalizer = this.structs.jsStructFinalizer(classId, struct.name, (gen, ptr) => options.destructor && gen.call(options.destructor.name, ["*" + ptr]));
-        const propDeclarations = this.structs.createGenerator();
+        this.structLookup[struct.name] = classId;
+        options.aliases?.forEach(x => {this.structLookup[x] = classId});
+        const finalizer = this.structGen.jsStructFinalizer(classId, struct.name, (gen, ptr) => options.destructor && gen.call(options.destructor.name, ["*" + ptr]));
+        const propDeclarations = new this.structGen.constructor();
+        this.structArgs[struct.name]=struct.fields;
         if (options && options.properties) {
             for (const field of Object.keys(options.properties)) {
                 const type = struct.fields.find(x => x.name === field)?.type;
@@ -171,20 +235,22 @@ export class RayLibHeader extends QuickJsHeader {
                 const el = options.properties[field];
                 let _get = undefined;
                 let _set = undefined;
-                if (el.get)
-                    _get = this.structs.jsStructGetter(struct.name, classId, field, type, /*Be carefull when allocating memory in a getter*/ this.structLookup, el.overrideRead);
-                if (el.set)
-                    _set = this.structs.jsStructSetter(struct.name, classId, field, type, this.structLookup, el.overrideWrite);
+                if (el.get){
+                    _get = this.structGen.jsStructGetter(struct.name, classId, field, type, /*Be carefull when allocating memory in a getter*/ el);
+                }
+                if (el.set){
+                    _set = this.structGen.jsStructSetter(struct.name, classId, field, type, el.overrideWrite);
+                }
                 propDeclarations.jsGetSetDef(field, _get?.getTag("_name"), _set?.getTag("_name"));
             }
         }
-        const classFuncList = this.structs.jsFunctionList(`js_${struct.name}_proto_funcs`);
+        const classFuncList = this.structGen.jsFunctionList(`js_${struct.name}_proto_funcs`);
         classFuncList.child(propDeclarations);
         classFuncList.jsPropStringDef("[Symbol.toStringTag]", struct.name);
-        const classDecl = this.structs.jsClassDeclaration(struct.name, classId, finalizer.getTag("_name"), classFuncList.getTag("_name"));
+        const classDecl = this.structGen.jsClassDeclaration(struct.name, classId, finalizer.getTag("_name"), classFuncList.getTag("_name"));
         this.moduleInit.call(classDecl.getTag("_name"), ["ctx", "m"]);
         if (options?.createConstructor || options?.createEmptyConstructor) {
-            const body = this.functions.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId, this.structLookup);
+            const body = this.functionGen.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId, this.structLookup);
             this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name})", ${struct.fields.length}, JS_CFUNC_constructor_or_func, 0)`);
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
