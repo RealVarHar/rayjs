@@ -15,7 +15,7 @@ enum {
 };
 #endif
 
-int has_suffix(const char *str, const char *suffix);
+int js__has_suffix(const char *str, const char *suffix);
 static inline size_t js__malloc_usable_size(const void *ptr)
 {
 #if defined(__APPLE__)

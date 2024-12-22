@@ -18,10 +18,11 @@ jobs:
     - uses: actions/checkout@v4
       with: 
         submodules: true
-        - name: MinGW Winlibs
+        
+    - name: MinGW Winlibs
+      uses: Denzy7/action-mingw@v0.1
 
     - name: Build
-      uses: Denzy7/action-mingw@v0.1
       # Build your program with the given configuration
       run: |
         mkdir ${{github.workspace}}/build

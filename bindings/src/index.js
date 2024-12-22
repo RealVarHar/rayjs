@@ -6,6 +6,24 @@ const source_parser = (await import("./source_parser.js")).source_parser;
 String.prototype.replaceAt = function(index, replacement) {
     return this.substr(0, index) + replacement + this.substr(index+1);
 };
+if(globalThis.structuredClone==undefined){
+    globalThis.structuredClone=undefined;
+    globalThis.structuredClone=(obj)=>{
+        if(typeof(obj)=='object'){
+            let obj2;
+            if(Array.isArray(obj)){
+                obj2=[];
+            }else{
+                obj2={};
+            }
+            for(let key in obj){
+                obj2[key]=globalThis.structuredClone(obj[key]);
+            }
+            return obj2;
+        }
+        return obj;
+    }
+}
 
 let api;
 let ignored=0;

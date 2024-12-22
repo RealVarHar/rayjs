@@ -721,6 +721,8 @@ declare function isKeyUp(key: number): boolean;
 declare function getKeyPressed(): number;
 /** Get char pressed (unicode), call it multiple times for chars queued, returns 0 when the queue is empty */
 declare function getCharPressed(): number;
+/** Get name of a QWERTY key on the current keyboard layout (eg returns string 'q' for KEY_A on an AZERTY keyboard) */
+declare function getKeyName(key: number): string | undefined | null;
 /** Set a custom key to exit program (default is ESC) */
 declare function setExitKey(key: number): void;
 /** Check if a gamepad is available */
@@ -1205,9 +1207,9 @@ declare function textToPascal(text: string | undefined | null): string | undefin
 declare function textToSnake(text: string | undefined | null): string | undefined | null;
 /** Get Camel case notation version of provided string */
 declare function textToCamel(text: string | undefined | null): string | undefined | null;
-/** Get integer value from text (negative values not supported) */
+/** Get integer value from text */
 declare function textToInteger(text: string | undefined | null): number;
-/** Get float value from text (negative values not supported) */
+/** Get float value from text */
 declare function textToFloat(text: string | undefined | null): number;
 /** Draw a line in 3D world space */
 declare function drawLine3D(startPos: Vector3, endPos: Vector3, color: Color): void;
@@ -2767,6 +2769,8 @@ declare var SHADER_LOC_VERTEX_BONEIDS: number;
 declare var SHADER_LOC_VERTEX_BONEWEIGHTS: number;
 /** Shader location: array of matrices uniform: boneMatrices */
 declare var SHADER_LOC_BONE_MATRICES: number;
+/** Shader location: vertex attribute: instanceTransform */
+declare var SHADER_LOC_VERTEX_INSTANCE_TX: number;
 /** Shader uniform type: float */
 declare var SHADER_UNIFORM_FLOAT: number;
 /** Shader uniform type: vec2 (2 float) */
@@ -2783,6 +2787,14 @@ declare var SHADER_UNIFORM_IVEC2: number;
 declare var SHADER_UNIFORM_IVEC3: number;
 /** Shader uniform type: ivec4 (4 int) */
 declare var SHADER_UNIFORM_IVEC4: number;
+/** Shader uniform type: unsigned int */
+declare var SHADER_UNIFORM_UINT: number;
+/** Shader uniform type: uivec2 (2 unsigned int) */
+declare var SHADER_UNIFORM_UIVEC2: number;
+/** Shader uniform type: uivec3 (3 unsigned int) */
+declare var SHADER_UNIFORM_UIVEC3: number;
+/** Shader uniform type: uivec4 (4 unsigned int) */
+declare var SHADER_UNIFORM_UIVEC4: number;
 /** Shader uniform type: sampler2d */
 declare var SHADER_UNIFORM_SAMPLER2D: number;
 /** Shader attribute type: float */

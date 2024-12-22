@@ -7639,6 +7639,20 @@ static JSValue js_getCharPressed(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
+static JSValue js_getKeyName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int32_t long_key;
+    int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
+    if(err_key<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int key = (int)long_key;
+    const char * returnVal = GetKeyName(key);
+    JSValue ret;
+    ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
 static JSValue js_setExitKey(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
@@ -31379,6 +31393,7 @@ static const JSCFunctionListEntry js_raylib_core_funcs[] = {
     JS_CFUNC_DEF("isKeyUp",1,js_isKeyUp),
     JS_CFUNC_DEF("getKeyPressed",0,js_getKeyPressed),
     JS_CFUNC_DEF("getCharPressed",0,js_getCharPressed),
+    JS_CFUNC_DEF("getKeyName",1,js_getKeyName),
     JS_CFUNC_DEF("setExitKey",1,js_setExitKey),
     JS_CFUNC_DEF("isGamepadAvailable",1,js_isGamepadAvailable),
     JS_CFUNC_DEF("getGamepadName",1,js_getGamepadName),
@@ -32602,6 +32617,7 @@ static int js_raylib_core_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExport(ctx, m, "SHADER_LOC_VERTEX_BONEIDS", JS_NewInt32(ctx, SHADER_LOC_VERTEX_BONEIDS));
     JS_SetModuleExport(ctx, m, "SHADER_LOC_VERTEX_BONEWEIGHTS", JS_NewInt32(ctx, SHADER_LOC_VERTEX_BONEWEIGHTS));
     JS_SetModuleExport(ctx, m, "SHADER_LOC_BONE_MATRICES", JS_NewInt32(ctx, SHADER_LOC_BONE_MATRICES));
+    JS_SetModuleExport(ctx, m, "SHADER_LOC_VERTEX_INSTANCE_TX", JS_NewInt32(ctx, SHADER_LOC_VERTEX_INSTANCE_TX));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_FLOAT", JS_NewInt32(ctx, SHADER_UNIFORM_FLOAT));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_VEC2", JS_NewInt32(ctx, SHADER_UNIFORM_VEC2));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_VEC3", JS_NewInt32(ctx, SHADER_UNIFORM_VEC3));
@@ -32610,6 +32626,10 @@ static int js_raylib_core_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_IVEC2", JS_NewInt32(ctx, SHADER_UNIFORM_IVEC2));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_IVEC3", JS_NewInt32(ctx, SHADER_UNIFORM_IVEC3));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_IVEC4", JS_NewInt32(ctx, SHADER_UNIFORM_IVEC4));
+    JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_UINT", JS_NewInt32(ctx, SHADER_UNIFORM_UINT));
+    JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC2", JS_NewInt32(ctx, SHADER_UNIFORM_UIVEC2));
+    JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC3", JS_NewInt32(ctx, SHADER_UNIFORM_UIVEC3));
+    JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC4", JS_NewInt32(ctx, SHADER_UNIFORM_UIVEC4));
     JS_SetModuleExport(ctx, m, "SHADER_UNIFORM_SAMPLER2D", JS_NewInt32(ctx, SHADER_UNIFORM_SAMPLER2D));
     JS_SetModuleExport(ctx, m, "SHADER_ATTRIB_FLOAT", JS_NewInt32(ctx, SHADER_ATTRIB_FLOAT));
     JS_SetModuleExport(ctx, m, "SHADER_ATTRIB_VEC2", JS_NewInt32(ctx, SHADER_ATTRIB_VEC2));
@@ -33292,6 +33312,7 @@ JSModuleDef * js_init_module_raylib_core(JSContext * ctx, const char * module_na
     JS_AddModuleExport(ctx, m, "SHADER_LOC_VERTEX_BONEIDS");
     JS_AddModuleExport(ctx, m, "SHADER_LOC_VERTEX_BONEWEIGHTS");
     JS_AddModuleExport(ctx, m, "SHADER_LOC_BONE_MATRICES");
+    JS_AddModuleExport(ctx, m, "SHADER_LOC_VERTEX_INSTANCE_TX");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_FLOAT");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_VEC2");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_VEC3");
@@ -33300,6 +33321,10 @@ JSModuleDef * js_init_module_raylib_core(JSContext * ctx, const char * module_na
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_IVEC2");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_IVEC3");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_IVEC4");
+    JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_UINT");
+    JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC2");
+    JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC3");
+    JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_UIVEC4");
     JS_AddModuleExport(ctx, m, "SHADER_UNIFORM_SAMPLER2D");
     JS_AddModuleExport(ctx, m, "SHADER_ATTRIB_FLOAT");
     JS_AddModuleExport(ctx, m, "SHADER_ATTRIB_VEC2");
