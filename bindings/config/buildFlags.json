@@ -2,6 +2,7 @@
   "bindText": true,
   "spreadSize": 4,
   "defined": {
-    "GRAPHICS_API_OPENGL_33": true
+    "GRAPHICS_API_OPENGL_33": true,
+    "QJS_USE_MIMALLOC": true
   }
 }

@@ -44,6 +44,17 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD 11)
 
+option(RAYJS_USE_MIMALLOC "Use mimalloc as the memory allocator" OFF)
+if(RAYJS_USE_MIMALLOC)
+	message("=== Configure mimalloc ===")
+	set(MI_BUILD_OBJECT OFF CACHE BOOL "Build object library" FORCE)
+	set(MI_BUILD_TESTS OFF CACHE BOOL "Build test executables" FORCE)
+	set(MI_BUILD_SHARED OFF CACHE BOOL "Build test executables" FORCE)
+	#set(MI_SECURE ON CACHE BOOL "Use full security mitigations" FORCE)
+	set(MI_WIN_REDIRECT OFF CACHE BOOL "Use redirection module ('mimalloc-redirect') on Windows if compiling mimalloc as a DLL" FORCE)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/mimalloc EXCLUDE_FROM_ALL)
+endif()
+
 message("=== Configure raylib ===")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib EXCLUDE_FROM_ALL)
 
@@ -65,10 +76,10 @@ set(quickjs_sources
 add_library(quickjs STATIC
 	${quickjs_sources}
 )
-target_compile_definitions(quickjs
-	PRIVATE
-		CONFIG_VERSION="${quickjs_version}"
-)
+target_compile_definitions(quickjs PRIVATE CONFIG_VERSION=${quickjs_version} )
+if(RAYJS_USE_MIMALLOC)
+	target_compile_definitions(quickjs PUBLIC QJS_USE_MIMALLOC )
+endif()
 target_include_directories(quickjs PRIVATE ${quickjs_sources_root})
 
 add_library(lightmapper INTERFACE)
@@ -88,4 +99,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE thirdparty/raygui/src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/shaders)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/others)
-target_link_libraries(${CMAKE_PROJECT_NAME} quickjs raylib lightmapper)
+
+set(RAYJS_LINK_LIBRARIES "quickjs" "raylib" "lightmapper" )
+if(RAYJS_USE_MIMALLOC)
+	set(RAYJS_LINK_LIBRARIES "${RAYJS_LINK_LIBRARIES}" "mimalloc-static")
+endif()
+target_link_libraries(${CMAKE_PROJECT_NAME} ${RAYJS_LINK_LIBRARIES})
