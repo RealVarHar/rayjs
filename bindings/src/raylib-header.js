@@ -44,32 +44,77 @@ export class RayLibHeader extends QuickJsHeader {
         if(allocLen>=2){
             dynamicAlloc=true;
             sub.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
-            sub.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
+            sub.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
+        }
+        //declare js variables so re-use is possible
+        for(let i=0;i<api.length;i++){
+            if(api[i].type.endsWith('&') && attachMultiple){
+                sub.declare('JSValue','js'+i);
+            }
         }
 
-        function addcall(sub,arr,inArray=false){
+        function addcall(sub,arr){
             sub.declare('trampolineContext','tctx',false,`${arr}`);
             sub.declare('JSContext *','ctx',false,'tctx.ctx');
+            //init parameters
             for(let i=0;i<api.length;i++){
-                sub.cToJs(api[i].type,'js'+i,api[i].name,{dynamicAlloc,altReturn:sub.getDefaultReturn(api.returnType)},0,api[i].sizeVars);
+                let type=api[i].type;
+                let arrtype=type.replace(/[^*&]/g,'');
+                if(arrtype.length>0){
+                    if(arrtype=='&'){
+                        type = type.replaceAll('&','*');
+                        api[i].sizeVars.push(1);
+                    }else{
+                        type = type.replaceAll(' &','');
+                    }
+                }
+                if(api[i].type.endsWith('&') && attachMultiple){//reuse js params if passed by reference
+                    sub.if(`i==0`).cToJs(type,'js'+i,api[i].name,{dynamicAlloc,altReturn:sub.getDefaultReturn(api.returnType),supressDeclaration:true},0,structuredClone(api[i].sizeVars));
+                }else{
+                    sub.cToJs(type,'js'+i,api[i].name,{dynamicAlloc,altReturn:sub.getDefaultReturn(api.returnType)},0,structuredClone(api[i].sizeVars));
+                }
             }
             sub.declare('JSValue','argv[]',false,'{'+api.map((el,i)=>'js'+i).join(',')+'}');
             sub.declare('JSValue','func1',false,'JS_DupValue(ctx, tctx.func_obj)',true);//fix for inline functions derefferencing after call
             sub.call('JS_Call',['ctx', 'func1', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
             sub.call('JS_FreeValue',['ctx','func1']);
+
+            let cleanupList=['js_ret'];
+            function errorCleanupFn(ctx){
+                if(dynamicAlloc){
+                    ctx.call('memoryClear',['ctx','memoryHead']);
+                }
+                for(let i=0;i<cleanupList.length;i++){
+                    ctx.call('JS_FreeValue',['ctx',cleanupList[i]]);
+                }
+            }
+            //cleanup
+            for (let i = 0; i < api.length; i++) {
+                if(!api[i].type.endsWith('&')){
+                    sub.call('JS_FreeValue',['ctx',`argv[${i}]`]);
+                }else{
+                    cleanupList.push(`argv[${i}]`);
+                }
+            }
             let finish=sub;
-            if(inArray){
+            if(attachMultiple){
                 finish=sub.if(`i==${callbackName}_size-1`);
             }
-            for(let i=0;i<api.length;i++){
-                sub.call('JS_FreeValue',['ctx',`argv[${i}]`]);
+            //save references
+            for (let i = 0; i < api.length; i++) {
+                if(api[i].type.endsWith('&')){
+                    //let jsType=api[i].type.replaceAll(" &",'');
+                    finish.jsToC(api[i].type,api[i].name,'js'+i,{allowNull:false,supressDeclaration:true,supressAllocation:true,jsType:'array',altReturn:sub.getDefaultReturn(api.returnType)},0,errorCleanupFn,structuredClone(api[i].sizeVars));
+                    finish.call('JS_FreeValue',['ctx',`argv[${i}]`]);
+                    cleanupList=cleanupList.filter(a=>a!==`argv[${i}]`);
+                }
             }
             if(api.returnType!=='void'){
-                finish.jsToC(api.returnType, `resp`, 'js_ret',{altReturn:sub.getDefaultReturn(api.returnType)});
-                finish.call('JS_FreeValue',['ctx','js_ret']);
+                finish.jsToC(api.returnType, `resp`, 'js_ret',{altReturn:sub.getDefaultReturn(api.returnType)},0,errorCleanupFn);
+                errorCleanupFn(finish);
                 finish.returnExp('resp');
             }else{
-                finish.call('JS_FreeValue',['ctx','js_ret']);
+                errorCleanupFn(finish);
             }
         }
         sub.declare('JSValue','func1');
@@ -119,9 +164,26 @@ export class RayLibHeader extends QuickJsHeader {
             if(allocLen>=2){
                 dynamicAlloc=true;
                 fun.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
-                fun.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
+                fun.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
             }
             allocLen=0;//re-use allocation length, now used to count the current state
+            const errorCleanupFn =(ctx,maxparam=activeParams.length)=>{
+                if(allocLen==0){
+                    return;
+                }
+                for (let j = 0; j < maxparam; j++) {
+                    const param = activeParams[j];
+                    if (param.binding.customCleanup){
+                        param.binding.customCleanup(ctx, "argv[" + j + "]");
+                    }
+                    if (!dynamicAlloc && !param.binding.customCleanup){
+                        ctx.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + j + "]",{allowNull:param.binding.allowNull});
+                    }
+                }
+                if(dynamicAlloc){
+                    ctx.call('memoryClear',['ctx','memoryHead']);
+                }
+            };
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
                 allocLen+=this.paramAllocLen(param);
@@ -130,24 +192,7 @@ export class RayLibHeader extends QuickJsHeader {
                 } else {
                     //cleans parameters initialized before an error
                     //TODO: reorder parameters to limit amount of code generated in cleanup
-                    const errorCleanupFn =(ctx)=>{
-                        if(allocLen==0){
-                            return;
-                        }
-                        for (let j = 0; j < i; j++) {
-                            const param = activeParams[j];
-                            if (param.binding.customCleanup){
-                                param.binding.customCleanup(ctx, "argv[" + j + "]");
-                            }
-                            if (!dynamicAlloc && !param.binding.customCleanup){
-                                ctx.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + j + "]", this.structLookup,{allowNull:param.binding.allowNull});
-                            }
-                        }
-                        if(dynamicAlloc){
-                            ctx.call('memoryClear',['ctx','memoryHead']);
-                        }
-                    };
-                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc},0,errorCleanupFn);
+                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc},0,(ctx)=>{errorCleanupFn(ctx,i)});
                 }
             }
             // call c function
@@ -179,21 +224,14 @@ export class RayLibHeader extends QuickJsHeader {
                 }
             }
 
-            // clean up parameters
-            if(dynamicAlloc){
-                fun.call('memoryClear',['ctx','memoryHead']);
-            }
+            // save references
             for (let i = 0; i < len; i++) {
                 const param = activeParams[i];
                 if(param.type.endsWith('&')){
                     fun.cToJs(param.type,"argv[" + i + "]",param.name,{allowNull:param.binding.allowNull,supressDeclaration:true});
                 }
-                if(param.binding.customCleanup){
-                    param.binding.customCleanup(fun, "argv[" + i + "]");
-                } else if(!dynamicAlloc){
-                    fun.jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + i + "]",{allowNull:param.binding.allowNull});
-                }
             }
+            errorCleanupFn(fun);
             // return result
             if (api.returnType === "void") {
                 if (options.after)

@@ -343,7 +343,6 @@ export class source_parser {
         let capture=[];
         let ret=this.simpleregex(input,['bos'," ",'br+',azZ0,'br*',' *','br+',azZ0,'bos',"unsigned ",'bos',"const ",'bos',"static ","br+","\n \t}"],pos-1,capture);
         if(ret===false)return pos;
-        if(capture[1]=='GuiSpinner'){debugger;}
         ret=this.simpleregex(input,['r*',', *[]'+azZ0,'s',')','r*'," \t\n",'os','/','os','{','os',';'],pos+1,capture);
         if(ret===false)return pos;
         if(capture[capture.length-3]==='/'){//some comment, remove it

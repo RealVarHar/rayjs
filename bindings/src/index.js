@@ -615,7 +615,7 @@ function main() {
             };
             let flags={dynamicAlloc:true};//reduces code size
             gen.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
-            gen.declare('memoryNode *', 'memoryCurrent',false,'memoryHead;');
+            gen.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
 
             gen.declare('size_t','char_ptrlen',false,10);
             gen.declare('char *','char_ptr',false,'(char *)js_calloc(ctx, char_ptrlen, sizeof(char))');
@@ -797,6 +797,7 @@ function main() {
     getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
     cb = structuredClone(att);
     cb.name='AudioMixedProcessor';
+    cb.params[0].type += ' &';
     cb.params[0].sizeVars = [`arg_frames*${config.defined['AUDIO_DEVICE_CHANNELS']}`];
     api.callbacks.push(cb);
     getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';

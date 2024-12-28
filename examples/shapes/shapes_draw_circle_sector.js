@@ -56,7 +56,6 @@ while (!windowShouldClose())    // Detect window close button or ESC key
         // Draw GUI controls
         //------------------------------------------------------------------------------
 		try{
-		let r=new Rectangle(600, 40, 120, 20);
         guiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", textFormat("%.2f", startAngle[0]), startAngle, 0, 720);
         guiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", textFormat("%.2f", endAngle[0]), endAngle, 0, 720);
 

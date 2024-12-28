@@ -158,7 +158,7 @@ export class CodeGenerator {
             cstatic='static '
         }
         this.inline(cstatic+returnType + " " + name + "(");
-        this.inline(args.map(x => x.type.replaceAll('&','*') + " " + x.name).join(", "));
+        this.inline(args.map(x => x.type.replaceAll('* &','*').replaceAll(' &',' *') + " " + x.name).join(", "));
         this.inline(") {");
         this.breakLine();
         this.indent();

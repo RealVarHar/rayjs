@@ -173,6 +173,8 @@ export class QuickJsGenerator extends CodeGenerator {
             return 'NULL';
         }
         switch(type){
+            case 'void':
+                return ' ';
             case "bool":
                 return 'false';
             case "char":
@@ -259,10 +261,10 @@ export class QuickJsGenerator extends CodeGenerator {
                 return false;
         }
     }
-    jsToC(type, name, src,flags={},depth=0,errorCleanupFn=((ctx)=>{})) {
+    jsToC(type, name, src,flags={},depth=0,errorCleanupFn=((ctx)=>{}),sizeVars=[]) {
         //needs to return flags
         //TODO: cache functions to limit js_raylib_core.h size
-        function getArray(ctx,type,name,src,srclen,overrideElse=false){
+        function getArray(ctx,type,name,src,overrideElse=false){
             //define
             if(!flags.supressDeclaration){
                 ctx.declare(type,name);
@@ -285,14 +287,20 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
+            let allowArrayType=flags.jsType==undefined||flags.jsType=='array';
+            let allowStringType=flags.jsType==undefined||flags.jsType=='string';
+            let allowBufferType=flags.jsType==undefined||flags.jsType=='buffer';
+            let allowTypedType=flags.jsType==undefined||flags.jsType=='typed';
 
             //Check if Array
             let arr;
-            if( !['void','char'].includes(getsubtype(type)) ) {//Dont allow dumb usecases: Array of direct opaque data, array of char
+            if( !['void','char'].includes(getsubtype(type)) && allowArrayType ) {//Dont allow dumb usecases: Array of direct opaque data, array of char
                 //TODO: allow dynamic binding of array properties
                 arr = ctx[ctxif](`JS_IsArray(ctx,${src}) == 1`);
+                let srclen = sizeVars.pop();
                 let size=srclen;
-                if (srclen == undefined) {
+                //get length from existing jsArray
+                if ( srclen == undefined || flags.supressAllocation  ) {
                     size="size_" + tmpname;
                     arr.declare("int64_t","size_" + tmpname);
                     let fi = arr.if(`JS_GetLength(ctx,${src},&size_${tmpname})==-1`);
@@ -300,9 +308,19 @@ export class QuickJsGenerator extends CodeGenerator {
                     fi.returnExp(flags.altReturn||"JS_EXCEPTION");
                 }
                 let subtype=getsubtype(type);
-                arr.declare(type,name,false,`(${type})js_malloc(ctx, ${size} * sizeof(${subtype}))`,true);
-                if (flags.dynamicAlloc) {
-                    arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
+                if(flags.supressAllocation){
+                    if(srclen==undefined){
+                        throw new Error("Missing array length with supressAllocation will cause out of bounds writes");
+                    }
+                    //check if ArrayLen is == srclen, otherwise return error
+                    let fi = arr.if(`${size}!=${srclen}`);
+                    errorCleanupFn(fi);
+                    fi.returnExp(flags.altReturn||"JS_EXCEPTION");
+                }else{
+                    arr.declare(type,name,false,`(${type})js_malloc(ctx, ${size} * sizeof(${subtype}))`,true);
+                    if (flags.dynamicAlloc) {
+                        arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, ${name})`);
+                    }
                 }
                 let iter = 'i' + depth;
                 if(size==1){
@@ -323,7 +341,7 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //Check if String
-            if(getsubtype(type)=='char') {
+            if(getsubtype(type)=='char' && allowStringType) {
                 arr = ctx[ctxif](`JS_IsString(${src}) == 1`);
                 arr.statement(`${name} = (${type})JS_ToCString(ctx, ${src})`);
                 if(flags.dynamicAlloc){
@@ -333,7 +351,7 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //Check if Buffer
-            if(addBuffer) {//check for arrayBuffer only if [] but not [][]
+            if(addBuffer && allowBufferType) {//check for arrayBuffer only if [] but not [][]
                 arr = ctx[ctxif](`JS_IsArrayBuffer(${src}) == 1`);
                 arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
                 if(flags.dynamicAlloc){
@@ -345,7 +363,7 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //Check if typed array like int8Array
-            if(addTypedArray){
+            if(addTypedArray && allowTypedType){
                 if(ctxif!='if'){
                     ctx = ctx.else();
                 }
@@ -407,14 +425,15 @@ export class QuickJsGenerator extends CodeGenerator {
         }else if(type.endsWith(']')){
             const stpos=type.indexOf('[');
             let len=type.substring(stpos+1,type.length-1).trim();
-            getArray(this,getsubtype(type)+' *',name,src,len);
+            sizeVars.push(len);
+            getArray(this,getsubtype(type)+' *',name,src);
         }else if(type.endsWith('*')){
             getArray(this,type,name,src);
         }else if(type.endsWith('&')){
             let subtype=getsubtype(type);
 
             const classId = this.root.structLookup[subtype];
-            //functions must be a pointer, dont check for them
+            //functions must be a pointer, don't check for them
             if (classId){
                 this.declare(subtype+' *', name, false, `(${subtype} *)JS_GetOpaque(${src}, ${classId})`,flags.supressDeclaration);
                 const fi=this.if(`${name} == NULL`);
@@ -423,14 +442,19 @@ export class QuickJsGenerator extends CodeGenerator {
                 fi.returnExp(flags.altReturn||"JS_EXCEPTION");
             }else{
                 //A pointer may be declared as [el]
-                let els;
+                let els=this;
                 if(subtype.endsWith('*')){
-                    getArray(this,subtype,name,src,undefined);
+                    getArray(this,subtype,name,src);
                 }else{
-                    els = getArray(this,subtype+' *',name,src,1,true);
-                    //Or direct
-                    els.jsToC(subtype,'js_'+tmpname,src,flags,depth,errorCleanupFn);
-                    els.declare(subtype+' *', name,false,'&js_'+tmpname,true);
+                    //differrenciate between [a] and a
+                    if(flags.jsType===undefined || flags.jsType==='array'){
+                        els = getArray(this,subtype+' *',name,src,true);
+                    }
+                    if(flags.jsType===undefined || flags.jsType!=='array'){
+                        //Or direct
+                        els.jsToC(subtype,'js_'+tmpname,src,flags,depth,errorCleanupFn);
+                        els.declare(subtype+' *', name,false,'&js_'+tmpname,true);
+                    }
                 }
             }
         }else{
@@ -655,20 +679,20 @@ export class QuickJsGenerator extends CodeGenerator {
 
             const subtype=getsubtype(type);
             //Check if String
-            if(getsubtype(type)=='char') {
+            if(getsubtype(type)==='char') {
                 ctx.statement(`${name} = JS_NewString(ctx, ${src})`);
                 return;
             }
 
             //Check if Array
-            if(subtype=='void'){
+            if(subtype==='void'){
                 console.log('At: '+type,name);
                 throw new Error('Cannot convert void array type');
                 return;
             }
             //Dont allow dumb usecases: Array of direct opaque data, array of char
             let srclen=sizeVars.pop();
-            if(srclen==undefined){
+            if(srclen===undefined){
                 //TODO: remove sizeof() based length
                 console.log("WARNING: sizeof length is deprecated, at"+type+name);
                 ctx.declare('JSValue', name, false, `JS_NewArray(ctx)`,true);
@@ -685,11 +709,11 @@ export class QuickJsGenerator extends CodeGenerator {
                 }
             }else if(typeof(srclen)=="string"){
                 let child=ctx;
-                if(srclen=='1&'){
+                if(srclen==='1&'){
                     ctx.cToJs(subtype,'js_'+tmpname,`${src}[0]`,{},depth+1,sizeVars);
                     ctx.statement(`JS_DefinePropertyValueUint32(ctx,${name},0,js_${tmpname},JS_PROP_C_W_E)`);
                     return;
-                }else if(srclen=='&'){
+                }else if(srclen==='&'){
                     sizeVars.push('&');
                     ctx.declare("size_t", "size_" + tmpname);
                     ctx.statement(`JS_GetLength(ctx, ${name},&size_${tmpname} )`);
@@ -698,7 +722,9 @@ export class QuickJsGenerator extends CodeGenerator {
                     ctx.declare('JSValue', name, false, `JS_NewArray(ctx)`,true);
                     child=ctx.for('0', srclen,'i'+depth);
                 }
-                child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,flags,depth+1,sizeVars);
+                let tmpflags=structuredClone(flags);
+                tmpflags.supressDeclaration=false;
+                child.cToJs(subtype,'js_'+tmpname,`${src}[i${depth}]`,tmpflags,depth+1,sizeVars);
                 child.statement(`JS_DefinePropertyValueUint32(ctx,${name},i${depth},js_${tmpname},JS_PROP_C_W_E)`);
             }
         }
