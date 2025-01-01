@@ -75,10 +75,13 @@ export class RayLibHeader extends QuickJsHeader {
                 }
             }
             sub.declare('JSValue','argv[]',false,'{'+api.map((el,i)=>'js'+i).join(',')+'}');
-            sub.declare('JSValue','func1',false,'JS_DupValue(ctx, tctx.func_obj)',true);//fix for inline functions derefferencing after call
-            sub.call('JS_Call',['ctx', 'func1', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
-            sub.call('JS_FreeValue',['ctx','func1']);
-
+            //No idea why, but internally, qjs sometimes moves contex count, since this is threaded, additional dup is called so that we dont end up freeing runtime
+            sub.call('JS_DupContext',[`ctx`]);
+            sub.call('JS_DupValue',['ctx', 'tctx.func_obj']);
+            //sub.call("printf",['\"3%i\"',`JS_IsFunction(ctx,tctx.func_obj)`]);
+            sub.call('JS_Call',['ctx', 'tctx.func_obj', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
+            sub.call('JS_FreeValue',['ctx','tctx.func_obj']);
+            sub.call('JS_FreeContext',[`ctx`]);
             let cleanupList=['js_ret'];
             function errorCleanupFn(ctx){
                 if(dynamicAlloc){

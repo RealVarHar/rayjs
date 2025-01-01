@@ -22,6 +22,9 @@ var averageVolume = new Float32Array(400);   // Average volume history
 //------------------------------------------------------------------------------------
 // Audio processing function
 //------------------------------------------------------------------------------------
+//WARNING! ProcessAudio is called by multithreaded AudioMixedProcessor
+//Make sure that no names are shared with runtime above, example: i++ will crash as it will overflow averageVolume at line 90
+//It would be smart to push this to a worker
 function ProcessAudio(buffer, frames){
     let samples = buffer;   // Samples internally stored as <float>s
     let average = 0;               // Temporary average volume
@@ -37,7 +40,7 @@ function ProcessAudio(buffer, frames){
     }
 
     // Moving history to the left
-    for (let i = 0; i < 399; i++) averageVolume[i] = averageVolume[i + 1];
+    for (let j = 0; j < 399; j++) averageVolume[j] = averageVolume[j + 1];
 
     averageVolume[399] = average;         // Adding last average value
 }
@@ -50,13 +53,9 @@ function ProcessAudio(buffer, frames){
 //--------------------------------------------------------------------------------------
 const screenWidth = 800;
 const screenHeight = 450;
-
 initWindow(screenWidth, screenHeight, "raylib [audio] example - processing mixed output");
-
 initAudioDevice();              // Initialize audio device
-
 attachAudioMixedProcessor(ProcessAudio);
-
 let music = loadMusicStream("resources/country.mp3");
 let sound = loadSound("resources/coin.wav");
 
@@ -64,14 +63,12 @@ playMusicStream(music);
 
 setTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
-
 // Main game loop
 while (!windowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
     updateMusicStream(music);   // Update music buffer with new stream data
-
     // Modify processing variables
     //----------------------------------------------------------------------------------
     if (isKeyPressed(KEY_LEFT)) exponent -= 0.05;
@@ -79,37 +76,31 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     if (exponent <= 0.5) exponent = 0.5;
     if (exponent >= 3) exponent = 3;
-
     if (isKeyPressed(KEY_SPACE)) playSound(sound);
-
     // Draw
     //----------------------------------------------------------------------------------
     beginDrawing();
-
         clearBackground(RAYWHITE);
 
         drawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, LIGHTGRAY);
 
         drawText(textFormat("EXPONENT = %.2f", exponent), 215, 180, 20, LIGHTGRAY);
-
         drawRectangle(199, 199, 402, 34, LIGHTGRAY);
         for (let i = 0; i < 400; i++){
             drawLine(201 + i, 232 - Math.floor(averageVolume[i] * 32), 201 + i, 232, MAROON);
         }
         drawRectangleLines(199, 199, 402, 34, GRAY);
-
         drawText("PRESS SPACE TO PLAY OTHER SOUND", 200, 250, 20, LIGHTGRAY);
         drawText("USE LEFT AND RIGHT ARROWS TO ALTER DISTORTION", 140, 280, 20, LIGHTGRAY);
-
     endDrawing();
     //----------------------------------------------------------------------------------
 }
-
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadMusicStream(music);   // Unload music stream buffers from RAM
-
+stopMusicStream(music);
 detachAudioMixedProcessor(ProcessAudio);  // Disconnect audio processor
+unloadSound(sound);   // Unload music stream buffers from RAM
+unloadMusicStream(music);   // Unload music stream buffers from RAM
 
 closeAudioDevice();         // Close audio device (music streaming is automatically stopped)
 

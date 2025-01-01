@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <quickjs.h>
+#include <rayjs_base.c>
 #include <raylib.h>
 #include <raymath.h>
 #include <rcamera.h>
@@ -18,70 +19,10 @@
 #include <rlightmapper.h>
 #include <rlgl.h>
 
-#ifndef countof
-#define countof(x) (sizeof(x) / sizeof((x)[0]))
-#endif
 #ifndef dynamidMemoryAlloc
 #define dynamidMemoryAlloc
-typedef struct memoryNode{
-    int length;
-    void * pointers[6];
-    struct memoryNode * next;
-} memoryNode;
-memoryNode* memoryStore(memoryNode *current, void * clarfunc, void * memoryptr) {
-   // Saves memory fo de-allocation
-   if(current->length < 6) {
-        current->pointers[current->length] = clarfunc;
-        current->pointers[current->length + 1] = memoryptr;
-        current->length += 2;
-        return current;
-   } else {
-        // This one is full, write to a new one
-        memoryNode *new_node = (memoryNode *)malloc(sizeof(memoryNode));
-        new_node->length = 2;
-        new_node->pointers[0] = clarfunc;
-        new_node->pointers[1] = memoryptr;
-        new_node->next = NULL;
-        current->next = new_node;
-        return new_node;
-   }
-}
-void memoryClear(JSContext * ctx, memoryNode *head) {
-    memoryNode * prev_node;
-    while (head != NULL) {
-        for (int i = 0; i < head->length; i += 2) {
-            void (*free_func) (JSContext *,void *) = head->pointers[i];
-            void * ptr_to_free = head->pointers[i + 1];
-            free_func(ctx, ptr_to_free);
-        }
-        prev_node = head;
-        head = head->next;
-        free(prev_node);
-    }
-}
-void JS_FreeValuePtr(JSContext *ctx, JSValue * v){
-    JS_FreeValue(ctx,*v);
-}
-typedef struct trampolineContext {
-    JSContext * ctx;
-    JSValue func_obj;
-} trampolineContext;
 enum {
 JS_CLASS_OBJECT = 1,JS_CLASS_ARRAY = 2,JS_CLASS_ERROR = 3,JS_CLASS_NUMBER = 4,JS_CLASS_STRING = 5,JS_CLASS_BOOLEAN = 6,JS_CLASS_SYMBOL = 7,JS_CLASS_ARGUMENTS = 8,JS_CLASS_MAPPED_ARGUMENTS = 9,JS_CLASS_DATE = 10,JS_CLASS_MODULE_NS = 11,JS_CLASS_C_FUNCTION = 12,JS_CLASS_BYTECODE_FUNCTION = 13,JS_CLASS_BOUND_FUNCTION = 14,JS_CLASS_C_FUNCTION_DATA = 15,JS_CLASS_GENERATOR_FUNCTION = 16,JS_CLASS_FOR_IN_ITERATOR = 17,JS_CLASS_REGEXP = 18,JS_CLASS_ARRAY_BUFFER = 19,JS_CLASS_SHARED_ARRAY_BUFFER = 20,JS_CLASS_UINT8C_ARRAY = 21,JS_CLASS_INT8_ARRAY = 22,JS_CLASS_UINT8_ARRAY = 23,JS_CLASS_INT16_ARRAY = 24,JS_CLASS_UINT16_ARRAY = 25,JS_CLASS_INT32_ARRAY = 26,JS_CLASS_UINT32_ARRAY = 27,JS_CLASS_BIG_INT64_ARRAY = 28,JS_CLASS_BIG_UINT64_ARRAY = 29,JS_CLASS_FLOAT16_ARRAY = 30,JS_CLASS_FLOAT32_ARRAY = 31,JS_CLASS_FLOAT64_ARRAY = 32,JS_CLASS_DATAVIEW = 33,JS_CLASS_BIG_INT = 34,JS_CLASS_MAP = 35,JS_CLASS_SET = 36,JS_CLASS_WEAKMAP = 37,JS_CLASS_WEAKSET = 38,JS_CLASS_ITERATOR = 39,JS_CLASS_ITERATOR_HELPER = 40,JS_CLASS_ITERATOR_WRAP = 41,JS_CLASS_MAP_ITERATOR = 42,JS_CLASS_SET_ITERATOR = 43,JS_CLASS_ARRAY_ITERATOR = 44,JS_CLASS_STRING_ITERATOR = 45,JS_CLASS_REGEXP_STRING_ITERATOR = 46,JS_CLASS_GENERATOR = 47,JS_CLASS_PROXY = 48,JS_CLASS_PROMISE = 49,JS_CLASS_PROMISE_RESOLVE_FUNCTION = 50,JS_CLASS_PROMISE_REJECT_FUNCTION = 51,JS_CLASS_ASYNC_FUNCTION = 52,JS_CLASS_ASYNC_FUNCTION_RESOLVE = 53,JS_CLASS_ASYNC_FUNCTION_REJECT = 54,JS_CLASS_ASYNC_FROM_SYNC_ITERATOR = 55,JS_CLASS_ASYNC_GENERATOR_FUNCTION = 56,JS_CLASS_ASYNC_GENERATOR = 57,JS_CLASS_WEAK_REF = 58,JS_CLASS_FINALIZATION_REGISTRY = 59,JS_CLASS_CALL_SITE = 60,JS_CLASS_INIT_COUNT = 61,
-};
-char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, ...){
-    va_list args;
-    va_start(args, format);
-    int len=vsnprintf(buffer,*maxsize,format,args);
-    if(len>*maxsize){
-        len++;
-        buffer=js_realloc(ctx,buffer,len * sizeof(char));
-        memset(buffer+*maxsize,0,len-*maxsize);
-        maxsize[0]=len;
-        len=vsnprintf(buffer,len,format,args);
-    }
-    va_end(args);
-    return buffer;
 };
 #endif
 
@@ -3419,9 +3360,11 @@ static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName
     JSValue js_js10 = JS_NewInt32(ctx, (long)arg_dataSize[0]);
     JS_DefinePropertyValueUint32(ctx,js1,0,js_js10,JS_PROP_C_W_E);
     JSValue argv[] = {js0,js1};
-    func1 = JS_DupValue(ctx, tctx.func_obj);
-    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
-    JS_FreeValue(ctx, func1);
+    JS_DupContext(ctx);
+    JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 2, argv);
+    JS_FreeValue(ctx, tctx.func_obj);
+    JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
     JSValue da_arg_dataSize;
     if(JS_IsArray(ctx,js1) == 1) {
@@ -3510,9 +3453,11 @@ static bool SaveFileDataCallback_callback_c(const char * arg_fileName, unsigned 
     }
     JSValue js2 = JS_NewInt32(ctx, (long)arg_dataSize);
     JSValue argv[] = {js0,js1,js2};
-    func1 = JS_DupValue(ctx, tctx.func_obj);
-    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 3, argv);
-    JS_FreeValue(ctx, func1);
+    JS_DupContext(ctx);
+    JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 3, argv);
+    JS_FreeValue(ctx, tctx.func_obj);
+    JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
     JS_FreeValue(ctx, argv[1]);
     JS_FreeValue(ctx, argv[2]);
@@ -3535,9 +3480,11 @@ static char * LoadFileTextCallback_callback_c(const char * arg_fileName) {
     JSValue js0;
     js0 = JS_NewString(ctx, arg_fileName);
     JSValue argv[] = {js0};
-    func1 = JS_DupValue(ctx, tctx.func_obj);
-    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 1, argv);
-    JS_FreeValue(ctx, func1);
+    JS_DupContext(ctx);
+    JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 1, argv);
+    JS_FreeValue(ctx, tctx.func_obj);
+    JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
     char * resp;
     JSValue da_resp;
@@ -3577,9 +3524,11 @@ static bool SaveFileTextCallback_callback_c(const char * arg_fileName, char * ar
     JSValue js1;
     js1 = JS_NewString(ctx, arg_text);
     JSValue argv[] = {js0,js1};
-    func1 = JS_DupValue(ctx, tctx.func_obj);
-    JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
-    JS_FreeValue(ctx, func1);
+    JS_DupContext(ctx);
+    JS_DupValue(ctx, tctx.func_obj);
+    JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 2, argv);
+    JS_FreeValue(ctx, tctx.func_obj);
+    JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
     JS_FreeValue(ctx, argv[1]);
     int js_resp = JS_ToBool(ctx, js_ret);
@@ -3612,9 +3561,11 @@ static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int
         }
         JSValue js1 = JS_NewUint32(ctx, (unsigned long)arg_frames);
         JSValue argv[] = {js0,js1};
-        func1 = JS_DupValue(ctx, tctx.func_obj);
-        JSValue js_ret = JS_Call(ctx, func1, JS_UNDEFINED, 2, argv);
-        JS_FreeValue(ctx, func1);
+        JS_DupContext(ctx);
+        JS_DupValue(ctx, tctx.func_obj);
+        JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 2, argv);
+        JS_FreeValue(ctx, tctx.func_obj);
+        JS_FreeContext(ctx);
         JS_FreeValue(ctx, argv[1]);
         if(i==AudioMixedProcessor_processor_size-1) {
             JSValue da_arg_bufferData;
@@ -6105,12 +6056,19 @@ static JSValue js_setTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_setLoadFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
-    ctx_callback.ctx = ctx;
+    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
+    ctx_callback.ctx = ctx2;
     ctx_callback.func_obj = argv[0];
     if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
         LoadFileDataCallback_callback_arr = NULL;
     }
     else if(JS_IsFunction(ctx,argv[0])==1) {
+        JS_DupValue(ctx, argv[0]);
+        JS_DupValue(ctx2, argv[0]);
+        if(LoadFileDataCallback_callback_arr != NULL) {
+            JS_FreeValue(LoadFileDataCallback_callback_arr->ctx, LoadFileDataCallback_callback_arr->func_obj);
+            JS_FreeContext(LoadFileDataCallback_callback_arr->ctx);
+        }
         LoadFileDataCallback_callback_arr = &ctx_callback;
     }
     else {
@@ -6129,12 +6087,19 @@ static JSValue js_setLoadFileDataCallback(JSContext * ctx, JSValue this_val, int
 
 static JSValue js_setSaveFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
-    ctx_callback.ctx = ctx;
+    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
+    ctx_callback.ctx = ctx2;
     ctx_callback.func_obj = argv[0];
     if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
         SaveFileDataCallback_callback_arr = NULL;
     }
     else if(JS_IsFunction(ctx,argv[0])==1) {
+        JS_DupValue(ctx, argv[0]);
+        JS_DupValue(ctx2, argv[0]);
+        if(SaveFileDataCallback_callback_arr != NULL) {
+            JS_FreeValue(SaveFileDataCallback_callback_arr->ctx, SaveFileDataCallback_callback_arr->func_obj);
+            JS_FreeContext(SaveFileDataCallback_callback_arr->ctx);
+        }
         SaveFileDataCallback_callback_arr = &ctx_callback;
     }
     else {
@@ -6153,12 +6118,19 @@ static JSValue js_setSaveFileDataCallback(JSContext * ctx, JSValue this_val, int
 
 static JSValue js_setLoadFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
-    ctx_callback.ctx = ctx;
+    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
+    ctx_callback.ctx = ctx2;
     ctx_callback.func_obj = argv[0];
     if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
         LoadFileTextCallback_callback_arr = NULL;
     }
     else if(JS_IsFunction(ctx,argv[0])==1) {
+        JS_DupValue(ctx, argv[0]);
+        JS_DupValue(ctx2, argv[0]);
+        if(LoadFileTextCallback_callback_arr != NULL) {
+            JS_FreeValue(LoadFileTextCallback_callback_arr->ctx, LoadFileTextCallback_callback_arr->func_obj);
+            JS_FreeContext(LoadFileTextCallback_callback_arr->ctx);
+        }
         LoadFileTextCallback_callback_arr = &ctx_callback;
     }
     else {
@@ -6177,12 +6149,19 @@ static JSValue js_setLoadFileTextCallback(JSContext * ctx, JSValue this_val, int
 
 static JSValue js_setSaveFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
-    ctx_callback.ctx = ctx;
+    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
+    ctx_callback.ctx = ctx2;
     ctx_callback.func_obj = argv[0];
     if(JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
         SaveFileTextCallback_callback_arr = NULL;
     }
     else if(JS_IsFunction(ctx,argv[0])==1) {
+        JS_DupValue(ctx, argv[0]);
+        JS_DupValue(ctx2, argv[0]);
+        if(SaveFileTextCallback_callback_arr != NULL) {
+            JS_FreeValue(SaveFileTextCallback_callback_arr->ctx, SaveFileTextCallback_callback_arr->func_obj);
+            JS_FreeContext(SaveFileTextCallback_callback_arr->ctx);
+        }
         SaveFileTextCallback_callback_arr = &ctx_callback;
     }
     else {
@@ -19777,8 +19756,11 @@ static JSValue js_setAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_
 
 static JSValue js_attachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_processor;
-    ctx_processor.ctx = ctx;
+    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
+    ctx_processor.ctx = ctx2;
     ctx_processor.func_obj = argv[0];
+    JS_DupValue(ctx, argv[0]);
+    JS_DupValue(ctx2, argv[0]);
     void * processor = AudioMixedProcessor_processor_c;
     if(JS_IsFunction(ctx,argv[0])==0) {
         return JS_EXCEPTION;
@@ -19800,14 +19782,14 @@ static JSValue js_attachAudioMixedProcessor(JSContext * ctx, JSValue this_val, i
 }
 
 static JSValue js_detachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    trampolineContext ctx_processor;
-    ctx_processor.ctx = ctx;
-    ctx_processor.func_obj = argv[0];
     int processor_pos;
     void * processor = AudioMixedProcessor_processor_c;
     void * processor_ptr = argv[0].u.ptr;
     for(int i0=0; i0 < AudioMixedProcessor_processor_size; i0++){
         if(AudioMixedProcessor_processor_arr[i0].func_obj.u.ptr == processor_ptr) {
+            JS_FreeValue(ctx, AudioMixedProcessor_processor_arr[i0].func_obj);
+            JS_FreeValue(AudioMixedProcessor_processor_arr[i0].ctx, AudioMixedProcessor_processor_arr[i0].func_obj);
+            JS_FreeContext(AudioMixedProcessor_processor_arr[i0].ctx);
             for(; i0 < AudioMixedProcessor_processor_size-1; i0++){
                 AudioMixedProcessor_processor_arr[i0]=AudioMixedProcessor_processor_arr[i0+1];
             }

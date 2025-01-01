@@ -31,10 +31,8 @@ export class QuickJsHeader {
         this.includeGen.include("string.h");
         this.includeGen.breakLine();
         this.includeGen.include("quickjs.h");
+        this.includeGen.include("rayjs_base.c");
         this.body.breakLine();
-        this.body.line("#ifndef countof");
-        this.body.line("#define countof(x) (sizeof(x) / sizeof((x)[0]))");
-        this.body.line("#endif");
         this.body.line("#ifndef dynamidMemoryAlloc");
         this.body.line("#define dynamidMemoryAlloc");
         this.includeText(this.body);
@@ -59,58 +57,6 @@ export class QuickJsHeader {
         moduleEntryFunc.statement("return m");
     }
     includeText(body){
-        //define an allocation linked list
-        //define struct
-        body.line('typedef struct memoryNode{');
-        body.indent();
-        body.declare('int', 'length');
-        body.declare('void *','pointers[6]');
-        body.declare('struct memoryNode *','next');
-        body.unindent();
-        body.line('} memoryNode;');
-        //define store function
-        body.line(`memoryNode* memoryStore(memoryNode *current, void * clarfunc, void * memoryptr) {
-   // Saves memory fo de-allocation
-   if(current->length < 6) {
-        current->pointers[current->length] = clarfunc;
-        current->pointers[current->length + 1] = memoryptr;
-        current->length += 2;
-        return current;
-   } else {
-        // This one is full, write to a new one
-        memoryNode *new_node = (memoryNode *)malloc(sizeof(memoryNode));
-        new_node->length = 2;
-        new_node->pointers[0] = clarfunc;
-        new_node->pointers[1] = memoryptr;
-        new_node->next = NULL;
-        current->next = new_node;
-        return new_node;
-   }
-}`);
-        //define clear function
-        body.line(`void memoryClear(JSContext * ctx, memoryNode *head) {
-    memoryNode * prev_node;
-    while (head != NULL) {
-        for (int i = 0; i < head->length; i += 2) {
-            void (*free_func) (JSContext *,void *) = head->pointers[i];
-            void * ptr_to_free = head->pointers[i + 1];
-            free_func(ctx, ptr_to_free);
-        }
-        prev_node = head;
-        head = head->next;
-        free(prev_node);
-    }
-}`);
-        //define a proxy for FreeValue
-        body.line(`void JS_FreeValuePtr(JSContext *ctx, JSValue * v){
-    JS_FreeValue(ctx,*v);
-}`);
-        //Define a struct to store in a trampoline
-        //TODO: check if it may be sane to keep one global JSContext instead
-        body.line(`typedef struct trampolineContext {
-    JSContext * ctx;
-    JSValue func_obj;
-} trampolineContext;`);
         // quickjs.c has the typename enum we need
         let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"));
         let classEnum=quickjsSource.enums.find(a=>a.name===''&&a.values.some(b=>b.name==='JS_CLASS_OBJECT'));
@@ -120,20 +66,6 @@ export class QuickJsHeader {
         }
         classEnumLine+="\n};";
         body.line(classEnumLine);
-        body.line(`char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, ...){
-    va_list args;
-    va_start(args, format);
-    int len=vsnprintf(buffer,*maxsize,format,args);
-    if(len>*maxsize){
-        len++;
-        buffer=js_realloc(ctx,buffer,len * sizeof(char));
-        memset(buffer+*maxsize,0,len-*maxsize);
-        maxsize[0]=len;
-        len=vsnprintf(buffer,len,format,args);
-    }
-    va_end(args);
-    return buffer;
-};`);
     }
     writeTo(filename) {
         const writer = new CodeWriter();
@@ -598,14 +530,24 @@ export class QuickJsGenerator extends CodeGenerator {
                             allocName=allocName.substr('detach'.length);
                         }
                         allocName=allocName+`_${tmpname}`;
-                        this.declare('trampolineContext',`ctx_${tmpname}`);
-                        this.statement(`ctx_${tmpname}.ctx = ctx`);
-                        this.statement(`ctx_${tmpname}.func_obj = ${src}`);//store as whole, but compare as ${src}.u.ptr
+                        if(attachmode!=='detach'){
+                            //Store function and give it new context (in case it is shared ans async)
+                            this.declare('trampolineContext',`ctx_${tmpname}`);
+                            this.call('JS_NewCustomContext',['JS_GetRuntime(ctx)'],{type:'JSContext *',name:'ctx2'});
+                            this.statement(`ctx_${tmpname}.ctx = ctx2`);
+                            //TODO: copy the full context?
+                            this.statement(`ctx_${tmpname}.func_obj = ${src}`);//store as whole, but compare as ${src}.u.ptr
+                        }
                         if(attachmode==='set'){
                             this.root.addCallback(callbackId,allocName,false);
                             let fi = this.if(`JS_IsUndefined(${src}) || JS_IsNull(${src})`);
                                 fi.declare('trampolineContext *',`${allocName}_arr`,false,`NULL`,true);
                             fi = this.elsif(`JS_IsFunction(ctx,${src})==1`);
+                                fi.call('JS_DupValue',['ctx', src]);
+                                fi.call('JS_DupValue',['ctx2',src]);
+                                let fi2 = fi.if(`${allocName}_arr != NULL`);
+                                    fi2.call('JS_FreeValue',[`${allocName}_arr->ctx`,`${allocName}_arr->func_obj`]);
+                                    fi2.call('JS_FreeContext',[`${allocName}_arr->ctx`]);
                                 fi.declare('trampolineContext *',`${allocName}_arr`,false,`&ctx_${tmpname}`,true);
                             fi = this.else();
                                 fi.returnExp(flags.altReturn||"JS_EXCEPTION");
@@ -617,13 +559,15 @@ export class QuickJsGenerator extends CodeGenerator {
 
                         }else
                         if(attachmode==='attach'){
+                            this.call('JS_DupValue',['ctx',src]);
+                            this.call('JS_DupValue',['ctx2',src]);
+
                             this.root.addCallback(callbackId,allocName,true);
                             this.declare('void *',name,false,allocName+'_c',flags.supressDeclaration);
                             let fi = this.if(`JS_IsFunction(ctx,${src})==0`);
                                 fi.returnExp(flags.altReturn||"JS_EXCEPTION");
 
                             fi.declare('void *',name,false,allocName+'_c',flags.supressDeclaration);
-
                             //Attaching functions is infrequent, no realloc optimization
                             fi=this.if(`${allocName}_size==0`);
                                 fi.call('js_malloc',['ctx',`sizeof(void *) * 3`],{name:`${allocName}_arr`});
@@ -643,6 +587,9 @@ export class QuickJsGenerator extends CodeGenerator {
                             let fi;
                             let fo = this.for(0, `${allocName}_size`, iter,'++');
                                 fi = fo.if(`${allocName}_arr[${iter}].func_obj.u.ptr == ${tmpname}_ptr`);
+                                    fi.call('JS_FreeValue',[`ctx`,`${allocName}_arr[${iter}].func_obj`]);
+                                    fi.call('JS_FreeValue',[`${allocName}_arr[${iter}].ctx`,`${allocName}_arr[${iter}].func_obj`]);
+                                    fi.call('JS_FreeContext',[`${allocName}_arr[${iter}].ctx`]);
                                     let fi2 = fi.for(undefined, `${allocName}_size-1`, iter,'++');
                                         fi2.statement(`${allocName}_arr[${iter}]=${allocName}_arr[${iter}+1]`);
                                     fi.statement(`${allocName}_size--`);

@@ -28,7 +28,6 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
@@ -81,8 +80,6 @@ int app_update_quickjs(JSContext *ctx){
 }
 
 #include "bindings/js_raylib_core.h"
-
-static JSCFunctionListEntry argv0;
 
 static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *filename, int eval_flags){
     JSValue val;
@@ -162,54 +159,6 @@ static int64_t parse_limit(const char *arg) {
     }
 
     return (int64_t)(d * unit);
-}
-
-static JSValue js_gc(JSContext *ctx, JSValue this_val,int argc, JSValue *argv){
-    JS_RunGC(JS_GetRuntime(ctx));
-    return JS_UNDEFINED;
-}
-
-static JSValue js_navigator_get_userAgent(JSContext *ctx, JSValue this_val){
-    char version[32];
-    snprintf(version, sizeof(version), "quickjs-ng/%s", JS_GetVersion());
-    return JS_NewString(ctx, version);
-}
-
-static const JSCFunctionListEntry navigator_proto_funcs[] = {
-    JS_CGETSET_DEF2("userAgent", js_navigator_get_userAgent, NULL, JS_PROP_CONFIGURABLE | JS_PROP_ENUMERABLE),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Navigator", JS_PROP_CONFIGURABLE),
-};
-
-static const JSCFunctionListEntry global_obj[] = {
-    JS_CFUNC_DEF("gc", 0, js_gc),
-#if defined(__ASAN__) || defined(__UBSAN__)
-    JS_PROP_INT32_DEF("__running_with_sanitizer__", 1, JS_PROP_C_W_E ),
-#endif
-};
-
-/* also used to initialize the worker context */
-static JSContext *JS_NewCustomContext(JSRuntime *rt){
-    JSContext *ctx;
-    ctx = JS_NewContext(rt);
-    if (!ctx)
-        return NULL;
-    /* system modules */
-    js_init_module_std(ctx, "qjs:std");
-    js_init_module_os(ctx, "qjs:os");
-    js_init_module_bjson(ctx, "qjs:bjson");
-    js_init_module_raylib_core(ctx, "rayjs:raylib");
-
-    JSValue global = JS_GetGlobalObject(ctx);
-    JS_SetPropertyFunctionList(ctx, global, global_obj, countof(global_obj));
-    JS_SetPropertyFunctionList(ctx, global, &argv0, 1);
-    JSValue navigator_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, navigator_proto, navigator_proto_funcs, countof(navigator_proto_funcs));
-    JSValue navigator = JS_NewObjectProto(ctx, navigator_proto);
-    JS_DefinePropertyValueStr(ctx, global, "navigator", navigator, JS_PROP_CONFIGURABLE | JS_PROP_ENUMERABLE);
-    JS_FreeValue(ctx, global);
-    JS_FreeValue(ctx, navigator_proto);
-
-    return ctx;
 }
 
 struct trace_malloc_data {
