@@ -1,5 +1,10 @@
 import * as rl from 'rayjs:raylib';
-for (const key in rl) { globalThis[key] = rl[key] };
+import * as rlm from 'rayjs:rlightmapper';
+import * as rm from 'rayjs:raymath';
+for (const key in rl) { globalThis[key] = rl[key]; }
+for (const key in rlm) { globalThis[key] = rlm[key]; }
+for (const key in rm) { globalThis[key] = rm[key]; }
+
 
 function drawScene(scene){
 	drawModel(scene.raylib_model, new Vector3(0,0,0), 1, WHITE);
@@ -37,7 +42,9 @@ scene.h = 256;
 scene.raylib_texture = loadTextureFromImage(genImageColor(1,1,BLACK));
 const defMat = loadMaterialDefault();
 setMaterialTexture(defMat, MATERIAL_MAP_ALBEDO, scene.raylib_texture);
-setModelMaterial(scene.raylib_model, 0, defMat);
+let materials = scene.raylib_model.materials;
+materials[0] = defMat;
+scene.raylib_model.materials = materials;//setModelMaterial
 
 const position = new Vector3( 0, bbox.min.y + ((bbox.max.y - bbox.min.y) / 2), bbox.max.z - bbox.min.z ); // Camera position
 const target = new Vector3( 0.0, bbox.min.y + ((bbox.max.y - bbox.min.y) / 2), 0.0);     // Camera looking at point
@@ -48,7 +55,7 @@ scene.camera = new Camera3D(position, target, up, fovy, projection);
 const config = getDefaultLightmapperConfig();
 //config.backgroundColor = new Color(10,10,10);
 //config.hemisphereSize = 512;
-const mesh = getModelMesh(scene.raylib_model, 0);
+const mesh = scene.raylib_model.meshes[0];//GetModelMesh
 const lm = loadLightmapper(scene.w, scene.h, mesh, config);
 const lmMat = loadMaterialLightmapper(BLACK, 0);
 const light = genMeshCube(0.2,0.2,0.2);
@@ -91,7 +98,9 @@ while (!windowShouldClose())
             unloadTexture(old);
             let mat = loadMaterialDefault();
             setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, scene.raylib_texture);
-            setModelMaterial(scene.raylib_model, 0, mat);
+            let materials=scene.raylib_model.materials;
+            materials[0] = mat
+            scene.raylib_model.materials= materials;//setModelMaterial
             unloadLightmapper(lm);
         }
     }

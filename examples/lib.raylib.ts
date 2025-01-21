@@ -1431,62 +1431,6 @@ declare function setAudioStreamBufferSizeDefault(size: number): void;
 declare function attachAudioMixedProcessor(processor: AudioMixedProcessor): void;
 /** Detach audio stream processor from the entire audio pipeline */
 declare function detachAudioMixedProcessor(processor: AudioCallback): void;
-/** (PI/180.0) */
-declare var DEG2RAD: number;
-/** (180.0/PI) */
-declare var RAD2DEG: number;
-/** Light Gray */
-declare var LIGHTGRAY: Color;
-/** Gray */
-declare var GRAY: Color;
-/** Dark Gray */
-declare var DARKGRAY: Color;
-/** Yellow */
-declare var YELLOW: Color;
-/** Gold */
-declare var GOLD: Color;
-/** Orange */
-declare var ORANGE: Color;
-/** Pink */
-declare var PINK: Color;
-/** Red */
-declare var RED: Color;
-/** Maroon */
-declare var MAROON: Color;
-/** Green */
-declare var GREEN: Color;
-/** Lime */
-declare var LIME: Color;
-/** Dark Green */
-declare var DARKGREEN: Color;
-/** Sky Blue */
-declare var SKYBLUE: Color;
-/** Blue */
-declare var BLUE: Color;
-/** Dark Blue */
-declare var DARKBLUE: Color;
-/** Purple */
-declare var PURPLE: Color;
-/** Violet */
-declare var VIOLET: Color;
-/** Dark Purple */
-declare var DARKPURPLE: Color;
-/** Beige */
-declare var BEIGE: Color;
-/** Brown */
-declare var BROWN: Color;
-/** Dark Brown */
-declare var DARKBROWN: Color;
-/** White */
-declare var WHITE: Color;
-/** Black */
-declare var BLACK: Color;
-/** Blank (Transparent) */
-declare var BLANK: Color;
-/** Magenta */
-declare var MAGENTA: Color;
-/** My own White (raylib logo) */
-declare var RAYWHITE: Color;
 /** Set to try enabling V-Sync on GPU */
 declare var FLAG_VSYNC_HINT: number;
 /** Set to run program in fullscreen */
@@ -2097,7 +2041,3 @@ declare var NPATCH_NINE_PATCH: number;
 declare var NPATCH_THREE_PATCH_VERTICAL: number;
 /** Npatch layout: 3x1 tiles */
 declare var NPATCH_THREE_PATCH_HORIZONTAL: number;
-/** Albedo material (same as: MATERIAL_MAP_DIFFUSE */
-declare var MATERIAL_MAP_DIFFUSE: number;
-/** Metalness material (same as: MATERIAL_MAP_SPECULAR) */
-declare var MATERIAL_MAP_SPECULAR: number;

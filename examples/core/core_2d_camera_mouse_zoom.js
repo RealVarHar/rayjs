@@ -12,7 +12,11 @@
 ********************************************************************************************/
 
 import * as rl from 'rayjs:raylib';
+import * as rlgl from 'rayjs:rlgl';
+import * as raymath from 'rayjs:raymath';
 for (const key in rl) { globalThis[key] = rl[key] };
+for (const key in rlgl) { globalThis[key] = rlgl[key] };
+for (const key in raymath) { globalThis[key] = raymath[key] };
 
 //------------------------------------------------------------------------------------
 // Program main entry point

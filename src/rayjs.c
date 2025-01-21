@@ -51,14 +51,10 @@ extern const uint32_t qjsc_repl_size;
 #include <stdbool.h>
 #include <limits.h>
 #include <quickjs.h>
-#include <quickjs-libc.h>
 #include <external/glad.h>
 #include <GLFW/glfw3.h>
 #include <raylib.h>
-
-#define REXTENSIONS_IMPLEMENTATION
-#include "rextensions.h"
-
+#include "rayjs_base.c"
 
 
 int app_update_quickjs(JSContext *ctx){
@@ -79,7 +75,14 @@ int app_update_quickjs(JSContext *ctx){
     return 0;
 }
 
-#include "bindings/js_raylib_core.h"
+#include "bindings/js_raylib.h"
+#include "bindings/js_raymath.h"
+#include "bindings/js_rcamera.h"
+#include "bindings/js_raygui.h"
+#include "bindings/js_rlights.h"
+#include "bindings/js_reasings.h"
+#include "bindings/js_rlgl.h"
+#include "bindings/js_rlightmapper.h"
 
 static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *filename, int eval_flags){
     JSValue val;
@@ -499,10 +502,23 @@ int main(int argc, char** argv){
                 "import * as std from 'qjs:std';\n"
                 "import * as os from 'qjs:os';\n"
                 "import * as raylib from 'rayjs:raylib';\n"
+                "import * as raymath from 'rayjs:raymath';\n"
+                "import * as rcamera from 'rayjs:rcamera';\n"
+                "import * as raygui from 'rayjs:raygui';\n"
+                "import * as rlights from 'rayjs:rlights';\n"
+                "import * as rlgl from 'rayjs:rlgl';\n"
+                "import * as reasings from 'rayjs:reasings';\n"
                 "globalThis.bjson = bjson;\n"
                 "globalThis.std = std;\n"
                 "globalThis.os = os;\n"
-                "globalThis.raylib = raylib;\n";
+                "globalThis.raylib = raylib;\n"
+                "globalThis.raymath = raymath;\n"
+                "globalThis.rcamera = rcamera;\n"
+                "globalThis.raygui = raygui;\n"
+                "globalThis.rlights = rlights;\n"
+                "globalThis.rlgl = rlgl;\n"
+                "globalThis.reasings = reasings;\n"
+                ;
             eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
         }
 

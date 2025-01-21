@@ -33,8 +33,10 @@ const floor = loadModelFromMesh(mesh);
 const texture = loadTexture("resources/cubicmap_atlas.png");    // Load map texture
 //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;    // Set map diffuse texture
 const mat = loadMaterialDefault()
-setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture)
-setModelMaterial(floor,0,mat)
+setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture);
+let materials = floor.materials;
+materials[0] = mat;
+floor.materials = materials;
 
 // Get map image data to be used for collision detection
 const mapPixels = new Uint8Array(loadImageColors(imMap));

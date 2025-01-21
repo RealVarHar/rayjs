@@ -1,5 +1,9 @@
 import * as rl from 'rayjs:raylib';
+import * as rlights from 'rayjs:rlights';
+import * as raymath from 'rayjs:raymath';
 for (const key in rl) { globalThis[key] = rl[key] };
+for (const key in rlights) { globalThis[key] = rlights[key] };
+for (const key in raymath) { globalThis[key] = raymath[key] };
 
 /*******************************************************************************************
 *
@@ -71,12 +75,16 @@ setShaderValue(shader, ambientLoc, [0.1, 0.1, 0.1, 1.0], SHADER_UNIFORM_VEC4);
 // Assign out lighting shader to model
 const matModel = loadMaterialDefault()
 matModel.shader = shader
-setModelMaterial(floor, 0, matModel)
+let materials = floor.materials;
+materials[0]=matModel;
+floor.materials=materials;
 setMaterialTexture(matModel, MATERIAL_MAP_DIFFUSE, texture)
 const matCube = loadMaterialDefault()
 matCube.shader = shader
-setMaterialTexture(matCube, MATERIAL_MAP_DIFFUSE, texture)
-setModelMaterial(cube, 0, matCube)
+setMaterialTexture(matCube, MATERIAL_MAP_DIFFUSE, texture);
+materials = cube.materials;
+materials[0]=matCube;
+cube.materials=materials;
 
 // Create lights
 const light = createLight(LIGHT_POINT, new Vector3(-2,1,-2), vector3Zero(), WHITE, shader)

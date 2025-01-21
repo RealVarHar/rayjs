@@ -1,5 +1,7 @@
 import * as rl from 'rayjs:raylib';
+import * as rgui from 'rayjs:raygui';
 for (const key in rl) { globalThis[key] = rl[key] };
+for (const key in rgui) { globalThis[key] = rgui[key] };
 
 /*******************************************************************************************
 *

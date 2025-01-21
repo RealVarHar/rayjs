@@ -1,11 +1,95 @@
-import { QuickJsHeader } from "./quickjs.js"
+import {QuickJsGenerator} from "./quickjs.js"
 import { TypeScriptDeclaration } from "./typescript.js"
-export class RayLibHeader extends QuickJsHeader {
-    constructor(name) {
-        super(undefined,name);
+import {source_parser} from "./source_parser.js";
+import * as fs from "./fs.js";
+import {CodeWriter} from "./generation.js";
+export class RayJsHeader {
+    parent;root;name='';
+    #structLookup = {};structLookup;
+    #callbackLookup = {};callbackLookup;
+    exported= {};
+    body;
+    includeGen;
+    structGen;structArgs={};
+    functionGen;functionArgs={};
+    callbackGen;callbackArgs={};
+    moduleFunctionList;
+    moduleInit;
+    moduleEntry;
+    includeDictionary;
+    constructor(name,includeDictionary={},did) {
+        const thiz=this;
+        const lookuphandler={
+            get(target, prop, receiver){
+                if(target[1][prop]!=undefined){
+                    return target[1][prop];
+                }else{
+                    if(thiz.#structLookup[1][prop]||thiz.#callbackLookup[1][prop])return;
+                    let moduleId=thiz.includeDictionary.lookup[prop];
+                    if(moduleId==undefined)return;
+                    //add the module in question
+                    const module=thiz.includeDictionary.contents[moduleId];
+                    module.include(thiz);
+                    for(let name in module.structLookup){
+                        thiz.#structLookup[1][name]=module.structLookup[name];
+                    }
+                    for(let name in module.callbackLookup){
+                        thiz.#callbackLookup[1][name]=module.callbackLookup[name];
+                    }
+                    //...
+                    return target[1][prop];
+                }
+            },
+            set(target, prop, value){
+                target[0][prop] = value;
+                target[1][prop] = value;
+                if(includeDictionary.lookup[prop]==undefined){
+                    includeDictionary.lookup[prop]=did;
+                }
+                return true;
+            }
+        }
+        this.#structLookup = [includeDictionary.contents[did].structLookup,{}];
+        this.structLookup = new Proxy(this.#structLookup,lookuphandler);
+        this.#callbackLookup = [includeDictionary.contents[did].callbackLookup,{}];
+        this.callbackLookup = new Proxy(this.#callbackLookup,lookuphandler);
         this.typings = new TypeScriptDeclaration();
-        this.includeGen.include("raylib.h");
-        //this.includes.line("#define RAYMATH_IMPLEMENTATION")
+        this.includeDictionary =includeDictionary;
+        this.name = name;
+        this.root = new QuickJsGenerator(this);
+        this.body = this.root.header("JS_" + this.name + "_GUARD");
+        this.includeGen = this.body.child();
+        //TODO: move includes upstream so generation could be split to modules
+        this.includeGen.include("stdio.h");
+        this.includeGen.include("stdlib.h");
+        this.includeGen.include("string.h");
+        this.includeGen.breakLine();
+        this.includeGen.include("quickjs.h");
+        this.includeGen.include("rayjs_base.h");
+        this.body.breakLine();
+        this.definitions = this.body.child();
+        this.body.breakLine();
+        this.structGen = this.body.child();
+        this.callbackGen = this.body.child();
+        this.functionGen = this.body.child();
+        this.moduleFunctionList = this.body.jsFunctionList("js_" + name + "_funcs");
+        const moduleInitFunc = this.body.function("js_" + this.name + "_init", "int", [{ type: "JSContext *", name: "ctx" }, { type: "JSModuleDef *", name: "m" }], true);
+        const moduleInit = this.moduleInit = moduleInitFunc.child();
+        moduleInit.statement(`JS_SetModuleExportList(ctx, m,${this.moduleFunctionList.getTag("_name")},countof(${this.moduleFunctionList.getTag("_name")}))`);
+        moduleInitFunc.returnExp("0");
+        const moduleEntryFunc = this.body.function("js_init_module_" + this.name, "JSModuleDef *", [{ type: "JSContext *", name: "ctx" }, { type: "const char *", name: "module_name" }], false);
+        const moduleEntry = this.moduleEntry = moduleEntryFunc.child();
+        moduleEntry.statement("JSModuleDef *m");
+        moduleEntry.statement(`m = JS_NewCModule(ctx, module_name, ${moduleInitFunc.getTag("_name")})`);
+        moduleEntry.statement("if(!m) return NULL");
+        moduleEntry.statement(`JS_AddModuleExportList(ctx, m, ${this.moduleFunctionList.getTag("_name")}, countof(${this.moduleFunctionList.getTag("_name")}))`);
+        moduleEntryFunc.statement("return m");
+        includeDictionary.contents[did].include(this);
+    }
+    writeTo(filename) {
+        const writer = new CodeWriter();
+        writer.writeGenerator(this.root);
+        fs.writeFileSync(filename, writer.toString());
     }
     paramAllocLen(param){
         let match= param.type.match(/\*/g);
@@ -15,7 +99,7 @@ export class RayLibHeader extends QuickJsHeader {
         //Do not remove length for opaque, pointers need to be re-evaluated manually
         return len;
     };
-    defineCallback(api){
+    registerCallback(api){
         const options = api.binding || {};
         if (options.ignore) return;
         console.log("Binding callback " + api.name);
@@ -78,7 +162,6 @@ export class RayLibHeader extends QuickJsHeader {
             //No idea why, but internally, qjs sometimes moves contex count, since this is threaded, additional dup is called so that we dont end up freeing runtime
             sub.call('JS_DupContext',[`ctx`]);
             sub.call('JS_DupValue',['ctx', 'tctx.func_obj']);
-            //sub.call("printf",['\"3%i\"',`JS_IsFunction(ctx,tctx.func_obj)`]);
             sub.call('JS_Call',['ctx', 'tctx.func_obj', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
             sub.call('JS_FreeValue',['ctx','tctx.func_obj']);
             sub.call('JS_FreeContext',[`ctx`]);
@@ -210,7 +293,7 @@ export class RayLibHeader extends QuickJsHeader {
                 if(hasspread){
                     //functions with bigger spread use more memory, but are less likely that user will run into limitations
                     //spreadSize Min 2, Max 127
-                    fun.declare(api.returnType, "returnVal");
+                    if(api.returnType!=='void')fun.declare(api.returnType, "returnVal");
                     let last=api.params.pop();
                     params.pop();
                     let sw =fun.switch('size_'+last.name);
@@ -256,13 +339,29 @@ export class RayLibHeader extends QuickJsHeader {
         console.log("Binding enum " + renum.name);
         renum.values.forEach(x => this.exportGlobalInt(x.name, x.description));
     }
+    registerAlias(alias){
+        let type=this.structLookup[alias.type];
+        if(type!=undefined){
+            this.structLookup[alias.name] = this.structLookup[alias.type];return;
+        }
+        type=this.callbackLookup[alias.type];
+        if(type!=undefined){
+            this.callbackLookup[alias.name] = this.callbackLookup[alias.type];return;
+        }
+    }
+    registerApiStruct(struct){
+        const options = struct.binding || {};
+        if (options.ignore) return;
+        console.log("Registered struct " + struct.name);
+        const classId = this.definitions.jsClassId(`js_${struct.name}_class_id`);
+        this.structLookup[struct.name] = classId;
+        options.aliases?.forEach(x => {this.structLookup[x] = classId});
+    }
     addApiStruct(struct) {
         const options = struct.binding || {};
         if (options.ignore) return;
         console.log("Binding struct " + struct.name);
         const classId = this.definitions.jsClassId(`js_${struct.name}_class_id`);
-        this.structLookup[struct.name] = classId;
-        options.aliases?.forEach(x => {this.structLookup[x] = classId});
         const finalizer = this.structGen.jsStructFinalizer(classId, struct.name, (gen, ptr) => options.destructor && gen.call(options.destructor.name, ["*" + ptr]));
         const propDeclarations = new this.structGen.constructor();
         this.structArgs[struct.name]=struct.fields;
@@ -291,7 +390,7 @@ export class RayLibHeader extends QuickJsHeader {
         const classDecl = this.structGen.jsClassDeclaration(struct.name, classId, finalizer.getTag("_name"), classFuncList.getTag("_name"));
         this.moduleInit.call(classDecl.getTag("_name"), ["ctx", "m"]);
         if (options?.createConstructor || options?.createEmptyConstructor) {
-            const body = this.functionGen.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId, this.structLookup);
+            const body = this.functionGen.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId);
             this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name})", ${struct.fields.length}, JS_CFUNC_constructor_or_func, 0)`);
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
@@ -307,16 +406,18 @@ export class RayLibHeader extends QuickJsHeader {
         this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${exportName}"`, exportName + "_js"]);
         this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", `"${exportName}"`]);
         this.typings.constants.tsDeclareConstant(exportName, structName, description);
+        this.exported[structName]='struct';
     }
-    exportGlobalInt(name, description) {
-        if(name==='')debugger;
+    exportGlobalInt(name, description='') {
         this.moduleInit.statement(`JS_SetModuleExport(ctx, m, "${name}", JS_NewInt32(ctx, ${name}))`);
         this.moduleEntry.statement(`JS_AddModuleExport(ctx, m, "${name}")`);
         this.typings.constants.tsDeclareConstant(name, "number", description);
+        this.exported[name]='int';
     }
-    exportGlobalDouble(name, description) {
+    exportGlobalDouble(name, description='') {
         this.moduleInit.statement(`JS_SetModuleExport(ctx, m, "${name}", JS_NewFloat64(ctx, ${name}))`);
         this.moduleEntry.statement(`JS_AddModuleExport(ctx, m, "${name}")`);
         this.typings.constants.tsDeclareConstant(name, "number", description);
+        this.exported[name]='float';
     }
 }

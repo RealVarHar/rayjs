@@ -1,5 +1,7 @@
 import * as rl from 'rayjs:raylib';
+import * as raymath from 'rayjs:raymath';
 for (const key in rl) { globalThis[key] = rl[key] };
+for (const key in raymath) { globalThis[key] = raymath[key] };
 
 // Initialization
 //--------------------------------------------------------------------------------------

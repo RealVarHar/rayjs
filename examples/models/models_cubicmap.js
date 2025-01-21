@@ -39,8 +39,10 @@ let texture = loadTexture("resources/cubicmap_atlas.png");    // Load map textur
 
 //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;    // Set map diffuse texture
 const mat = loadMaterialDefault()
-setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture)
-setModelMaterial(floor,0,mat)
+setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture);
+let materials = floor.materials;
+materials[0] = mat;
+floor.materials = materials;
 
 const mapPosition = new Vector3(-16.0, 0.0, -8.0);          // Set model position
 

@@ -6,7 +6,7 @@ QuickJS based Javascript bindings for raylib in a single ~3mb executable
 rayjs is small ES2020 compliant Javascript interpreter based on [QuickJS](https://bellard.org/quickjs/) with bindings for [Raylib](https://www.raylib.com/). You can use it to develop tiny desktop games with Javascript.
 
 ## What this is not
-rayjs is not a binding for NodeJS nor is it running in the browser (yet). It's comes with its own Javascript engine (QuickJS) similar to how NodeJS comes with the V8 engine. That makes it much easier to run and distribute rayjs programs as all you need to run a program / game is the small rayjs executable. No installation, no dlls or additional files are needed.
+rayjs is not a binding for NodeJS nor is it running in the browser, or phone (yet). It's comes with its own Javascript engine (QuickJS) similar to how NodeJS comes with the V8 engine. That makes it much easier to run and distribute rayjs programs as all you need to run a program / game is the small rayjs executable. No installation, no dlls or additional files are needed.
 
 ## Features
 * Compiles into a single, small executable without any dependencies for easy distribution
@@ -39,12 +39,25 @@ rayjs is not a binding for NodeJS nor is it running in the browser (yet). It's c
 5. Congratulations, you have created your first rayjs app. 
 
 ## Running code
-rayjs will run code in three different modes
-1. If no parameter is given it will look for a file called `main.js` in the executable directory
-2. It will run a given Javascript file given as a command line argument like this `rayjs <filename>`
-3. It will look for a file called `main.js` in a folder given as a command line argument like this `rayjs <foldername>`
+rayjs application shares usage options with QJS, with help avaliable through rayjs.exe -help
+```
+usage: rayjs [options] [file [args]]
+-h  --help         list options
+-e  --eval EXPR    evaluate EXPR
+-i  --interactive  go to interactive mode
+-m  --module       load as ES6 module (default=autodetect)
+--script       load as ES6 script (default=autodetect)
+-I  --include file include an additional file
+--std          make 'std','os','bjson','raylib' available to the loaded script
+-T  --trace        trace memory allocation
+-d  --dump         dump the memory usage stats
+-D  --dump-flags   flags for dumping debug data -D=<bitmask> (see DUMP_* defines)
+--memory-limit n       limit the memory usage to 'n' Kbytes
+--stack-size n         limit the stack size to 'n' Kbytes
+--unhandled-rejection  dump unhandled promise rejections
+-q  --quit         just instantiate the interpreter and quit
+```
 
-The directory of the main Javascript module will also be the working directory of the app. Modules and resources will be loaded relative to it.
 
 ## API support
 
@@ -69,25 +82,7 @@ To check which API functions are not available (yet) check `/bindings/src/index.
 
 ## Additional APIs
 
-Rayjs comes with some additional functionality on top of raylib to make writing raylib code with Javascript easier
-```typescript
-/** Replace material in slot materialIndex (Material is NOT unloaded) */
-declare function setModelMaterial(model: Model, materialIndex: number, material: Material): void;
-/** Get material in slot materialIndex */
-declare function getModelMaterial(model: Model, materialIndex: number): Material;
-/** Get a single mesh from a model */
-declare function getModelMesh(model: Model, meshIndex: number): Mesh;
-/** Set shader constant in shader locations array */
-declare function setShaderLocation(shader: Shader, constant: number, location: number): void;
-/** Read a single pixel from an image */
-declare function imageReadPixel(image: Image, x: number, y: number): Color;
-/** Make a deep-copy of an existing mesh */
-declare function meshCopy(mesh: Mesh): Mesh;
-/** Create a new mesh that contains combined attributes of two meshes */
-declare function meshMerge(a: Mesh, b: Mesh): Mesh;
-```
-
-Additionally it also comes with bindings to [lightmapper.h](https://github.com/ands/lightmapper/tree/master). See below for more information.
+Rayjs comes with bindings to [lightmapper.h](https://github.com/ands/lightmapper/tree/master). See below for more information.
 
 ## Auto-Complete / Intellisense
 

@@ -1,6 +1,6 @@
 import * as fs from "./fs.js";
 globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
-const raylib_header = (await import("./raylib-header.js")).RayLibHeader;
+const rayjs_header = (await import("./raylib-header.js")).RayJsHeader;
 const source_parser = (await import("./source_parser.js")).source_parser;
 
 String.prototype.replaceAt = function(index, replacement) {
@@ -24,84 +24,113 @@ if(globalThis.structuredClone==undefined){
         return obj;
     }
 }
-
-let api;
+let modules= {};//name=>api
 let ignored=0;
-function getFunction(name) {
-    return api.functions.find(x => x.name === name);
-}
-function getStruct(name) {
-    return api.structs.find(x => x.name === name);
-}
-function getCallback(name) {
-    return api.callbacks.find(x => x.name === name);
-}
-function getAliases(name) {
-    return api.aliases.filter(x => x.type === name).map(x => x.name);
-}
-function ignore(name) {
-    let obj=getFunction(name);
-    if(!obj)obj=getStruct(name);
-    if(!obj)obj=getCallback(name);
-    obj.binding = { ignore: true };
-    ignored++;
+function attachGetters(api){
+    api.getFunction=(name)=> api.functions.find(x => x.name === name);
+    api.getStruct=(name)=> api.structs.find(x => x.name === name);
+    api.getCallback=(name)=> api.callbacks.find(x => x.name === name);
+    api.ignore=(name)=>{
+        let obj=api.getFunction(name);
+        if(!obj)obj=api.getStruct(name);
+        if(!obj)obj=api.getCallback(name);
+        if(obj){
+            obj.binding = { ignore: true };
+            ignored++;
+        }
+    };
 }
 function normalizeType(type=''){
     return type.replaceAll("*", " * ").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ').trim();
 }
-function deduplicateName(arr){
-    let dedup=new Set();let j=0;
-    for(let i=0;i<arr.length;i++){
-        let f=arr[i];
-        if(dedup.has(f.name)){
-            continue;
-        }else{
-            dedup.add(f.name);
-            arr[j]=f;
+function removeDuplicates(module,key,names){
+    let j=0;
+    for(let i=0;i<module[key].length;i++){
+        if(!names.has(module[key][i].name)){
+            module[key][j]=module[key][i];
             j++;
         }
     }
-    arr.splice(j,arr.length-j);
-    return arr;
+    if(j<module[key].length)module[key]=module[key].slice(0,j);
+}
+const includeDictionary={lookup:{},contents:[]};
+function addModuleToDictionary(module,include){
+    let id=includeDictionary.contents.length;
+    let contents={include};
+    contents.structLookup={};
+    contents.callbackLookup={};
+    contents.enumLookup={};
+    contents.functionLookup={};
+    includeDictionary.contents[id]=contents;
+    return id;
 }
 function main() {
-    let att,cb;
+    let att,cb,did;
     // load quickjs.c since it has the enum we need
     let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"));
+    let classEnum=quickjsSource.enums.find(a=>a.name===''&&a.values.some(b=>b.name==='JS_CLASS_OBJECT'));
+    let classEnumLine="enum {\n";
+    for(let value of classEnum.values){
+        classEnumLine+=value.name+' = '+value.value+',';
+    }
+    classEnumLine+="\n};";
+    fs.writeFileSync("src/rayjs_generated.c",classEnumLine);
     // Load the pre-generated raylib api
-    api = JSON.parse(fs.readFileSync("thirdparty/raylib/parser/output/raylib_api.json", 'utf8'));
-    //make sure json structure is as expected
-    api.functions=api.functions.map(fn=>{
-        return {
-            returnType: normalizeType(fn.returnType),
-            name: fn.name,
-            params: (fn.params||[]).map( parm =>{
-                return {
-                    name: parm.name || "",
-                    type: normalizeType(parm.type),
-                    binding:{}
-                }
-            }),
-            description: fn.description || "",
-            binding:{}
-        };
+    let once={};
+    modules['core'] = new source_parser(fs.readFileSync("thirdparty/raylib/src/raylib.h", "utf8"));
+    did=addModuleToDictionary(modules['core'],(gen)=>{
+        gen.includeGen.include("raylib.h");
     });
-    let mathSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"));
-    api.functions=api.functions.concat(mathSource.functions);
-    let rlglSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"));
-    api.functions=api.functions.concat(rlglSource.functions);
-    api.structs=api.structs.concat(rlglSource.structs);
-    let rcameraSource=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"));
-    api.functions=api.functions.concat(rcameraSource.functions);
-    api.structs=api.structs.concat(rcameraSource.structs);
-    let rguiSource=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"));
-    api.functions=api.functions.concat(rguiSource.functions);
-    api.enums=api.enums.concat(rguiSource.enums);
-    let rlightsSource=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"));
-    api.functions=api.functions.concat(rlightsSource.functions);
-    api.enums=api.enums.concat(rlightsSource.enums);
-    api.structs=api.structs.concat(rlightsSource.structs);
-    api.structs.find(a=>a.name=='Light').binding = {
+    modules['core'].gen = new rayjs_header("js_raylib",includeDictionary,did);
+    modules['raymath']=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"));
+    did=addModuleToDictionary(modules['raymath'],(gen)=>{
+        gen.includeGen.include("raymath.h");
+    });
+    modules['raymath'].gen = new rayjs_header("js_raymath",includeDictionary,did);
+    modules['rcamera']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"));
+    did=addModuleToDictionary(modules['rcamera'],(gen)=>{
+        gen.includeGen.include("rcamera.h");
+    });
+    modules['rcamera'].gen = new rayjs_header("js_rcamera",includeDictionary,did);
+    modules['raygui']=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"));
+    did=addModuleToDictionary(modules['raygui'],(gen)=>{
+        if(!once['raygui']){
+            once['raygui']=true;
+            gen.includeGen.line("#define RAYGUI_IMPLEMENTATION");
+        }
+        gen.includeGen.include("raygui.h");
+    });
+    modules['raygui'].gen = new rayjs_header("js_raygui",includeDictionary,did);
+    modules['rlights']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"));
+    did=addModuleToDictionary(modules['rlights'],(gen)=>{
+        if(!once['rlights']){
+            once['rlights']=true;
+            gen.includeGen.line("#define RLIGHTS_IMPLEMENTATION");
+        }
+        gen.includeGen.include("rlights.h");
+    });
+    modules['rlights'].gen = new rayjs_header("js_rlights",includeDictionary,did);
+    modules['reasings']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"));
+    did=addModuleToDictionary(modules['reasings'],(gen)=>{
+        gen.includeGen.include("reasings.h");
+    });
+    modules['reasings'].gen = new rayjs_header("js_reasings",includeDictionary,did);
+    modules['rlgl']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"));
+    did=addModuleToDictionary(modules['rlgl'],(gen)=>{
+        gen.includeGen.include("rlgl.h");
+    });
+    modules['rlgl'].gen = new rayjs_header("js_rlgl",includeDictionary,did);
+    modules['rlightmapper']=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"));
+    did=addModuleToDictionary(modules['rlightmapper'],(gen)=>{
+        if(!once['rlightmapper']){
+            once['rlightmapper']=true;
+            gen.includeGen.line("#define RLIGHTMAPPER_IMPLEMENTATION");
+        }
+        gen.includeGen.include("rlightmapper.h");
+    });
+    modules['rlightmapper'].gen = new rayjs_header("js_rlightmapper",includeDictionary,did);
+    for(let key in modules)attachGetters(modules[key]);
+    modules['rlights'].getStruct('Light').binding = {
         properties: {
             type: { get: true, set: true },
             enabled: { get: true, set: true },
@@ -111,19 +140,14 @@ function main() {
             attenuation: { get: true, set: true },
         },
     };
-    let reasingsSource=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"));
-    api.functions=api.functions.concat(reasingsSource.functions);
-    let rlightmapperSource=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"));
-    api.functions=api.functions.concat(rlightmapperSource.functions);
-    api.structs=api.structs.concat(rlightmapperSource.structs);
-    api.structs.find(a=>a.name=='Lightmapper').binding = {
+    modules['rlightmapper'].getStruct('Lightmapper').binding = {
         properties: {
             w: { get: true },
             h: { get: true },
             progress: { get: true }
         }
     };
-    api.structs.find(a=>a.name=='LightmapperConfig').binding = {
+    modules['rlightmapper'].getStruct('LightmapperConfig').binding = {
         properties: {
             hemisphereSize: { get: true, set: true },
             zNear: { get: true, set: true },
@@ -134,38 +158,22 @@ function main() {
             cameraToSurfaceDistanceModifier: { get: true, set: true },
         }
     };
-    let rextensionsSource=new source_parser(fs.readFileSync("src/rextensions.h", "utf8"));
-    api.functions=api.functions.concat(rextensionsSource.functions);
-    // Deduplicate functions and structs
-    let dedup=new Set();let j=0;
-    for(let i=0;i<api.functions.length;i++){
-        let f=api.functions[i];
-        if(dedup.has(f.name)){
-            continue;
-        }else{
-            dedup.add(f.name);
-            api.functions[j]=f;
-            j++;
-        }
+
+    // Remove duplicate structs and functions from modules
+    let dedup=new Set();
+    for(let i=0;i<modules['core'].functions.length;i++){dedup.add(modules['core'].functions[i].name);}
+    for(let i=0;i<modules['core'].structs.length;i++){dedup.add(modules['core'].structs[i].name);}
+    for(let i=0;i<modules['core'].enums.length;i++){dedup.add(modules['core'].enums[i].name);}
+    for(let i=0;i<modules['core'].aliases.length;i++){dedup.add(modules['core'].aliases[i].name);}
+    for(let name in modules){
+        if(name=='core')continue;
+        removeDuplicates(modules[name],'functions',dedup);
+        removeDuplicates(modules[name],'structs',dedup);
+        removeDuplicates(modules[name],'enums',dedup);
+        removeDuplicates(modules[name],'aliases',dedup);
     }
     new source_parser(fs.readFileSync("thirdparty/raylib/src/config.h", "utf8"));//only parse to add #defined
-    api.functions=deduplicateName(api.functions);
-    api.structs=deduplicateName(api.structs);
-    api.enums=deduplicateName(api.enums);
-    // Define a new header
-    const core = new raylib_header("raylib_core");
-    core.includeGen.include("raymath.h");
-    core.includeGen.include("rcamera.h");
-    core.includeGen.line("#define RAYGUI_IMPLEMENTATION");
-    core.includeGen.include("raygui.h");
-    core.includeGen.line("#define RLIGHTS_IMPLEMENTATION");
-    core.includeGen.include("rlights.h");
-    core.includeGen.include("reasings.h");
-    core.includeGen.line("#define RLIGHTMAPPER_IMPLEMENTATION");
-    core.includeGen.include("rlightmapper.h");
-    //core.includeGen.line("#define RLGL_IMPLEMENTATION");
-    core.includeGen.include("rlgl.h");
-    getStruct("Color").binding = {
+    modules['core'].getStruct("Color").binding = {
         properties: {
             r: { get: true, set: true },
             g: { get: true, set: true },
@@ -174,7 +182,7 @@ function main() {
         },
         createConstructor: true
     };
-    getStruct("Rectangle").binding = {
+    modules['core'].getStruct("Rectangle").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
@@ -183,14 +191,14 @@ function main() {
         },
         createConstructor: true
     };
-    getStruct("Vector2").binding = {
+    modules['core'].getStruct("Vector2").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
         },
         createConstructor: true
     };
-    getStruct("Vector3").binding = {
+    modules['core'].getStruct("Vector3").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
@@ -198,24 +206,23 @@ function main() {
         },
         createConstructor: true
     };
-    getStruct("Vector4").binding = {
+    modules['core'].getStruct("Vector4").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
             z: { get: true, set: true },
             w: { get: true, set: true },
         },
-        createConstructor: true,
-        aliases: getAliases("Vector4")
+        createConstructor: true
     };
-    getStruct("Ray").binding = {
+    modules['core'].getStruct("Ray").binding = {
         properties: {
             position: { get: false, set: true },
             direction: { get: false, set: true },
         },
         createConstructor: true
     };
-    getStruct("RayCollision").binding = {
+    modules['core'].getStruct("RayCollision").binding = {
         properties: {
             hit: { get: true, set: false },
             distance: { get: true, set: false },
@@ -224,7 +231,7 @@ function main() {
         },
         createConstructor: false
     };
-    getStruct("Camera2D").binding = {
+    modules['core'].getStruct("Camera2D").binding = {
         properties: {
             offset: { get: true, set: true },
             target: { get: true, set: true },
@@ -233,7 +240,7 @@ function main() {
         },
         createConstructor: true
     };
-    getStruct("Camera3D").binding = {
+    modules['core'].getStruct("Camera3D").binding = {
         properties: {
             position: { get: true, set: true },
             target: { get: true, set: true },
@@ -241,21 +248,20 @@ function main() {
             fovy: { get: true, set: true },
             projection: { get: true, set: true },
         },
-        createConstructor: true,
-        aliases: getAliases("Camera3D")
+        createConstructor: true
     };
-    getStruct("BoundingBox").binding = {
+    modules['core'].getStruct("BoundingBox").binding = {
         properties: {
             min: { get: true, set: true },
             max: { get: true, set: true },
         },
         createConstructor: true
     };
-    getStruct("Matrix").binding = {
+    modules['core'].getStruct("Matrix").binding = {
         properties: {},
         createConstructor: false
     };
-    getStruct("NPatchInfo").binding = {
+    modules['core'].getStruct("NPatchInfo").binding = {
         properties: {
             source: { get: true, set: true },
             left: { get: true, set: true },
@@ -266,7 +272,7 @@ function main() {
         },
         createConstructor: true
     };
-    getStruct("Image").binding = {
+    modules['core'].getStruct("Image").binding = {
         properties: {
             data: { set: true },
             width: { get: true, set: true },
@@ -277,7 +283,7 @@ function main() {
         createEmptyConstructor: true
         //destructor: "UnloadImage"
     };
-    getStruct("Wave").binding = {
+    modules['core'].getStruct("Wave").binding = {
         properties: {
             frameCount: { get: true },
             sampleRate: { get: true },
@@ -286,13 +292,13 @@ function main() {
         },
         //destructor: "UnloadWave"
     };
-    getStruct("Sound").binding = {
+    modules['core'].getStruct("Sound").binding = {
         properties: {
             frameCount: { get: true }
         },
         //destructor: "UnloadSound"
     };
-    getStruct("Music").binding = {
+    modules['core'].getStruct("Music").binding = {
         properties: {
             frameCount: { get: true },
             looping: { get: true, set: true },
@@ -300,13 +306,13 @@ function main() {
         },
         //destructor: "UnloadMusicStream"
     };
-    getStruct("Model").binding = {
+    modules['core'].getStruct("Model").binding = {
         properties: {
             transform: { get: true, set: true },
             meshCount: { get: true },
             materialCount: { get: true },
-            meshes: { get: true, sizeVars:['ptr->meshCount']},
-            materials: { get: true, sizeVars:['ptr->materialCount'] },
+            meshes: { get: true, set: true, sizeVars:['ptr->meshCount']},
+            materials: { get: true, set: true, sizeVars:['ptr->materialCount'] },
             meshMaterial: { get: true, sizeVars:['ptr->meshCount'] },
             boneCount: { get: true },
             bones: { get: true, sizeVars:['ptr->boneCount'] },
@@ -314,7 +320,7 @@ function main() {
         },
         //destructor: "UnloadModel"
     };
-    getStruct("Mesh").binding = {
+    modules['core'].getStruct("Mesh").binding = {
         properties: {
             vertexCount: { get: true, set: true },
             triangleCount: { get: true, set: true },
@@ -334,23 +340,22 @@ function main() {
         createEmptyConstructor: true
         //destructor: "UnloadMesh"
     };
-    getStruct("Shader").binding = {
+    modules['core'].getStruct("Shader").binding = {
         properties: {
             id: { get: true }
         },
         //destructor: "UnloadShader"
     };
-    getStruct("Texture").binding = {
+    modules['core'].getStruct("Texture").binding = {
         properties: {
             width: { get: true },
             height: { get: true },
             mipmaps: { get: true },
             format: { get: true },
-        },
-        aliases: getAliases("Texture")
+        }
         //destructor: "UnloadTexture"
     };
-    getStruct("Font").binding = {
+    modules['core'].getStruct("Font").binding = {
         properties: {
             baseSize: { get: true },
             glyphCount: { get: true },
@@ -359,16 +364,15 @@ function main() {
         },
         //destructor: "UnloadFont"
     };
-    getStruct("RenderTexture").binding = {
+    modules['core'].getStruct("RenderTexture").binding = {
         properties: {
             id: { get: true },
             texture: { get: true },
             depth: { get: true },
-        },
-        aliases: getAliases("RenderTexture")
+        }
         //destructor: "UnloadRenderTexture"
     };
-    getStruct("MaterialMap").binding = {
+    modules['core'].getStruct("MaterialMap").binding = {
         properties: {
             texture: { set: true },
             color: { set: true, get: true },
@@ -376,15 +380,14 @@ function main() {
         },
         //destructor: "UnloadMaterialMap"
     };
-    getStruct("Material").binding = {
+    modules['core'].getStruct("Material").binding = {
         properties: {
             shader: { get: true, set: true },
             maps: { get: true, sizeVars:[config.defined['MAX_MATERIAL_MAPS']] }
         },
         //destructor: "UnloadMaterial"
     };
-    const structDI = getStruct("VrDeviceInfo");
-    structDI.fields.filter(x => x.name === "lensDistortionValues")[0].type = "Vector4";
+    const structDI = modules['core'].getStruct("VrDeviceInfo");
     structDI.binding = {
         createEmptyConstructor: true,
         properties: {
@@ -395,24 +398,19 @@ function main() {
             eyeToScreenDistance: { set: true, get: true },
             lensSeparationDistance: { set: true, get: true },
             interpupillaryDistance: { set: true, get: true },
-			//below are Vector4 and float[4] that need custom read/write
-            //lensDistortionValues: { set: true, get: true },
-			//chromaAbCorrection : { set: true, get: true }
+            lensDistortionValues: { set: true, get: true },
+			chromaAbCorrection : { set: true, get: true }
         }
     };
-    getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
-    ignore("SetWindowIcons");
-    ignore("GetWindowHandle");
+    modules['core'].getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
+    modules['core'].ignore("SetWindowIcons");
+    modules['core'].ignore("GetWindowHandle");
     // Custom frame control functions
     // NOT SUPPORTED BECAUSE NEEDS COMPILER FLAG
-    ignore("SwapScreenBuffer");
-    ignore("PollInputEvents");
-    ignore("WaitTime");
-    //ignore("BeginVrStereoMode")
-    //ignore("EndVrStereoMode")
-    //ignore("LoadVrStereoConfig")
-    //ignore("UnloadVrStereoConfig")
-    getFunction("SetShaderValue").binding = { body: (gen) => {
+    modules['core'].ignore("SwapScreenBuffer");
+    modules['core'].ignore("PollInputEvents");
+    modules['core'].ignore("WaitTime");
+    modules['core'].getFunction("SetShaderValue").binding = { body: (gen) => {
         gen.jsToC("Shader", "shader", "argv[0]");
         gen.jsToC("int", "locIndex", "argv[1]");
         gen.declare("void *", "value", false, "NULL");
@@ -452,7 +450,7 @@ function main() {
         gen.jsCleanUpParameter("void *", 'value', "argv[2]");
         gen.returnExp("JS_UNDEFINED");
     } };
-    getFunction("SetShaderValueV").binding = { body: (gen) => {
+    modules['core'].getFunction("SetShaderValueV").binding = { body: (gen) => {
             gen.jsToC("Shader", "shader", "argv[0]");
             gen.jsToC("int", "locIndex", "argv[1]");
             gen.jsToC("int", "uniformType", "argv[3]");
@@ -482,35 +480,29 @@ function main() {
             gen.jsCleanUpParameter("void *", 'value', "argv[2]");
             gen.returnExp("JS_UNDEFINED");
         } };
-    getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
-    const traceLog = getFunction("TraceLog");
-    traceLog.params?.pop();
+    modules['core'].getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
     // JS User has no need to raw allocate memory
-    ignore("MemAlloc");
-    ignore("MemRealloc");
-    ignore("MemFree");
+    modules['core'].ignore("MemAlloc");
+    modules['core'].ignore("MemRealloc");
+    modules['core'].ignore("MemFree");
     // SetTraceLogCallback uses va_list and as such needs custom
-    getFunction("ComputeMD5").returnSizeVars = [4];
-    getFunction("ComputeSHA1").returnSizeVars = [5];
-    ignore("TraceLogCallback");
-    ignore("SetTraceLogCallback");
-    //ignore("SetLoadFileDataCallback");
-    //ignore("SetSaveFileDataCallback");
-    //ignore("SetLoadFileTextCallback");
-    //ignore("SetSaveFileTextCallback");
+    modules['core'].getFunction("ComputeMD5").returnSizeVars = [4];
+    modules['core'].getFunction("ComputeSHA1").returnSizeVars = [5];
+    modules['core'].ignore("TraceLogCallback");
+    modules['core'].ignore("SetTraceLogCallback");
     // Files management functions
-    att = getFunction("LoadFileData");
+    att = modules['core'].getFunction("LoadFileData");
     //att.params.find(a=>a.name=='dataSize').type='int &';
     att.returnSizeVars = ['dataSize[0]'];
     att.binding.after = gen => gen.call("UnloadFileData", ["returnVal"]);
-    ignore("UnloadFileData");
-    att = getFunction("ExportImageToMemory");
+    modules['core'].ignore("UnloadFileData");
+    att = modules['core'].getFunction("ExportImageToMemory");
     att.returnSizeVars = ['fileSize[0]'];
     // TODO: SaveFileData works but unnecessary makes copy of memory
-    getFunction("SaveFileData").binding = {};
-    ignore("ExportDataAsCode");
-    getFunction("LoadFileText").binding.after = gen => gen.call("UnloadFileText", ["returnVal"]);
-    ignore("UnloadFileText");
+    modules['core'].getFunction("SaveFileData").binding = {};
+    modules['core'].ignore("ExportDataAsCode");
+    modules['core'].getFunction("LoadFileText").binding.after = gen => gen.call("UnloadFileText", ["returnVal"]);
+    modules['core'].ignore("UnloadFileText");
     const createFileList = (gen, loadName, unloadName, args) => {
         gen.call(loadName, args, { type: "FilePathList", name: "files" });
         gen.call("JS_NewArray", ["ctx"], { type: "JSValue", name: "ret" });
@@ -518,7 +510,7 @@ function main() {
         f.call("JS_SetPropertyUint32", ["ctx", "ret", "i", "JS_NewString(ctx,files.paths[i])"]);
         gen.call(unloadName, ["files"]);
     };
-    getFunction("LoadDirectoryFiles").binding = {
+    modules['core'].getFunction("LoadDirectoryFiles").binding = {
         jsReturns: "string[]",
         body: gen => {
             gen.jsToC("const char *", "dirPath", "argv[0]");
@@ -527,7 +519,7 @@ function main() {
             gen.returnExp("ret");
         }
     };
-    getFunction("LoadDirectoryFilesEx").binding = {
+    modules['core'].getFunction("LoadDirectoryFilesEx").binding = {
         jsReturns: "string[]",
         body: gen => {
             gen.jsToC("const char *", "basePath", "argv[0]");
@@ -539,28 +531,28 @@ function main() {
             gen.returnExp("ret");
         }
     };
-    ignore("UnloadDirectoryFiles");
-    getFunction("LoadDroppedFiles").binding = {
+    modules['core'].ignore("UnloadDirectoryFiles");
+    modules['core'].getFunction("LoadDroppedFiles").binding = {
         jsReturns: "string[]",
         body: gen => {
             createFileList(gen, "LoadDroppedFiles", "UnloadDroppedFiles", []);
             gen.returnExp("ret");
         }
     };
-    ignore("UnloadDroppedFiles");
+    modules['core'].ignore("UnloadDroppedFiles");
     // Compression/encoding functionality
-    ignore("CompressData");
-    ignore("DecompressData");
-    ignore("EncodeDataBase64");
-    ignore("DecodeDataBase64");
-    ignore("DrawLineStrip");
-    ignore("DrawTriangleFan");
-    ignore("DrawTriangleStrip");
-    ignore("CheckCollisionPointPoly");
-    ignore("CheckCollisionLines");
-    ignore("LoadImageAnim");
-    ignore("ExportImageAsCode");
-    getFunction("LoadImageColors").binding = {
+    modules['core'].ignore("CompressData");
+    modules['core'].ignore("DecompressData");
+    modules['core'].ignore("EncodeDataBase64");
+    modules['core'].ignore("DecodeDataBase64");
+    modules['core'].ignore("DrawLineStrip");
+    modules['core'].ignore("DrawTriangleFan");
+    modules['core'].ignore("DrawTriangleStrip");
+    modules['core'].ignore("CheckCollisionPointPoly");
+    modules['core'].ignore("CheckCollisionLines");
+    modules['core'].ignore("LoadImageAnim");
+    modules['core'].ignore("ExportImageAsCode");
+    modules['core'].getFunction("LoadImageColors").binding = {
         jsReturns: "ArrayBuffer",
         body: gen => {
             gen.jsToC("Image", "image", "argv[0]");
@@ -570,13 +562,13 @@ function main() {
             gen.returnExp("retVal");
         }
     };
-    ignore("LoadImagePalette");
-    ignore("UnloadImageColors");
-    ignore("UnloadImagePalette");
-    ignore("GetPixelColor");
-    ignore("SetPixelColor");
+    modules['core'].ignore("LoadImagePalette");
+    modules['core'].ignore("UnloadImageColors");
+    modules['core'].ignore("UnloadImagePalette");
+    modules['core'].ignore("GetPixelColor");
+    modules['core'].ignore("SetPixelColor");
     let applyffix=false;
-    const lfx = getFunction("LoadFontEx");
+    const lfx = modules['core'].getFunction("LoadFontEx");
     if(applyffix){
         lfx.params[2].binding = { ignore: true };
         lfx.params[3].binding = { ignore: true };
@@ -584,28 +576,28 @@ function main() {
     }else{
         lfx.params[2].binding = { allowNull: true };
     }
-    ignore("LoadFontFromMemory");
-    ignore("LoadFontData");
-    ignore("GenImageFontAtlas");
-    ignore("UnloadFontData");
-    ignore("ExportFontAsCode");
-    ignore("DrawTextCodepoints");
-    ignore("GetGlyphInfo");
-    ignore("LoadUTF8");
-    ignore("UnloadUTF8");
-    ignore("LoadCodepoints");
-    ignore("UnloadCodepoints");
-    ignore("GetCodepointCount");
-    ignore("GetCodepoint");
-    ignore("GetCodepointNext");
-    ignore("GetCodepointPrevious");
-    ignore("CodepointToUTF8");
+    modules['core'].ignore("LoadFontFromMemory");
+    modules['core'].ignore("LoadFontData");
+    modules['core'].ignore("GenImageFontAtlas");
+    modules['core'].ignore("UnloadFontData");
+    modules['core'].ignore("ExportFontAsCode");
+    modules['core'].ignore("DrawTextCodepoints");
+    modules['core'].ignore("GetGlyphInfo");
+    modules['core'].ignore("LoadUTF8");
+    modules['core'].ignore("UnloadUTF8");
+    modules['core'].ignore("LoadCodepoints");
+    modules['core'].ignore("UnloadCodepoints");
+    modules['core'].ignore("GetCodepointCount");
+    modules['core'].ignore("GetCodepoint");
+    modules['core'].ignore("GetCodepointNext");
+    modules['core'].ignore("GetCodepointPrevious");
+    modules['core'].ignore("CodepointToUTF8");
     if(!config.bindText){
         //Text functions are enabled for compatibility
-        api.functions.filter(x => x.name.startsWith("Text")).forEach(x => ignore(x.name));
+        api.functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['core'].ignore(x.name));
     }else{
-        getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
-        getFunction("TextFormat").binding.body=(gen)=>{
+        modules['core'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+        modules['core'].getFunction("TextFormat").binding.body=(gen)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
             const errorCleanupFn =(ctx)=>{
@@ -642,14 +634,14 @@ function main() {
                     t1.declare('int','firsth',false,'i+1');
                     t1.declare('char','har',false,'format[firsth]');
                         t2=t1.if('har==0');
-                        t2.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                        t2.cToJs('char *','ret','buffer',{},0,['l']);
                         errorCleanupFn(t2);
                         t2.returnExp('ret');
                     t2=t1.while("!(har>=97&&har<=122)&&!(har>=65&&har<=90)&&har!='%'");
                         t2.statement('firsth++');
                         t2.statement('har=format[firsth]');
                         t3=t2.if('har==0');
-                            t3.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                            t3.cToJs('char *','ret','buffer',{},0,['l']);
                             errorCleanupFn(t3);
                             t3.returnExp('ret');
                     t1.declare('int','lasth',false,'firsth');
@@ -658,7 +650,7 @@ function main() {
                         t2.statement('lasth++');
                         t2.declare('char','har',false,'format[lasth]',true);
                         t3=t2.if('har==0');
-                            t3.cToJs('char *','ret','buffer',core.structLookup,{},0,['l']);
+                            t3.cToJs('char *','ret','buffer',{},0,['l']);
                             errorCleanupFn(t3);
                             t3.returnExp('ret');
                     t1.declare('size_t','subformatlen',false,'lasth-i+1',true);
@@ -765,66 +757,59 @@ function main() {
             gen.returnExp('js_buffer');
         };
     }
-    att = getFunction("LoadWaveSamples");
+    att = modules['core'].getFunction("LoadWaveSamples");
     att.returnSizeVars = ['wave.frameCount*wave.channels'];
     att.binding.after = gen => gen.call("UnloadWaveSamples", ["returnVal"]);
 
-    att = getFunction("rlGetShaderLocsDefault");
-    att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'])];
-    ignore("DrawTriangleStrip3D");
-    ignore("LoadMaterials");
-    ignore("LoadModelAnimations");
-    ignore("UpdateModelAnimation");
-    ignore("UnloadModelAnimation");
-    ignore("UnloadModelAnimations");
-    ignore("UnloadRandomSequence");
-    ignore("IsModelAnimationValid");
-    ignore("ExportWaveAsCode");
+    modules['core'].ignore("DrawTriangleStrip3D");
+    modules['core'].ignore("LoadMaterials");
+    modules['core'].ignore("LoadModelAnimations");
+    modules['core'].ignore("UpdateModelAnimation");
+    modules['core'].ignore("UnloadModelAnimation");
+    modules['core'].ignore("UnloadModelAnimations");
+    modules['core'].ignore("UnloadRandomSequence");
+    modules['core'].ignore("IsModelAnimationValid");
+    modules['core'].ignore("ExportWaveAsCode");
     // requires returning pointer
-    ignore("rlReadTexturePixels");
+    modules['rlgl'].ignore("rlReadTexturePixels");
+    att = modules['rlgl'].getFunction("rlGetShaderLocsDefault");
+    att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'])];
     // Wave/Sound management functions
-    ignore("SetAudioStreamCallback");
-    ignore("AttachAudioStreamProcessor");
-    ignore("DetachAudioStreamProcessor");
+    modules['core'].ignore("SetAudioStreamCallback");
+    modules['core'].ignore("AttachAudioStreamProcessor");
+    modules['core'].ignore("DetachAudioStreamProcessor");
     //ignore("AttachAudioMixedProcessor");//Working on this
-    att = getCallback("AudioCallback");
+    att = modules['core'].getCallback("AudioCallback");
     att.params[0].type='float *';
     //audioCallback has different sizes depending on what called it
     cb = structuredClone(att);
     cb.name='AudioStreamCallback';
     cb.params[0].sizeVars = ['arg_frames*2'];
-    api.callbacks.push(cb);
-    getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
+    modules['core'].callbacks.push(cb);
+    modules['core'].getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
     cb = structuredClone(att);
     cb.name='AudioMixedProcessor';
     cb.params[0].type += ' &';
     cb.params[0].sizeVars = [`arg_frames*${config.defined['AUDIO_DEVICE_CHANNELS']}`];
-    api.callbacks.push(cb);
-    getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';
-    att = getCallback("SaveFileDataCallback");
+    modules['core'].callbacks.push(cb);
+    modules['core'].getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';
+    att = modules['core'].getCallback("SaveFileDataCallback");
     att.params[1].type='unsigned char *';
     att.params[1].sizeVars=['arg_dataSize'];
-    //ignore("DetachAudioMixedProcessor");
-    ignore("Vector3ToFloatV");
-    ignore("MatrixToFloatV");
-    core.exportGlobalDouble("DEG2RAD", "(PI/180.0)");
-    core.exportGlobalDouble("RAD2DEG", "(180.0/PI)");
-    core.definitions.declare("char", "textbuffer[4096]", true);
-    //ignore("GuiListViewEx");
+    modules['raymath'].ignore("Vector3ToFloatV");
+    modules['raymath'].ignore("MatrixToFloatV");
     // needs string array
-    ignore("GuiTabBar");
-    ignore("GuiGetIcons");
-    ignore("GuiLoadIcons");
-    ignore("rlLoadExtensions");
-    ignore("rlSetVertexAttributeDefault");
-    ignore("rlSetUniform");
-    att = getFunction("LoadRandomSequence");
+    modules['raygui'].ignore("GuiTabBar");
+    modules['raygui'].ignore("GuiGetIcons");
+    modules['raygui'].ignore("GuiLoadIcons");
+    modules['rlgl'].ignore("rlLoadExtensions");
+    modules['rlgl'].ignore("rlSetVertexAttributeDefault");
+    modules['rlgl'].ignore("rlSetUniform");
+    att = modules['core'].getFunction("LoadRandomSequence");
     att.returnSizeVars = ['count'];
     att.binding = { after: gen => gen.call("UnloadRandomSequence", ['returnVal']) };
-    att = getFunction("rlReadScreenPixels");
+    att = modules['rlgl'].getFunction("rlReadScreenPixels");
     att.returnSizeVars = ['width*height*4'];
-
-    api.structs.forEach(x => core.addApiStruct(x));
     function detectPointer(fn){//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
         for(let i=0;i<fn.params.length;i++){
             const parm=fn.params[i];
@@ -848,33 +833,67 @@ function main() {
             }
         }
     }
-    api.functions.forEach(detectPointer);
-    api.callbacks.forEach(detectPointer);
-    getFunction('LoadShader').params[0].binding.allowNull=true;
-    getFunction('GuiSpinner').params[1].binding.allowNull=true;
-    getFunction('GuiValueBox').params[1].binding.allowNull=true;
-    getFunction('GuiColorPicker').params[1].binding.allowNull=true;
-    getFunction('GuiSlider').params[1].binding.allowNull=true;
-    getFunction('GuiSliderBar').params[1].binding.allowNull=true;
-    getFunction('GuiProgressBar').params[1].binding.allowNull=true;
-    getFunction('GuiScrollPanel').params[1].binding.allowNull=true;
-    getFunction('GuiGrid').params[1].binding.allowNull=true;
-    getFunction('GuiColorBarAlpha').params[1].binding.allowNull=true;
-    getFunction('GuiTextInputBox').params[6].binding.allowNull=true;
-    api.callbacks.forEach(x => core.defineCallback(x));
-    api.functions.forEach(x => core.addApiFunction(x));
-    api.defines.filter(x => x.type === "COLOR").map(x => ({ name: x.name, description: x.description, values: (x.value.match(/\{([^}]+)\}/) || "")[1].split(',').map(x => x.trim()) })).forEach(x => {
-        core.exportGlobalStruct("Color", x.name, x.values, x.description);
-    });
-    api.enums.forEach(x => core.addEnum(x));
-    core.exportGlobalInt("MATERIAL_MAP_DIFFUSE", "Albedo material (same as: MATERIAL_MAP_DIFFUSE");
-    core.exportGlobalInt("MATERIAL_MAP_SPECULAR", "Metalness material (same as: MATERIAL_MAP_SPECULAR)");
-    core.writeTo("src/bindings/js_raylib_core.h");
-    core.typings.writeTo("examples/lib.raylib.d.ts");
-    const ignored = api.functions.filter(x => x.binding.ignore).length;
-    console.log(`Converted ${api.functions.length+api.structs.length+api.callbacks.length - ignored}, ${ignored} ignored.`);
+    for(let key in modules){
+        modules[key].functions.forEach(detectPointer);
+        modules[key].callbacks.forEach(detectPointer);
+    }
+
+    modules['core'].getFunction('LoadShader').params[0].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiValueBox').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiColorPicker').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiSlider').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiSliderBar').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiProgressBar').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiScrollPanel').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiGrid').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiColorBarAlpha').params[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiTextInputBox').params[6].binding.allowNull=true;
+    // Register types
+    for(let key in modules){
+        const module=modules[key];
+        module.structs.forEach(x => module.gen.registerApiStruct(x));
+        module.callbacks.forEach(x => module.gen.registerCallback(x));
+    }
+    for(let key in modules){
+        const module=modules[key];
+        module.aliases.forEach(x => module.gen.registerAlias(x));
+    }
+    //Generate Code
+    for(let key in modules){
+        const module=modules[key];
+        module.structs.forEach(x => module.gen.addApiStruct(x));
+        module.functions.forEach(x => module.gen.addApiFunction(x));
+        module.enums.forEach(x => module.gen.addEnum(x));
+        module.defines.forEach(x => {
+            if(x.type=='bool' && x.name.endsWith('_H'))return;//GUARD
+            if(x.type=='int'){
+                module.gen.exportGlobalInt(x.name,x.description);
+            }
+            if(x.type=='float' || x.type=='double'){
+                module.gen.exportGlobalDouble(x.name,x.description);
+            }
+            if(x.type=='struct'){
+                let structId=module.gen.structLookup[x.content.type];
+                if(structId!=undefined){
+                    module.gen.exportGlobalStruct(x.content.type, x.name, x.content.values, x.description);
+                }
+            }
+            if(x.type=='undefined' && module.gen.exported[x.content]!=undefined){
+                const aliasof=module.gen.exported[x.content];
+                if(aliasof=='int'){
+                    module.gen.exportGlobalInt(x.name,x.description);
+                }else if(aliasof=='float'){
+                    module.gen.exportGlobalDouble(x.name,x.description);
+                }
+            }
+        });
+        module.gen.writeTo(`src/bindings/${module.gen.name}.h`);
+        module.gen.typings.writeTo(`examples/lib.${module.gen.name}.ts`);
+    }
+    const ignored = modules['core'].functions.filter(x => x.binding.ignore).length;
+    console.log(`Converted ${modules['core'].functions.length+modules['core'].structs.length+modules['core'].callbacks.length - ignored}, ${ignored} ignored.`);
     console.log("Success!");
-    // TODO: Expose PLatform defines
 }
 try{
     main();

@@ -34,7 +34,9 @@
 **********************************************************************************************/
 
 import * as rl from 'rayjs:raylib';
+import * as raygui from 'rayjs:raygui';
 for (const key in rl) { globalThis[key] = rl[key] };
+for (const key in raygui) { globalThis[key] = raygui[key] };
 
 // Initialization
 //---------------------------------------------------------------------------------------

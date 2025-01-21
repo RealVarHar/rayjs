@@ -11,6 +11,9 @@ export class source_parser {
     functions=[];
     enums=[];
     structs=[];
+    callbacks=[];
+    aliases=[];
+    defines=[];
     //Raw detection
     comments=[];
     //define
@@ -164,6 +167,13 @@ export class source_parser {
         }
         return pos;
     }
+    println(input,pos){
+        //debugging function for printing lines
+        if(input[pos]=="\n")pos++;
+        let start=this.simpleregex(input,["bnr*","\n"],pos);
+        let end=this.simpleregex(input,["nr*","\n"],pos);
+        console.log(input.substring(start+1,pos)+'||'+input.substring(pos,end));
+    }
     //Text filtration
     normalizeType(type=''){
         let ret=type.replaceAll("*", " * ").replaceAll('[',' [').replace(new RegExp("\\s+",'g'),' ').trim();
@@ -281,18 +291,36 @@ export class source_parser {
             }
             start=ret+1;
             let parts=capture[0].split(',').map(a=>a.trim());
-            ret=this.simpleregex(parts[0],['br+',azZ0],parts[0].length-1,capture);
+            if(parts[0].endsWith(']')){
+                ret=this.simpleregex(parts[0],['bs',']','br*','0123456789','bs','[','bos',' ','br+',azZ0],parts[0].length-1,capture);
+                capture[1]=' ['+capture[2]+']';
+                capture[2]=capture[5];
+                capture=capture.slice(0,3);
+            }else{
+                capture.push('');
+                ret=this.simpleregex(parts[0],['br+',azZ0],parts[0].length-1,capture);
+            }
             if(ret===false)return values;
-            let type=this.normalizeType(parts[0].substring(0,ret));
+            let type=this.normalizeType(parts[0].substring(0,ret+1));
             values.push({
-                type,
-                name: capture[1],
+                type:type+capture[1],
+                name: capture[2],
                 child:undefined
             });
             for(let i=1;i<parts.length;i++){
+                let capture=[];
+                if(parts[0].endsWith(']')){
+                    ret=this.simpleregex(parts[i],['bs',']','br*','0123456789','bs','[','bos',' ','br+',azZ0],parts[i].length-1,capture);
+                    capture[0]=' ['+capture[1]+']';
+                    capture[1]=capture[4];
+                    capture=capture.slice(0,2);
+                }else{
+                    ret=this.simpleregex(parts[i],['br+',azZ0],parts[i].length-1,capture);
+                }
+                if(ret===false)return values;
                 values.push({
-                    type,
-                    name: parts[i],
+                    type:type+capture[0],
+                    name: capture[1],
                     child:undefined
                 });
             }
@@ -302,48 +330,97 @@ export class source_parser {
     parseTypedef(input, pos=0, save=true){
         //Resolve Encountering top level !typedef struct or !typedef enum
         let capture=[];
-        let ret=this.simpleregex(input,['s','typedef ','os','struct','os','enum','r*',' \t\n','r*',azZ0,'r*',' \t\n','os','{'],pos,capture);
+        let ret=this.simpleregex(input,['s','typedef ','os','struct','os','enum','os','union','r*',' \t\n','r*',azZ0,'r*',' \t\n','os','{'],pos,capture);
         if(ret===false)return pos;
-        let capturename=['r+',azZ0];
-        if(capture[4]!==''){
-            capturename=['s',capture[4]];
+        let thiz=this;
+        function enum_struct_union(){
+            let capturename=['r+',azZ0];
+            let structName=capture[5];
+            if(structName!==''){
+                capturename=['s',capture[5]];
+            }
+            if(capture[7]==='{'){
+                let depthEnd=thiz.skipDepth(input,ret-1)+1;
+                capture.push(input.substring(ret,depthEnd-1));
+                ret=depthEnd;
+            }
+            ret=thiz.simpleregex(input,['r*',' \t\n',...capturename,'r*',' \t\n','s',';'],ret,capture);
+            if(ret===false)return pos;
+            if(structName==''){
+                structName=capture[capture.length-3];
+            }
+            if(save){
+                if(capture[1]!==''){
+                    thiz.defineName(structName,'structs',{
+                        name: structName,
+                        fields: thiz.parseStructValues(capture[capture.length-5]),
+                    });
+                }else if(capture[2]!==''){
+                    thiz.defineName(structName,'enums',{
+                        name: structName,
+                        values: thiz.parseEnumValues(capture[capture.length-5]),
+                    });
+                }else if(capture[3]!==''){
+                    thiz.defineName(structName,'enums',{
+                        name: structName,
+                        fields: thiz.parseStructValues(capture[capture.length-5]),
+                    });
+                }
+            }
+            return ret;
         }
-        if(capture[6]==='{'){
-            let tmp=this.skipDepth(input,ret-1)+1;
-            capture.push(input.substring(ret,tmp-1));
-            ret=tmp;
-        }
-        ret=this.simpleregex(input,['r*',' \t\n',...capturename,'r*',' \t\n','s',';'],ret,capture);
-        if(ret===false)return pos;
-        let structName;
-        if(capture[4]!==''){
-            structName=capture[4]
-        }else{
-            structName=capture[capture.length-3];
-        }
-        if(save){
-            if(capture[1]!==''){
-                this.defineName(structName,'structs',{
-                    name: structName,
-                    fields: this.parseStructValues(capture[capture.length-5]),
-                });
-            }else if(capture[2]!==''){
-                this.defineName(structName,'enums',{
-                    name: structName,
-                    values: this.parseEnumValues(capture[capture.length-5]),
+        function callback(){
+            //example: typedef int (*someType)(char, int);
+            // typedef void (*TraceLogCallback)(int logLevel, const char *text, va_list args);  // Logging: Redirect trace log messages
+            // typedef unsigned char *(*LoadFileDataCallback)(const char *fileName, int *dataSize);    // FileIO: Load binary data
+            // typedef bool (*SaveFileDataCallback)(const char *fileName, void *data, int dataSize);   // FileIO: Save binary data
+            // typedef char *(*LoadFileTextCallback)(const char *fileName);            // FileIO: Load text data
+            // typedef bool (*SaveFileTextCallback)(const char *fileName, char *text); // FileIO: Save text data
+            if(capture[5]=='')return pos;
+            ret=pos+'typedef '.length;
+            thiz.println(input,ret);
+            ret=thiz.simpleregex(input,['os','static ','os','unsigned ','os','const ','r+',azZ0,'r*',' '],ret,capture=[]);//TODO: reallign capture
+            if(ret===false)return pos;
+            ret=thiz.simpleregex(input,['os','*','r*',' ','s','(','r*',' ','s','*','r*',' ','r+',azZ0,'r*',' ','s',')','r*',' ','s','(','r+',', \n*[]'+azZ0,'os','...','r*',' ','s',')','r*',' ','s',';'],ret,capture);
+            if(ret===false)return pos;
+            if(save){
+                console.log(capture[11]);
+                thiz.defineName(capture[11],'callbacks',{
+                    returnType: thiz.normalizeType(capture[1]+capture[2]+capture[3]+capture[4]+capture[5]+capture[6]),
+                    name: capture[11],
+                    params: thiz.parseFunctionArgs(capture[16]+capture[17]),
+                    binding:{}
                 });
             }
+            return ret;
         }
-        return ret;
+        if(capture[1]!=='' || capture[2]!=='' || capture[3]!==''){
+            return enum_struct_union();
+        }else{
+            //check if is some simple alias
+            if(capture[5]!==''){//type
+                let alias_end=this.simpleregex(input,['r*',' \t\n','r*',azZ0,'r*',' \t\n','s',';'],ret,capture);
+                if(alias_end!==false){
+                    thiz.defineName(capture[9],'aliases',{
+                        name: capture[9],
+                        type: capture[5],
+                        binding:{}
+                    });
+                    return alias_end;
+                }
+            }
+            return callback();
+        }
     }
     parseFunction(input, pos=0, save=true){
         //Resolve Encountering top level !(){
         //((?:\/\/.+\n)+)^[A-Z]+ (.+?)(\w+)\(([^\)]+)\)
         //Search argsStart,' (',name,' ',type
         let capture=[];
-        let ret=this.simpleregex(input,['bos'," ",'br+',azZ0,'br*',' *','br+',azZ0,'bos',"unsigned ",'bos',"const ",'bos',"static ","br+","\n \t}"],pos-1,capture);
+        //RLAPI should not be hard coded here, but the alternative is to translate every word according to defines
+        let ret=this.simpleregex(input,['br+',azZ0,'br*',' *','br+',azZ0,'bos',"const ",'bos',"unsigned ",'bos',"static ",'bos',"RLAPI ","br+","\n \t}"],pos-1,capture);
         if(ret===false)return pos;
-        ret=this.simpleregex(input,['r*',', *[]'+azZ0,'s',')','r*'," \t\n",'os','/','os','{','os',';'],pos+1,capture);
+        ret=this.simpleregex(input,['r*',', \n*[]'+azZ0,'os','...','r*',' ','s',')','r*'," \t\n",'os','/','os','{','os',';'],pos+1,capture);
         if(ret===false)return pos;
         if(capture[capture.length-3]==='/'){//some comment, remove it
             ret=this.parseComment(input,ret-1);
@@ -358,10 +435,10 @@ export class source_parser {
             ret=tmp;
         }
         if(save){
-            this.defineName(capture[1],'functions',{
-                returnType: this.normalizeType(capture[5]+capture[4]+capture[3]+capture[2]),
-                name: capture[1],
-                params: this.parseFunctionArgs(capture[8]),
+            this.defineName(capture[0],'functions',{
+                returnType: this.normalizeType(capture[4]+capture[3]+capture[2]+capture[1]),
+                name: capture[0],
+                params: this.parseFunctionArgs(capture[8]+capture[9]),
                 binding:{}
             });
         }
@@ -371,7 +448,10 @@ export class source_parser {
         return input.split(',').filter(x => x !== 'void' && x !=='').map(arg => {
             const frags = this.normalizeType(arg).split(' ');
             const name = frags.pop();
-            const type = frags.join(' ');
+            if(name=='...'){
+                return { name: 'args', type: '...', binding:{} };
+            }
+            let type = frags.join(' ');
             return { name: name || "", type: type.trim(), binding:{} };
         });
     }
@@ -528,38 +608,92 @@ export class source_parser {
         }
         return history[0];
     }
-    parseDefine(input){
+    parseDefine(input,save){
         //Parse #define and register poperly
+        let thiz=this;
+        function getStack(input,pos,capture=[]){
+            let stack_size=1;
+            while(pos<input.length){
+                pos=thiz.simpleregex(input,['nr*','()'],pos,capture);
+                if(pos===false)return;
+                if(input[pos]=='(')stack_size++;
+                if(input[pos]==')')stack_size--;
+                capture.push(stack_size);
+                if(pos>=input.length)break;
+                capture[capture.length-2]+=input[pos];
+                pos++;
+            }
+
+        }
+        function setDefine(name,type,content){
+            if(!save)return;
+            //console.log({name, type, content});
+            defined[name]=content;
+            thiz.defineName(name,'defines',{name, type, content});
+        }
         let pos=0;
         if(input.startsWith('#define'))pos=8;
         input=input.trim().replace(/\s+/g,' ');
         let capture=[];
         pos=this.simpleregex(input,['r+',azZ0,'os','('],pos,capture);
         if(pos===false)return;
-        let content;
-        if(capture.pop()==='('){
-            pos=this.simpleregex(input,['nr+',')'],pos,capture);
-            if(pos===false)return;
-            capture[1]=capture[1].replace(/[^a-zA-Z,0-9_-]+/g,'');//secure eval
-            let argNames=capture[1].split(',');
-            let argArray=argNames.map(a=>'"'+a+'"').join(',');
-            content=eval(`(${capture[1]})=>{
-            let a=${JSON.stringify(input.substring(pos+1,input.length))};
-            let args=[${argArray}];
-            for(let i=0;i<args.length;i++){
-                a=a.replaceAll(args[i],arguments[i]);
-            }
-            return JSON.parse(a);}
-            `);
-        }else{
-            content=input.substring(pos,input.length).trimStart();
-            if(content.toLowerCase()=='true'){content=1;}else
-            if(content.toLowerCase()=='false'){content=0;}else
-            if(content==''){content=true;}else
-            if(!isNaN(content)){content=Number(content);}
+        let name=capture[0];
+        let content, type;
+        if(capture[1]==='('){
+            getStack(input,pos,capture=[]);
+            type='function';
+            content=capture;
+            return setDefine(name,type,content);
         }
-        
-        defined[capture[0]]=content;
+        pos=this.simpleregex(input,['r*',' \t','os','('],pos,capture=[]);
+        if(capture[1]==='('){
+            getStack(input,pos,capture=[]);
+            type='eval';
+            content=capture;
+            return setDefine(name,type,content);
+        }
+        content=input.substring(pos,input.length).trim();
+        if(content.at(-1)=='f' && !isNaN(content.substring(0,content.length-1))){
+            content=Number(content.substring(0,content.length-1));
+            return setDefine(name,'float',content);
+        }
+        if(content.at(-1)=='d' && !isNaN(content.substring(0,content.length-1))){
+            content=Number(content.substring(0,content.length-1));
+            return setDefine(name,'double',content);
+        }
+        type='undefined';
+        if(content.startsWith('CLITERAL(')){
+            getStack(input,pos,capture=[]);
+            type="struct";
+            //collect string
+            let startDepth=capture[3];
+            let str=capture[4];
+            let i=5;
+            while(i<capture.length && startDepth<capture[i]){
+                str+=capture[i+1];i+=2;
+            }
+            str=str.substring(1,str.length-1)//remove {}
+            content={
+                type:capture[2].substring(0,capture[2].length-1),//remove last )
+                values:str.split(',').map(a=>a.trim())
+            }
+            console.log(capture);
+        }else
+        if(content.toLowerCase()=='true'){content=1;type='bool';}else
+        if(content.toLowerCase()=='false'){content=0;type='bool';}else
+        if(content==''){content=true;type='bool';}else
+        if((content.startsWith('"')&&content.endsWith('"')) || (content.startsWith("'")&&content.endsWith("'"))){
+            content=content.substring(1,content.length-1);type='string';
+        }else
+        if(!isNaN(content)){
+            if(content.includes('.')){
+                type='double';
+            }else{
+                type='int';
+            }
+            content=Number(content);
+        }
+        return setDefine(name,type,content);
     }
     ifselect(input,pos=0){
         //#if statements can exist inside structs.
@@ -591,17 +725,17 @@ export class source_parser {
                 case "#":{
                     if(ifBody && this.lookForward(input,'#define',pos)){
                         inDefine=true;
-                        pos+=7;start=pos;
+                        start=pos+8;pos+=7;
                         ifStatement='';
                     }else if(this.lookForward(input,'#if',pos)){
                         ifpassed=false;
                         parseBody=false;pushCapture(pos,1);
                         ifStatement='';
                         if(this.lookForward(input,'def',pos+3)){
-                            pos+=7;start=pos;
+                            start=pos+7;pos+=6;
                             ifStatement='#ifdef';
                         } else if(this.lookForward(input,'ndef',pos+3)){
-                            pos+=8;start=pos;
+                            start=pos+8;pos+=7;
                             ifStatement='#ifndef';
                         }else{
                             pos+=4;start=pos;
@@ -609,13 +743,13 @@ export class source_parser {
                         ifBody=false;
                     }else if(this.lookForward(input,'#elif',pos)){
                         parseBody=false;pushCapture(pos,1);
-                        pos+=5;start=pos;
+                        start=pos+6;pos+=5;
                         ifDepth--;
-                        ifBody=false;
                         ifStatement='';
+                        ifBody=false;
                     }else if(this.lookForward(input,'#else',pos)){
                         parseBody=false;pushCapture(pos,1);
-                        pos+=5;start=pos;
+                        start=pos+6;pos+=5;
                         ifDepth--;
                         if(!ifpassed && ifOkDepth===ifDepth){
                             ifOkDepth++;
@@ -623,9 +757,10 @@ export class source_parser {
                             parseBody=true;pushCapture(start,0);
                         }
                         ifDepth++;
+                        ifBody=true;
                     }else if(this.lookForward(input,'#endif',pos)){
                         parseBody=false;pushCapture(pos,1);
-                        pos+=6;start=pos;
+                        start=pos+7;pos+=6;
                         ifDepth--;
                         if(ifOkDepth>=ifDepth){
                             ifOkDepth=ifDepth;
@@ -702,7 +837,6 @@ export class source_parser {
         return pos-1;
     }
     constructor(input){
-        //TODO: if(parseBody) save data
         let ifDepth=0;
         let ifStatement='';
         let ifBody=true;//0=definition, 1 block
@@ -718,14 +852,14 @@ export class source_parser {
                 case "#":{
                     if(ifBody && this.lookForward(input,'#define',pos)){
                         inDefine=true;
-                        pos+=7;start=pos;
+                        start=pos+8;pos+=7;
                         ifStatement='';
                     }else if(this.lookForward(input,'#if',pos)){
                         ifpassed=false;
                         parseBody=false;
                         ifStatement='';
                         if(this.lookForward(input,'def',pos+3)){
-                            pos+=7;start=pos;
+                            start=pos+7;pos+=6;
                             ifStatement='#ifdef';
                         } else if(this.lookForward(input,'ndef',pos+3)){
                             start=pos+8;pos+=7;
@@ -736,13 +870,13 @@ export class source_parser {
                         ifBody=false;
                     }else if(this.lookForward(input,'#elif',pos)){
                         parseBody=false;
-                        pos+=4;start=pos+1;
+                        start=pos+6;pos+=5;
                         ifDepth--;
                         ifBody=false;
                         ifStatement='';
                     }else if(this.lookForward(input,'#else',pos)){
                         parseBody=false;
-                        pos+=4;start=pos+1;
+                        start=pos+6;pos+=5;
                         ifDepth--;
                         if(!ifpassed && ifOkDepth===ifDepth){
                             ifOkDepth++;
@@ -750,9 +884,10 @@ export class source_parser {
                             parseBody=true;
                         }
                         ifDepth++;
+                        ifBody=true;
                     }else if(this.lookForward(input,'#endif',pos)){
                         parseBody=false;
-                        pos+=5;start=pos+1;
+                        start=pos+7;pos+=6;
                         ifDepth--;
                         if(ifOkDepth>=ifDepth){
                             ifOkDepth=ifDepth;
@@ -764,28 +899,29 @@ export class source_parser {
                 }
                 case "\n":{
                     //For newline or comment, if in #if header, write this as 'if'
-                    if(input[pos-1]!=='\\'){//handle multiline if
-                        if(inDefine){
-                            ifStatement+=input.substring(start,pos);
-                            this.parseDefine(ifStatement);
-                            inDefine=false;
-                        }else
-                        if(!ifBody){
-                            ifStatement+=input.substring(start,pos);
-                            if(!ifpassed && ifOkDepth===ifDepth &&this.parseIfHeader(ifStatement)){
-                                ifOkDepth++;
-                                ifpassed=true;
-                                parseBody=true;
-                            }
-                            ifBody=true;
-                            start=pos+1;
-                            ifDepth++;
+                    if(input[pos-1]=='\\') break;//handle multiline if
+                    if(inDefine){
+                        ifStatement+=input.substring(start,pos);
+                        this.parseDefine(ifStatement,parseBody);
+                        inDefine=false;
+                    }else
+                    if(!ifBody){
+                        ifStatement+=input.substring(start,pos);
+                        if(!ifpassed && ifOkDepth===ifDepth &&this.parseIfHeader(ifStatement)){
+                            ifOkDepth++;
+                            ifpassed=true;
+                            parseBody=true;
                         }
+                        ifBody=true;
+                        start=pos+1;
+                        ifDepth++;
                     }
                     break;
                 }
                 case "'":case "":pos=this.parseString(input,pos);break;
                 case "t":{
+                    //todo: handle callbacks
+                    //example: raylib.h line 953
                     pos=this.parseTypedef(input,pos,parseBody);
                     break;
                 }
@@ -793,13 +929,14 @@ export class source_parser {
                     //skip extern "C" {
                     if(this.lookForward(input,'extern "C" {',pos)){
                         pos+=12;
-                    }else{
+                    }else if(!inDefine){
                         pos=this.parseES(input, pos,parseBody);
                     }
                     break;
                 }
                 case "s":{
-                    pos=this.parseES(input, pos);break;
+                    if(inDefine)break;
+                    pos=this.parseES(input, pos);
                 }
                 case "/":{
                     //For newline or comment, if in #if header, write this as 'if'
@@ -816,6 +953,7 @@ export class source_parser {
                     break;
                 }
                 case "(":{
+                    if(!ifBody || inDefine){pos=this.skipDepthf(input,pos);break;}
                     let a=this.parseFunction(input,pos,parseBody);
                     if(a==pos){
                         pos=this.skipDepthf(input,pos);
