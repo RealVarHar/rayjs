@@ -28,6 +28,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
@@ -39,6 +40,7 @@
 #include <time.h>
 
 #include "cutils.h"
+#include "quickjs.h"
 #include "quickjs-libc.h"
 
 #ifdef QJS_USE_MIMALLOC
@@ -47,10 +49,15 @@
 
 extern const uint8_t qjsc_repl[];
 extern const uint32_t qjsc_repl_size;
+extern const uint8_t qjsc_standalone[];
+extern const uint32_t qjsc_standalone_size;
 
-#include <stdbool.h>
-#include <limits.h>
-#include <quickjs.h>
+// Must match standalone.js
+#define TRAILER_SIZE 12
+static const char trailer_magic[] = "quickjs2";
+static const int trailer_magic_size = sizeof(trailer_magic) - 1;
+static const int trailer_size = TRAILER_SIZE;
+
 #include <external/glad.h>
 #include <GLFW/glfw3.h>
 #include <raylib.h>
@@ -71,8 +78,55 @@ int app_update_quickjs(JSContext *ctx){
             break;
         }
     }
-
     return 0;
+}
+static bool is_standalone(const char *exe)
+{
+    FILE *exe_f = fopen(exe, "rb");
+    if (!exe_f)
+        return false;
+    if (fseek(exe_f, -trailer_size, SEEK_END) < 0)
+        goto fail;
+    uint8_t buf[TRAILER_SIZE];
+    if (fread(buf, 1, trailer_size, exe_f) != trailer_size)
+        goto fail;
+    fclose(exe_f);
+    return !memcmp(buf, trailer_magic, trailer_magic_size);
+fail:
+    fclose(exe_f);
+    return false;
+}
+
+static JSValue load_standalone_module(JSContext *ctx)
+{
+    JSModuleDef *m;
+    JSValue obj, val;
+    obj = JS_ReadObject(ctx, qjsc_standalone, qjsc_standalone_size, JS_READ_OBJ_BYTECODE);
+    if (JS_IsException(obj))
+        goto exception;
+    assert(JS_VALUE_GET_TAG(obj) == JS_TAG_MODULE);
+    if (JS_ResolveModule(ctx, obj) < 0) {
+        JS_FreeValue(ctx, obj);
+        goto exception;
+    }
+    if (js_module_set_import_meta(ctx, obj, false, true) < 0) {
+        JS_FreeValue(ctx, obj);
+        goto exception;
+    }
+    val = JS_EvalFunction(ctx, JS_DupValue(ctx, obj));
+    val = js_std_await(ctx, val);
+
+    if (JS_IsException(val)) {
+        JS_FreeValue(ctx, obj);
+    exception:
+        js_std_dump_error(ctx);
+        exit(1);
+    }
+    JS_FreeValue(ctx, val);
+
+    m = JS_VALUE_GET_PTR(obj);
+    JS_FreeValue(ctx, obj);
+    return JS_GetModuleNamespace(ctx, m);
 }
 
 #include "bindings/js_raylib.h"
@@ -94,7 +148,11 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *fil
         val = JS_Eval(ctx, buf, buf_len, filename,
                       eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
         if (!JS_IsException(val)) {
-            js_module_set_import_meta(ctx, val, TRUE, TRUE);
+            if (js_module_set_import_meta(ctx, val, true, true) < 0) {
+                js_std_dump_error(ctx);
+                ret = -1;
+                goto end;
+            }
             val = JS_EvalFunction(ctx, val);
         }
         val = js_std_await(ctx, val);
@@ -107,11 +165,13 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *fil
     } else {
         ret = 0;
     }
+end:
     JS_FreeValue(ctx, val);
     return ret;
 }
 
-static int eval_file(JSContext *ctx, const char *filename, int module){
+static int eval_file(JSContext *ctx, const char *filename, int module)
+{
     uint8_t *buf;
     int ret, eval_flags;
     size_t buf_len;
@@ -174,14 +234,7 @@ static inline unsigned long long js_trace_malloc_ptr_offset(uint8_t *ptr,
     return ptr - dp->base;
 }
 
-static void
-#if defined(_WIN32) && !defined(__clang__)
-/* mingw printf is used */
-__attribute__((format(gnu_printf, 2, 3)))
-#else
-__attribute__((format(printf, 2, 3)))
-#endif
-    js_trace_malloc_printf(void *opaque, const char *fmt, ...)
+static void JS_PRINTF_FORMAT_ATTR(2, 3) js_trace_malloc_printf(void *opaque, JS_PRINTF_FORMAT const char *fmt, ...)
 {
     va_list ap;
     int c;
@@ -290,7 +343,7 @@ static const JSMallocFunctions mi_mf = {
 #define PROG_NAME "rayjs"
 
 void help(void){
-    printf("QuickJS v%s + raylib v%s \n"
+    printf("QuickJS-ng v%s + raylib v%s \n"
            "usage: " PROG_NAME " [options] [file [args]]\n"
            "-h  --help         list options\n"
            "-e  --eval EXPR    evaluate EXPR\n"
@@ -298,25 +351,32 @@ void help(void){
            "-m  --module       load as ES6 module (default=autodetect)\n"
            "    --script       load as ES6 script (default=autodetect)\n"
            "-I  --include file include an additional file\n"
-           "    --std          make 'std','os','bjson','raylib' available to the loaded script\n"
+           "    --std          make 'std','os','bjson','raylib' available to script\n"
            "-T  --trace        trace memory allocation\n"
            "-d  --dump         dump the memory usage stats\n"
-           "-D  --dump-flags   flags for dumping debug data -D=<bitmask> (see DUMP_* defines)\n"
+           "-D  --dump-flags   flags for dumping debug data (see DUMP_* defines)\n"
+           "-c  --compile FILE compile the given JS file as a standalone executable\n"
+           "-o  --out FILE     output file for standalone executables\n"
+           "    --exe          select the executable to use as the base, defaults to the current one\n"
            "    --memory-limit n       limit the memory usage to 'n' Kbytes\n"
            "    --stack-size n         limit the stack size to 'n' Kbytes\n"
-           "    --unhandled-rejection  dump unhandled promise rejections\n"
-           "-q  --quit         just instantiate the interpreter and quit\n", JS_GetVersion(), RAYLIB_VERSION);
+           "-q  --quit         just instantiate the interpreter and quit\n", JS_GetVersion());
     exit(1);
 }
 
 int main(int argc, char** argv){
     JSRuntime *rt;
     JSContext *ctx;
-    JSValue ret;
+    JSValue ret = JS_UNDEFINED;
     struct trace_malloc_data trace_data = { NULL };
-    int optind;
+    int r = 0;
+    int optind = 1;
+    char *compile_file = NULL;
+    char *exe = NULL;
     char *expr = NULL;
     char *dump_flags_str = NULL;
+    char *out = NULL;
+    int standalone = 0;
     int interactive = 0;
     int dump_memory = 0;
     int dump_flags = 0;
@@ -324,20 +384,25 @@ int main(int argc, char** argv){
     int empty_run = 0;
     int module = -1;
     int load_std = 0;
-    int dump_unhandled_promise_rejection = 0;
     char *include_list[32];
     int i, include_count = 0;
     int64_t memory_limit = -1;
     int64_t stack_size = -1;
 
-    argv0 = (JSCFunctionListEntry)JS_PROP_STRING_DEF("argv0", argv[0],JS_PROP_C_W_E);
+    /* save for later */
+    qjs__argc = argc;
+    qjs__argv = argv;
+
+    if (is_standalone(argv[0])) {
+        standalone = 1;
+        goto start;
+    }
 
     dump_flags_str = getenv("RAYJS_DUMP_FLAGS");
     dump_flags = dump_flags_str ? strtol(dump_flags_str, NULL, 16) : 0;
 
     /* cannot use getopt because we want to pass the command line to
        the script */
-    optind = 1;
     while (optind < argc && *argv[optind] == '-') {
         char *arg = argv[optind] + 1;
         const char *longopt = "";
@@ -418,10 +483,6 @@ int main(int argc, char** argv){
                 load_std = 1;
                 continue;
             }
-            if (!strcmp(longopt, "unhandled-rejection")) {
-                dump_unhandled_promise_rejection = 1;
-                continue;
-            }
             if (opt == 'q' || !strcmp(longopt, "quit")) {
                 empty_run++;
                 continue;
@@ -448,6 +509,39 @@ int main(int argc, char** argv){
                 stack_size = parse_limit(opt_arg);
                 break;
             }
+            if (opt == 'c' || !strcmp(longopt, "compile")) {
+                if (!opt_arg) {
+                    if (optind >= argc) {
+                        fprintf(stderr, "qjs: missing file for -c\n");
+                        exit(1);
+                    }
+                    opt_arg = argv[optind++];
+                }
+                compile_file = opt_arg;
+                break;
+            }
+            if (opt == 'o' || !strcmp(longopt, "out")) {
+                if (!opt_arg) {
+                    if (optind >= argc) {
+                        fprintf(stderr, "qjs: missing file for -o\n");
+                        exit(1);
+                    }
+                    opt_arg = argv[optind++];
+                }
+                out = opt_arg;
+                break;
+            }
+            if (!strcmp(longopt, "exe")) {
+                if (!opt_arg) {
+                    if (optind >= argc) {
+                        fprintf(stderr, "qjs: missing file for --exe\n");
+                        exit(1);
+                    }
+                    opt_arg = argv[optind++];
+                }
+                exe = opt_arg;
+                break;
+            }
             if (opt) {
                 fprintf(stderr, "rayjs: unknown option '-%c'\n", opt);
             } else {
@@ -456,6 +550,11 @@ int main(int argc, char** argv){
             help();
         }
     }
+
+    if (compile_file && !out)
+        help();
+
+start:
 
     if (trace_memory) {
         js_trace_malloc_init(&trace_data);
@@ -488,9 +587,8 @@ int main(int argc, char** argv){
     /* loader for ES6 modules */
     JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
 
-    if (dump_unhandled_promise_rejection) {
-        JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker,NULL);
-    }
+    /* exit on unhandled promise rejections */
+    JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker, NULL);
 
     if (!empty_run) {
         js_std_add_helpers(ctx, argc - optind, argv + optind);
@@ -523,15 +621,41 @@ int main(int argc, char** argv){
         }
 
         for(i = 0; i < include_count; i++) {
-            if (eval_file(ctx, include_list[i], module))
+            if (eval_file(ctx, include_list[i], 0))
                 goto fail;
         }
 
-        if (expr) {
+        if (standalone) {
+            JSValue ns = load_standalone_module(ctx);
+            if (JS_IsException(ns))
+                goto fail;
+            JSValue func = JS_GetPropertyStr(ctx, ns, "runStandalone");
+            JS_FreeValue(ctx, ns);
+            if (JS_IsException(func))
+                goto fail;
+            ret = JS_Call(ctx, func, JS_UNDEFINED, 0, NULL);
+            JS_FreeValue(ctx, func);
+        } else if (compile_file) {
+            JSValue ns = load_standalone_module(ctx);
+            if (JS_IsException(ns))
+                goto fail;
+            JSValue func = JS_GetPropertyStr(ctx, ns, "compileStandalone");
+            JS_FreeValue(ctx, ns);
+            if (JS_IsException(func))
+                goto fail;
+            JSValue args[3];
+            args[0] = JS_NewString(ctx, compile_file);
+            args[1] = JS_NewString(ctx, out);
+            args[2] = JS_NewString(ctx, exe != NULL ? exe : argv[0]);
+            ret = JS_Call(ctx, func, JS_UNDEFINED, countof(args), args);
+            JS_FreeValue(ctx, func);
+            JS_FreeValue(ctx, args[0]);
+            JS_FreeValue(ctx, args[1]);
+            JS_FreeValue(ctx, args[2]);
+        } else if (expr) {
             if (eval_buf(ctx, expr, strlen(expr), "<cmdline>", 0))
                 goto fail;
-        } else
-        if (optind >= argc) {
+        } else if (optind >= argc) {
             /* interactive mode */
             interactive = 1;
         } else {
@@ -541,11 +665,21 @@ int main(int argc, char** argv){
                 goto fail;
         }
         if (interactive) {
+            JS_SetHostPromiseRejectionTracker(rt, NULL, NULL);
             js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
         }
-        ret = js_std_loop(ctx);
-        if (!JS_IsUndefined(ret)) {
-            js_std_dump_error1(ctx, ret);
+        if (standalone || compile_file) {
+            if (JS_IsException(ret)) {
+                r = 1;
+            } else {
+                JS_FreeValue(ctx, ret);
+                r = js_std_loop(ctx);
+            }
+        } else {
+            r = js_std_loop(ctx);
+        }
+        if (r) {
+            js_std_dump_error(ctx);
             goto fail;
         }
     }

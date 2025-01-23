@@ -18,9 +18,6 @@ static JSValue js_gc(JSContext *ctx, JSValue this_val,int argc, JSValue *argv){
 
 static const JSCFunctionListEntry global_obj[] = {
     JS_CFUNC_DEF("gc", 0, js_gc),
-#if defined(__ASAN__) || defined(__UBSAN__)
-    JS_PROP_INT32_DEF("__running_with_sanitizer__", 1, JS_PROP_C_W_E ),
-#endif
 };
 
 #ifdef QJS_USE_MIMALLOC
@@ -59,7 +56,13 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt){
 
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyFunctionList(ctx, global, global_obj, countof(global_obj));
-    JS_SetPropertyFunctionList(ctx, global, &argv0, 1);
+    JSValue args = JS_NewArray(ctx);
+    int i;
+    for(i = 0; i < qjs__argc; i++) {
+        JS_SetPropertyUint32(ctx, args, i, JS_NewString(ctx, qjs__argv[i]));
+    }
+    JS_SetPropertyStr(ctx, global, "execArgv", args);
+    JS_SetPropertyStr(ctx, global, "argv0", JS_NewString(ctx, qjs__argv[0]));
     JSValue navigator_proto = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, navigator_proto, navigator_proto_funcs, countof(navigator_proto_funcs));
     JSValue navigator = JS_NewObjectProto(ctx, navigator_proto);

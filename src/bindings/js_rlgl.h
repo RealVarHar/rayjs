@@ -1049,13 +1049,18 @@ static JSValue js_rlScissor(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_rlEnableWireMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    rlEnableWireMode();
+static JSValue js_rlEnablePointMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    rlEnablePointMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_rlEnablePointMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    rlEnablePointMode();
+static JSValue js_rlDisablePointMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    rlDisablePointMode();
+    return JS_UNDEFINED;
+}
+
+static JSValue js_rlEnableWireMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    rlEnableWireMode();
     return JS_UNDEFINED;
 }
 
@@ -3264,8 +3269,9 @@ static const JSCFunctionListEntry js_js_rlgl_funcs[] = {
     JS_CFUNC_DEF("rlEnableScissorTest",0,js_rlEnableScissorTest),
     JS_CFUNC_DEF("rlDisableScissorTest",0,js_rlDisableScissorTest),
     JS_CFUNC_DEF("rlScissor",4,js_rlScissor),
-    JS_CFUNC_DEF("rlEnableWireMode",0,js_rlEnableWireMode),
     JS_CFUNC_DEF("rlEnablePointMode",0,js_rlEnablePointMode),
+    JS_CFUNC_DEF("rlDisablePointMode",0,js_rlDisablePointMode),
+    JS_CFUNC_DEF("rlEnableWireMode",0,js_rlEnableWireMode),
     JS_CFUNC_DEF("rlDisableWireMode",0,js_rlDisableWireMode),
     JS_CFUNC_DEF("rlSetLineWidth",1,js_rlSetLineWidth),
     JS_CFUNC_DEF("rlGetLineWidth",0,js_rlGetLineWidth),

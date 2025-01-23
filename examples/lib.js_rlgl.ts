@@ -134,9 +134,11 @@ declare function rlDisableScissorTest(): void;
 /** undefined */
 declare function rlScissor(x: number, y: number, width: number, height: number): void;
 /** undefined */
-declare function rlEnableWireMode(): void;
-/** undefined */
 declare function rlEnablePointMode(): void;
+/** undefined */
+declare function rlDisablePointMode(): void;
+/** undefined */
+declare function rlEnableWireMode(): void;
 /** undefined */
 declare function rlDisableWireMode(): void;
 /** undefined */

@@ -34,6 +34,9 @@ static JSCFunctionListEntry argv0;
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+static int qjs__argc;
+static char **qjs__argv;
+
 static JSValue js_navigator_get_userAgent(JSContext *ctx, JSValue this_val);
 
 static const JSCFunctionListEntry navigator_proto_funcs[];

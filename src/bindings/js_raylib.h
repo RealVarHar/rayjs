@@ -16081,7 +16081,7 @@ static JSValue js_textJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextJoin((const char * *)textList, count, (const char *)delimiter);
+    char * returnVal = TextJoin(textList, count, (const char *)delimiter);
     memoryClear(ctx, memoryHead);
     JSValue ret;
     ret = JS_NewString(ctx, returnVal);
@@ -16194,7 +16194,7 @@ static JSValue js_textSplit(JSContext * ctx, JSValue this_val, int argc, JSValue
             count = &js_count;
         }
     }
-    const char * * returnVal = TextSplit((const char *)text, delimiter, count);
+    char * * returnVal = TextSplit((const char *)text, delimiter, count);
     if(JS_IsArray(ctx,argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)count[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
@@ -16451,7 +16451,7 @@ static JSValue js_textToUpper(JSContext * ctx, JSValue this_val, int argc, JSVal
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextToUpper((const char *)text);
+    char * returnVal = TextToUpper((const char *)text);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, text);
     }
@@ -16499,7 +16499,7 @@ static JSValue js_textToLower(JSContext * ctx, JSValue this_val, int argc, JSVal
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextToLower((const char *)text);
+    char * returnVal = TextToLower((const char *)text);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, text);
     }
@@ -16547,7 +16547,7 @@ static JSValue js_textToPascal(JSContext * ctx, JSValue this_val, int argc, JSVa
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextToPascal((const char *)text);
+    char * returnVal = TextToPascal((const char *)text);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, text);
     }
@@ -16595,7 +16595,7 @@ static JSValue js_textToSnake(JSContext * ctx, JSValue this_val, int argc, JSVal
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextToSnake((const char *)text);
+    char * returnVal = TextToSnake((const char *)text);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, text);
     }
@@ -16643,7 +16643,7 @@ static JSValue js_textToCamel(JSContext * ctx, JSValue this_val, int argc, JSVal
             return JS_EXCEPTION;
         }
     }
-    const char * returnVal = TextToCamel((const char *)text);
+    char * returnVal = TextToCamel((const char *)text);
     if(JS_IsArray(ctx,argv[0]) == 1) {
         js_free(ctx, text);
     }
