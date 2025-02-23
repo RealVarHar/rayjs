@@ -4,22 +4,22 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [js] example - project folder");
+InitWindow(screenWidth, screenHeight, "raylib [js] example - project folder");
 
-const logo = loadTexture("assets/raylib_512x512.png")
+const logo = LoadTexture("assets/raylib_512x512.png")
 
-setTargetFPS(60);   
-while (!windowShouldClose())
+SetTargetFPS(60);
+while (!WindowShouldClose())
 {
-    const offset = Math.sin(getTime())*50
-    beginDrawing();
+    const offset = Math.sin(GetTime())*50
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
-        drawTexture(logo, (screenWidth/2) - (logo.width/2), (screenHeight/2) - (logo.height/2) + offset, WHITE)
+        ClearBackground(RAYWHITE);
+        DrawTexture(logo, (screenWidth/2) - (logo.width/2), (screenHeight/2) - (logo.height/2) + offset, WHITE)
 
-        drawText("This is an example for loading a folder!", 190, 200, 20, LIGHTGRAY);
+        DrawText("This is an example for loading a folder!", 190, 200, 20, LIGHTGRAY);
 
-    endDrawing();
+    EndDrawing();
 }
-unloadTexture(logo)
-closeWindow();
+UnloadTexture(logo)
+CloseWindow();

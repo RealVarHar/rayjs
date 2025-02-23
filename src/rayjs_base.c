@@ -20,12 +20,38 @@ static const JSCFunctionListEntry global_obj[] = {
     JS_CFUNC_DEF("gc", 0, js_gc),
 };
 
+
+
 #ifdef QJS_USE_MIMALLOC
 #include <mimalloc.h>
 static void * jsc_malloc(JSContext *ctx, size_t sz ){ return mi_malloc(sz); }
 static void * jsc_calloc(JSContext *ctx, size_t n, size_t sz ){ return mi_calloc(n,sz); }
 static void * jsc_realloc(JSContext *ctx, void * ptr, size_t sz ){ return mi_realloc(ptr,sz); }
 static void jsc_free(JSContext *ctx, void * ptr ){ mi_free(ptr); }
+static void *js_mi_calloc(void *opaque, size_t count, size_t size){
+    return mi_calloc(count, size);
+}
+
+static void *js_mi_malloc(void *opaque, size_t size){
+    return mi_malloc(size);
+}
+
+static void js_mi_free(void *opaque, void *ptr){
+    if (!ptr)
+        return;
+    mi_free(ptr);
+}
+
+static void *js_mi_realloc(void *opaque, void *ptr, size_t size){
+    return mi_realloc(ptr, size);
+}
+static const JSMallocFunctions mi_mf = {
+    js_mi_calloc,
+    js_mi_malloc,
+    js_mi_free,
+    js_mi_realloc,
+    mi_malloc_usable_size
+};
 #else
 static void * jsc_malloc(JSContext *ctx, size_t sz ){ return malloc(sz); }
 static void * jsc_calloc(JSContext *ctx, size_t n, size_t sz ){ return calloc(n,sz); }
@@ -72,8 +98,22 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt){
 
     return ctx;
 }
-static JSValue copyFunction(JSContext *from_ctx, JSContext *to_ctx, JSValue fn){
 
+static JSRuntime* JS_NewRuntime3(){
+    JSRuntime* rt;
+    #ifdef QJS_USE_MIMALLOC
+        rt = JS_NewRuntime2(&mi_mf, NULL);
+    #else
+        rt = JS_NewRuntime();
+    #endif
+    if(!rt)return rt;
+    if (default_dump != 0)
+        JS_SetDumpFlags(rt, default_dump);
+    js_std_set_worker_new_context_func(JS_NewCustomContext);
+    return rt;
+}
+
+static JSValue copyFunction(JSContext *from_ctx, JSContext *to_ctx, JSValue fn){
     //Create (function)ObjectProtoClass from c function
     //JSValue JS_NewCFunctionData(JSContext *ctx, JSCFunctionData *func,int length, int magic, int data_len,JSValue *data)
     //ReadObject can be used to create a function in ctx from data

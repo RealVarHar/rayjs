@@ -27,7 +27,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [text] example - font loading");
+InitWindow(screenWidth, screenHeight, "raylib [text] example - font loading");
 
 // Define characters to draw
 // NOTE: raylib supports UTF-8 encoding, following list is actually codified as UTF8 internally
@@ -36,55 +36,55 @@ const msg = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHI\nJKLMNOPQRSTUVWXYZ[]^_`a
 // NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
 
 // BMFont (AngelCode) : Font data and image atlas have been generated using external program
-const fontBm = loadFont("resources/pixantiqua.fnt");
+const fontBm = LoadFont("resources/pixantiqua.fnt");
 
 // TTF font : Font data and atlas are generated directly from TTF
 // NOTE: We define a font base size of 32 pixels tall and up-to 250 characters
-const fontTtf = loadFontEx("resources/pixantiqua.ttf", 32, null, 250);
+const fontTtf = LoadFontEx("resources/pixantiqua.ttf", 32, null, 250);
 
 let useTtf = false;
 
-setTextLineSpacing(16);         // Set line spacing for multiline text (when line breaks are included '\n')
+SetTextLineSpacing(16);         // Set line spacing for multiline text (when line breaks are included '\n')
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    if (isKeyDown(KEY_SPACE)) useTtf = true;
+    if (IsKeyDown(KEY_SPACE)) useTtf = true;
     else useTtf = false;
     //----------------------------------------------------------------------------------
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        drawText("Hold SPACE to use TTF generated font", 20, 20, 20, LIGHTGRAY);
+        DrawText("Hold SPACE to use TTF generated font", 20, 20, 20, LIGHTGRAY);
 
         if (!useTtf)
         {
-            drawTextEx(fontBm, msg, new Vector2(20.0, 100.0), fontBm.baseSize/2, 2, MAROON);
-            drawText("Using BMFont (Angelcode) imported", 20, getScreenHeight() - 30, 20, GRAY);
+            DrawTextEx(fontBm, msg, new Vector2(20.0, 100.0), fontBm.baseSize/2, 2, MAROON);
+            DrawText("Using BMFont (Angelcode) imported", 20, GetScreenHeight() - 30, 20, GRAY);
         }
         else
         {
-            drawTextEx(fontTtf, msg, new Vector2(20.0, 100.0), fontTtf.baseSize/2, 2, LIME);
-            drawText("Using TTF font generated", 20, getScreenHeight() - 30, 20, GRAY);
+            DrawTextEx(fontTtf, msg, new Vector2(20.0, 100.0), fontTtf.baseSize/2, 2, LIME);
+            DrawText("Using TTF font generated", 20, GetScreenHeight() - 30, 20, GRAY);
         }
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadFont(fontBm);     // AngelCode Font unloading
-unloadFont(fontTtf);    // TTF Font unloading
+UnloadFont(fontBm);     // AngelCode Font unloading
+UnloadFont(fontTtf);    // TTF Font unloading
 
-closeWindow();          // Close window and OpenGL context
+CloseWindow();          // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

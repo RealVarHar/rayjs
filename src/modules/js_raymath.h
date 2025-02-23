@@ -59,7 +59,7 @@ static int js_declare_float16(JSContext * ctx, JSModuleDef * m) {
     return 0;
 }
 
-static JSValue js_clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_value;
     int err_value = JS_ToFloat64(ctx, &double_value, argv[0]);
     if(err_value<0) {
@@ -86,7 +86,7 @@ static JSValue js_clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * a
     return ret;
 }
 
-static JSValue js_lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_start;
     int err_start = JS_ToFloat64(ctx, &double_start, argv[0]);
     if(err_start<0) {
@@ -113,7 +113,7 @@ static JSValue js_lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * ar
     return ret;
 }
 
-static JSValue js_normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_value;
     int err_value = JS_ToFloat64(ctx, &double_value, argv[0]);
     if(err_value<0) {
@@ -140,7 +140,7 @@ static JSValue js_normalize(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_remap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Remap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_value;
     int err_value = JS_ToFloat64(ctx, &double_value, argv[0]);
     if(err_value<0) {
@@ -181,7 +181,7 @@ static JSValue js_remap(JSContext * ctx, JSValue this_val, int argc, JSValue * a
     return ret;
 }
 
-static JSValue js_wrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Wrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_value;
     int err_value = JS_ToFloat64(ctx, &double_value, argv[0]);
     if(err_value<0) {
@@ -208,7 +208,7 @@ static JSValue js_wrap(JSContext * ctx, JSValue this_val, int argc, JSValue * ar
     return ret;
 }
 
-static JSValue js_floatEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_FloatEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_x;
     int err_x = JS_ToFloat64(ctx, &double_x, argv[0]);
     if(err_x<0) {
@@ -228,7 +228,7 @@ static JSValue js_floatEquals(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector2Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = Vector2Zero();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -237,7 +237,7 @@ static JSValue js_vector2Zero(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector2One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = Vector2One();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -246,7 +246,7 @@ static JSValue js_vector2One(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector2Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -267,7 +267,7 @@ static JSValue js_vector2Add(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector2AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -289,7 +289,7 @@ static JSValue js_vector2AddValue(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -310,7 +310,7 @@ static JSValue js_vector2Subtract(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -332,7 +332,7 @@ static JSValue js_vector2SubtractValue(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_vector2Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -344,7 +344,7 @@ static JSValue js_vector2Length(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -356,7 +356,7 @@ static JSValue js_vector2LengthSqr(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -374,7 +374,7 @@ static JSValue js_vector2DotProduct(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector2CrossProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2CrossProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -392,7 +392,7 @@ static JSValue js_vector2CrossProduct(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_vector2Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -410,7 +410,7 @@ static JSValue js_vector2Distance(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -428,7 +428,7 @@ static JSValue js_vector2DistanceSqr(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -446,7 +446,7 @@ static JSValue js_vector2Angle(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector2LineAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2LineAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_start = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_start == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -464,7 +464,7 @@ static JSValue js_vector2LineAngle(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -486,7 +486,7 @@ static JSValue js_vector2Scale(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector2Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -507,7 +507,7 @@ static JSValue js_vector2Multiply(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector2Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -522,7 +522,7 @@ static JSValue js_vector2Negate(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -543,7 +543,7 @@ static JSValue js_vector2Divide(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -558,7 +558,7 @@ static JSValue js_vector2Normalize(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -579,7 +579,7 @@ static JSValue js_vector2Transform(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector2Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -607,7 +607,7 @@ static JSValue js_vector2Lerp(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector2Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -628,7 +628,7 @@ static JSValue js_vector2Reflect(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_vector2Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -649,7 +649,7 @@ static JSValue js_vector2Min(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector2Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -670,7 +670,7 @@ static JSValue js_vector2Max(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector2Rotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Rotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -692,7 +692,7 @@ static JSValue js_vector2Rotate(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -720,7 +720,7 @@ static JSValue js_vector2MoveTowards(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector2Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -735,7 +735,7 @@ static JSValue js_vector2Invert(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -762,7 +762,7 @@ static JSValue js_vector2Clamp(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector2ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -791,7 +791,7 @@ static JSValue js_vector2ClampValue(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector2Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -809,7 +809,7 @@ static JSValue js_vector2Equals(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector2Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector2Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -837,7 +837,7 @@ static JSValue js_vector2Refract(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_vector3Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3 returnVal = Vector3Zero();
     Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ptr_ret = returnVal;
@@ -846,7 +846,7 @@ static JSValue js_vector3Zero(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector3One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3 returnVal = Vector3One();
     Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ptr_ret = returnVal;
@@ -855,7 +855,7 @@ static JSValue js_vector3One(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector3Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -876,7 +876,7 @@ static JSValue js_vector3Add(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector3AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -898,7 +898,7 @@ static JSValue js_vector3AddValue(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -919,7 +919,7 @@ static JSValue js_vector3Subtract(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -941,7 +941,7 @@ static JSValue js_vector3SubtractValue(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -963,7 +963,7 @@ static JSValue js_vector3Scale(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector3Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -984,7 +984,7 @@ static JSValue js_vector3Multiply(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3CrossProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3CrossProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1005,7 +1005,7 @@ static JSValue js_vector3CrossProduct(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_vector3Perpendicular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Perpendicular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1020,7 +1020,7 @@ static JSValue js_vector3Perpendicular(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_vector3Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1032,7 +1032,7 @@ static JSValue js_vector3Length(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1044,7 +1044,7 @@ static JSValue js_vector3LengthSqr(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1062,7 +1062,7 @@ static JSValue js_vector3DotProduct(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1080,7 +1080,7 @@ static JSValue js_vector3Distance(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector3DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1098,7 +1098,7 @@ static JSValue js_vector3DistanceSqr(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Angle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1116,7 +1116,7 @@ static JSValue js_vector3Angle(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector3Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1131,7 +1131,7 @@ static JSValue js_vector3Negate(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1152,7 +1152,7 @@ static JSValue js_vector3Divide(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1167,7 +1167,7 @@ static JSValue js_vector3Normalize(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3Project(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Project(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1188,7 +1188,7 @@ static JSValue js_vector3Project(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1209,7 +1209,7 @@ static JSValue js_vector3Reject(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3 * v1 = (Vector3 *)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector3");
@@ -1224,7 +1224,7 @@ static JSValue js_vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_vector3Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Transform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1245,7 +1245,7 @@ static JSValue js_vector3Transform(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3RotateByQuaternion(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3RotateByQuaternion(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1266,7 +1266,7 @@ static JSValue js_vector3RotateByQuaternion(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_vector3RotateByAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3RotateByAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1294,7 +1294,7 @@ static JSValue js_vector3RotateByAxisAngle(JSContext * ctx, JSValue this_val, in
     return ret;
 }
 
-static JSValue js_vector3MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1322,7 +1322,7 @@ static JSValue js_vector3MoveTowards(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector3Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1350,7 +1350,7 @@ static JSValue js_vector3Lerp(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector3CubicHermite(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3CubicHermite(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1390,7 +1390,7 @@ static JSValue js_vector3CubicHermite(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_vector3Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Reflect(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1411,7 +1411,7 @@ static JSValue js_vector3Reflect(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_vector3Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1432,7 +1432,7 @@ static JSValue js_vector3Min(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector3Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1453,7 +1453,7 @@ static JSValue js_vector3Max(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector3Barycenter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Barycenter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_p = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_p == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1486,7 +1486,7 @@ static JSValue js_vector3Barycenter(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3Unproject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Unproject(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_source = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_source == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1513,7 +1513,7 @@ static JSValue js_vector3Unproject(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector3Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1528,7 +1528,7 @@ static JSValue js_vector3Invert(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1555,7 +1555,7 @@ static JSValue js_vector3Clamp(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector3ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3ClampValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1584,7 +1584,7 @@ static JSValue js_vector3ClampValue(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector3Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_p = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_p == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1602,7 +1602,7 @@ static JSValue js_vector3Equals(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector3Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector3Refract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1630,7 +1630,7 @@ static JSValue js_vector3Refract(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_vector4Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Zero(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4 returnVal = Vector4Zero();
     Vector4* ptr_ret = (Vector4*)js_malloc(ctx, sizeof(Vector4));
     *ptr_ret = returnVal;
@@ -1639,7 +1639,7 @@ static JSValue js_vector4Zero(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector4One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4One(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4 returnVal = Vector4One();
     Vector4* ptr_ret = (Vector4*)js_malloc(ctx, sizeof(Vector4));
     *ptr_ret = returnVal;
@@ -1648,7 +1648,7 @@ static JSValue js_vector4One(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector4Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Add(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1669,7 +1669,7 @@ static JSValue js_vector4Add(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector4AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4AddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1691,7 +1691,7 @@ static JSValue js_vector4AddValue(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Subtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1712,7 +1712,7 @@ static JSValue js_vector4Subtract(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4SubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1734,7 +1734,7 @@ static JSValue js_vector4SubtractValue(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_vector4Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Length(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1746,7 +1746,7 @@ static JSValue js_vector4Length(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector4LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4LengthSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1758,7 +1758,7 @@ static JSValue js_vector4LengthSqr(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector4DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4DotProduct(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1776,7 +1776,7 @@ static JSValue js_vector4DotProduct(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_vector4Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Distance(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1794,7 +1794,7 @@ static JSValue js_vector4Distance(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4DistanceSqr(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1812,7 +1812,7 @@ static JSValue js_vector4DistanceSqr(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector4Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Scale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1834,7 +1834,7 @@ static JSValue js_vector4Scale(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_vector4Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Multiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1855,7 +1855,7 @@ static JSValue js_vector4Multiply(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_vector4Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Negate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1870,7 +1870,7 @@ static JSValue js_vector4Negate(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector4Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Divide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1891,7 +1891,7 @@ static JSValue js_vector4Divide(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector4Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Normalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1906,7 +1906,7 @@ static JSValue js_vector4Normalize(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_vector4Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Min(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1927,7 +1927,7 @@ static JSValue js_vector4Min(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector4Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Max(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1948,7 +1948,7 @@ static JSValue js_vector4Max(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_vector4Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Lerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v1 = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1976,7 +1976,7 @@ static JSValue js_vector4Lerp(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_vector4MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4MoveTowards(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2004,7 +2004,7 @@ static JSValue js_vector4MoveTowards(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_vector4Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_v = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_v == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2019,7 +2019,7 @@ static JSValue js_vector4Invert(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_vector4Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Vector4Equals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_p = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_p == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2037,7 +2037,7 @@ static JSValue js_vector4Equals(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_matrixDeterminant(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixDeterminant(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2049,7 +2049,7 @@ static JSValue js_matrixDeterminant(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_matrixTrace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixTrace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2061,7 +2061,7 @@ static JSValue js_matrixTrace(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_matrixTranspose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixTranspose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2076,7 +2076,7 @@ static JSValue js_matrixTranspose(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_matrixInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2091,7 +2091,7 @@ static JSValue js_matrixInvert(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_matrixIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix returnVal = MatrixIdentity();
     Matrix* ptr_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ptr_ret = returnVal;
@@ -2100,7 +2100,7 @@ static JSValue js_matrixIdentity(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_matrixAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_left = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_left == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2121,7 +2121,7 @@ static JSValue js_matrixAdd(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_matrixSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_left = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_left == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2142,7 +2142,7 @@ static JSValue js_matrixSubtract(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_matrixMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_left = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_left == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2163,7 +2163,7 @@ static JSValue js_matrixMultiply(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_matrixTranslate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixTranslate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_x;
     int err_x = JS_ToFloat64(ctx, &double_x, argv[0]);
     if(err_x<0) {
@@ -2193,7 +2193,7 @@ static JSValue js_matrixTranslate(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_matrixRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_axis = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_axis == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2215,7 +2215,7 @@ static JSValue js_matrixRotate(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_matrixRotateX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotateX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_angle;
     int err_angle = JS_ToFloat64(ctx, &double_angle, argv[0]);
     if(err_angle<0) {
@@ -2231,7 +2231,7 @@ static JSValue js_matrixRotateX(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_matrixRotateY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotateY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_angle;
     int err_angle = JS_ToFloat64(ctx, &double_angle, argv[0]);
     if(err_angle<0) {
@@ -2247,7 +2247,7 @@ static JSValue js_matrixRotateY(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_matrixRotateZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotateZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_angle;
     int err_angle = JS_ToFloat64(ctx, &double_angle, argv[0]);
     if(err_angle<0) {
@@ -2263,7 +2263,7 @@ static JSValue js_matrixRotateZ(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_matrixRotateXYZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotateXYZ(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_angle = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_angle == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2278,7 +2278,7 @@ static JSValue js_matrixRotateXYZ(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_matrixRotateZYX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixRotateZYX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_angle = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_angle == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2293,7 +2293,7 @@ static JSValue js_matrixRotateZYX(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_matrixScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_x;
     int err_x = JS_ToFloat64(ctx, &double_x, argv[0]);
     if(err_x<0) {
@@ -2323,7 +2323,7 @@ static JSValue js_matrixScale(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_matrixFrustum(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixFrustum(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double left;
     int err_left = JS_ToFloat64(ctx, &left, argv[0]);
     if(err_left<0) {
@@ -2368,7 +2368,7 @@ static JSValue js_matrixFrustum(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_matrixPerspective(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixPerspective(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double fovY;
     int err_fovY = JS_ToFloat64(ctx, &fovY, argv[0]);
     if(err_fovY<0) {
@@ -2401,7 +2401,7 @@ static JSValue js_matrixPerspective(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_matrixOrtho(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixOrtho(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double left;
     int err_left = JS_ToFloat64(ctx, &left, argv[0]);
     if(err_left<0) {
@@ -2446,7 +2446,7 @@ static JSValue js_matrixOrtho(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_matrixLookAt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixLookAt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_eye = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_eye == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2473,7 +2473,7 @@ static JSValue js_matrixLookAt(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_quaternionAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2494,7 +2494,7 @@ static JSValue js_quaternionAdd(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_quaternionAddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionAddValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2516,7 +2516,7 @@ static JSValue js_quaternionAddValue(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionSubtract(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2537,7 +2537,7 @@ static JSValue js_quaternionSubtract(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionSubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionSubtractValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2559,7 +2559,7 @@ static JSValue js_quaternionSubtractValue(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_quaternionIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionIdentity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion returnVal = QuaternionIdentity();
     Quaternion* ptr_ret = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
     *ptr_ret = returnVal;
@@ -2568,7 +2568,7 @@ static JSValue js_quaternionIdentity(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2580,7 +2580,7 @@ static JSValue js_quaternionLength(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_quaternionNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2595,7 +2595,7 @@ static JSValue js_quaternionNormalize(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_quaternionInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2610,7 +2610,7 @@ static JSValue js_quaternionInvert(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_quaternionMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionMultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2631,7 +2631,7 @@ static JSValue js_quaternionMultiply(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2653,7 +2653,7 @@ static JSValue js_quaternionScale(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_quaternionDivide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionDivide(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2674,7 +2674,7 @@ static JSValue js_quaternionDivide(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_quaternionLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2702,7 +2702,7 @@ static JSValue js_quaternionLerp(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_quaternionNlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionNlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2730,7 +2730,7 @@ static JSValue js_quaternionNlerp(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_quaternionSlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionSlerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2758,7 +2758,7 @@ static JSValue js_quaternionSlerp(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionCubicHermiteSpline(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2798,7 +2798,7 @@ static JSValue js_quaternionCubicHermiteSpline(JSContext * ctx, JSValue this_val
     return ret;
 }
 
-static JSValue js_quaternionFromVector3ToVector3(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionFromVector3ToVector3(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_from = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_from == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2819,7 +2819,7 @@ static JSValue js_quaternionFromVector3ToVector3(JSContext * ctx, JSValue this_v
     return ret;
 }
 
-static JSValue js_quaternionFromMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionFromMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2834,7 +2834,7 @@ static JSValue js_quaternionFromMatrix(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_quaternionToMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionToMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2849,7 +2849,7 @@ static JSValue js_quaternionToMatrix(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionFromAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_axis = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_axis == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2871,7 +2871,7 @@ static JSValue js_quaternionFromAxisAngle(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_quaternionToAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
@@ -2960,7 +2960,7 @@ static JSValue js_quaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_quaternionFromEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionFromEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_pitch;
     int err_pitch = JS_ToFloat64(ctx, &double_pitch, argv[0]);
     if(err_pitch<0) {
@@ -2990,7 +2990,7 @@ static JSValue js_quaternionFromEuler(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_quaternionToEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionToEuler(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3005,7 +3005,7 @@ static JSValue js_quaternionToEuler(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_quaternionTransform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionTransform(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3026,7 +3026,7 @@ static JSValue js_quaternionTransform(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_quaternionEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_QuaternionEquals(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_p = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_p == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3044,7 +3044,7 @@ static JSValue js_quaternionEquals(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_matrixDecompose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MatrixDecompose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
     if(ptr_mat == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3071,148 +3071,148 @@ static JSValue js_matrixDecompose(JSContext * ctx, JSValue this_val, int argc, J
 }
 
 static const JSCFunctionListEntry js_js_raymath_funcs[] = {
-    JS_CFUNC_DEF("clamp",3,js_clamp),
-    JS_CFUNC_DEF("lerp",3,js_lerp),
-    JS_CFUNC_DEF("normalize",3,js_normalize),
-    JS_CFUNC_DEF("remap",5,js_remap),
-    JS_CFUNC_DEF("wrap",3,js_wrap),
-    JS_CFUNC_DEF("floatEquals",2,js_floatEquals),
-    JS_CFUNC_DEF("vector2Zero",0,js_vector2Zero),
-    JS_CFUNC_DEF("vector2One",0,js_vector2One),
-    JS_CFUNC_DEF("vector2Add",2,js_vector2Add),
-    JS_CFUNC_DEF("vector2AddValue",2,js_vector2AddValue),
-    JS_CFUNC_DEF("vector2Subtract",2,js_vector2Subtract),
-    JS_CFUNC_DEF("vector2SubtractValue",2,js_vector2SubtractValue),
-    JS_CFUNC_DEF("vector2Length",1,js_vector2Length),
-    JS_CFUNC_DEF("vector2LengthSqr",1,js_vector2LengthSqr),
-    JS_CFUNC_DEF("vector2DotProduct",2,js_vector2DotProduct),
-    JS_CFUNC_DEF("vector2CrossProduct",2,js_vector2CrossProduct),
-    JS_CFUNC_DEF("vector2Distance",2,js_vector2Distance),
-    JS_CFUNC_DEF("vector2DistanceSqr",2,js_vector2DistanceSqr),
-    JS_CFUNC_DEF("vector2Angle",2,js_vector2Angle),
-    JS_CFUNC_DEF("vector2LineAngle",2,js_vector2LineAngle),
-    JS_CFUNC_DEF("vector2Scale",2,js_vector2Scale),
-    JS_CFUNC_DEF("vector2Multiply",2,js_vector2Multiply),
-    JS_CFUNC_DEF("vector2Negate",1,js_vector2Negate),
-    JS_CFUNC_DEF("vector2Divide",2,js_vector2Divide),
-    JS_CFUNC_DEF("vector2Normalize",1,js_vector2Normalize),
-    JS_CFUNC_DEF("vector2Transform",2,js_vector2Transform),
-    JS_CFUNC_DEF("vector2Lerp",3,js_vector2Lerp),
-    JS_CFUNC_DEF("vector2Reflect",2,js_vector2Reflect),
-    JS_CFUNC_DEF("vector2Min",2,js_vector2Min),
-    JS_CFUNC_DEF("vector2Max",2,js_vector2Max),
-    JS_CFUNC_DEF("vector2Rotate",2,js_vector2Rotate),
-    JS_CFUNC_DEF("vector2MoveTowards",3,js_vector2MoveTowards),
-    JS_CFUNC_DEF("vector2Invert",1,js_vector2Invert),
-    JS_CFUNC_DEF("vector2Clamp",3,js_vector2Clamp),
-    JS_CFUNC_DEF("vector2ClampValue",3,js_vector2ClampValue),
-    JS_CFUNC_DEF("vector2Equals",2,js_vector2Equals),
-    JS_CFUNC_DEF("vector2Refract",3,js_vector2Refract),
-    JS_CFUNC_DEF("vector3Zero",0,js_vector3Zero),
-    JS_CFUNC_DEF("vector3One",0,js_vector3One),
-    JS_CFUNC_DEF("vector3Add",2,js_vector3Add),
-    JS_CFUNC_DEF("vector3AddValue",2,js_vector3AddValue),
-    JS_CFUNC_DEF("vector3Subtract",2,js_vector3Subtract),
-    JS_CFUNC_DEF("vector3SubtractValue",2,js_vector3SubtractValue),
-    JS_CFUNC_DEF("vector3Scale",2,js_vector3Scale),
-    JS_CFUNC_DEF("vector3Multiply",2,js_vector3Multiply),
-    JS_CFUNC_DEF("vector3CrossProduct",2,js_vector3CrossProduct),
-    JS_CFUNC_DEF("vector3Perpendicular",1,js_vector3Perpendicular),
-    JS_CFUNC_DEF("vector3Length",1,js_vector3Length),
-    JS_CFUNC_DEF("vector3LengthSqr",1,js_vector3LengthSqr),
-    JS_CFUNC_DEF("vector3DotProduct",2,js_vector3DotProduct),
-    JS_CFUNC_DEF("vector3Distance",2,js_vector3Distance),
-    JS_CFUNC_DEF("vector3DistanceSqr",2,js_vector3DistanceSqr),
-    JS_CFUNC_DEF("vector3Angle",2,js_vector3Angle),
-    JS_CFUNC_DEF("vector3Negate",1,js_vector3Negate),
-    JS_CFUNC_DEF("vector3Divide",2,js_vector3Divide),
-    JS_CFUNC_DEF("vector3Normalize",1,js_vector3Normalize),
-    JS_CFUNC_DEF("vector3Project",2,js_vector3Project),
-    JS_CFUNC_DEF("vector3Reject",2,js_vector3Reject),
-    JS_CFUNC_DEF("vector3OrthoNormalize",2,js_vector3OrthoNormalize),
-    JS_CFUNC_DEF("vector3Transform",2,js_vector3Transform),
-    JS_CFUNC_DEF("vector3RotateByQuaternion",2,js_vector3RotateByQuaternion),
-    JS_CFUNC_DEF("vector3RotateByAxisAngle",3,js_vector3RotateByAxisAngle),
-    JS_CFUNC_DEF("vector3MoveTowards",3,js_vector3MoveTowards),
-    JS_CFUNC_DEF("vector3Lerp",3,js_vector3Lerp),
-    JS_CFUNC_DEF("vector3CubicHermite",5,js_vector3CubicHermite),
-    JS_CFUNC_DEF("vector3Reflect",2,js_vector3Reflect),
-    JS_CFUNC_DEF("vector3Min",2,js_vector3Min),
-    JS_CFUNC_DEF("vector3Max",2,js_vector3Max),
-    JS_CFUNC_DEF("vector3Barycenter",4,js_vector3Barycenter),
-    JS_CFUNC_DEF("vector3Unproject",3,js_vector3Unproject),
-    JS_CFUNC_DEF("vector3Invert",1,js_vector3Invert),
-    JS_CFUNC_DEF("vector3Clamp",3,js_vector3Clamp),
-    JS_CFUNC_DEF("vector3ClampValue",3,js_vector3ClampValue),
-    JS_CFUNC_DEF("vector3Equals",2,js_vector3Equals),
-    JS_CFUNC_DEF("vector3Refract",3,js_vector3Refract),
-    JS_CFUNC_DEF("vector4Zero",0,js_vector4Zero),
-    JS_CFUNC_DEF("vector4One",0,js_vector4One),
-    JS_CFUNC_DEF("vector4Add",2,js_vector4Add),
-    JS_CFUNC_DEF("vector4AddValue",2,js_vector4AddValue),
-    JS_CFUNC_DEF("vector4Subtract",2,js_vector4Subtract),
-    JS_CFUNC_DEF("vector4SubtractValue",2,js_vector4SubtractValue),
-    JS_CFUNC_DEF("vector4Length",1,js_vector4Length),
-    JS_CFUNC_DEF("vector4LengthSqr",1,js_vector4LengthSqr),
-    JS_CFUNC_DEF("vector4DotProduct",2,js_vector4DotProduct),
-    JS_CFUNC_DEF("vector4Distance",2,js_vector4Distance),
-    JS_CFUNC_DEF("vector4DistanceSqr",2,js_vector4DistanceSqr),
-    JS_CFUNC_DEF("vector4Scale",2,js_vector4Scale),
-    JS_CFUNC_DEF("vector4Multiply",2,js_vector4Multiply),
-    JS_CFUNC_DEF("vector4Negate",1,js_vector4Negate),
-    JS_CFUNC_DEF("vector4Divide",2,js_vector4Divide),
-    JS_CFUNC_DEF("vector4Normalize",1,js_vector4Normalize),
-    JS_CFUNC_DEF("vector4Min",2,js_vector4Min),
-    JS_CFUNC_DEF("vector4Max",2,js_vector4Max),
-    JS_CFUNC_DEF("vector4Lerp",3,js_vector4Lerp),
-    JS_CFUNC_DEF("vector4MoveTowards",3,js_vector4MoveTowards),
-    JS_CFUNC_DEF("vector4Invert",1,js_vector4Invert),
-    JS_CFUNC_DEF("vector4Equals",2,js_vector4Equals),
-    JS_CFUNC_DEF("matrixDeterminant",1,js_matrixDeterminant),
-    JS_CFUNC_DEF("matrixTrace",1,js_matrixTrace),
-    JS_CFUNC_DEF("matrixTranspose",1,js_matrixTranspose),
-    JS_CFUNC_DEF("matrixInvert",1,js_matrixInvert),
-    JS_CFUNC_DEF("matrixIdentity",0,js_matrixIdentity),
-    JS_CFUNC_DEF("matrixAdd",2,js_matrixAdd),
-    JS_CFUNC_DEF("matrixSubtract",2,js_matrixSubtract),
-    JS_CFUNC_DEF("matrixMultiply",2,js_matrixMultiply),
-    JS_CFUNC_DEF("matrixTranslate",3,js_matrixTranslate),
-    JS_CFUNC_DEF("matrixRotate",2,js_matrixRotate),
-    JS_CFUNC_DEF("matrixRotateX",1,js_matrixRotateX),
-    JS_CFUNC_DEF("matrixRotateY",1,js_matrixRotateY),
-    JS_CFUNC_DEF("matrixRotateZ",1,js_matrixRotateZ),
-    JS_CFUNC_DEF("matrixRotateXYZ",1,js_matrixRotateXYZ),
-    JS_CFUNC_DEF("matrixRotateZYX",1,js_matrixRotateZYX),
-    JS_CFUNC_DEF("matrixScale",3,js_matrixScale),
-    JS_CFUNC_DEF("matrixFrustum",6,js_matrixFrustum),
-    JS_CFUNC_DEF("matrixPerspective",4,js_matrixPerspective),
-    JS_CFUNC_DEF("matrixOrtho",6,js_matrixOrtho),
-    JS_CFUNC_DEF("matrixLookAt",3,js_matrixLookAt),
-    JS_CFUNC_DEF("quaternionAdd",2,js_quaternionAdd),
-    JS_CFUNC_DEF("quaternionAddValue",2,js_quaternionAddValue),
-    JS_CFUNC_DEF("quaternionSubtract",2,js_quaternionSubtract),
-    JS_CFUNC_DEF("quaternionSubtractValue",2,js_quaternionSubtractValue),
-    JS_CFUNC_DEF("quaternionIdentity",0,js_quaternionIdentity),
-    JS_CFUNC_DEF("quaternionLength",1,js_quaternionLength),
-    JS_CFUNC_DEF("quaternionNormalize",1,js_quaternionNormalize),
-    JS_CFUNC_DEF("quaternionInvert",1,js_quaternionInvert),
-    JS_CFUNC_DEF("quaternionMultiply",2,js_quaternionMultiply),
-    JS_CFUNC_DEF("quaternionScale",2,js_quaternionScale),
-    JS_CFUNC_DEF("quaternionDivide",2,js_quaternionDivide),
-    JS_CFUNC_DEF("quaternionLerp",3,js_quaternionLerp),
-    JS_CFUNC_DEF("quaternionNlerp",3,js_quaternionNlerp),
-    JS_CFUNC_DEF("quaternionSlerp",3,js_quaternionSlerp),
-    JS_CFUNC_DEF("quaternionCubicHermiteSpline",5,js_quaternionCubicHermiteSpline),
-    JS_CFUNC_DEF("quaternionFromVector3ToVector3",2,js_quaternionFromVector3ToVector3),
-    JS_CFUNC_DEF("quaternionFromMatrix",1,js_quaternionFromMatrix),
-    JS_CFUNC_DEF("quaternionToMatrix",1,js_quaternionToMatrix),
-    JS_CFUNC_DEF("quaternionFromAxisAngle",2,js_quaternionFromAxisAngle),
-    JS_CFUNC_DEF("quaternionToAxisAngle",3,js_quaternionToAxisAngle),
-    JS_CFUNC_DEF("quaternionFromEuler",3,js_quaternionFromEuler),
-    JS_CFUNC_DEF("quaternionToEuler",1,js_quaternionToEuler),
-    JS_CFUNC_DEF("quaternionTransform",2,js_quaternionTransform),
-    JS_CFUNC_DEF("quaternionEquals",2,js_quaternionEquals),
-    JS_CFUNC_DEF("matrixDecompose",4,js_matrixDecompose),
+    JS_CFUNC_DEF("Clamp",3,js_Clamp),
+    JS_CFUNC_DEF("Lerp",3,js_Lerp),
+    JS_CFUNC_DEF("Normalize",3,js_Normalize),
+    JS_CFUNC_DEF("Remap",5,js_Remap),
+    JS_CFUNC_DEF("Wrap",3,js_Wrap),
+    JS_CFUNC_DEF("FloatEquals",2,js_FloatEquals),
+    JS_CFUNC_DEF("Vector2Zero",0,js_Vector2Zero),
+    JS_CFUNC_DEF("Vector2One",0,js_Vector2One),
+    JS_CFUNC_DEF("Vector2Add",2,js_Vector2Add),
+    JS_CFUNC_DEF("Vector2AddValue",2,js_Vector2AddValue),
+    JS_CFUNC_DEF("Vector2Subtract",2,js_Vector2Subtract),
+    JS_CFUNC_DEF("Vector2SubtractValue",2,js_Vector2SubtractValue),
+    JS_CFUNC_DEF("Vector2Length",1,js_Vector2Length),
+    JS_CFUNC_DEF("Vector2LengthSqr",1,js_Vector2LengthSqr),
+    JS_CFUNC_DEF("Vector2DotProduct",2,js_Vector2DotProduct),
+    JS_CFUNC_DEF("Vector2CrossProduct",2,js_Vector2CrossProduct),
+    JS_CFUNC_DEF("Vector2Distance",2,js_Vector2Distance),
+    JS_CFUNC_DEF("Vector2DistanceSqr",2,js_Vector2DistanceSqr),
+    JS_CFUNC_DEF("Vector2Angle",2,js_Vector2Angle),
+    JS_CFUNC_DEF("Vector2LineAngle",2,js_Vector2LineAngle),
+    JS_CFUNC_DEF("Vector2Scale",2,js_Vector2Scale),
+    JS_CFUNC_DEF("Vector2Multiply",2,js_Vector2Multiply),
+    JS_CFUNC_DEF("Vector2Negate",1,js_Vector2Negate),
+    JS_CFUNC_DEF("Vector2Divide",2,js_Vector2Divide),
+    JS_CFUNC_DEF("Vector2Normalize",1,js_Vector2Normalize),
+    JS_CFUNC_DEF("Vector2Transform",2,js_Vector2Transform),
+    JS_CFUNC_DEF("Vector2Lerp",3,js_Vector2Lerp),
+    JS_CFUNC_DEF("Vector2Reflect",2,js_Vector2Reflect),
+    JS_CFUNC_DEF("Vector2Min",2,js_Vector2Min),
+    JS_CFUNC_DEF("Vector2Max",2,js_Vector2Max),
+    JS_CFUNC_DEF("Vector2Rotate",2,js_Vector2Rotate),
+    JS_CFUNC_DEF("Vector2MoveTowards",3,js_Vector2MoveTowards),
+    JS_CFUNC_DEF("Vector2Invert",1,js_Vector2Invert),
+    JS_CFUNC_DEF("Vector2Clamp",3,js_Vector2Clamp),
+    JS_CFUNC_DEF("Vector2ClampValue",3,js_Vector2ClampValue),
+    JS_CFUNC_DEF("Vector2Equals",2,js_Vector2Equals),
+    JS_CFUNC_DEF("Vector2Refract",3,js_Vector2Refract),
+    JS_CFUNC_DEF("Vector3Zero",0,js_Vector3Zero),
+    JS_CFUNC_DEF("Vector3One",0,js_Vector3One),
+    JS_CFUNC_DEF("Vector3Add",2,js_Vector3Add),
+    JS_CFUNC_DEF("Vector3AddValue",2,js_Vector3AddValue),
+    JS_CFUNC_DEF("Vector3Subtract",2,js_Vector3Subtract),
+    JS_CFUNC_DEF("Vector3SubtractValue",2,js_Vector3SubtractValue),
+    JS_CFUNC_DEF("Vector3Scale",2,js_Vector3Scale),
+    JS_CFUNC_DEF("Vector3Multiply",2,js_Vector3Multiply),
+    JS_CFUNC_DEF("Vector3CrossProduct",2,js_Vector3CrossProduct),
+    JS_CFUNC_DEF("Vector3Perpendicular",1,js_Vector3Perpendicular),
+    JS_CFUNC_DEF("Vector3Length",1,js_Vector3Length),
+    JS_CFUNC_DEF("Vector3LengthSqr",1,js_Vector3LengthSqr),
+    JS_CFUNC_DEF("Vector3DotProduct",2,js_Vector3DotProduct),
+    JS_CFUNC_DEF("Vector3Distance",2,js_Vector3Distance),
+    JS_CFUNC_DEF("Vector3DistanceSqr",2,js_Vector3DistanceSqr),
+    JS_CFUNC_DEF("Vector3Angle",2,js_Vector3Angle),
+    JS_CFUNC_DEF("Vector3Negate",1,js_Vector3Negate),
+    JS_CFUNC_DEF("Vector3Divide",2,js_Vector3Divide),
+    JS_CFUNC_DEF("Vector3Normalize",1,js_Vector3Normalize),
+    JS_CFUNC_DEF("Vector3Project",2,js_Vector3Project),
+    JS_CFUNC_DEF("Vector3Reject",2,js_Vector3Reject),
+    JS_CFUNC_DEF("Vector3OrthoNormalize",2,js_Vector3OrthoNormalize),
+    JS_CFUNC_DEF("Vector3Transform",2,js_Vector3Transform),
+    JS_CFUNC_DEF("Vector3RotateByQuaternion",2,js_Vector3RotateByQuaternion),
+    JS_CFUNC_DEF("Vector3RotateByAxisAngle",3,js_Vector3RotateByAxisAngle),
+    JS_CFUNC_DEF("Vector3MoveTowards",3,js_Vector3MoveTowards),
+    JS_CFUNC_DEF("Vector3Lerp",3,js_Vector3Lerp),
+    JS_CFUNC_DEF("Vector3CubicHermite",5,js_Vector3CubicHermite),
+    JS_CFUNC_DEF("Vector3Reflect",2,js_Vector3Reflect),
+    JS_CFUNC_DEF("Vector3Min",2,js_Vector3Min),
+    JS_CFUNC_DEF("Vector3Max",2,js_Vector3Max),
+    JS_CFUNC_DEF("Vector3Barycenter",4,js_Vector3Barycenter),
+    JS_CFUNC_DEF("Vector3Unproject",3,js_Vector3Unproject),
+    JS_CFUNC_DEF("Vector3Invert",1,js_Vector3Invert),
+    JS_CFUNC_DEF("Vector3Clamp",3,js_Vector3Clamp),
+    JS_CFUNC_DEF("Vector3ClampValue",3,js_Vector3ClampValue),
+    JS_CFUNC_DEF("Vector3Equals",2,js_Vector3Equals),
+    JS_CFUNC_DEF("Vector3Refract",3,js_Vector3Refract),
+    JS_CFUNC_DEF("Vector4Zero",0,js_Vector4Zero),
+    JS_CFUNC_DEF("Vector4One",0,js_Vector4One),
+    JS_CFUNC_DEF("Vector4Add",2,js_Vector4Add),
+    JS_CFUNC_DEF("Vector4AddValue",2,js_Vector4AddValue),
+    JS_CFUNC_DEF("Vector4Subtract",2,js_Vector4Subtract),
+    JS_CFUNC_DEF("Vector4SubtractValue",2,js_Vector4SubtractValue),
+    JS_CFUNC_DEF("Vector4Length",1,js_Vector4Length),
+    JS_CFUNC_DEF("Vector4LengthSqr",1,js_Vector4LengthSqr),
+    JS_CFUNC_DEF("Vector4DotProduct",2,js_Vector4DotProduct),
+    JS_CFUNC_DEF("Vector4Distance",2,js_Vector4Distance),
+    JS_CFUNC_DEF("Vector4DistanceSqr",2,js_Vector4DistanceSqr),
+    JS_CFUNC_DEF("Vector4Scale",2,js_Vector4Scale),
+    JS_CFUNC_DEF("Vector4Multiply",2,js_Vector4Multiply),
+    JS_CFUNC_DEF("Vector4Negate",1,js_Vector4Negate),
+    JS_CFUNC_DEF("Vector4Divide",2,js_Vector4Divide),
+    JS_CFUNC_DEF("Vector4Normalize",1,js_Vector4Normalize),
+    JS_CFUNC_DEF("Vector4Min",2,js_Vector4Min),
+    JS_CFUNC_DEF("Vector4Max",2,js_Vector4Max),
+    JS_CFUNC_DEF("Vector4Lerp",3,js_Vector4Lerp),
+    JS_CFUNC_DEF("Vector4MoveTowards",3,js_Vector4MoveTowards),
+    JS_CFUNC_DEF("Vector4Invert",1,js_Vector4Invert),
+    JS_CFUNC_DEF("Vector4Equals",2,js_Vector4Equals),
+    JS_CFUNC_DEF("MatrixDeterminant",1,js_MatrixDeterminant),
+    JS_CFUNC_DEF("MatrixTrace",1,js_MatrixTrace),
+    JS_CFUNC_DEF("MatrixTranspose",1,js_MatrixTranspose),
+    JS_CFUNC_DEF("MatrixInvert",1,js_MatrixInvert),
+    JS_CFUNC_DEF("MatrixIdentity",0,js_MatrixIdentity),
+    JS_CFUNC_DEF("MatrixAdd",2,js_MatrixAdd),
+    JS_CFUNC_DEF("MatrixSubtract",2,js_MatrixSubtract),
+    JS_CFUNC_DEF("MatrixMultiply",2,js_MatrixMultiply),
+    JS_CFUNC_DEF("MatrixTranslate",3,js_MatrixTranslate),
+    JS_CFUNC_DEF("MatrixRotate",2,js_MatrixRotate),
+    JS_CFUNC_DEF("MatrixRotateX",1,js_MatrixRotateX),
+    JS_CFUNC_DEF("MatrixRotateY",1,js_MatrixRotateY),
+    JS_CFUNC_DEF("MatrixRotateZ",1,js_MatrixRotateZ),
+    JS_CFUNC_DEF("MatrixRotateXYZ",1,js_MatrixRotateXYZ),
+    JS_CFUNC_DEF("MatrixRotateZYX",1,js_MatrixRotateZYX),
+    JS_CFUNC_DEF("MatrixScale",3,js_MatrixScale),
+    JS_CFUNC_DEF("MatrixFrustum",6,js_MatrixFrustum),
+    JS_CFUNC_DEF("MatrixPerspective",4,js_MatrixPerspective),
+    JS_CFUNC_DEF("MatrixOrtho",6,js_MatrixOrtho),
+    JS_CFUNC_DEF("MatrixLookAt",3,js_MatrixLookAt),
+    JS_CFUNC_DEF("QuaternionAdd",2,js_QuaternionAdd),
+    JS_CFUNC_DEF("QuaternionAddValue",2,js_QuaternionAddValue),
+    JS_CFUNC_DEF("QuaternionSubtract",2,js_QuaternionSubtract),
+    JS_CFUNC_DEF("QuaternionSubtractValue",2,js_QuaternionSubtractValue),
+    JS_CFUNC_DEF("QuaternionIdentity",0,js_QuaternionIdentity),
+    JS_CFUNC_DEF("QuaternionLength",1,js_QuaternionLength),
+    JS_CFUNC_DEF("QuaternionNormalize",1,js_QuaternionNormalize),
+    JS_CFUNC_DEF("QuaternionInvert",1,js_QuaternionInvert),
+    JS_CFUNC_DEF("QuaternionMultiply",2,js_QuaternionMultiply),
+    JS_CFUNC_DEF("QuaternionScale",2,js_QuaternionScale),
+    JS_CFUNC_DEF("QuaternionDivide",2,js_QuaternionDivide),
+    JS_CFUNC_DEF("QuaternionLerp",3,js_QuaternionLerp),
+    JS_CFUNC_DEF("QuaternionNlerp",3,js_QuaternionNlerp),
+    JS_CFUNC_DEF("QuaternionSlerp",3,js_QuaternionSlerp),
+    JS_CFUNC_DEF("QuaternionCubicHermiteSpline",5,js_QuaternionCubicHermiteSpline),
+    JS_CFUNC_DEF("QuaternionFromVector3ToVector3",2,js_QuaternionFromVector3ToVector3),
+    JS_CFUNC_DEF("QuaternionFromMatrix",1,js_QuaternionFromMatrix),
+    JS_CFUNC_DEF("QuaternionToMatrix",1,js_QuaternionToMatrix),
+    JS_CFUNC_DEF("QuaternionFromAxisAngle",2,js_QuaternionFromAxisAngle),
+    JS_CFUNC_DEF("QuaternionToAxisAngle",3,js_QuaternionToAxisAngle),
+    JS_CFUNC_DEF("QuaternionFromEuler",3,js_QuaternionFromEuler),
+    JS_CFUNC_DEF("QuaternionToEuler",1,js_QuaternionToEuler),
+    JS_CFUNC_DEF("QuaternionTransform",2,js_QuaternionTransform),
+    JS_CFUNC_DEF("QuaternionEquals",2,js_QuaternionEquals),
+    JS_CFUNC_DEF("MatrixDecompose",4,js_MatrixDecompose),
 };
 
 static int js_js_raymath_init(JSContext * ctx, JSModuleDef * m) {

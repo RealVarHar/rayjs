@@ -18,7 +18,7 @@ typedef struct trampolineContext {
 
 #include <string.h>
 #include <stdarg.h>
-#include "quickjs-libc.h"
+#include "modules/quickjs-libc.h"
 
 extern JSModuleDef * js_init_module_js_raylib(JSContext * ctx, const char * module_name);
 extern JSModuleDef * js_init_module_js_raymath(JSContext * ctx, const char * module_name);
@@ -36,6 +36,8 @@ static JSCFunctionListEntry argv0;
 
 static int qjs__argc;
 static char **qjs__argv;
+static int default_dump;
+
 
 static JSValue js_navigator_get_userAgent(JSContext *ctx, JSValue this_val);
 

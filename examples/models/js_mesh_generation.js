@@ -8,7 +8,7 @@ for (const key in raymath) { globalThis[key] = raymath[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [core] example - javascript mesh generation");
+InitWindow(screenWidth, screenHeight, "raylib [core] example - javascript mesh generation");
 
 const mesh = new Mesh()
 mesh.vertexCount = 3
@@ -22,15 +22,15 @@ mesh.vertices = new Float32Array([
     v2.x, v2.y, v2.z,
     v3.x, v3.y, v3.z
 ]).buffer
-uploadMesh(mesh, false) // If your forget to upload to GPU, drawMesh will segfault
-const material = loadMaterialDefault()
-const matrix = matrixIdentity()
+UploadMesh(mesh, false) // If your forget to upload to GPU, drawMesh will segfault
+const material = LoadMaterialDefault()
+const matrix = MatrixIdentity()
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
@@ -38,18 +38,18 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
-        drawMesh(mesh, material, matrix)
-        drawText("Mesh created from Javascript ArrayBuffers", 190, 200, 20, LIGHTGRAY);
+        ClearBackground(RAYWHITE);
+        DrawMesh(mesh, material, matrix)
+        DrawText("Mesh created from Javascript ArrayBuffers", 190, 200, 20, LIGHTGRAY);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadMaterial(material)
-unloadMesh(mesh)
-closeWindow();        // Close window and OpenGL context
+UnloadMaterial(material)
+UnloadMesh(mesh)
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

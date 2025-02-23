@@ -6,14 +6,14 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
@@ -22,17 +22,17 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        drawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+        DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 // De-Initialization
 //--------------------------------------------------------------------------------------
-closeWindow();        // Close window and OpenGL context
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------
 

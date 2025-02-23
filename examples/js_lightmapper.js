@@ -6,17 +6,17 @@ for (const key in rlm) { globalThis[key] = rlm[key]; }
 for (const key in rm) { globalThis[key] = rm[key]; }
 
 
-function drawScene(scene){
-	drawModel(scene.raylib_model, new Vector3(0,0,0), 1, WHITE);
+function DrawScene(scene){
+	DrawModel(scene.raylib_model, new Vector3(0,0,0), 1, WHITE);
 }
 
-setConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI | FLAG_VSYNC_HINT);
+SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI | FLAG_VSYNC_HINT);
 
-initWindow(1024,768,"Test");
+InitWindow(1024,768,"Test");
 
 const scene = {}
 
-scene.raylib_model = loadModel("../assets/models/gazebo.obj");
+scene.raylib_model = LoadModel("../assets/models/gazebo.obj");
 
 // Demonstration how to merge models into a single mesh
 // let m = loadModel("../assets/models/untitled_no_lm.obj");
@@ -35,13 +35,13 @@ scene.raylib_model = loadModel("../assets/models/gazebo.obj");
 //     m = loadModelFromMesh(currentMesh)
 // }
 
-const bbox = getModelBoundingBox(scene.raylib_model)
+const bbox = GetModelBoundingBox(scene.raylib_model)
 
 scene.w = 256;
 scene.h = 256;
-scene.raylib_texture = loadTextureFromImage(genImageColor(1,1,BLACK));
-const defMat = loadMaterialDefault();
-setMaterialTexture(defMat, MATERIAL_MAP_ALBEDO, scene.raylib_texture);
+scene.raylib_texture = LoadTextureFromImage(GenImageColor(1,1,BLACK));
+const defMat = LoadMaterialDefault();
+SetMaterialTexture(defMat, MATERIAL_MAP_ALBEDO, scene.raylib_texture);
 let materials = scene.raylib_model.materials;
 materials[0] = defMat;
 scene.raylib_model.materials = materials;//setModelMaterial
@@ -52,74 +52,74 @@ const up = new Vector3(0.0, 1.0, 0.0);          // Camera up vector (rotation to
 const fovy = 45.0;                                // Camera field-of-view Y
 const projection = CAMERA_PERSPECTIVE;                   // Camera mode type
 scene.camera = new Camera3D(position, target, up, fovy, projection);
-const config = getDefaultLightmapperConfig();
+const config = GetDefaultLightmapperConfig();
 //config.backgroundColor = new Color(10,10,10);
 //config.hemisphereSize = 512;
 const mesh = scene.raylib_model.meshes[0];//GetModelMesh
-const lm = loadLightmapper(scene.w, scene.h, mesh, config);
-const lmMat = loadMaterialLightmapper(BLACK, 0);
-const light = genMeshCube(0.2,0.2,0.2);
-const lightMaterial = loadMaterialLightmapper(ORANGE, .1); 
+const lm = LoadLightmapper(scene.w, scene.h, mesh, config);
+const lmMat = LoadMaterialLightmapper(BLACK, 0);
+const light = GenMeshCube(0.2,0.2,0.2);
+const lightMaterial = LoadMaterialLightmapper(ORANGE, .1);
 
-while (!windowShouldClose())
+while (!WindowShouldClose())
 {
-    const wm = getMouseWheelMove()
+    const wm = GetMouseWheelMove();
     if(wm !== 0){
         const camPos = scene.camera.position;
-        const fac = 1 + (wm * -0.1)
-        scene.camera.position = vector3Multiply(camPos, new Vector3(fac, fac, fac));
+        const fac = 1 + (wm * -0.1);
+        scene.camera.position = Vector3Multiply(camPos, new Vector3(fac, fac, fac));
     }
 
-    if(isMouseButtonDown(MOUSE_BUTTON_LEFT))
-        updateCamera(scene.camera, CAMERA_THIRD_PERSON);
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        UpdateCamera(scene.camera, CAMERA_THIRD_PERSON);
 
     if(lm.progress < 1.0){
-        let startTime = getTime();
-        beginLightmap();
-        while(beginLightmapFragment(lm)){
-            drawMesh(mesh, lmMat, matrixIdentity());
+        let startTime = GetTime();
+        BeginLightmap();
+        while(BeginLightmapFragment(lm)){
+            DrawMesh(mesh, lmMat, MatrixIdentity());
             // drawMesh(light, lightMaterial, matrixTranslate(0.0,0.3,0.5));
             // drawMesh(light, lightMaterial, matrixTranslate(0.0,0.3,-0.5));
             //drawMesh(light, lightMaterial, matrixMultiply(matrixScale(60,60,60), matrixTranslate(0.0,150,0)));
             // drawMesh(light, lightMaterial, matrixTranslate(0.5,0.3,0));
             // drawMesh(light, lightMaterial, matrixTranslate(-0.5,0.3,0));
-            endLightmapFragment(lm);
+            EndLightmapFragment(lm);
             // display progress every second (printf is expensive)
-            let time = getTime();
-            if (getTime() - startTime > 0.03) break;
+            let time = GetTime();
+            if (GetTime() - startTime > 0.03) break;
         }
-        endLightmap();
+        EndLightmap();
         if(lm.progress == 1.0){
-            const img = loadImageFromLightmapper(lm);
+            const img = LoadImageFromLightmapper(lm);
             //exportImage(img, "my_result.png");
             const old = scene.raylib_texture;
-            scene.raylib_texture = loadTextureFromImage(img);
-            setTextureFilter(scene.raylib_texture, TEXTURE_FILTER_TRILINEAR);
-            unloadTexture(old);
-            let mat = loadMaterialDefault();
-            setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, scene.raylib_texture);
+            scene.raylib_texture = LoadTextureFromImage(img);
+            SetTextureFilter(scene.raylib_texture, TEXTURE_FILTER_TRILINEAR);
+            UnloadTexture(old);
+            let mat = LoadMaterialDefault();
+            SetMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, scene.raylib_texture);
             let materials=scene.raylib_model.materials;
             materials[0] = mat
             scene.raylib_model.materials= materials;//setModelMaterial
-            unloadLightmapper(lm);
+            UnloadLightmapper(lm);
         }
     }
 
-    beginDrawing();
-        clearBackground(BLUE);
+    BeginDrawing();
+        ClearBackground(BLUE);
         
-            beginMode3D(scene.camera);
-            drawScene(scene);
-            endMode3D();
+            BeginMode3D(scene.camera);
+            DrawScene(scene);
+            EndMode3D();
         
         // printf("%d\n",(int)(lm.progress*GetScreenWidth()));
         if(lm.progress < 1.0){
-            drawRectangle(0,0,getScreenWidth(),20, fade(GREEN,0.5));
-            drawRectangle(0,0,getScreenWidth()*lm.progress,20, GREEN);
+            DrawRectangle(0,0,GetScreenWidth(),20, Fade(GREEN,0.5));
+            DrawRectangle(0,0,GetScreenWidth()*lm.progress,20, GREEN);
         }
-    endDrawing();
+    EndDrawing();
 }
 
-unloadModel(scene.raylib_model);
-unloadTexture(scene.raylib_texture);
-closeWindow();
+UnloadModel(scene.raylib_model);
+UnloadTexture(scene.raylib_texture);
+CloseWindow();

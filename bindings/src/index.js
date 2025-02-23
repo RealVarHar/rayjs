@@ -628,8 +628,8 @@ function main() {
             let t0,t1,t2,t3,t4,t5,t6;
             t0=gen.for(0, 'formatlen');
                 t1=t0.if("format[i]!='%'");
-                    t1.statement('buffer[l]=format[i];');
-                    t1.statement('i++');
+                    t1.statement('buffer[l]=format[i]');
+                    t1.statement('l++');
                 t1=t0.else();
                     t1.declare('int','firsth',false,'i+1');
                     t1.declare('char','har',false,'format[firsth]');
@@ -660,7 +660,7 @@ function main() {
                     t2=t1.if("format[lasth]=='%'");
                         t2.declare('int','i',false,'lasth',true);
                         t2.statement("buffer[l]='%';");
-                        t2.statement("i++");
+                        t2.statement("l++");
                         t2.statement("continue");
                     t1.statement('memset(char_ptr,0,ilen * sizeof(char))');
                     t2=t1.switch('har');
@@ -754,6 +754,7 @@ function main() {
                     t1.statement('l+=ilen');
                     t1.declare('int','i',false,'lasth',true);
             gen.cToJs('char *','js_buffer','buffer');
+            errorCleanupFn(gen);
             gen.returnExp('js_buffer');
         };
     }
@@ -888,7 +889,7 @@ function main() {
                 }
             }
         });
-        module.gen.writeTo(`src/bindings/${module.gen.name}.h`);
+        module.gen.writeTo(`src/modules/${module.gen.name}.h`);
         module.gen.typings.writeTo(`examples/lib.${module.gen.name}.ts`);
     }
     const ignored = modules['core'].functions.filter(x => x.binding.ignore).length;

@@ -6,7 +6,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
     const screenWidth = 800;
     const screenHeight = 450;
 
-    initWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera mode");
+    InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera mode");
 
     // Define the camera to look into our 3d world
     const position = new Vector3(0,10,10);
@@ -16,11 +16,11 @@ for (const key in rl) { globalThis[key] = rl[key] };
 
     const cubePosition = new Vector3(0,0,0);
 
-    setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!windowShouldClose())    // Detect window close button or ESC key
+    while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
@@ -29,28 +29,28 @@ for (const key in rl) { globalThis[key] = rl[key] };
         
         // Draw
         //----------------------------------------------------------------------------------
-        beginDrawing();
+        BeginDrawing();
 
-            clearBackground(RAYWHITE);
+            ClearBackground(RAYWHITE);
 
-            beginMode3D(camera);
+            BeginMode3D(camera);
 
-                drawCube(cubePosition, 2.0, 2.0, 2.0, RED);
-                drawCubeWires(cubePosition, 2.0, 2.0, 2.0, MAROON);
+                DrawCube(cubePosition, 2.0, 2.0, 2.0, RED);
+                DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, MAROON);
 
-                drawGrid(10, 1.0);
+                DrawGrid(10, 1.0);
 
-            endMode3D();
+            EndMode3D();
 
-            drawText("Welcome to the third dimension!", 10, 40, 20, DARKGRAY);
+            DrawText("Welcome to the third dimension!", 10, 40, 20, DARKGRAY);
 
-            drawFPS(10, 10);
+            DrawFPS(10, 10);
 
-        endDrawing();
+        EndDrawing();
         //----------------------------------------------------------------------------------
     }
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    closeWindow();        // Close window and OpenGL context
+    CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

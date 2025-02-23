@@ -5,28 +5,28 @@ for (const key in rl) { globalThis[key] = rl[key] };
 //--------------------------------------------------------------------------------------
 const screenWidth = 800;
 const screenHeight = 450;
-const MAX_BUNNIES = 50000
-const MAX_BATCH_ELEMENTS = 8192
+const MAX_BUNNIES = 50000;
+const MAX_BATCH_ELEMENTS = 8192;
 
-initWindow(screenWidth, screenHeight, "raylib [textures] example - bunnymark");
+InitWindow(screenWidth, screenHeight, "raylib [textures] example - bunnymark");
 
 // Load bunny texture
-const texBunny = loadTexture("resources/wabbit_alpha.png");
+const texBunny = LoadTexture("resources/wabbit_alpha.png");
 
 const bunnies = new Array(MAX_BUNNIES)
 
 
 let bunniesCount = 0;           // Bunnies counter
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    if (isMouseButtonDown(MOUSE_BUTTON_LEFT))
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     {
         // Create more bunnies
         for (let i = 0; i < 100; i++)
@@ -34,9 +34,9 @@ while (!windowShouldClose())    // Detect window close button or ESC key
             if (bunniesCount < MAX_BUNNIES)
             {
                 const bunny = {
-                    position: getMousePosition(),
-                    speed: new Vector2(getRandomValue(-250, 250)/60.0, getRandomValue(-250, 250)/60.0),
-                    color: new Color(getRandomValue(50, 240), getRandomValue(80, 240), getRandomValue(100, 240), 255)
+                    position: GetMousePosition(),
+                    speed: new Vector2(GetRandomValue(-250, 250)/60.0, GetRandomValue(-250, 250)/60.0),
+                    color: new Color(GetRandomValue(50, 240), GetRandomValue(80, 240), GetRandomValue(100, 240), 255)
                 }
                 bunnies[bunniesCount] = bunny
                 bunniesCount++;
@@ -45,8 +45,8 @@ while (!windowShouldClose())    // Detect window close button or ESC key
     }
 
     // Update bunnies
-    const width = getScreenWidth()
-    const height = getScreenHeight()
+    const width = GetScreenWidth()
+    const height = GetScreenHeight()
     for (let i = 0; i < bunniesCount; i++)
     {
         const bunny = bunnies[i]
@@ -63,9 +63,9 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
         for (let i = 0; i < bunniesCount; i++)
         {
@@ -76,21 +76,21 @@ while (!windowShouldClose())    // Detect window close button or ESC key
             // Process of sending data is costly and it could happen that GPU data has not been completely
             // processed for drawing while new data is tried to be sent (updating current in-use buffers)
             // it could generates a stall and consequently a frame drop, limiting the number of drawn bunnies
-            drawTexture(texBunny, bunny.position.x, bunny.position.y, bunny.color);
+            DrawTexture(texBunny, bunny.position.x, bunny.position.y, bunny.color);
         }
 
-        drawRectangle(0, 0, screenWidth, 40, BLACK);
-        drawText("bunnies: " + bunniesCount, 120, 10, 20, GREEN);
-        drawText("batched draw calls: " + (1 + bunniesCount/MAX_BATCH_ELEMENTS), 320, 10, 20, MAROON);
+        DrawRectangle(0, 0, screenWidth, 40, BLACK);
+        DrawText("bunnies: " + bunniesCount, 120, 10, 20, GREEN);
+        DrawText("batched draw calls: " + (1 + bunniesCount/MAX_BATCH_ELEMENTS), 320, 10, 20, MAROON);
 
-        drawFPS(10, 10);
+        DrawFPS(10, 10);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadTexture(texBunny);
-closeWindow();              // Close window and OpenGL context
+UnloadTexture(texBunny);
+CloseWindow();              // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera free");
+InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera free");
 
 // Define the camera to look into our 3d world (position, target, up vector)
 const position = new Vector3(10.0, 10.0, 10.0);    // Camera position
@@ -30,51 +30,51 @@ const camera = new Camera3D(position,target, up, fovy, projection);
 
 const cubePosition = new Vector3(0.0, 0.0, 0.0);
 
-disableCursor();                    // Limit cursor to relative movement inside the window
+DisableCursor();                    // Limit cursor to relative movement inside the window
 
-setTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())        // Detect window close button or ESC key
+while (!WindowShouldClose())        // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    updateCamera(camera, CAMERA_FREE);
+    UpdateCamera(camera, CAMERA_FREE);
 
-    if (isKeyPressed('Z')) camera.target = new Vector3(0.0, 0.0, 0.0);
+    if (IsKeyPressed('Z')) camera.target = new Vector3(0.0, 0.0, 0.0);
     //----------------------------------------------------------------------------------
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        beginMode3D(camera);
+        BeginMode3D(camera);
 
-            drawCube(cubePosition, 2.0, 2.0, 2.0, RED);
-            drawCubeWires(cubePosition, 2.0, 2.0, 2.0, MAROON);
+            DrawCube(cubePosition, 2.0, 2.0, 2.0, RED);
+            DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, MAROON);
 
-            drawGrid(10, 1.0);
+            DrawGrid(10, 1.0);
 
-        endMode3D();
+        EndMode3D();
 
-        drawRectangle( 10, 10, 320, 133, fade(SKYBLUE, 0.5));
-        drawRectangleLines( 10, 10, 320, 133, BLUE);
+        DrawRectangle( 10, 10, 320, 133, Fade(SKYBLUE, 0.5));
+        DrawRectangleLines( 10, 10, 320, 133, BLUE);
 
-        drawText("Free camera default controls:", 20, 20, 10, BLACK);
-        drawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, DARKGRAY);
-        drawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, DARKGRAY);
-        drawText("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, DARKGRAY);
-        drawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, DARKGRAY);
-        drawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, DARKGRAY);
+        DrawText("Free camera default controls:", 20, 20, 10, BLACK);
+        DrawText("- Mouse Wheel to Zoom in-out", 40, 40, 10, DARKGRAY);
+        DrawText("- Mouse Wheel Pressed to Pan", 40, 60, 10, DARKGRAY);
+        DrawText("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, DARKGRAY);
+        DrawText("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, DARKGRAY);
+        DrawText("- Z to zoom to (0, 0, 0)", 40, 120, 10, DARKGRAY);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-closeWindow();        // Close window and OpenGL context
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

@@ -3474,14 +3474,13 @@ static bool SaveFileTextCallback_callback_c(const char * arg_fileName, char * ar
 
 static trampolineContext * AudioMixedProcessor_processor_arr = NULL;
 static size_t AudioMixedProcessor_processor_size = 0;
+static JSContext*  AudioMixedProcessor_processor_ctx;
 static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int arg_frames) {
     JSValue js0;
     JSValue func1;
-    trampolineContext * tctx;
-    JSContext * ctx;
     for(int i=0; i < AudioMixedProcessor_processor_size; i++){
         trampolineContext tctx = AudioMixedProcessor_processor_arr[i];
-        JSContext * ctx = tctx.ctx;
+        JSContext * ctx = AudioMixedProcessor_processor_ctx;
         if(i==0) {
             js0 = JS_NewArray(ctx);
             for(int i0=0; i0 < arg_frames*2; i0++){
@@ -3491,11 +3490,7 @@ static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int
         }
         JSValue js1 = JS_NewUint32(ctx, (unsigned long)arg_frames);
         JSValue argv[] = {js0,js1};
-        JS_DupContext(ctx);
-        JS_DupValue(ctx, tctx.func_obj);
-        JSValue js_ret = JS_Call(ctx, tctx.func_obj, JS_UNDEFINED, 2, argv);
-        JS_FreeValue(ctx, tctx.func_obj);
-        JS_FreeContext(ctx);
+        JSValue js_ret = js_postMessage(ctx, tctx.func_obj, 2, argv);
         JS_FreeValue(ctx, argv[1]);
         if(i==AudioMixedProcessor_processor_size-1) {
             int64_t size_arg_bufferData;
@@ -3971,7 +3966,7 @@ static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValue this_val, in
     return _return;
 }
 
-static JSValue js_initWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_InitWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -4031,60 +4026,60 @@ static JSValue js_initWindow(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_closeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CloseWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     CloseWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_windowShouldClose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_WindowShouldClose(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = WindowShouldClose();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowReady();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowFullscreen();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowHidden();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowMinimized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowMinimized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowMinimized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowMaximized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowMaximized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowMaximized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowFocused();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowResized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowResized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsWindowResized();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_isWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_flag;
     int err_flag = JS_ToUint32(ctx, &long_flag, argv[0]);
     if(err_flag<0) {
@@ -4097,7 +4092,7 @@ static JSValue js_isWindowState(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_setWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_flags;
     int err_flags = JS_ToUint32(ctx, &long_flags, argv[0]);
     if(err_flags<0) {
@@ -4109,7 +4104,7 @@ static JSValue js_setWindowState(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_clearWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ClearWindowState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_flags;
     int err_flags = JS_ToUint32(ctx, &long_flags, argv[0]);
     if(err_flags<0) {
@@ -4121,32 +4116,32 @@ static JSValue js_clearWindowState(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_toggleFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ToggleFullscreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ToggleFullscreen();
     return JS_UNDEFINED;
 }
 
-static JSValue js_toggleBorderlessWindowed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ToggleBorderlessWindowed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ToggleBorderlessWindowed();
     return JS_UNDEFINED;
 }
 
-static JSValue js_maximizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MaximizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     MaximizeWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_minimizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MinimizeWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     MinimizeWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_restoreWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_RestoreWindow(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RestoreWindow();
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4157,7 +4152,7 @@ static JSValue js_setWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowTitle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowTitle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * title;
     JSValue da_title;
     int64_t size_title;
@@ -4203,7 +4198,7 @@ static JSValue js_setWindowTitle(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_x;
     int err_x = JS_ToInt32(ctx, &long_x, argv[0]);
     if(err_x<0) {
@@ -4222,7 +4217,7 @@ static JSValue js_setWindowPosition(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4234,7 +4229,7 @@ static JSValue js_setWindowMonitor(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMinSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowMinSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -4253,7 +4248,7 @@ static JSValue js_setWindowMinSize(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowMaxSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowMaxSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -4272,7 +4267,7 @@ static JSValue js_setWindowMaxSize(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -4291,7 +4286,7 @@ static JSValue js_setWindowSize(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowOpacity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowOpacity(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_opacity;
     int err_opacity = JS_ToFloat64(ctx, &double_opacity, argv[0]);
     if(err_opacity<0) {
@@ -4303,48 +4298,48 @@ static JSValue js_setWindowOpacity(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetWindowFocused(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     SetWindowFocused();
     return JS_UNDEFINED;
 }
 
-static JSValue js_getScreenWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetScreenWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetScreenWidth();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getScreenHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetScreenHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetScreenHeight();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getRenderWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRenderWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetRenderWidth();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getRenderHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRenderHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetRenderHeight();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getMonitorCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMonitorCount();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getCurrentMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCurrentMonitor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetCurrentMonitor();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getMonitorPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4360,7 +4355,7 @@ static JSValue js_getMonitorPosition(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getMonitorWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4373,7 +4368,7 @@ static JSValue js_getMonitorWidth(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_getMonitorHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4386,7 +4381,7 @@ static JSValue js_getMonitorHeight(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getMonitorPhysicalWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorPhysicalWidth(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4399,7 +4394,7 @@ static JSValue js_getMonitorPhysicalWidth(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_getMonitorPhysicalHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorPhysicalHeight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4412,7 +4407,7 @@ static JSValue js_getMonitorPhysicalHeight(JSContext * ctx, JSValue this_val, in
     return ret;
 }
 
-static JSValue js_getMonitorRefreshRate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorRefreshRate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4425,7 +4420,7 @@ static JSValue js_getMonitorRefreshRate(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_getWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWindowPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetWindowPosition();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -4434,7 +4429,7 @@ static JSValue js_getWindowPosition(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_getWindowScaleDPI(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWindowScaleDPI(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetWindowScaleDPI();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -4443,7 +4438,7 @@ static JSValue js_getWindowScaleDPI(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_getMonitorName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMonitorName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_monitor;
     int err_monitor = JS_ToInt32(ctx, &long_monitor, argv[0]);
     if(err_monitor<0) {
@@ -4457,7 +4452,7 @@ static JSValue js_getMonitorName(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_setClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -4503,14 +4498,14 @@ static JSValue js_setClipboardText(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_getClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetClipboardText();
     JSValue ret;
     ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getClipboardImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetClipboardImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image returnVal = GetClipboardImage();
     Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
     *ptr_ret = returnVal;
@@ -4519,49 +4514,49 @@ static JSValue js_getClipboardImage(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_enableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EnableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EnableEventWaiting();
     return JS_UNDEFINED;
 }
 
-static JSValue js_disableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DisableEventWaiting(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     DisableEventWaiting();
     return JS_UNDEFINED;
 }
 
-static JSValue js_showCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ShowCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     ShowCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_hideCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_HideCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     HideCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isCursorHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsCursorHidden(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsCursorHidden();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_enableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EnableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EnableCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_disableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DisableCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     DisableCursor();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isCursorOnScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsCursorOnScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsCursorOnScreen();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_clearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ClearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4572,18 +4567,18 @@ static JSValue js_clearBackground(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BeginDrawing();
     return JS_UNDEFINED;
 }
 
-static JSValue js_endDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndDrawing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndDrawing();
     app_update_quickjs(ctx);
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera2D* ptr_camera = (Camera2D*)JS_GetOpaque(argv[0], js_Camera2D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4594,12 +4589,12 @@ static JSValue js_beginMode2D(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_endMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndMode2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndMode2D();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera3D* ptr_camera = (Camera3D*)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4610,12 +4605,12 @@ static JSValue js_beginMode3D(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_endMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndMode3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndMode3D();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* ptr_target = (RenderTexture2D*)JS_GetOpaque(argv[0], js_RenderTexture_class_id);
     if(ptr_target == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4626,12 +4621,12 @@ static JSValue js_beginTextureMode(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_endTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndTextureMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndTextureMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4642,12 +4637,12 @@ static JSValue js_beginShaderMode(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_endShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndShaderMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndShaderMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_mode;
     int err_mode = JS_ToInt32(ctx, &long_mode, argv[0]);
     if(err_mode<0) {
@@ -4659,12 +4654,12 @@ static JSValue js_beginBlendMode(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_endBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndBlendMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndBlendMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_x;
     int err_x = JS_ToInt32(ctx, &long_x, argv[0]);
     if(err_x<0) {
@@ -4697,12 +4692,12 @@ static JSValue js_beginScissorMode(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_endScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndScissorMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndScissorMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrStereoConfig* ptr_config = (VrStereoConfig*)JS_GetOpaque(argv[0], js_VrStereoConfig_class_id);
     if(ptr_config == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4713,12 +4708,12 @@ static JSValue js_beginVrStereoMode(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_endVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndVrStereoMode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndVrStereoMode();
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrDeviceInfo* ptr_device = (VrDeviceInfo*)JS_GetOpaque(argv[0], js_VrDeviceInfo_class_id);
     if(ptr_device == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4733,7 +4728,7 @@ static JSValue js_loadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_unloadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadVrStereoConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     VrStereoConfig* ptr_config = (VrStereoConfig*)JS_GetOpaque(argv[0], js_VrStereoConfig_class_id);
     if(ptr_config == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4744,7 +4739,7 @@ static JSValue js_unloadVrStereoConfig(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * vsFileName;
@@ -4817,7 +4812,7 @@ static JSValue js_loadShader(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadShaderFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * vsCode;
@@ -4887,7 +4882,7 @@ static JSValue js_loadShaderFromMemory(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_isShaderValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsShaderValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4899,7 +4894,7 @@ static JSValue js_isShaderValid(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_getShaderLocation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetShaderLocation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4952,7 +4947,7 @@ static JSValue js_getShaderLocation(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_getShaderLocationAttrib(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetShaderLocationAttrib(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5005,7 +5000,7 @@ static JSValue js_getShaderLocationAttrib(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_setShaderValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5397,7 +5392,7 @@ static JSValue js_setShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShaderValueV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5538,7 +5533,7 @@ static JSValue js_setShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShaderValueMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetShaderValueMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5562,7 +5557,7 @@ static JSValue js_setShaderValueMatrix(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShaderValueTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetShaderValueTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5586,7 +5581,7 @@ static JSValue js_setShaderValueTexture(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5597,7 +5592,7 @@ static JSValue js_unloadShader(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_getScreenToWorldRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetScreenToWorldRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5618,7 +5613,7 @@ static JSValue js_getScreenToWorldRay(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getScreenToWorldRayEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetScreenToWorldRayEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5653,7 +5648,7 @@ static JSValue js_getScreenToWorldRayEx(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_getWorldToScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWorldToScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5674,7 +5669,7 @@ static JSValue js_getWorldToScreen(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getWorldToScreenEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWorldToScreenEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5709,7 +5704,7 @@ static JSValue js_getWorldToScreenEx(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getWorldToScreen2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWorldToScreen2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5730,7 +5725,7 @@ static JSValue js_getWorldToScreen2D(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getScreenToWorld2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetScreenToWorld2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5751,7 +5746,7 @@ static JSValue js_getScreenToWorld2D(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getCameraMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* ptr_camera = (Camera*)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5766,7 +5761,7 @@ static JSValue js_getCameraMatrix(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_getCameraMatrix2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraMatrix2D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera2D* ptr_camera = (Camera2D*)JS_GetOpaque(argv[0], js_Camera2D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -5781,7 +5776,7 @@ static JSValue js_getCameraMatrix2D(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_setTargetFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetTargetFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_fps;
     int err_fps = JS_ToInt32(ctx, &long_fps, argv[0]);
     if(err_fps<0) {
@@ -5793,25 +5788,25 @@ static JSValue js_setTargetFPS(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_getFrameTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFrameTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetFrameTime();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_getTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double returnVal = GetTime();
     JSValue ret = JS_NewFloat64(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetFPS();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_setRandomSeed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetRandomSeed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_seed;
     int err_seed = JS_ToUint32(ctx, &long_seed, argv[0]);
     if(err_seed<0) {
@@ -5823,7 +5818,7 @@ static JSValue js_setRandomSeed(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_getRandomValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRandomValue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_min;
     int err_min = JS_ToInt32(ctx, &long_min, argv[0]);
     if(err_min<0) {
@@ -5843,7 +5838,7 @@ static JSValue js_getRandomValue(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_loadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_count;
     int err_count = JS_ToUint32(ctx, &long_count, argv[0]);
     if(err_count<0) {
@@ -5876,7 +5871,7 @@ static JSValue js_loadRandomSequence(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_takeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TakeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -5922,7 +5917,7 @@ static JSValue js_takeScreenshot(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setConfigFlags(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetConfigFlags(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_flags;
     int err_flags = JS_ToUint32(ctx, &long_flags, argv[0]);
     if(err_flags<0) {
@@ -5934,7 +5929,7 @@ static JSValue js_setConfigFlags(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_openURL(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_OpenURL(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * url;
     JSValue da_url;
     int64_t size_url;
@@ -5980,7 +5975,7 @@ static JSValue js_openURL(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return JS_UNDEFINED;
 }
 
-static JSValue js_traceLog(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TraceLog(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     int32_t long_logLevel;
@@ -6049,7 +6044,7 @@ static JSValue js_traceLog(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_logLevel;
     int err_logLevel = JS_ToInt32(ctx, &long_logLevel, argv[0]);
     if(err_logLevel<0) {
@@ -6061,7 +6056,7 @@ static JSValue js_setTraceLogLevel(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setLoadFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetLoadFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
     JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
     ctx_callback.ctx = ctx2;
@@ -6092,7 +6087,7 @@ static JSValue js_setLoadFileDataCallback(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSaveFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetSaveFileDataCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
     JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
     ctx_callback.ctx = ctx2;
@@ -6123,7 +6118,7 @@ static JSValue js_setSaveFileDataCallback(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_setLoadFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetLoadFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
     JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
     ctx_callback.ctx = ctx2;
@@ -6154,7 +6149,7 @@ static JSValue js_setLoadFileTextCallback(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSaveFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetSaveFileTextCallback(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_callback;
     JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
     ctx_callback.ctx = ctx2;
@@ -6185,7 +6180,7 @@ static JSValue js_setSaveFileTextCallback(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -6330,7 +6325,7 @@ static JSValue js_loadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_saveFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SaveFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileName;
@@ -6389,7 +6384,7 @@ static JSValue js_saveFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_loadFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -6438,7 +6433,7 @@ static JSValue js_loadFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_saveFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SaveFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileName;
@@ -6505,7 +6500,7 @@ static JSValue js_saveFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_fileExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_FileExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -6552,7 +6547,7 @@ static JSValue js_fileExists(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_directoryExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DirectoryExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
     JSValue da_dirPath;
     int64_t size_dirPath;
@@ -6599,7 +6594,7 @@ static JSValue js_directoryExists(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_isFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileName;
@@ -6666,7 +6661,7 @@ static JSValue js_isFileExtension(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_getFileLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFileLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -6713,7 +6708,7 @@ static JSValue js_getFileLength(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_getFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -6761,7 +6756,7 @@ static JSValue js_getFileExtension(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getFileName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFileName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
     JSValue da_filePath;
     int64_t size_filePath;
@@ -6809,7 +6804,7 @@ static JSValue js_getFileName(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_getFileNameWithoutExt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFileNameWithoutExt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
     JSValue da_filePath;
     int64_t size_filePath;
@@ -6857,7 +6852,7 @@ static JSValue js_getFileNameWithoutExt(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_getDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
     JSValue da_filePath;
     int64_t size_filePath;
@@ -6905,7 +6900,7 @@ static JSValue js_getDirectoryPath(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getPrevDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetPrevDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
     JSValue da_dirPath;
     int64_t size_dirPath;
@@ -6953,21 +6948,21 @@ static JSValue js_getPrevDirectoryPath(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_getWorkingDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetWorkingDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetWorkingDirectory();
     JSValue ret;
     ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_getApplicationDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetApplicationDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     const char * returnVal = GetApplicationDirectory();
     JSValue ret;
     ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_makeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MakeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
     JSValue da_dirPath;
     int64_t size_dirPath;
@@ -7014,7 +7009,7 @@ static JSValue js_makeDirectory(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_changeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ChangeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dir;
     JSValue da_dir;
     int64_t size_dir;
@@ -7061,7 +7056,7 @@ static JSValue js_changeDirectory(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_isPathFile(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsPathFile(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * path;
     JSValue da_path;
     int64_t size_path;
@@ -7108,7 +7103,7 @@ static JSValue js_isPathFile(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_isFileNameValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsFileNameValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -7155,7 +7150,7 @@ static JSValue js_isFileNameValid(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
     JSValue da_dirPath;
     int64_t size_dirPath;
@@ -7192,7 +7187,7 @@ static JSValue js_loadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * basePath;
     JSValue da_basePath;
     int64_t size_basePath;
@@ -7262,13 +7257,13 @@ static JSValue js_loadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_isFileDropped(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsFileDropped(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsFileDropped();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_loadDroppedFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadDroppedFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     FilePathList files = LoadDroppedFiles();
     JSValue ret = JS_NewArray(ctx);
     for(int i=0; i < files.count; i++){
@@ -7278,7 +7273,7 @@ static JSValue js_loadDroppedFiles(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getFileModTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFileModTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -7325,7 +7320,7 @@ static JSValue js_getFileModTime(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_computeCRC32(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
     JSValue da_data;
     int64_t size_data;
@@ -7402,7 +7397,7 @@ static JSValue js_computeCRC32(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_computeMD5(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ComputeMD5(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
     JSValue da_data;
     int64_t size_data;
@@ -7488,7 +7483,7 @@ static JSValue js_computeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_computeSHA1(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ComputeSHA1(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
     JSValue da_data;
     int64_t size_data;
@@ -7576,7 +7571,7 @@ static JSValue js_computeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_loadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -7626,7 +7621,7 @@ static JSValue js_loadAutomationEventList(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_unloadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList* ptr_list = (AutomationEventList*)JS_GetOpaque(argv[0], js_AutomationEventList_class_id);
     if(ptr_list == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -7637,7 +7632,7 @@ static JSValue js_unloadAutomationEventList(JSContext * ctx, JSValue this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList* ptr_list = (AutomationEventList*)JS_GetOpaque(argv[0], js_AutomationEventList_class_id);
     if(ptr_list == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -7690,7 +7685,7 @@ static JSValue js_exportAutomationEventList(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_setAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEventList * list = (AutomationEventList *)JS_GetOpaque(argv[0], js_AutomationEventList_class_id);
     if(list == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type AutomationEventList");
@@ -7700,7 +7695,7 @@ static JSValue js_setAutomationEventList(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAutomationEventBaseFrame(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAutomationEventBaseFrame(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_frame;
     int err_frame = JS_ToInt32(ctx, &long_frame, argv[0]);
     if(err_frame<0) {
@@ -7712,17 +7707,17 @@ static JSValue js_setAutomationEventBaseFrame(JSContext * ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_startAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_StartAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     StartAutomationEventRecording();
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_StopAutomationEventRecording(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     StopAutomationEventRecording();
     return JS_UNDEFINED;
 }
 
-static JSValue js_playAutomationEvent(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PlayAutomationEvent(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AutomationEvent* ptr_event = (AutomationEvent*)JS_GetOpaque(argv[0], js_AutomationEvent_class_id);
     if(ptr_event == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -7733,7 +7728,7 @@ static JSValue js_playAutomationEvent(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_isKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7746,7 +7741,7 @@ static JSValue js_isKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_isKeyPressedRepeat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsKeyPressedRepeat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7759,7 +7754,7 @@ static JSValue js_isKeyPressedRepeat(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_isKeyDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsKeyDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7772,7 +7767,7 @@ static JSValue js_isKeyDown(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_isKeyReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsKeyReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7785,7 +7780,7 @@ static JSValue js_isKeyReleased(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_isKeyUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsKeyUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7798,19 +7793,19 @@ static JSValue js_isKeyUp(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return ret;
 }
 
-static JSValue js_getKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetKeyPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetKeyPressed();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getCharPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCharPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetCharPressed();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getKeyName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetKeyName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7824,7 +7819,7 @@ static JSValue js_getKeyName(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_setExitKey(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetExitKey(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_key;
     int err_key = JS_ToInt32(ctx, &long_key, argv[0]);
     if(err_key<0) {
@@ -7836,7 +7831,7 @@ static JSValue js_setExitKey(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_isGamepadAvailable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGamepadAvailable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7849,7 +7844,7 @@ static JSValue js_isGamepadAvailable(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getGamepadName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGamepadName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7863,7 +7858,7 @@ static JSValue js_getGamepadName(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_isGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7883,7 +7878,7 @@ static JSValue js_isGamepadButtonPressed(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_isGamepadButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGamepadButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7903,7 +7898,7 @@ static JSValue js_isGamepadButtonDown(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_isGamepadButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGamepadButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7923,7 +7918,7 @@ static JSValue js_isGamepadButtonReleased(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_isGamepadButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGamepadButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7943,13 +7938,13 @@ static JSValue js_isGamepadButtonUp(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_getGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGamepadButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetGamepadButtonPressed();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getGamepadAxisCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGamepadAxisCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7962,7 +7957,7 @@ static JSValue js_getGamepadAxisCount(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getGamepadAxisMovement(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGamepadAxisMovement(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -7982,7 +7977,7 @@ static JSValue js_getGamepadAxisMovement(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_setGamepadMappings(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetGamepadMappings(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * mappings;
     JSValue da_mappings;
     int64_t size_mappings;
@@ -8029,7 +8024,7 @@ static JSValue js_setGamepadMappings(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_setGamepadVibration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetGamepadVibration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_gamepad;
     int err_gamepad = JS_ToInt32(ctx, &long_gamepad, argv[0]);
     if(err_gamepad<0) {
@@ -8062,7 +8057,7 @@ static JSValue js_setGamepadVibration(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_isMouseButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMouseButtonPressed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_button;
     int err_button = JS_ToInt32(ctx, &long_button, argv[0]);
     if(err_button<0) {
@@ -8075,7 +8070,7 @@ static JSValue js_isMouseButtonPressed(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_isMouseButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMouseButtonDown(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_button;
     int err_button = JS_ToInt32(ctx, &long_button, argv[0]);
     if(err_button<0) {
@@ -8088,7 +8083,7 @@ static JSValue js_isMouseButtonDown(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isMouseButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMouseButtonReleased(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_button;
     int err_button = JS_ToInt32(ctx, &long_button, argv[0]);
     if(err_button<0) {
@@ -8101,7 +8096,7 @@ static JSValue js_isMouseButtonReleased(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_isMouseButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMouseButtonUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_button;
     int err_button = JS_ToInt32(ctx, &long_button, argv[0]);
     if(err_button<0) {
@@ -8114,19 +8109,19 @@ static JSValue js_isMouseButtonUp(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_getMouseX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMouseX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMouseX();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getMouseY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMouseY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetMouseY();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMousePosition();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -8135,7 +8130,7 @@ static JSValue js_getMousePosition(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getMouseDelta(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMouseDelta(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMouseDelta();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -8144,7 +8139,7 @@ static JSValue js_getMouseDelta(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_setMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMousePosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_x;
     int err_x = JS_ToInt32(ctx, &long_x, argv[0]);
     if(err_x<0) {
@@ -8163,7 +8158,7 @@ static JSValue js_setMousePosition(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMouseOffset(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMouseOffset(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_offsetX;
     int err_offsetX = JS_ToInt32(ctx, &long_offsetX, argv[0]);
     if(err_offsetX<0) {
@@ -8182,7 +8177,7 @@ static JSValue js_setMouseOffset(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMouseScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMouseScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_scaleX;
     int err_scaleX = JS_ToFloat64(ctx, &double_scaleX, argv[0]);
     if(err_scaleX<0) {
@@ -8201,13 +8196,13 @@ static JSValue js_setMouseScale(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMouseWheelMove(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMouseWheelMove(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetMouseWheelMove();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_getMouseWheelMoveV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMouseWheelMoveV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetMouseWheelMoveV();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -8216,7 +8211,7 @@ static JSValue js_getMouseWheelMoveV(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_setMouseCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMouseCursor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_cursor;
     int err_cursor = JS_ToInt32(ctx, &long_cursor, argv[0]);
     if(err_cursor<0) {
@@ -8228,19 +8223,19 @@ static JSValue js_setMouseCursor(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_getTouchX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTouchX(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchX();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getTouchY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTouchY(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchY();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getTouchPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTouchPosition(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_index;
     int err_index = JS_ToInt32(ctx, &long_index, argv[0]);
     if(err_index<0) {
@@ -8256,7 +8251,7 @@ static JSValue js_getTouchPosition(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getTouchPointId(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTouchPointId(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_index;
     int err_index = JS_ToInt32(ctx, &long_index, argv[0]);
     if(err_index<0) {
@@ -8269,13 +8264,13 @@ static JSValue js_getTouchPointId(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_getTouchPointCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetTouchPointCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetTouchPointCount();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_setGesturesEnabled(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetGesturesEnabled(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_flags;
     int err_flags = JS_ToUint32(ctx, &long_flags, argv[0]);
     if(err_flags<0) {
@@ -8287,7 +8282,7 @@ static JSValue js_setGesturesEnabled(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_isGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_gesture;
     int err_gesture = JS_ToUint32(ctx, &long_gesture, argv[0]);
     if(err_gesture<0) {
@@ -8300,19 +8295,19 @@ static JSValue js_isGestureDetected(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_getGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGestureDetected(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GetGestureDetected();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_getGestureHoldDuration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGestureHoldDuration(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGestureHoldDuration();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_getGestureDragVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGestureDragVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetGestureDragVector();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -8321,13 +8316,13 @@ static JSValue js_getGestureDragVector(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_getGestureDragAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGestureDragAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGestureDragAngle();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_getGesturePinchVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGesturePinchVector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 returnVal = GetGesturePinchVector();
     Vector2* ptr_ret = (Vector2*)js_malloc(ctx, sizeof(Vector2));
     *ptr_ret = returnVal;
@@ -8336,13 +8331,13 @@ static JSValue js_getGesturePinchVector(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_getGesturePinchAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGesturePinchAngle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetGesturePinchAngle();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_updateCamera(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateCamera(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -8359,7 +8354,7 @@ static JSValue js_updateCamera(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateCameraPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateCameraPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -8388,7 +8383,7 @@ static JSValue js_updateCameraPro(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_setShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8405,7 +8400,7 @@ static JSValue js_setShapesTexture(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_getShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetShapesTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D returnVal = GetShapesTexture();
     Texture2D* ptr_ret = (Texture2D*)js_malloc(ctx, sizeof(Texture2D));
     *ptr_ret = returnVal;
@@ -8414,7 +8409,7 @@ static JSValue js_getShapesTexture(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getShapesTextureRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetShapesTextureRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle returnVal = GetShapesTextureRectangle();
     Rectangle* ptr_ret = (Rectangle*)js_malloc(ctx, sizeof(Rectangle));
     *ptr_ret = returnVal;
@@ -8423,7 +8418,7 @@ static JSValue js_getShapesTextureRectangle(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_drawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -8448,7 +8443,7 @@ static JSValue js_drawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8465,7 +8460,7 @@ static JSValue js_drawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_startPosX;
     int err_startPosX = JS_ToInt32(ctx, &long_startPosX, argv[0]);
     if(err_startPosX<0) {
@@ -8504,7 +8499,7 @@ static JSValue js_drawLine(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_startPos = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8527,7 +8522,7 @@ static JSValue js_drawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_startPos = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8557,7 +8552,7 @@ static JSValue js_drawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawLineBezier(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawLineBezier(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_startPos = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8587,7 +8582,7 @@ static JSValue js_drawLineBezier(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_centerX;
     int err_centerX = JS_ToInt32(ctx, &long_centerX, argv[0]);
     if(err_centerX<0) {
@@ -8619,7 +8614,7 @@ static JSValue js_drawCircle(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleSector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleSector(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8664,7 +8659,7 @@ static JSValue js_drawCircleSector(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleSectorLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleSectorLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8709,7 +8704,7 @@ static JSValue js_drawCircleSectorLines(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleGradient(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleGradient(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_centerX;
     int err_centerX = JS_ToInt32(ctx, &long_centerX, argv[0]);
     if(err_centerX<0) {
@@ -8747,7 +8742,7 @@ static JSValue js_drawCircleGradient(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8771,7 +8766,7 @@ static JSValue js_drawCircleV(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_centerX;
     int err_centerX = JS_ToInt32(ctx, &long_centerX, argv[0]);
     if(err_centerX<0) {
@@ -8803,7 +8798,7 @@ static JSValue js_drawCircleLines(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8827,7 +8822,7 @@ static JSValue js_drawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawEllipse(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawEllipse(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_centerX;
     int err_centerX = JS_ToInt32(ctx, &long_centerX, argv[0]);
     if(err_centerX<0) {
@@ -8866,7 +8861,7 @@ static JSValue js_drawEllipse(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawEllipseLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawEllipseLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_centerX;
     int err_centerX = JS_ToInt32(ctx, &long_centerX, argv[0]);
     if(err_centerX<0) {
@@ -8905,7 +8900,7 @@ static JSValue js_drawEllipseLines(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -8957,7 +8952,7 @@ static JSValue js_drawRing(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRingLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRingLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9009,7 +9004,7 @@ static JSValue js_drawRingLines(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -9048,7 +9043,7 @@ static JSValue js_drawRectangle(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9071,7 +9066,7 @@ static JSValue js_drawRectangleV(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9088,7 +9083,7 @@ static JSValue js_drawRectangleRec(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectanglePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectanglePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9118,7 +9113,7 @@ static JSValue js_drawRectanglePro(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleGradientV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -9163,7 +9158,7 @@ static JSValue js_drawRectangleGradientV(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientH(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleGradientH(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -9208,7 +9203,7 @@ static JSValue js_drawRectangleGradientH(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleGradientEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleGradientEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9243,7 +9238,7 @@ static JSValue js_drawRectangleGradientEx(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -9282,7 +9277,7 @@ static JSValue js_drawRectangleLines(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9306,7 +9301,7 @@ static JSValue js_drawRectangleLinesEx(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRounded(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleRounded(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9337,7 +9332,7 @@ static JSValue js_drawRectangleRounded(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRoundedLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleRoundedLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9368,7 +9363,7 @@ static JSValue js_drawRectangleRoundedLines(JSContext * ctx, JSValue this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRectangleRoundedLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRectangleRoundedLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9406,7 +9401,7 @@ static JSValue js_drawRectangleRoundedLinesEx(JSContext * ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9435,7 +9430,7 @@ static JSValue js_drawTriangle(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_v1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9464,7 +9459,7 @@ static JSValue js_drawTriangleLines(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9502,7 +9497,7 @@ static JSValue js_drawPoly(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPolyLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPolyLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9540,7 +9535,7 @@ static JSValue js_drawPolyLines(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPolyLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPolyLinesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -9585,7 +9580,7 @@ static JSValue js_drawPolyLinesEx(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
     JSValue da_points;
     int64_t size_points;
@@ -9662,7 +9657,7 @@ static JSValue js_drawSplineLinear(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
     JSValue da_points;
     int64_t size_points;
@@ -9739,7 +9734,7 @@ static JSValue js_drawSplineBasis(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
     JSValue da_points;
     int64_t size_points;
@@ -9816,7 +9811,7 @@ static JSValue js_drawSplineCatmullRom(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
     JSValue da_points;
     int64_t size_points;
@@ -9893,7 +9888,7 @@ static JSValue js_drawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
     JSValue da_points;
     int64_t size_points;
@@ -9970,7 +9965,7 @@ static JSValue js_drawSplineBezierCubic(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineSegmentLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10000,7 +9995,7 @@ static JSValue js_drawSplineSegmentLinear(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineSegmentBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10042,7 +10037,7 @@ static JSValue js_drawSplineSegmentBasis(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineSegmentCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10084,7 +10079,7 @@ static JSValue js_drawSplineSegmentCatmullRom(JSContext * ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineSegmentBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10120,7 +10115,7 @@ static JSValue js_drawSplineSegmentBezierQuadratic(JSContext * ctx, JSValue this
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSplineSegmentBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10162,7 +10157,7 @@ static JSValue js_drawSplineSegmentBezierCubic(JSContext * ctx, JSValue this_val
     return JS_UNDEFINED;
 }
 
-static JSValue js_getSplinePointLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetSplinePointLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_startPos = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10190,7 +10185,7 @@ static JSValue js_getSplinePointLinear(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_getSplinePointBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetSplinePointBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10230,7 +10225,7 @@ static JSValue js_getSplinePointBasis(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetSplinePointCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10270,7 +10265,7 @@ static JSValue js_getSplinePointCatmullRom(JSContext * ctx, JSValue this_val, in
     return ret;
 }
 
-static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetSplinePointBezierQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10304,7 +10299,7 @@ static JSValue js_getSplinePointBezierQuad(JSContext * ctx, JSValue this_val, in
     return ret;
 }
 
-static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetSplinePointBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_p1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_p1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10344,7 +10339,7 @@ static JSValue js_getSplinePointBezierCubic(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_checkCollisionRecs(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionRecs(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec1 = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10362,7 +10357,7 @@ static JSValue js_checkCollisionRecs(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_checkCollisionCircles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionCircles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10394,7 +10389,7 @@ static JSValue js_checkCollisionCircles(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionCircleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10419,7 +10414,7 @@ static JSValue js_checkCollisionCircleRec(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionCircleLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_center = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10450,7 +10445,7 @@ static JSValue js_checkCollisionCircleLine(JSContext * ctx, JSValue this_val, in
     return ret;
 }
 
-static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionPointRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_point == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10468,7 +10463,7 @@ static JSValue js_checkCollisionPointRec(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_checkCollisionPointCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionPointCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_point == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10493,7 +10488,7 @@ static JSValue js_checkCollisionPointCircle(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_checkCollisionPointTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionPointTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_point == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10523,7 +10518,7 @@ static JSValue js_checkCollisionPointTriangle(JSContext * ctx, JSValue this_val,
     return ret;
 }
 
-static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionPointLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_point == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10554,7 +10549,7 @@ static JSValue js_checkCollisionPointLine(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_getCollisionRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCollisionRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec1 = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -10575,7 +10570,7 @@ static JSValue js_getCollisionRec(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -10625,7 +10620,7 @@ static JSValue js_loadImage(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_loadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -10763,7 +10758,7 @@ static JSValue js_loadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileType;
@@ -10910,7 +10905,7 @@ static JSValue js_loadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_loadImageFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileType;
@@ -11003,7 +10998,7 @@ static JSValue js_loadImageFromMemory(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_loadImageFromTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageFromTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11018,7 +11013,7 @@ static JSValue js_loadImageFromTexture(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_loadImageFromScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageFromScreen(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image returnVal = LoadImageFromScreen();
     Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
     *ptr_ret = returnVal;
@@ -11027,7 +11022,7 @@ static JSValue js_loadImageFromScreen(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_isImageValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsImageValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11039,7 +11034,7 @@ static JSValue js_isImageValid(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_unloadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11050,7 +11045,7 @@ static JSValue js_unloadImage(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11103,7 +11098,7 @@ static JSValue js_exportImage(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_exportImageToMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportImageToMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11253,7 +11248,7 @@ static JSValue js_exportImageToMemory(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_genImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11282,7 +11277,7 @@ static JSValue js_genImageColor(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_genImageGradientLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageGradientLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11324,7 +11319,7 @@ static JSValue js_genImageGradientLinear(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_genImageGradientRadial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageGradientRadial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11366,7 +11361,7 @@ static JSValue js_genImageGradientRadial(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_genImageGradientSquare(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageGradientSquare(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11408,7 +11403,7 @@ static JSValue js_genImageGradientSquare(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_genImageChecked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageChecked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11457,7 +11452,7 @@ static JSValue js_genImageChecked(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_genImageWhiteNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageWhiteNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11487,7 +11482,7 @@ static JSValue js_genImageWhiteNoise(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImagePerlinNoise(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11531,7 +11526,7 @@ static JSValue js_genImagePerlinNoise(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_genImageCellular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageCellular(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11561,7 +11556,7 @@ static JSValue js_genImageCellular(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genImageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenImageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -11625,7 +11620,7 @@ static JSValue js_genImageText(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_imageCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11640,7 +11635,7 @@ static JSValue js_imageCopy(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_imageFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11661,7 +11656,7 @@ static JSValue js_imageFromImage(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_imageFromChannel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageFromChannel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11683,7 +11678,7 @@ static JSValue js_imageFromChannel(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_imageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -11776,7 +11771,7 @@ static JSValue js_imageText(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_imageTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -11897,7 +11892,7 @@ static JSValue js_imageTextEx(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_imageFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -11914,7 +11909,7 @@ static JSValue js_imageFormat(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -11930,7 +11925,7 @@ static JSValue js_imageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -11946,7 +11941,7 @@ static JSValue js_imageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -11963,7 +11958,7 @@ static JSValue js_imageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaClear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageAlphaClear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -11986,7 +11981,7 @@ static JSValue js_imageAlphaClear(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12002,7 +11997,7 @@ static JSValue js_imageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageAlphaPremultiply(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12012,7 +12007,7 @@ static JSValue js_imageAlphaPremultiply(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageBlurGaussian(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageBlurGaussian(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12029,7 +12024,7 @@ static JSValue js_imageBlurGaussian(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageKernelConvolution(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12110,7 +12105,7 @@ static JSValue js_imageKernelConvolution(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageResize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12134,7 +12129,7 @@ static JSValue js_imageResize(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12158,7 +12153,7 @@ static JSValue js_imageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageResizeCanvas(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageResizeCanvas(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12202,7 +12197,7 @@ static JSValue js_imageResizeCanvas(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12212,7 +12207,7 @@ static JSValue js_imageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDither(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDither(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12250,7 +12245,7 @@ static JSValue js_imageDither(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageFlipVertical(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageFlipVertical(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12260,7 +12255,7 @@ static JSValue js_imageFlipVertical(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageFlipHorizontal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12270,7 +12265,7 @@ static JSValue js_imageFlipHorizontal(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageRotate(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12287,7 +12282,7 @@ static JSValue js_imageRotate(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12297,7 +12292,7 @@ static JSValue js_imageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12307,7 +12302,7 @@ static JSValue js_imageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12323,7 +12318,7 @@ static JSValue js_imageColorTint(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorInvert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12333,7 +12328,7 @@ static JSValue js_imageColorInvert(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorGrayscale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorGrayscale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12343,7 +12338,7 @@ static JSValue js_imageColorGrayscale(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12360,7 +12355,7 @@ static JSValue js_imageColorContrast(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12377,7 +12372,7 @@ static JSValue js_imageColorBrightness(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageColorReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageColorReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * image = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12399,7 +12394,7 @@ static JSValue js_imageColorReplace(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadImageColors(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageColors(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -12412,7 +12407,7 @@ static JSValue js_loadImageColors(JSContext * ctx, JSValue this_val, int argc, J
     return retVal;
 }
 
-static JSValue js_getImageAlphaBorder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetImageAlphaBorder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -12434,7 +12429,7 @@ static JSValue js_getImageAlphaBorder(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetImageColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -12463,7 +12458,7 @@ static JSValue js_getImageColor(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_imageClearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageClearBackground(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12479,7 +12474,7 @@ static JSValue js_imageClearBackground(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12509,7 +12504,7 @@ static JSValue js_imageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12531,7 +12526,7 @@ static JSValue js_imageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12575,7 +12570,7 @@ static JSValue js_imageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12603,7 +12598,7 @@ static JSValue js_imageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12638,7 +12633,7 @@ static JSValue js_imageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawCircle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12675,7 +12670,7 @@ static JSValue js_imageDrawCircle(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12704,7 +12699,7 @@ static JSValue js_imageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawCircleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12741,7 +12736,7 @@ static JSValue js_imageDrawCircleLines(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12770,7 +12765,7 @@ static JSValue js_imageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawRectangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12814,7 +12809,7 @@ static JSValue js_imageDrawRectangle(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawRectangleV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12842,7 +12837,7 @@ static JSValue js_imageDrawRectangleV(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawRectangleRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12864,7 +12859,7 @@ static JSValue js_imageDrawRectangleRec(JSContext * ctx, JSValue this_val, int a
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawRectangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12893,7 +12888,7 @@ static JSValue js_imageDrawRectangleLines(JSContext * ctx, JSValue this_val, int
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12927,7 +12922,7 @@ static JSValue js_imageDrawTriangle(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTriangleEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -12973,7 +12968,7 @@ static JSValue js_imageDrawTriangleEx(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTriangleLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13007,7 +13002,7 @@ static JSValue js_imageDrawTriangleLines(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTriangleFan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13076,7 +13071,7 @@ static JSValue js_imageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13145,7 +13140,7 @@ static JSValue js_imageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13179,7 +13174,7 @@ static JSValue js_imageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13317,7 +13312,7 @@ static JSValue js_imageDrawText(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_imageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ImageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image * dst = (Image *)JS_GetOpaque(argv[0], js_Image_class_id);
     if(dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Image");
@@ -13460,7 +13455,7 @@ static JSValue js_imageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -13510,7 +13505,7 @@ static JSValue js_loadTexture(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_loadTextureFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadTextureFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13525,7 +13520,7 @@ static JSValue js_loadTextureFromImage(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_loadTextureCubemap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadTextureCubemap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13547,7 +13542,7 @@ static JSValue js_loadTextureCubemap(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_loadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -13570,7 +13565,7 @@ static JSValue js_loadRenderTexture(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13582,7 +13577,7 @@ static JSValue js_isTextureValid(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_unloadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13593,7 +13588,7 @@ static JSValue js_unloadTexture(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_isRenderTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsRenderTextureValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* ptr_target = (RenderTexture2D*)JS_GetOpaque(argv[0], js_RenderTexture_class_id);
     if(ptr_target == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13605,7 +13600,7 @@ static JSValue js_isRenderTextureValid(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_unloadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadRenderTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     RenderTexture2D* ptr_target = (RenderTexture2D*)JS_GetOpaque(argv[0], js_RenderTexture_class_id);
     if(ptr_target == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13616,7 +13611,7 @@ static JSValue js_unloadRenderTexture(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13642,7 +13637,7 @@ static JSValue js_updateTexture(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13674,7 +13669,7 @@ static JSValue js_updateTextureRec(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_genTextureMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenTextureMipmaps(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D * texture = (Texture2D *)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Texture2D");
@@ -13684,7 +13679,7 @@ static JSValue js_genTextureMipmaps(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextureFilter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetTextureFilter(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13702,7 +13697,7 @@ static JSValue js_setTextureFilter(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextureWrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetTextureWrap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13720,7 +13715,7 @@ static JSValue js_setTextureWrap(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13751,7 +13746,7 @@ static JSValue js_drawTexture(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextureV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13774,7 +13769,7 @@ static JSValue js_drawTextureV(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextureEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13811,7 +13806,7 @@ static JSValue js_drawTextureEx(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextureRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13840,7 +13835,7 @@ static JSValue js_drawTextureRec(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTexturePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTexturePro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13882,7 +13877,7 @@ static JSValue js_drawTexturePro(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextureNPatch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextureNPatch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
     if(ptr_texture == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13924,7 +13919,7 @@ static JSValue js_drawTextureNPatch(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_colorIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_col1 = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_col1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13942,7 +13937,7 @@ static JSValue js_colorIsEqual(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_fade(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_Fade(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13964,7 +13959,7 @@ static JSValue js_fade(JSContext * ctx, JSValue this_val, int argc, JSValue * ar
     return ret;
 }
 
-static JSValue js_colorToInt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorToInt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13976,7 +13971,7 @@ static JSValue js_colorToInt(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_colorNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorNormalize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -13991,7 +13986,7 @@ static JSValue js_colorNormalize(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_colorFromNormalized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorFromNormalized(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector4* ptr_normalized = (Vector4*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_normalized == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14006,7 +14001,7 @@ static JSValue js_colorFromNormalized(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_colorToHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorToHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14021,7 +14016,7 @@ static JSValue js_colorToHSV(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_colorFromHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorFromHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_hue;
     int err_hue = JS_ToFloat64(ctx, &double_hue, argv[0]);
     if(err_hue<0) {
@@ -14051,7 +14046,7 @@ static JSValue js_colorFromHSV(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_colorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorTint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14072,7 +14067,7 @@ static JSValue js_colorTint(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_colorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorBrightness(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14094,7 +14089,7 @@ static JSValue js_colorBrightness(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_colorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorContrast(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14116,7 +14111,7 @@ static JSValue js_colorContrast(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_colorAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14138,7 +14133,7 @@ static JSValue js_colorAlpha(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_colorAlphaBlend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorAlphaBlend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_dst = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_dst == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14165,7 +14160,7 @@ static JSValue js_colorAlphaBlend(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_colorLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ColorLerp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_color1 = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_color1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14193,7 +14188,7 @@ static JSValue js_colorLerp(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_getColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_hexValue;
     int err_hexValue = JS_ToUint32(ctx, &long_hexValue, argv[0]);
     if(err_hexValue<0) {
@@ -14209,7 +14204,7 @@ static JSValue js_getColor(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_getPixelDataSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetPixelDataSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
     if(err_width<0) {
@@ -14236,7 +14231,7 @@ static JSValue js_getPixelDataSize(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getFontDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetFontDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font returnVal = GetFontDefault();
     Font* ptr_ret = (Font*)js_malloc(ctx, sizeof(Font));
     *ptr_ret = returnVal;
@@ -14245,7 +14240,7 @@ static JSValue js_getFontDefault(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_loadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -14295,7 +14290,7 @@ static JSValue js_loadFont(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_loadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileName;
@@ -14399,7 +14394,7 @@ static JSValue js_loadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_loadFontFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadFontFromImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_image == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14427,7 +14422,7 @@ static JSValue js_loadFontFromImage(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isFontValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsFontValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14439,7 +14434,7 @@ static JSValue js_isFontValid(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_unloadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14450,7 +14445,7 @@ static JSValue js_unloadFont(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_posX;
     int err_posX = JS_ToInt32(ctx, &long_posX, argv[0]);
     if(err_posX<0) {
@@ -14469,7 +14464,7 @@ static JSValue js_drawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -14602,7 +14597,7 @@ static JSValue js_drawText(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14740,7 +14735,7 @@ static JSValue js_drawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14921,7 +14916,7 @@ static JSValue js_drawTextPro(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTextCodepoint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTextCodepoint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -14958,7 +14953,7 @@ static JSValue js_drawTextCodepoint(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_setTextLineSpacing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetTextLineSpacing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_spacing;
     int err_spacing = JS_ToInt32(ctx, &long_spacing, argv[0]);
     if(err_spacing<0) {
@@ -14970,7 +14965,7 @@ static JSValue js_setTextLineSpacing(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_measureText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MeasureText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -15039,7 +15034,7 @@ static JSValue js_measureText(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_measureTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_MeasureTextEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -15139,7 +15134,7 @@ static JSValue js_measureTextEx(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_getGlyphIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGlyphIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -15158,7 +15153,7 @@ static JSValue js_getGlyphIndex(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_getGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -15180,7 +15175,7 @@ static JSValue js_getGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_textCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * dst;
@@ -15250,7 +15245,7 @@ static JSValue js_textCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_textIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextIsEqual(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * text1;
@@ -15317,7 +15312,7 @@ static JSValue js_textIsEqual(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -15364,7 +15359,7 @@ static JSValue js_textLength(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     size_t char_ptrlen = 10;
@@ -15414,7 +15409,7 @@ static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     for(int i=0; i < formatlen; i++){
         if(format[i]!='%') {
             buffer[l]=format[i];;
-            i++;
+            l++;
         }
         else {
             int firsth = i+1;
@@ -15459,8 +15454,8 @@ static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
             subformat[subformatlen]=0;
             if(format[lasth]=='%') {
                 i = lasth;
-                buffer[l]='%';;
-                i++;
+                buffer[l]='%';
+                l++;
                 continue;
             }
             memset(char_ptr,0,ilen * sizeof(char));
@@ -15727,10 +15722,13 @@ static JSValue js_textFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     JSValue js_buffer;
     js_buffer = JS_NewString(ctx, buffer);
+    memoryClear(ctx, memoryHead);
+    js_free(ctx, char_ptr);
+    js_free(ctx, buffer);
     return js_buffer;
 }
 
-static JSValue js_textSubtext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextSubtext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -15822,7 +15820,7 @@ static JSValue js_textSubtext(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextReplace(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * text;
@@ -15919,7 +15917,7 @@ static JSValue js_textReplace(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textInsert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextInsert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * text;
@@ -15995,7 +15993,7 @@ static JSValue js_textInsert(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_textJoin(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextJoin(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * * textList;
@@ -16088,7 +16086,7 @@ static JSValue js_textJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_textSplit(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextSplit(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16237,7 +16235,7 @@ static JSValue js_textSplit(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_textAppend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextAppend(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * text;
@@ -16357,7 +16355,7 @@ static JSValue js_textAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_textFindIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextFindIndex(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * text;
@@ -16424,7 +16422,7 @@ static JSValue js_textFindIndex(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_textToUpper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToUpper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16472,7 +16470,7 @@ static JSValue js_textToUpper(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textToLower(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToLower(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16520,7 +16518,7 @@ static JSValue js_textToLower(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textToPascal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToPascal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16568,7 +16566,7 @@ static JSValue js_textToPascal(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_textToSnake(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToSnake(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16616,7 +16614,7 @@ static JSValue js_textToSnake(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textToCamel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToCamel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16664,7 +16662,7 @@ static JSValue js_textToCamel(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_textToInteger(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToInteger(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16711,7 +16709,7 @@ static JSValue js_textToInteger(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_textToFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_TextToFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
     JSValue da_text;
     int64_t size_text;
@@ -16758,7 +16756,7 @@ static JSValue js_textToFloat(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_drawLine3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawLine3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_startPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16781,7 +16779,7 @@ static JSValue js_drawLine3D(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPoint3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPoint3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16798,7 +16796,7 @@ static JSValue js_drawPoint3D(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCircle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCircle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_center = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_center == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16835,7 +16833,7 @@ static JSValue js_drawCircle3D(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawTriangle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawTriangle3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16864,7 +16862,7 @@ static JSValue js_drawTriangle3D(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16902,7 +16900,7 @@ static JSValue js_drawCube(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCubeV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16925,7 +16923,7 @@ static JSValue js_drawCubeV(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCubeWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16963,7 +16961,7 @@ static JSValue js_drawCubeWires(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCubeWiresV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCubeWiresV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -16986,7 +16984,7 @@ static JSValue js_drawCubeWiresV(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_centerPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_centerPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17010,7 +17008,7 @@ static JSValue js_drawSphere(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphereEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSphereEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_centerPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_centerPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17048,7 +17046,7 @@ static JSValue js_drawSphereEx(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawSphereWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawSphereWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_centerPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_centerPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17086,7 +17084,7 @@ static JSValue js_drawSphereWires(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17131,7 +17129,7 @@ static JSValue js_drawCylinder(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCylinderEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_startPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17175,7 +17173,7 @@ static JSValue js_drawCylinderEx(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCylinderWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_position = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_position == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17220,7 +17218,7 @@ static JSValue js_drawCylinderWires(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCylinderWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCylinderWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_startPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17264,7 +17262,7 @@ static JSValue js_drawCylinderWiresEx(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCapsule(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCapsule(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_startPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17308,7 +17306,7 @@ static JSValue js_drawCapsule(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawCapsuleWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawCapsuleWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_startPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_startPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17352,7 +17350,7 @@ static JSValue js_drawCapsuleWires(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_centerPos = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_centerPos == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17375,7 +17373,7 @@ static JSValue js_drawPlane(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawRay(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17392,7 +17390,7 @@ static JSValue js_drawRay(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_slices;
     int err_slices = JS_ToInt32(ctx, &long_slices, argv[0]);
     if(err_slices<0) {
@@ -17411,7 +17409,7 @@ static JSValue js_drawGrid(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -17461,7 +17459,7 @@ static JSValue js_loadModel(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_loadModelFromMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadModelFromMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17476,7 +17474,7 @@ static JSValue js_loadModelFromMesh(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_isModelValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsModelValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17488,7 +17486,7 @@ static JSValue js_isModelValid(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_unloadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17499,7 +17497,7 @@ static JSValue js_unloadModel(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_getModelBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetModelBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17514,7 +17512,7 @@ static JSValue js_getModelBoundingBox(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_drawModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17544,7 +17542,7 @@ static JSValue js_drawModel(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModelEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17586,7 +17584,7 @@ static JSValue js_drawModelEx(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModelWires(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17616,7 +17614,7 @@ static JSValue js_drawModelWires(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModelWiresEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17658,7 +17656,7 @@ static JSValue js_drawModelWiresEx(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelPoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModelPoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17688,7 +17686,7 @@ static JSValue js_drawModelPoints(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawModelPointsEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawModelPointsEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17730,7 +17728,7 @@ static JSValue js_drawModelPointsEx(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* ptr_box = (BoundingBox*)JS_GetOpaque(argv[0], js_BoundingBox_class_id);
     if(ptr_box == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17747,7 +17745,7 @@ static JSValue js_drawBoundingBox(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboard(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawBillboard(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* ptr_camera = (Camera*)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17783,7 +17781,7 @@ static JSValue js_drawBillboard(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboardRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawBillboardRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* ptr_camera = (Camera*)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17824,7 +17822,7 @@ static JSValue js_drawBillboardRec(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawBillboardPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawBillboardPro(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera* ptr_camera = (Camera*)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(ptr_camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17884,7 +17882,7 @@ static JSValue js_drawBillboardPro(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_uploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh * mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Mesh");
@@ -17900,7 +17898,7 @@ static JSValue js_uploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateMeshBuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateMeshBuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17953,7 +17951,7 @@ static JSValue js_updateMeshBuffer(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17964,7 +17962,7 @@ static JSValue js_unloadMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -17987,7 +17985,7 @@ static JSValue js_drawMesh(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_drawMeshInstanced(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DrawMeshInstanced(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18051,7 +18049,7 @@ static JSValue js_drawMeshInstanced(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMeshBoundingBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18066,7 +18064,7 @@ static JSValue js_getMeshBoundingBox(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_genMeshTangents(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshTangents(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh * mesh = (Mesh *)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Mesh");
@@ -18076,7 +18074,7 @@ static JSValue js_genMeshTangents(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18129,7 +18127,7 @@ static JSValue js_exportMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_exportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Mesh* ptr_mesh = (Mesh*)JS_GetOpaque(argv[0], js_Mesh_class_id);
     if(ptr_mesh == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18182,7 +18180,7 @@ static JSValue js_exportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_sides;
     int err_sides = JS_ToInt32(ctx, &long_sides, argv[0]);
     if(err_sides<0) {
@@ -18205,7 +18203,7 @@ static JSValue js_genMeshPoly(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_genMeshPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshPlane(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_width;
     int err_width = JS_ToFloat64(ctx, &double_width, argv[0]);
     if(err_width<0) {
@@ -18242,7 +18240,7 @@ static JSValue js_genMeshPlane(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_genMeshCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshCube(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_width;
     int err_width = JS_ToFloat64(ctx, &double_width, argv[0]);
     if(err_width<0) {
@@ -18272,7 +18270,7 @@ static JSValue js_genMeshCube(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_genMeshSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18302,7 +18300,7 @@ static JSValue js_genMeshSphere(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_genMeshHemiSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshHemiSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18332,7 +18330,7 @@ static JSValue js_genMeshHemiSphere(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_genMeshCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshCylinder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18362,7 +18360,7 @@ static JSValue js_genMeshCylinder(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_genMeshCone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshCone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18392,7 +18390,7 @@ static JSValue js_genMeshCone(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_genMeshTorus(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshTorus(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18429,7 +18427,7 @@ static JSValue js_genMeshTorus(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_genMeshKnot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshKnot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_radius;
     int err_radius = JS_ToFloat64(ctx, &double_radius, argv[0]);
     if(err_radius<0) {
@@ -18466,7 +18464,7 @@ static JSValue js_genMeshKnot(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_genMeshHeightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshHeightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_heightmap = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_heightmap == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18487,7 +18485,7 @@ static JSValue js_genMeshHeightmap(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_genMeshCubicmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GenMeshCubicmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Image* ptr_cubicmap = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
     if(ptr_cubicmap == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18508,7 +18506,7 @@ static JSValue js_genMeshCubicmap(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadMaterialDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadMaterialDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material returnVal = LoadMaterialDefault();
     Material* ptr_ret = (Material*)js_malloc(ctx, sizeof(Material));
     *ptr_ret = returnVal;
@@ -18517,7 +18515,7 @@ static JSValue js_loadMaterialDefault(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_isMaterialValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMaterialValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* ptr_material = (Material*)JS_GetOpaque(argv[0], js_Material_class_id);
     if(ptr_material == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18529,7 +18527,7 @@ static JSValue js_isMaterialValid(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_unloadMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material* ptr_material = (Material*)JS_GetOpaque(argv[0], js_Material_class_id);
     if(ptr_material == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18540,7 +18538,7 @@ static JSValue js_unloadMaterial(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMaterialTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMaterialTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material * material = (Material *)JS_GetOpaque(argv[0], js_Material_class_id);
     if(material == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Material");
@@ -18563,7 +18561,7 @@ static JSValue js_setMaterialTexture(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetModelMeshMaterial(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model * model = (Model *)JS_GetOpaque(argv[0], js_Model_class_id);
     if(model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Model");
@@ -18587,7 +18585,7 @@ static JSValue js_setModelMeshMaterial(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateModelAnimationBones(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateModelAnimationBones(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18611,7 +18609,7 @@ static JSValue js_updateModelAnimationBones(JSContext * ctx, JSValue this_val, i
     return JS_UNDEFINED;
 }
 
-static JSValue js_checkCollisionSpheres(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionSpheres(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_center1 = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_center1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18643,7 +18641,7 @@ static JSValue js_checkCollisionSpheres(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_checkCollisionBoxes(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionBoxes(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* ptr_box1 = (BoundingBox*)JS_GetOpaque(argv[0], js_BoundingBox_class_id);
     if(ptr_box1 == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18661,7 +18659,7 @@ static JSValue js_checkCollisionBoxes(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_checkCollisionBoxSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CheckCollisionBoxSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BoundingBox* ptr_box = (BoundingBox*)JS_GetOpaque(argv[0], js_BoundingBox_class_id);
     if(ptr_box == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18686,7 +18684,7 @@ static JSValue js_checkCollisionBoxSphere(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_getRayCollisionSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRayCollisionSphere(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18714,7 +18712,7 @@ static JSValue js_getRayCollisionSphere(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_getRayCollisionBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRayCollisionBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18735,7 +18733,7 @@ static JSValue js_getRayCollisionBox(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getRayCollisionMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRayCollisionMesh(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18762,7 +18760,7 @@ static JSValue js_getRayCollisionMesh(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getRayCollisionTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRayCollisionTriangle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18795,7 +18793,7 @@ static JSValue js_getRayCollisionTriangle(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_getRayCollisionQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetRayCollisionQuad(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Ray* ptr_ray = (Ray*)JS_GetOpaque(argv[0], js_Ray_class_id);
     if(ptr_ray == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -18834,23 +18832,23 @@ static JSValue js_getRayCollisionQuad(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_initAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_InitAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     InitAudioDevice();
     return JS_UNDEFINED;
 }
 
-static JSValue js_closeAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CloseAudioDevice(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     CloseAudioDevice();
     return JS_UNDEFINED;
 }
 
-static JSValue js_isAudioDeviceReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsAudioDeviceReady(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = IsAudioDeviceReady();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_setMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_volume;
     int err_volume = JS_ToFloat64(ctx, &double_volume, argv[0]);
     if(err_volume<0) {
@@ -18862,13 +18860,13 @@ static JSValue js_setMasterVolume(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMasterVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float returnVal = GetMasterVolume();
     JSValue ret = JS_NewFloat64(ctx, (double)returnVal);
     return ret;
 }
 
-static JSValue js_loadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -18918,7 +18916,7 @@ static JSValue js_loadWave(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileType;
@@ -19011,7 +19009,7 @@ static JSValue js_loadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_isWaveValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsWaveValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19023,7 +19021,7 @@ static JSValue js_isWaveValid(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_loadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -19073,7 +19071,7 @@ static JSValue js_loadSound(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_loadSoundFromWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadSoundFromWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19088,7 +19086,7 @@ static JSValue js_loadSoundFromWave(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_loadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_source = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_source == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19103,7 +19101,7 @@ static JSValue js_loadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_isSoundValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsSoundValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19115,7 +19113,7 @@ static JSValue js_isSoundValid(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_updateSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19151,7 +19149,7 @@ static JSValue js_updateSound(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19162,7 +19160,7 @@ static JSValue js_unloadWave(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19173,7 +19171,7 @@ static JSValue js_unloadSound(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_unloadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadSoundAlias(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_alias = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_alias == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19184,7 +19182,7 @@ static JSValue js_unloadSoundAlias(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_exportWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ExportWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19237,7 +19235,7 @@ static JSValue js_exportWave(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_playSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PlaySound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19248,7 +19246,7 @@ static JSValue js_playSound(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_StopSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19259,7 +19257,7 @@ static JSValue js_stopSound(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_pauseSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PauseSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19270,7 +19268,7 @@ static JSValue js_pauseSound(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_resumeSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ResumeSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19281,7 +19279,7 @@ static JSValue js_resumeSound(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_isSoundPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsSoundPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19293,7 +19291,7 @@ static JSValue js_isSoundPlaying(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_setSoundVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetSoundVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19311,7 +19309,7 @@ static JSValue js_setSoundVolume(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSoundPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetSoundPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19329,7 +19327,7 @@ static JSValue js_setSoundPitch(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_setSoundPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetSoundPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Sound* ptr_sound = (Sound*)JS_GetOpaque(argv[0], js_Sound_class_id);
     if(ptr_sound == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19347,7 +19345,7 @@ static JSValue js_setSoundPan(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_waveCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_WaveCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19362,7 +19360,7 @@ static JSValue js_waveCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_waveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_WaveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave * wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Wave");
@@ -19386,7 +19384,7 @@ static JSValue js_waveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_waveFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_WaveFormat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave * wave = (Wave *)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Wave");
@@ -19417,7 +19415,7 @@ static JSValue js_waveFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
     if(ptr_wave == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19435,7 +19433,7 @@ static JSValue js_loadWaveSamples(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_unloadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float * samples;
     JSValue da_samples;
     int64_t size_samples;
@@ -19490,7 +19488,7 @@ static JSValue js_unloadWaveSamples(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -19540,7 +19538,7 @@ static JSValue js_loadMusicStream(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     char * fileType;
@@ -19633,7 +19631,7 @@ static JSValue js_loadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static JSValue js_isMusicValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMusicValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19645,7 +19643,7 @@ static JSValue js_isMusicValid(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_unloadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19656,7 +19654,7 @@ static JSValue js_unloadMusicStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_playMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PlayMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19667,7 +19665,7 @@ static JSValue js_playMusicStream(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_isMusicStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsMusicStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19679,7 +19677,7 @@ static JSValue js_isMusicStreamPlaying(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_updateMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19690,7 +19688,7 @@ static JSValue js_updateMusicStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_stopMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_StopMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19701,7 +19699,7 @@ static JSValue js_stopMusicStream(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_pauseMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PauseMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19712,7 +19710,7 @@ static JSValue js_pauseMusicStream(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_resumeMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ResumeMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19723,7 +19721,7 @@ static JSValue js_resumeMusicStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_seekMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SeekMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19741,7 +19739,7 @@ static JSValue js_seekMusicStream(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMusicVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19759,7 +19757,7 @@ static JSValue js_setMusicVolume(JSContext * ctx, JSValue this_val, int argc, JS
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMusicPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19777,7 +19775,7 @@ static JSValue js_setMusicPitch(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_setMusicPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetMusicPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19795,7 +19793,7 @@ static JSValue js_setMusicPan(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_getMusicTimeLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMusicTimeLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19807,7 +19805,7 @@ static JSValue js_getMusicTimeLength(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetMusicTimePlayed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Music* ptr_music = (Music*)JS_GetOpaque(argv[0], js_Music_class_id);
     if(ptr_music == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19819,7 +19817,7 @@ static JSValue js_getMusicTimePlayed(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_loadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     uint32_t long_sampleRate;
     int err_sampleRate = JS_ToUint32(ctx, &long_sampleRate, argv[0]);
     if(err_sampleRate<0) {
@@ -19849,7 +19847,7 @@ static JSValue js_loadAudioStream(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_isAudioStreamValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsAudioStreamValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19861,7 +19859,7 @@ static JSValue js_isAudioStreamValid(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
-static JSValue js_unloadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19872,7 +19870,7 @@ static JSValue js_unloadAudioStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_updateAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19908,7 +19906,7 @@ static JSValue js_updateAudioStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_isAudioStreamProcessed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsAudioStreamProcessed(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19920,7 +19918,7 @@ static JSValue js_isAudioStreamProcessed(JSContext * ctx, JSValue this_val, int 
     return ret;
 }
 
-static JSValue js_playAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PlayAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19931,7 +19929,7 @@ static JSValue js_playAudioStream(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_pauseAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_PauseAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19942,7 +19940,7 @@ static JSValue js_pauseAudioStream(JSContext * ctx, JSValue this_val, int argc, 
     return JS_UNDEFINED;
 }
 
-static JSValue js_resumeAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_ResumeAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19953,7 +19951,7 @@ static JSValue js_resumeAudioStream(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_isAudioStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_IsAudioStreamPlaying(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19965,7 +19963,7 @@ static JSValue js_isAudioStreamPlaying(JSContext * ctx, JSValue this_val, int ar
     return ret;
 }
 
-static JSValue js_stopAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_StopAudioStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19976,7 +19974,7 @@ static JSValue js_stopAudioStream(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAudioStreamVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAudioStreamVolume(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -19994,7 +19992,7 @@ static JSValue js_setAudioStreamVolume(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAudioStreamPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAudioStreamPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -20012,7 +20010,7 @@ static JSValue js_setAudioStreamPitch(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAudioStreamPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAudioStreamPan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
     if(ptr_stream == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -20030,7 +20028,7 @@ static JSValue js_setAudioStreamPan(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_setAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_SetAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_size;
     int err_size = JS_ToInt32(ctx, &long_size, argv[0]);
     if(err_size<0) {
@@ -20042,34 +20040,31 @@ static JSValue js_setAudioStreamBufferSizeDefault(JSContext * ctx, JSValue this_
     return JS_UNDEFINED;
 }
 
-static JSValue js_attachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_AttachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     trampolineContext ctx_processor;
-    JSContext * ctx2 = JS_NewCustomContext(JS_GetRuntime(ctx));
-    ctx_processor.ctx = ctx2;
-    ctx_processor.func_obj = argv[0];
-    JS_DupValue(ctx, argv[0]);
-    JS_DupValue(ctx2, argv[0]);
+    ctx_processor.ctx = ctx;
     void * processor = AudioMixedProcessor_processor_c;
-    if(JS_IsFunction(ctx,argv[0])==0) {
-        return JS_EXCEPTION;
-        void * processor = AudioMixedProcessor_processor_c;
-    }
     if(AudioMixedProcessor_processor_size==0) {
+        JSRuntime* rt = JS_NewRuntime3();
+        if(!rt){
+            return JS_EXCEPTION;
+        }
+        js_std_init_handlers(rt);
+        AudioMixedProcessor_processor_ctx = JS_NewCustomContext(rt);
+        JS_SetMaxStackSize(rt, 0);//do not keep track of limits, internal commands only
+        JS_DupContext(ctx);
         AudioMixedProcessor_processor_arr = js_malloc(ctx, sizeof(void *) * 3);
-        AudioMixedProcessor_processor_arr[AudioMixedProcessor_processor_size] = ctx_processor;
-        AudioMixedProcessor_processor_size++;
-    }
-    else {
+    } else {
         AudioMixedProcessor_processor_arr = js_realloc(ctx, AudioMixedProcessor_processor_arr, sizeof(void *) * AudioMixedProcessor_processor_size);
-        AudioMixedProcessor_processor_arr[AudioMixedProcessor_processor_size] = ctx_processor;
-        AudioMixedProcessor_processor_size++;
-        return JS_UNDEFINED;
     }
+    ctx_processor.func_obj=js_copyWorker(ctx,AudioMixedProcessor_processor_ctx);
+    AudioMixedProcessor_processor_arr[AudioMixedProcessor_processor_size] = ctx_processor;
+    AudioMixedProcessor_processor_size++;
     AttachAudioMixedProcessor(processor);
     return JS_UNDEFINED;
 }
 
-static JSValue js_detachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_DetachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int processor_pos;
     void * processor = AudioMixedProcessor_processor_c;
     void * processor_ptr = argv[0].u.ptr;
@@ -20090,572 +20085,577 @@ static JSValue js_detachAudioMixedProcessor(JSContext * ctx, JSValue this_val, i
         return JS_UNDEFINED;
     }
     DetachAudioMixedProcessor(processor);
+    JSRuntime* rt = JS_GetRuntime(ctx);
+    JS_FreeContext(AudioMixedProcessor_processor_ctx);
+    JS_FreeContext(ctx);
+    js_std_free_handlers(rt);
+    JS_FreeRuntime(rt);
     return JS_UNDEFINED;
 }
 
 static const JSCFunctionListEntry js_js_raylib_funcs[] = {
-    JS_CFUNC_DEF("initWindow",3,js_initWindow),
-    JS_CFUNC_DEF("closeWindow",0,js_closeWindow),
-    JS_CFUNC_DEF("windowShouldClose",0,js_windowShouldClose),
-    JS_CFUNC_DEF("isWindowReady",0,js_isWindowReady),
-    JS_CFUNC_DEF("isWindowFullscreen",0,js_isWindowFullscreen),
-    JS_CFUNC_DEF("isWindowHidden",0,js_isWindowHidden),
-    JS_CFUNC_DEF("isWindowMinimized",0,js_isWindowMinimized),
-    JS_CFUNC_DEF("isWindowMaximized",0,js_isWindowMaximized),
-    JS_CFUNC_DEF("isWindowFocused",0,js_isWindowFocused),
-    JS_CFUNC_DEF("isWindowResized",0,js_isWindowResized),
-    JS_CFUNC_DEF("isWindowState",1,js_isWindowState),
-    JS_CFUNC_DEF("setWindowState",1,js_setWindowState),
-    JS_CFUNC_DEF("clearWindowState",1,js_clearWindowState),
-    JS_CFUNC_DEF("toggleFullscreen",0,js_toggleFullscreen),
-    JS_CFUNC_DEF("toggleBorderlessWindowed",0,js_toggleBorderlessWindowed),
-    JS_CFUNC_DEF("maximizeWindow",0,js_maximizeWindow),
-    JS_CFUNC_DEF("minimizeWindow",0,js_minimizeWindow),
-    JS_CFUNC_DEF("restoreWindow",0,js_restoreWindow),
-    JS_CFUNC_DEF("setWindowIcon",1,js_setWindowIcon),
-    JS_CFUNC_DEF("setWindowTitle",1,js_setWindowTitle),
-    JS_CFUNC_DEF("setWindowPosition",2,js_setWindowPosition),
-    JS_CFUNC_DEF("setWindowMonitor",1,js_setWindowMonitor),
-    JS_CFUNC_DEF("setWindowMinSize",2,js_setWindowMinSize),
-    JS_CFUNC_DEF("setWindowMaxSize",2,js_setWindowMaxSize),
-    JS_CFUNC_DEF("setWindowSize",2,js_setWindowSize),
-    JS_CFUNC_DEF("setWindowOpacity",1,js_setWindowOpacity),
-    JS_CFUNC_DEF("setWindowFocused",0,js_setWindowFocused),
-    JS_CFUNC_DEF("getScreenWidth",0,js_getScreenWidth),
-    JS_CFUNC_DEF("getScreenHeight",0,js_getScreenHeight),
-    JS_CFUNC_DEF("getRenderWidth",0,js_getRenderWidth),
-    JS_CFUNC_DEF("getRenderHeight",0,js_getRenderHeight),
-    JS_CFUNC_DEF("getMonitorCount",0,js_getMonitorCount),
-    JS_CFUNC_DEF("getCurrentMonitor",0,js_getCurrentMonitor),
-    JS_CFUNC_DEF("getMonitorPosition",1,js_getMonitorPosition),
-    JS_CFUNC_DEF("getMonitorWidth",1,js_getMonitorWidth),
-    JS_CFUNC_DEF("getMonitorHeight",1,js_getMonitorHeight),
-    JS_CFUNC_DEF("getMonitorPhysicalWidth",1,js_getMonitorPhysicalWidth),
-    JS_CFUNC_DEF("getMonitorPhysicalHeight",1,js_getMonitorPhysicalHeight),
-    JS_CFUNC_DEF("getMonitorRefreshRate",1,js_getMonitorRefreshRate),
-    JS_CFUNC_DEF("getWindowPosition",0,js_getWindowPosition),
-    JS_CFUNC_DEF("getWindowScaleDPI",0,js_getWindowScaleDPI),
-    JS_CFUNC_DEF("getMonitorName",1,js_getMonitorName),
-    JS_CFUNC_DEF("setClipboardText",1,js_setClipboardText),
-    JS_CFUNC_DEF("getClipboardText",0,js_getClipboardText),
-    JS_CFUNC_DEF("getClipboardImage",0,js_getClipboardImage),
-    JS_CFUNC_DEF("enableEventWaiting",0,js_enableEventWaiting),
-    JS_CFUNC_DEF("disableEventWaiting",0,js_disableEventWaiting),
-    JS_CFUNC_DEF("showCursor",0,js_showCursor),
-    JS_CFUNC_DEF("hideCursor",0,js_hideCursor),
-    JS_CFUNC_DEF("isCursorHidden",0,js_isCursorHidden),
-    JS_CFUNC_DEF("enableCursor",0,js_enableCursor),
-    JS_CFUNC_DEF("disableCursor",0,js_disableCursor),
-    JS_CFUNC_DEF("isCursorOnScreen",0,js_isCursorOnScreen),
-    JS_CFUNC_DEF("clearBackground",1,js_clearBackground),
-    JS_CFUNC_DEF("beginDrawing",0,js_beginDrawing),
-    JS_CFUNC_DEF("endDrawing",0,js_endDrawing),
-    JS_CFUNC_DEF("beginMode2D",1,js_beginMode2D),
-    JS_CFUNC_DEF("endMode2D",0,js_endMode2D),
-    JS_CFUNC_DEF("beginMode3D",1,js_beginMode3D),
-    JS_CFUNC_DEF("endMode3D",0,js_endMode3D),
-    JS_CFUNC_DEF("beginTextureMode",1,js_beginTextureMode),
-    JS_CFUNC_DEF("endTextureMode",0,js_endTextureMode),
-    JS_CFUNC_DEF("beginShaderMode",1,js_beginShaderMode),
-    JS_CFUNC_DEF("endShaderMode",0,js_endShaderMode),
-    JS_CFUNC_DEF("beginBlendMode",1,js_beginBlendMode),
-    JS_CFUNC_DEF("endBlendMode",0,js_endBlendMode),
-    JS_CFUNC_DEF("beginScissorMode",4,js_beginScissorMode),
-    JS_CFUNC_DEF("endScissorMode",0,js_endScissorMode),
-    JS_CFUNC_DEF("beginVrStereoMode",1,js_beginVrStereoMode),
-    JS_CFUNC_DEF("endVrStereoMode",0,js_endVrStereoMode),
-    JS_CFUNC_DEF("loadVrStereoConfig",1,js_loadVrStereoConfig),
-    JS_CFUNC_DEF("unloadVrStereoConfig",1,js_unloadVrStereoConfig),
-    JS_CFUNC_DEF("loadShader",2,js_loadShader),
-    JS_CFUNC_DEF("loadShaderFromMemory",2,js_loadShaderFromMemory),
-    JS_CFUNC_DEF("isShaderValid",1,js_isShaderValid),
-    JS_CFUNC_DEF("getShaderLocation",2,js_getShaderLocation),
-    JS_CFUNC_DEF("getShaderLocationAttrib",2,js_getShaderLocationAttrib),
-    JS_CFUNC_DEF("setShaderValue",4,js_setShaderValue),
-    JS_CFUNC_DEF("setShaderValueV",5,js_setShaderValueV),
-    JS_CFUNC_DEF("setShaderValueMatrix",3,js_setShaderValueMatrix),
-    JS_CFUNC_DEF("setShaderValueTexture",3,js_setShaderValueTexture),
-    JS_CFUNC_DEF("unloadShader",1,js_unloadShader),
-    JS_CFUNC_DEF("getScreenToWorldRay",2,js_getScreenToWorldRay),
-    JS_CFUNC_DEF("getScreenToWorldRayEx",4,js_getScreenToWorldRayEx),
-    JS_CFUNC_DEF("getWorldToScreen",2,js_getWorldToScreen),
-    JS_CFUNC_DEF("getWorldToScreenEx",4,js_getWorldToScreenEx),
-    JS_CFUNC_DEF("getWorldToScreen2D",2,js_getWorldToScreen2D),
-    JS_CFUNC_DEF("getScreenToWorld2D",2,js_getScreenToWorld2D),
-    JS_CFUNC_DEF("getCameraMatrix",1,js_getCameraMatrix),
-    JS_CFUNC_DEF("getCameraMatrix2D",1,js_getCameraMatrix2D),
-    JS_CFUNC_DEF("setTargetFPS",1,js_setTargetFPS),
-    JS_CFUNC_DEF("getFrameTime",0,js_getFrameTime),
-    JS_CFUNC_DEF("getTime",0,js_getTime),
-    JS_CFUNC_DEF("getFPS",0,js_getFPS),
-    JS_CFUNC_DEF("setRandomSeed",1,js_setRandomSeed),
-    JS_CFUNC_DEF("getRandomValue",2,js_getRandomValue),
-    JS_CFUNC_DEF("loadRandomSequence",3,js_loadRandomSequence),
-    JS_CFUNC_DEF("takeScreenshot",1,js_takeScreenshot),
-    JS_CFUNC_DEF("setConfigFlags",1,js_setConfigFlags),
-    JS_CFUNC_DEF("openURL",1,js_openURL),
-    JS_CFUNC_DEF("traceLog",1,js_traceLog),
-    JS_CFUNC_DEF("setTraceLogLevel",1,js_setTraceLogLevel),
-    JS_CFUNC_DEF("setLoadFileDataCallback",1,js_setLoadFileDataCallback),
-    JS_CFUNC_DEF("setSaveFileDataCallback",1,js_setSaveFileDataCallback),
-    JS_CFUNC_DEF("setLoadFileTextCallback",1,js_setLoadFileTextCallback),
-    JS_CFUNC_DEF("setSaveFileTextCallback",1,js_setSaveFileTextCallback),
-    JS_CFUNC_DEF("loadFileData",2,js_loadFileData),
-    JS_CFUNC_DEF("saveFileData",3,js_saveFileData),
-    JS_CFUNC_DEF("loadFileText",1,js_loadFileText),
-    JS_CFUNC_DEF("saveFileText",2,js_saveFileText),
-    JS_CFUNC_DEF("fileExists",1,js_fileExists),
-    JS_CFUNC_DEF("directoryExists",1,js_directoryExists),
-    JS_CFUNC_DEF("isFileExtension",2,js_isFileExtension),
-    JS_CFUNC_DEF("getFileLength",1,js_getFileLength),
-    JS_CFUNC_DEF("getFileExtension",1,js_getFileExtension),
-    JS_CFUNC_DEF("getFileName",1,js_getFileName),
-    JS_CFUNC_DEF("getFileNameWithoutExt",1,js_getFileNameWithoutExt),
-    JS_CFUNC_DEF("getDirectoryPath",1,js_getDirectoryPath),
-    JS_CFUNC_DEF("getPrevDirectoryPath",1,js_getPrevDirectoryPath),
-    JS_CFUNC_DEF("getWorkingDirectory",0,js_getWorkingDirectory),
-    JS_CFUNC_DEF("getApplicationDirectory",0,js_getApplicationDirectory),
-    JS_CFUNC_DEF("makeDirectory",1,js_makeDirectory),
-    JS_CFUNC_DEF("changeDirectory",1,js_changeDirectory),
-    JS_CFUNC_DEF("isPathFile",1,js_isPathFile),
-    JS_CFUNC_DEF("isFileNameValid",1,js_isFileNameValid),
-    JS_CFUNC_DEF("loadDirectoryFiles",1,js_loadDirectoryFiles),
-    JS_CFUNC_DEF("loadDirectoryFilesEx",3,js_loadDirectoryFilesEx),
-    JS_CFUNC_DEF("isFileDropped",0,js_isFileDropped),
-    JS_CFUNC_DEF("loadDroppedFiles",0,js_loadDroppedFiles),
-    JS_CFUNC_DEF("getFileModTime",1,js_getFileModTime),
-    JS_CFUNC_DEF("computeCRC32",2,js_computeCRC32),
-    JS_CFUNC_DEF("computeMD5",2,js_computeMD5),
-    JS_CFUNC_DEF("computeSHA1",2,js_computeSHA1),
-    JS_CFUNC_DEF("loadAutomationEventList",1,js_loadAutomationEventList),
-    JS_CFUNC_DEF("unloadAutomationEventList",1,js_unloadAutomationEventList),
-    JS_CFUNC_DEF("exportAutomationEventList",2,js_exportAutomationEventList),
-    JS_CFUNC_DEF("setAutomationEventList",1,js_setAutomationEventList),
-    JS_CFUNC_DEF("setAutomationEventBaseFrame",1,js_setAutomationEventBaseFrame),
-    JS_CFUNC_DEF("startAutomationEventRecording",0,js_startAutomationEventRecording),
-    JS_CFUNC_DEF("stopAutomationEventRecording",0,js_stopAutomationEventRecording),
-    JS_CFUNC_DEF("playAutomationEvent",1,js_playAutomationEvent),
-    JS_CFUNC_DEF("isKeyPressed",1,js_isKeyPressed),
-    JS_CFUNC_DEF("isKeyPressedRepeat",1,js_isKeyPressedRepeat),
-    JS_CFUNC_DEF("isKeyDown",1,js_isKeyDown),
-    JS_CFUNC_DEF("isKeyReleased",1,js_isKeyReleased),
-    JS_CFUNC_DEF("isKeyUp",1,js_isKeyUp),
-    JS_CFUNC_DEF("getKeyPressed",0,js_getKeyPressed),
-    JS_CFUNC_DEF("getCharPressed",0,js_getCharPressed),
-    JS_CFUNC_DEF("getKeyName",1,js_getKeyName),
-    JS_CFUNC_DEF("setExitKey",1,js_setExitKey),
-    JS_CFUNC_DEF("isGamepadAvailable",1,js_isGamepadAvailable),
-    JS_CFUNC_DEF("getGamepadName",1,js_getGamepadName),
-    JS_CFUNC_DEF("isGamepadButtonPressed",2,js_isGamepadButtonPressed),
-    JS_CFUNC_DEF("isGamepadButtonDown",2,js_isGamepadButtonDown),
-    JS_CFUNC_DEF("isGamepadButtonReleased",2,js_isGamepadButtonReleased),
-    JS_CFUNC_DEF("isGamepadButtonUp",2,js_isGamepadButtonUp),
-    JS_CFUNC_DEF("getGamepadButtonPressed",0,js_getGamepadButtonPressed),
-    JS_CFUNC_DEF("getGamepadAxisCount",1,js_getGamepadAxisCount),
-    JS_CFUNC_DEF("getGamepadAxisMovement",2,js_getGamepadAxisMovement),
-    JS_CFUNC_DEF("setGamepadMappings",1,js_setGamepadMappings),
-    JS_CFUNC_DEF("setGamepadVibration",4,js_setGamepadVibration),
-    JS_CFUNC_DEF("isMouseButtonPressed",1,js_isMouseButtonPressed),
-    JS_CFUNC_DEF("isMouseButtonDown",1,js_isMouseButtonDown),
-    JS_CFUNC_DEF("isMouseButtonReleased",1,js_isMouseButtonReleased),
-    JS_CFUNC_DEF("isMouseButtonUp",1,js_isMouseButtonUp),
-    JS_CFUNC_DEF("getMouseX",0,js_getMouseX),
-    JS_CFUNC_DEF("getMouseY",0,js_getMouseY),
-    JS_CFUNC_DEF("getMousePosition",0,js_getMousePosition),
-    JS_CFUNC_DEF("getMouseDelta",0,js_getMouseDelta),
-    JS_CFUNC_DEF("setMousePosition",2,js_setMousePosition),
-    JS_CFUNC_DEF("setMouseOffset",2,js_setMouseOffset),
-    JS_CFUNC_DEF("setMouseScale",2,js_setMouseScale),
-    JS_CFUNC_DEF("getMouseWheelMove",0,js_getMouseWheelMove),
-    JS_CFUNC_DEF("getMouseWheelMoveV",0,js_getMouseWheelMoveV),
-    JS_CFUNC_DEF("setMouseCursor",1,js_setMouseCursor),
-    JS_CFUNC_DEF("getTouchX",0,js_getTouchX),
-    JS_CFUNC_DEF("getTouchY",0,js_getTouchY),
-    JS_CFUNC_DEF("getTouchPosition",1,js_getTouchPosition),
-    JS_CFUNC_DEF("getTouchPointId",1,js_getTouchPointId),
-    JS_CFUNC_DEF("getTouchPointCount",0,js_getTouchPointCount),
-    JS_CFUNC_DEF("setGesturesEnabled",1,js_setGesturesEnabled),
-    JS_CFUNC_DEF("isGestureDetected",1,js_isGestureDetected),
-    JS_CFUNC_DEF("getGestureDetected",0,js_getGestureDetected),
-    JS_CFUNC_DEF("getGestureHoldDuration",0,js_getGestureHoldDuration),
-    JS_CFUNC_DEF("getGestureDragVector",0,js_getGestureDragVector),
-    JS_CFUNC_DEF("getGestureDragAngle",0,js_getGestureDragAngle),
-    JS_CFUNC_DEF("getGesturePinchVector",0,js_getGesturePinchVector),
-    JS_CFUNC_DEF("getGesturePinchAngle",0,js_getGesturePinchAngle),
-    JS_CFUNC_DEF("updateCamera",2,js_updateCamera),
-    JS_CFUNC_DEF("updateCameraPro",4,js_updateCameraPro),
-    JS_CFUNC_DEF("setShapesTexture",2,js_setShapesTexture),
-    JS_CFUNC_DEF("getShapesTexture",0,js_getShapesTexture),
-    JS_CFUNC_DEF("getShapesTextureRectangle",0,js_getShapesTextureRectangle),
-    JS_CFUNC_DEF("drawPixel",3,js_drawPixel),
-    JS_CFUNC_DEF("drawPixelV",2,js_drawPixelV),
-    JS_CFUNC_DEF("drawLine",5,js_drawLine),
-    JS_CFUNC_DEF("drawLineV",3,js_drawLineV),
-    JS_CFUNC_DEF("drawLineEx",4,js_drawLineEx),
-    JS_CFUNC_DEF("drawLineBezier",4,js_drawLineBezier),
-    JS_CFUNC_DEF("drawCircle",4,js_drawCircle),
-    JS_CFUNC_DEF("drawCircleSector",6,js_drawCircleSector),
-    JS_CFUNC_DEF("drawCircleSectorLines",6,js_drawCircleSectorLines),
-    JS_CFUNC_DEF("drawCircleGradient",5,js_drawCircleGradient),
-    JS_CFUNC_DEF("drawCircleV",3,js_drawCircleV),
-    JS_CFUNC_DEF("drawCircleLines",4,js_drawCircleLines),
-    JS_CFUNC_DEF("drawCircleLinesV",3,js_drawCircleLinesV),
-    JS_CFUNC_DEF("drawEllipse",5,js_drawEllipse),
-    JS_CFUNC_DEF("drawEllipseLines",5,js_drawEllipseLines),
-    JS_CFUNC_DEF("drawRing",7,js_drawRing),
-    JS_CFUNC_DEF("drawRingLines",7,js_drawRingLines),
-    JS_CFUNC_DEF("drawRectangle",5,js_drawRectangle),
-    JS_CFUNC_DEF("drawRectangleV",3,js_drawRectangleV),
-    JS_CFUNC_DEF("drawRectangleRec",2,js_drawRectangleRec),
-    JS_CFUNC_DEF("drawRectanglePro",4,js_drawRectanglePro),
-    JS_CFUNC_DEF("drawRectangleGradientV",6,js_drawRectangleGradientV),
-    JS_CFUNC_DEF("drawRectangleGradientH",6,js_drawRectangleGradientH),
-    JS_CFUNC_DEF("drawRectangleGradientEx",5,js_drawRectangleGradientEx),
-    JS_CFUNC_DEF("drawRectangleLines",5,js_drawRectangleLines),
-    JS_CFUNC_DEF("drawRectangleLinesEx",3,js_drawRectangleLinesEx),
-    JS_CFUNC_DEF("drawRectangleRounded",4,js_drawRectangleRounded),
-    JS_CFUNC_DEF("drawRectangleRoundedLines",4,js_drawRectangleRoundedLines),
-    JS_CFUNC_DEF("drawRectangleRoundedLinesEx",5,js_drawRectangleRoundedLinesEx),
-    JS_CFUNC_DEF("drawTriangle",4,js_drawTriangle),
-    JS_CFUNC_DEF("drawTriangleLines",4,js_drawTriangleLines),
-    JS_CFUNC_DEF("drawPoly",5,js_drawPoly),
-    JS_CFUNC_DEF("drawPolyLines",5,js_drawPolyLines),
-    JS_CFUNC_DEF("drawPolyLinesEx",6,js_drawPolyLinesEx),
-    JS_CFUNC_DEF("drawSplineLinear",4,js_drawSplineLinear),
-    JS_CFUNC_DEF("drawSplineBasis",4,js_drawSplineBasis),
-    JS_CFUNC_DEF("drawSplineCatmullRom",4,js_drawSplineCatmullRom),
-    JS_CFUNC_DEF("drawSplineBezierQuadratic",4,js_drawSplineBezierQuadratic),
-    JS_CFUNC_DEF("drawSplineBezierCubic",4,js_drawSplineBezierCubic),
-    JS_CFUNC_DEF("drawSplineSegmentLinear",4,js_drawSplineSegmentLinear),
-    JS_CFUNC_DEF("drawSplineSegmentBasis",6,js_drawSplineSegmentBasis),
-    JS_CFUNC_DEF("drawSplineSegmentCatmullRom",6,js_drawSplineSegmentCatmullRom),
-    JS_CFUNC_DEF("drawSplineSegmentBezierQuadratic",5,js_drawSplineSegmentBezierQuadratic),
-    JS_CFUNC_DEF("drawSplineSegmentBezierCubic",6,js_drawSplineSegmentBezierCubic),
-    JS_CFUNC_DEF("getSplinePointLinear",3,js_getSplinePointLinear),
-    JS_CFUNC_DEF("getSplinePointBasis",5,js_getSplinePointBasis),
-    JS_CFUNC_DEF("getSplinePointCatmullRom",5,js_getSplinePointCatmullRom),
-    JS_CFUNC_DEF("getSplinePointBezierQuad",4,js_getSplinePointBezierQuad),
-    JS_CFUNC_DEF("getSplinePointBezierCubic",5,js_getSplinePointBezierCubic),
-    JS_CFUNC_DEF("checkCollisionRecs",2,js_checkCollisionRecs),
-    JS_CFUNC_DEF("checkCollisionCircles",4,js_checkCollisionCircles),
-    JS_CFUNC_DEF("checkCollisionCircleRec",3,js_checkCollisionCircleRec),
-    JS_CFUNC_DEF("checkCollisionCircleLine",4,js_checkCollisionCircleLine),
-    JS_CFUNC_DEF("checkCollisionPointRec",2,js_checkCollisionPointRec),
-    JS_CFUNC_DEF("checkCollisionPointCircle",3,js_checkCollisionPointCircle),
-    JS_CFUNC_DEF("checkCollisionPointTriangle",4,js_checkCollisionPointTriangle),
-    JS_CFUNC_DEF("checkCollisionPointLine",4,js_checkCollisionPointLine),
-    JS_CFUNC_DEF("getCollisionRec",2,js_getCollisionRec),
-    JS_CFUNC_DEF("loadImage",1,js_loadImage),
-    JS_CFUNC_DEF("loadImageRaw",5,js_loadImageRaw),
-    JS_CFUNC_DEF("loadImageAnimFromMemory",4,js_loadImageAnimFromMemory),
-    JS_CFUNC_DEF("loadImageFromMemory",3,js_loadImageFromMemory),
-    JS_CFUNC_DEF("loadImageFromTexture",1,js_loadImageFromTexture),
-    JS_CFUNC_DEF("loadImageFromScreen",0,js_loadImageFromScreen),
-    JS_CFUNC_DEF("isImageValid",1,js_isImageValid),
-    JS_CFUNC_DEF("unloadImage",1,js_unloadImage),
-    JS_CFUNC_DEF("exportImage",2,js_exportImage),
-    JS_CFUNC_DEF("exportImageToMemory",3,js_exportImageToMemory),
-    JS_CFUNC_DEF("genImageColor",3,js_genImageColor),
-    JS_CFUNC_DEF("genImageGradientLinear",5,js_genImageGradientLinear),
-    JS_CFUNC_DEF("genImageGradientRadial",5,js_genImageGradientRadial),
-    JS_CFUNC_DEF("genImageGradientSquare",5,js_genImageGradientSquare),
-    JS_CFUNC_DEF("genImageChecked",6,js_genImageChecked),
-    JS_CFUNC_DEF("genImageWhiteNoise",3,js_genImageWhiteNoise),
-    JS_CFUNC_DEF("genImagePerlinNoise",5,js_genImagePerlinNoise),
-    JS_CFUNC_DEF("genImageCellular",3,js_genImageCellular),
-    JS_CFUNC_DEF("genImageText",3,js_genImageText),
-    JS_CFUNC_DEF("imageCopy",1,js_imageCopy),
-    JS_CFUNC_DEF("imageFromImage",2,js_imageFromImage),
-    JS_CFUNC_DEF("imageFromChannel",2,js_imageFromChannel),
-    JS_CFUNC_DEF("imageText",3,js_imageText),
-    JS_CFUNC_DEF("imageTextEx",5,js_imageTextEx),
-    JS_CFUNC_DEF("imageFormat",2,js_imageFormat),
-    JS_CFUNC_DEF("imageToPOT",2,js_imageToPOT),
-    JS_CFUNC_DEF("imageCrop",2,js_imageCrop),
-    JS_CFUNC_DEF("imageAlphaCrop",2,js_imageAlphaCrop),
-    JS_CFUNC_DEF("imageAlphaClear",3,js_imageAlphaClear),
-    JS_CFUNC_DEF("imageAlphaMask",2,js_imageAlphaMask),
-    JS_CFUNC_DEF("imageAlphaPremultiply",1,js_imageAlphaPremultiply),
-    JS_CFUNC_DEF("imageBlurGaussian",2,js_imageBlurGaussian),
-    JS_CFUNC_DEF("imageKernelConvolution",3,js_imageKernelConvolution),
-    JS_CFUNC_DEF("imageResize",3,js_imageResize),
-    JS_CFUNC_DEF("imageResizeNN",3,js_imageResizeNN),
-    JS_CFUNC_DEF("imageResizeCanvas",6,js_imageResizeCanvas),
-    JS_CFUNC_DEF("imageMipmaps",1,js_imageMipmaps),
-    JS_CFUNC_DEF("imageDither",5,js_imageDither),
-    JS_CFUNC_DEF("imageFlipVertical",1,js_imageFlipVertical),
-    JS_CFUNC_DEF("imageFlipHorizontal",1,js_imageFlipHorizontal),
-    JS_CFUNC_DEF("imageRotate",2,js_imageRotate),
-    JS_CFUNC_DEF("imageRotateCW",1,js_imageRotateCW),
-    JS_CFUNC_DEF("imageRotateCCW",1,js_imageRotateCCW),
-    JS_CFUNC_DEF("imageColorTint",2,js_imageColorTint),
-    JS_CFUNC_DEF("imageColorInvert",1,js_imageColorInvert),
-    JS_CFUNC_DEF("imageColorGrayscale",1,js_imageColorGrayscale),
-    JS_CFUNC_DEF("imageColorContrast",2,js_imageColorContrast),
-    JS_CFUNC_DEF("imageColorBrightness",2,js_imageColorBrightness),
-    JS_CFUNC_DEF("imageColorReplace",3,js_imageColorReplace),
-    JS_CFUNC_DEF("loadImageColors",1,js_loadImageColors),
-    JS_CFUNC_DEF("getImageAlphaBorder",2,js_getImageAlphaBorder),
-    JS_CFUNC_DEF("getImageColor",3,js_getImageColor),
-    JS_CFUNC_DEF("imageClearBackground",2,js_imageClearBackground),
-    JS_CFUNC_DEF("imageDrawPixel",4,js_imageDrawPixel),
-    JS_CFUNC_DEF("imageDrawPixelV",3,js_imageDrawPixelV),
-    JS_CFUNC_DEF("imageDrawLine",6,js_imageDrawLine),
-    JS_CFUNC_DEF("imageDrawLineV",4,js_imageDrawLineV),
-    JS_CFUNC_DEF("imageDrawLineEx",5,js_imageDrawLineEx),
-    JS_CFUNC_DEF("imageDrawCircle",5,js_imageDrawCircle),
-    JS_CFUNC_DEF("imageDrawCircleV",4,js_imageDrawCircleV),
-    JS_CFUNC_DEF("imageDrawCircleLines",5,js_imageDrawCircleLines),
-    JS_CFUNC_DEF("imageDrawCircleLinesV",4,js_imageDrawCircleLinesV),
-    JS_CFUNC_DEF("imageDrawRectangle",6,js_imageDrawRectangle),
-    JS_CFUNC_DEF("imageDrawRectangleV",4,js_imageDrawRectangleV),
-    JS_CFUNC_DEF("imageDrawRectangleRec",3,js_imageDrawRectangleRec),
-    JS_CFUNC_DEF("imageDrawRectangleLines",4,js_imageDrawRectangleLines),
-    JS_CFUNC_DEF("imageDrawTriangle",5,js_imageDrawTriangle),
-    JS_CFUNC_DEF("imageDrawTriangleEx",7,js_imageDrawTriangleEx),
-    JS_CFUNC_DEF("imageDrawTriangleLines",5,js_imageDrawTriangleLines),
-    JS_CFUNC_DEF("imageDrawTriangleFan",4,js_imageDrawTriangleFan),
-    JS_CFUNC_DEF("imageDrawTriangleStrip",4,js_imageDrawTriangleStrip),
-    JS_CFUNC_DEF("imageDraw",5,js_imageDraw),
-    JS_CFUNC_DEF("imageDrawText",6,js_imageDrawText),
-    JS_CFUNC_DEF("imageDrawTextEx",7,js_imageDrawTextEx),
-    JS_CFUNC_DEF("loadTexture",1,js_loadTexture),
-    JS_CFUNC_DEF("loadTextureFromImage",1,js_loadTextureFromImage),
-    JS_CFUNC_DEF("loadTextureCubemap",2,js_loadTextureCubemap),
-    JS_CFUNC_DEF("loadRenderTexture",2,js_loadRenderTexture),
-    JS_CFUNC_DEF("isTextureValid",1,js_isTextureValid),
-    JS_CFUNC_DEF("unloadTexture",1,js_unloadTexture),
-    JS_CFUNC_DEF("isRenderTextureValid",1,js_isRenderTextureValid),
-    JS_CFUNC_DEF("unloadRenderTexture",1,js_unloadRenderTexture),
-    JS_CFUNC_DEF("updateTexture",2,js_updateTexture),
-    JS_CFUNC_DEF("updateTextureRec",3,js_updateTextureRec),
-    JS_CFUNC_DEF("genTextureMipmaps",1,js_genTextureMipmaps),
-    JS_CFUNC_DEF("setTextureFilter",2,js_setTextureFilter),
-    JS_CFUNC_DEF("setTextureWrap",2,js_setTextureWrap),
-    JS_CFUNC_DEF("drawTexture",4,js_drawTexture),
-    JS_CFUNC_DEF("drawTextureV",3,js_drawTextureV),
-    JS_CFUNC_DEF("drawTextureEx",5,js_drawTextureEx),
-    JS_CFUNC_DEF("drawTextureRec",4,js_drawTextureRec),
-    JS_CFUNC_DEF("drawTexturePro",6,js_drawTexturePro),
-    JS_CFUNC_DEF("drawTextureNPatch",6,js_drawTextureNPatch),
-    JS_CFUNC_DEF("colorIsEqual",2,js_colorIsEqual),
-    JS_CFUNC_DEF("fade",2,js_fade),
-    JS_CFUNC_DEF("colorToInt",1,js_colorToInt),
-    JS_CFUNC_DEF("colorNormalize",1,js_colorNormalize),
-    JS_CFUNC_DEF("colorFromNormalized",1,js_colorFromNormalized),
-    JS_CFUNC_DEF("colorToHSV",1,js_colorToHSV),
-    JS_CFUNC_DEF("colorFromHSV",3,js_colorFromHSV),
-    JS_CFUNC_DEF("colorTint",2,js_colorTint),
-    JS_CFUNC_DEF("colorBrightness",2,js_colorBrightness),
-    JS_CFUNC_DEF("colorContrast",2,js_colorContrast),
-    JS_CFUNC_DEF("colorAlpha",2,js_colorAlpha),
-    JS_CFUNC_DEF("colorAlphaBlend",3,js_colorAlphaBlend),
-    JS_CFUNC_DEF("colorLerp",3,js_colorLerp),
-    JS_CFUNC_DEF("getColor",1,js_getColor),
-    JS_CFUNC_DEF("getPixelDataSize",3,js_getPixelDataSize),
-    JS_CFUNC_DEF("getFontDefault",0,js_getFontDefault),
-    JS_CFUNC_DEF("loadFont",1,js_loadFont),
-    JS_CFUNC_DEF("loadFontEx",4,js_loadFontEx),
-    JS_CFUNC_DEF("loadFontFromImage",3,js_loadFontFromImage),
-    JS_CFUNC_DEF("isFontValid",1,js_isFontValid),
-    JS_CFUNC_DEF("unloadFont",1,js_unloadFont),
-    JS_CFUNC_DEF("drawFPS",2,js_drawFPS),
-    JS_CFUNC_DEF("drawText",5,js_drawText),
-    JS_CFUNC_DEF("drawTextEx",6,js_drawTextEx),
-    JS_CFUNC_DEF("drawTextPro",8,js_drawTextPro),
-    JS_CFUNC_DEF("drawTextCodepoint",5,js_drawTextCodepoint),
-    JS_CFUNC_DEF("setTextLineSpacing",1,js_setTextLineSpacing),
-    JS_CFUNC_DEF("measureText",2,js_measureText),
-    JS_CFUNC_DEF("measureTextEx",4,js_measureTextEx),
-    JS_CFUNC_DEF("getGlyphIndex",2,js_getGlyphIndex),
-    JS_CFUNC_DEF("getGlyphAtlasRec",2,js_getGlyphAtlasRec),
-    JS_CFUNC_DEF("textCopy",2,js_textCopy),
-    JS_CFUNC_DEF("textIsEqual",2,js_textIsEqual),
-    JS_CFUNC_DEF("textLength",1,js_textLength),
-    JS_CFUNC_DEF("textFormat",2,js_textFormat),
-    JS_CFUNC_DEF("textSubtext",3,js_textSubtext),
-    JS_CFUNC_DEF("textReplace",3,js_textReplace),
-    JS_CFUNC_DEF("textInsert",3,js_textInsert),
-    JS_CFUNC_DEF("textJoin",3,js_textJoin),
-    JS_CFUNC_DEF("textSplit",3,js_textSplit),
-    JS_CFUNC_DEF("textAppend",3,js_textAppend),
-    JS_CFUNC_DEF("textFindIndex",2,js_textFindIndex),
-    JS_CFUNC_DEF("textToUpper",1,js_textToUpper),
-    JS_CFUNC_DEF("textToLower",1,js_textToLower),
-    JS_CFUNC_DEF("textToPascal",1,js_textToPascal),
-    JS_CFUNC_DEF("textToSnake",1,js_textToSnake),
-    JS_CFUNC_DEF("textToCamel",1,js_textToCamel),
-    JS_CFUNC_DEF("textToInteger",1,js_textToInteger),
-    JS_CFUNC_DEF("textToFloat",1,js_textToFloat),
-    JS_CFUNC_DEF("drawLine3D",3,js_drawLine3D),
-    JS_CFUNC_DEF("drawPoint3D",2,js_drawPoint3D),
-    JS_CFUNC_DEF("drawCircle3D",5,js_drawCircle3D),
-    JS_CFUNC_DEF("drawTriangle3D",4,js_drawTriangle3D),
-    JS_CFUNC_DEF("drawCube",5,js_drawCube),
-    JS_CFUNC_DEF("drawCubeV",3,js_drawCubeV),
-    JS_CFUNC_DEF("drawCubeWires",5,js_drawCubeWires),
-    JS_CFUNC_DEF("drawCubeWiresV",3,js_drawCubeWiresV),
-    JS_CFUNC_DEF("drawSphere",3,js_drawSphere),
-    JS_CFUNC_DEF("drawSphereEx",5,js_drawSphereEx),
-    JS_CFUNC_DEF("drawSphereWires",5,js_drawSphereWires),
-    JS_CFUNC_DEF("drawCylinder",6,js_drawCylinder),
-    JS_CFUNC_DEF("drawCylinderEx",6,js_drawCylinderEx),
-    JS_CFUNC_DEF("drawCylinderWires",6,js_drawCylinderWires),
-    JS_CFUNC_DEF("drawCylinderWiresEx",6,js_drawCylinderWiresEx),
-    JS_CFUNC_DEF("drawCapsule",6,js_drawCapsule),
-    JS_CFUNC_DEF("drawCapsuleWires",6,js_drawCapsuleWires),
-    JS_CFUNC_DEF("drawPlane",3,js_drawPlane),
-    JS_CFUNC_DEF("drawRay",2,js_drawRay),
-    JS_CFUNC_DEF("drawGrid",2,js_drawGrid),
-    JS_CFUNC_DEF("loadModel",1,js_loadModel),
-    JS_CFUNC_DEF("loadModelFromMesh",1,js_loadModelFromMesh),
-    JS_CFUNC_DEF("isModelValid",1,js_isModelValid),
-    JS_CFUNC_DEF("unloadModel",1,js_unloadModel),
-    JS_CFUNC_DEF("getModelBoundingBox",1,js_getModelBoundingBox),
-    JS_CFUNC_DEF("drawModel",4,js_drawModel),
-    JS_CFUNC_DEF("drawModelEx",6,js_drawModelEx),
-    JS_CFUNC_DEF("drawModelWires",4,js_drawModelWires),
-    JS_CFUNC_DEF("drawModelWiresEx",6,js_drawModelWiresEx),
-    JS_CFUNC_DEF("drawModelPoints",4,js_drawModelPoints),
-    JS_CFUNC_DEF("drawModelPointsEx",6,js_drawModelPointsEx),
-    JS_CFUNC_DEF("drawBoundingBox",2,js_drawBoundingBox),
-    JS_CFUNC_DEF("drawBillboard",5,js_drawBillboard),
-    JS_CFUNC_DEF("drawBillboardRec",6,js_drawBillboardRec),
-    JS_CFUNC_DEF("drawBillboardPro",9,js_drawBillboardPro),
-    JS_CFUNC_DEF("uploadMesh",2,js_uploadMesh),
-    JS_CFUNC_DEF("updateMeshBuffer",5,js_updateMeshBuffer),
-    JS_CFUNC_DEF("unloadMesh",1,js_unloadMesh),
-    JS_CFUNC_DEF("drawMesh",3,js_drawMesh),
-    JS_CFUNC_DEF("drawMeshInstanced",4,js_drawMeshInstanced),
-    JS_CFUNC_DEF("getMeshBoundingBox",1,js_getMeshBoundingBox),
-    JS_CFUNC_DEF("genMeshTangents",1,js_genMeshTangents),
-    JS_CFUNC_DEF("exportMesh",2,js_exportMesh),
-    JS_CFUNC_DEF("exportMeshAsCode",2,js_exportMeshAsCode),
-    JS_CFUNC_DEF("genMeshPoly",2,js_genMeshPoly),
-    JS_CFUNC_DEF("genMeshPlane",4,js_genMeshPlane),
-    JS_CFUNC_DEF("genMeshCube",3,js_genMeshCube),
-    JS_CFUNC_DEF("genMeshSphere",3,js_genMeshSphere),
-    JS_CFUNC_DEF("genMeshHemiSphere",3,js_genMeshHemiSphere),
-    JS_CFUNC_DEF("genMeshCylinder",3,js_genMeshCylinder),
-    JS_CFUNC_DEF("genMeshCone",3,js_genMeshCone),
-    JS_CFUNC_DEF("genMeshTorus",4,js_genMeshTorus),
-    JS_CFUNC_DEF("genMeshKnot",4,js_genMeshKnot),
-    JS_CFUNC_DEF("genMeshHeightmap",2,js_genMeshHeightmap),
-    JS_CFUNC_DEF("genMeshCubicmap",2,js_genMeshCubicmap),
-    JS_CFUNC_DEF("loadMaterialDefault",0,js_loadMaterialDefault),
-    JS_CFUNC_DEF("isMaterialValid",1,js_isMaterialValid),
-    JS_CFUNC_DEF("unloadMaterial",1,js_unloadMaterial),
-    JS_CFUNC_DEF("setMaterialTexture",3,js_setMaterialTexture),
-    JS_CFUNC_DEF("setModelMeshMaterial",3,js_setModelMeshMaterial),
-    JS_CFUNC_DEF("updateModelAnimationBones",3,js_updateModelAnimationBones),
-    JS_CFUNC_DEF("checkCollisionSpheres",4,js_checkCollisionSpheres),
-    JS_CFUNC_DEF("checkCollisionBoxes",2,js_checkCollisionBoxes),
-    JS_CFUNC_DEF("checkCollisionBoxSphere",3,js_checkCollisionBoxSphere),
-    JS_CFUNC_DEF("getRayCollisionSphere",3,js_getRayCollisionSphere),
-    JS_CFUNC_DEF("getRayCollisionBox",2,js_getRayCollisionBox),
-    JS_CFUNC_DEF("getRayCollisionMesh",3,js_getRayCollisionMesh),
-    JS_CFUNC_DEF("getRayCollisionTriangle",4,js_getRayCollisionTriangle),
-    JS_CFUNC_DEF("getRayCollisionQuad",5,js_getRayCollisionQuad),
-    JS_CFUNC_DEF("initAudioDevice",0,js_initAudioDevice),
-    JS_CFUNC_DEF("closeAudioDevice",0,js_closeAudioDevice),
-    JS_CFUNC_DEF("isAudioDeviceReady",0,js_isAudioDeviceReady),
-    JS_CFUNC_DEF("setMasterVolume",1,js_setMasterVolume),
-    JS_CFUNC_DEF("getMasterVolume",0,js_getMasterVolume),
-    JS_CFUNC_DEF("loadWave",1,js_loadWave),
-    JS_CFUNC_DEF("loadWaveFromMemory",3,js_loadWaveFromMemory),
-    JS_CFUNC_DEF("isWaveValid",1,js_isWaveValid),
-    JS_CFUNC_DEF("loadSound",1,js_loadSound),
-    JS_CFUNC_DEF("loadSoundFromWave",1,js_loadSoundFromWave),
-    JS_CFUNC_DEF("loadSoundAlias",1,js_loadSoundAlias),
-    JS_CFUNC_DEF("isSoundValid",1,js_isSoundValid),
-    JS_CFUNC_DEF("updateSound",3,js_updateSound),
-    JS_CFUNC_DEF("unloadWave",1,js_unloadWave),
-    JS_CFUNC_DEF("unloadSound",1,js_unloadSound),
-    JS_CFUNC_DEF("unloadSoundAlias",1,js_unloadSoundAlias),
-    JS_CFUNC_DEF("exportWave",2,js_exportWave),
-    JS_CFUNC_DEF("playSound",1,js_playSound),
-    JS_CFUNC_DEF("stopSound",1,js_stopSound),
-    JS_CFUNC_DEF("pauseSound",1,js_pauseSound),
-    JS_CFUNC_DEF("resumeSound",1,js_resumeSound),
-    JS_CFUNC_DEF("isSoundPlaying",1,js_isSoundPlaying),
-    JS_CFUNC_DEF("setSoundVolume",2,js_setSoundVolume),
-    JS_CFUNC_DEF("setSoundPitch",2,js_setSoundPitch),
-    JS_CFUNC_DEF("setSoundPan",2,js_setSoundPan),
-    JS_CFUNC_DEF("waveCopy",1,js_waveCopy),
-    JS_CFUNC_DEF("waveCrop",3,js_waveCrop),
-    JS_CFUNC_DEF("waveFormat",4,js_waveFormat),
-    JS_CFUNC_DEF("loadWaveSamples",1,js_loadWaveSamples),
-    JS_CFUNC_DEF("unloadWaveSamples",1,js_unloadWaveSamples),
-    JS_CFUNC_DEF("loadMusicStream",1,js_loadMusicStream),
-    JS_CFUNC_DEF("loadMusicStreamFromMemory",3,js_loadMusicStreamFromMemory),
-    JS_CFUNC_DEF("isMusicValid",1,js_isMusicValid),
-    JS_CFUNC_DEF("unloadMusicStream",1,js_unloadMusicStream),
-    JS_CFUNC_DEF("playMusicStream",1,js_playMusicStream),
-    JS_CFUNC_DEF("isMusicStreamPlaying",1,js_isMusicStreamPlaying),
-    JS_CFUNC_DEF("updateMusicStream",1,js_updateMusicStream),
-    JS_CFUNC_DEF("stopMusicStream",1,js_stopMusicStream),
-    JS_CFUNC_DEF("pauseMusicStream",1,js_pauseMusicStream),
-    JS_CFUNC_DEF("resumeMusicStream",1,js_resumeMusicStream),
-    JS_CFUNC_DEF("seekMusicStream",2,js_seekMusicStream),
-    JS_CFUNC_DEF("setMusicVolume",2,js_setMusicVolume),
-    JS_CFUNC_DEF("setMusicPitch",2,js_setMusicPitch),
-    JS_CFUNC_DEF("setMusicPan",2,js_setMusicPan),
-    JS_CFUNC_DEF("getMusicTimeLength",1,js_getMusicTimeLength),
-    JS_CFUNC_DEF("getMusicTimePlayed",1,js_getMusicTimePlayed),
-    JS_CFUNC_DEF("loadAudioStream",3,js_loadAudioStream),
-    JS_CFUNC_DEF("isAudioStreamValid",1,js_isAudioStreamValid),
-    JS_CFUNC_DEF("unloadAudioStream",1,js_unloadAudioStream),
-    JS_CFUNC_DEF("updateAudioStream",3,js_updateAudioStream),
-    JS_CFUNC_DEF("isAudioStreamProcessed",1,js_isAudioStreamProcessed),
-    JS_CFUNC_DEF("playAudioStream",1,js_playAudioStream),
-    JS_CFUNC_DEF("pauseAudioStream",1,js_pauseAudioStream),
-    JS_CFUNC_DEF("resumeAudioStream",1,js_resumeAudioStream),
-    JS_CFUNC_DEF("isAudioStreamPlaying",1,js_isAudioStreamPlaying),
-    JS_CFUNC_DEF("stopAudioStream",1,js_stopAudioStream),
-    JS_CFUNC_DEF("setAudioStreamVolume",2,js_setAudioStreamVolume),
-    JS_CFUNC_DEF("setAudioStreamPitch",2,js_setAudioStreamPitch),
-    JS_CFUNC_DEF("setAudioStreamPan",2,js_setAudioStreamPan),
-    JS_CFUNC_DEF("setAudioStreamBufferSizeDefault",1,js_setAudioStreamBufferSizeDefault),
-    JS_CFUNC_DEF("attachAudioMixedProcessor",1,js_attachAudioMixedProcessor),
-    JS_CFUNC_DEF("detachAudioMixedProcessor",1,js_detachAudioMixedProcessor),
+    JS_CFUNC_DEF("InitWindow",3,js_InitWindow),
+    JS_CFUNC_DEF("CloseWindow",0,js_CloseWindow),
+    JS_CFUNC_DEF("WindowShouldClose",0,js_WindowShouldClose),
+    JS_CFUNC_DEF("IsWindowReady",0,js_IsWindowReady),
+    JS_CFUNC_DEF("IsWindowFullscreen",0,js_IsWindowFullscreen),
+    JS_CFUNC_DEF("IsWindowHidden",0,js_IsWindowHidden),
+    JS_CFUNC_DEF("IsWindowMinimized",0,js_IsWindowMinimized),
+    JS_CFUNC_DEF("IsWindowMaximized",0,js_IsWindowMaximized),
+    JS_CFUNC_DEF("IsWindowFocused",0,js_IsWindowFocused),
+    JS_CFUNC_DEF("IsWindowResized",0,js_IsWindowResized),
+    JS_CFUNC_DEF("IsWindowState",1,js_IsWindowState),
+    JS_CFUNC_DEF("SetWindowState",1,js_SetWindowState),
+    JS_CFUNC_DEF("ClearWindowState",1,js_ClearWindowState),
+    JS_CFUNC_DEF("ToggleFullscreen",0,js_ToggleFullscreen),
+    JS_CFUNC_DEF("ToggleBorderlessWindowed",0,js_ToggleBorderlessWindowed),
+    JS_CFUNC_DEF("MaximizeWindow",0,js_MaximizeWindow),
+    JS_CFUNC_DEF("MinimizeWindow",0,js_MinimizeWindow),
+    JS_CFUNC_DEF("RestoreWindow",0,js_RestoreWindow),
+    JS_CFUNC_DEF("SetWindowIcon",1,js_SetWindowIcon),
+    JS_CFUNC_DEF("SetWindowTitle",1,js_SetWindowTitle),
+    JS_CFUNC_DEF("SetWindowPosition",2,js_SetWindowPosition),
+    JS_CFUNC_DEF("SetWindowMonitor",1,js_SetWindowMonitor),
+    JS_CFUNC_DEF("SetWindowMinSize",2,js_SetWindowMinSize),
+    JS_CFUNC_DEF("SetWindowMaxSize",2,js_SetWindowMaxSize),
+    JS_CFUNC_DEF("SetWindowSize",2,js_SetWindowSize),
+    JS_CFUNC_DEF("SetWindowOpacity",1,js_SetWindowOpacity),
+    JS_CFUNC_DEF("SetWindowFocused",0,js_SetWindowFocused),
+    JS_CFUNC_DEF("GetScreenWidth",0,js_GetScreenWidth),
+    JS_CFUNC_DEF("GetScreenHeight",0,js_GetScreenHeight),
+    JS_CFUNC_DEF("GetRenderWidth",0,js_GetRenderWidth),
+    JS_CFUNC_DEF("GetRenderHeight",0,js_GetRenderHeight),
+    JS_CFUNC_DEF("GetMonitorCount",0,js_GetMonitorCount),
+    JS_CFUNC_DEF("GetCurrentMonitor",0,js_GetCurrentMonitor),
+    JS_CFUNC_DEF("GetMonitorPosition",1,js_GetMonitorPosition),
+    JS_CFUNC_DEF("GetMonitorWidth",1,js_GetMonitorWidth),
+    JS_CFUNC_DEF("GetMonitorHeight",1,js_GetMonitorHeight),
+    JS_CFUNC_DEF("GetMonitorPhysicalWidth",1,js_GetMonitorPhysicalWidth),
+    JS_CFUNC_DEF("GetMonitorPhysicalHeight",1,js_GetMonitorPhysicalHeight),
+    JS_CFUNC_DEF("GetMonitorRefreshRate",1,js_GetMonitorRefreshRate),
+    JS_CFUNC_DEF("GetWindowPosition",0,js_GetWindowPosition),
+    JS_CFUNC_DEF("GetWindowScaleDPI",0,js_GetWindowScaleDPI),
+    JS_CFUNC_DEF("GetMonitorName",1,js_GetMonitorName),
+    JS_CFUNC_DEF("SetClipboardText",1,js_SetClipboardText),
+    JS_CFUNC_DEF("GetClipboardText",0,js_GetClipboardText),
+    JS_CFUNC_DEF("GetClipboardImage",0,js_GetClipboardImage),
+    JS_CFUNC_DEF("EnableEventWaiting",0,js_EnableEventWaiting),
+    JS_CFUNC_DEF("DisableEventWaiting",0,js_DisableEventWaiting),
+    JS_CFUNC_DEF("ShowCursor",0,js_ShowCursor),
+    JS_CFUNC_DEF("HideCursor",0,js_HideCursor),
+    JS_CFUNC_DEF("IsCursorHidden",0,js_IsCursorHidden),
+    JS_CFUNC_DEF("EnableCursor",0,js_EnableCursor),
+    JS_CFUNC_DEF("DisableCursor",0,js_DisableCursor),
+    JS_CFUNC_DEF("IsCursorOnScreen",0,js_IsCursorOnScreen),
+    JS_CFUNC_DEF("ClearBackground",1,js_ClearBackground),
+    JS_CFUNC_DEF("BeginDrawing",0,js_BeginDrawing),
+    JS_CFUNC_DEF("EndDrawing",0,js_EndDrawing),
+    JS_CFUNC_DEF("BeginMode2D",1,js_BeginMode2D),
+    JS_CFUNC_DEF("EndMode2D",0,js_EndMode2D),
+    JS_CFUNC_DEF("BeginMode3D",1,js_BeginMode3D),
+    JS_CFUNC_DEF("EndMode3D",0,js_EndMode3D),
+    JS_CFUNC_DEF("BeginTextureMode",1,js_BeginTextureMode),
+    JS_CFUNC_DEF("EndTextureMode",0,js_EndTextureMode),
+    JS_CFUNC_DEF("BeginShaderMode",1,js_BeginShaderMode),
+    JS_CFUNC_DEF("EndShaderMode",0,js_EndShaderMode),
+    JS_CFUNC_DEF("BeginBlendMode",1,js_BeginBlendMode),
+    JS_CFUNC_DEF("EndBlendMode",0,js_EndBlendMode),
+    JS_CFUNC_DEF("BeginScissorMode",4,js_BeginScissorMode),
+    JS_CFUNC_DEF("EndScissorMode",0,js_EndScissorMode),
+    JS_CFUNC_DEF("BeginVrStereoMode",1,js_BeginVrStereoMode),
+    JS_CFUNC_DEF("EndVrStereoMode",0,js_EndVrStereoMode),
+    JS_CFUNC_DEF("LoadVrStereoConfig",1,js_LoadVrStereoConfig),
+    JS_CFUNC_DEF("UnloadVrStereoConfig",1,js_UnloadVrStereoConfig),
+    JS_CFUNC_DEF("LoadShader",2,js_LoadShader),
+    JS_CFUNC_DEF("LoadShaderFromMemory",2,js_LoadShaderFromMemory),
+    JS_CFUNC_DEF("IsShaderValid",1,js_IsShaderValid),
+    JS_CFUNC_DEF("GetShaderLocation",2,js_GetShaderLocation),
+    JS_CFUNC_DEF("GetShaderLocationAttrib",2,js_GetShaderLocationAttrib),
+    JS_CFUNC_DEF("SetShaderValue",4,js_SetShaderValue),
+    JS_CFUNC_DEF("SetShaderValueV",5,js_SetShaderValueV),
+    JS_CFUNC_DEF("SetShaderValueMatrix",3,js_SetShaderValueMatrix),
+    JS_CFUNC_DEF("SetShaderValueTexture",3,js_SetShaderValueTexture),
+    JS_CFUNC_DEF("UnloadShader",1,js_UnloadShader),
+    JS_CFUNC_DEF("GetScreenToWorldRay",2,js_GetScreenToWorldRay),
+    JS_CFUNC_DEF("GetScreenToWorldRayEx",4,js_GetScreenToWorldRayEx),
+    JS_CFUNC_DEF("GetWorldToScreen",2,js_GetWorldToScreen),
+    JS_CFUNC_DEF("GetWorldToScreenEx",4,js_GetWorldToScreenEx),
+    JS_CFUNC_DEF("GetWorldToScreen2D",2,js_GetWorldToScreen2D),
+    JS_CFUNC_DEF("GetScreenToWorld2D",2,js_GetScreenToWorld2D),
+    JS_CFUNC_DEF("GetCameraMatrix",1,js_GetCameraMatrix),
+    JS_CFUNC_DEF("GetCameraMatrix2D",1,js_GetCameraMatrix2D),
+    JS_CFUNC_DEF("SetTargetFPS",1,js_SetTargetFPS),
+    JS_CFUNC_DEF("GetFrameTime",0,js_GetFrameTime),
+    JS_CFUNC_DEF("GetTime",0,js_GetTime),
+    JS_CFUNC_DEF("GetFPS",0,js_GetFPS),
+    JS_CFUNC_DEF("SetRandomSeed",1,js_SetRandomSeed),
+    JS_CFUNC_DEF("GetRandomValue",2,js_GetRandomValue),
+    JS_CFUNC_DEF("LoadRandomSequence",3,js_LoadRandomSequence),
+    JS_CFUNC_DEF("TakeScreenshot",1,js_TakeScreenshot),
+    JS_CFUNC_DEF("SetConfigFlags",1,js_SetConfigFlags),
+    JS_CFUNC_DEF("OpenURL",1,js_OpenURL),
+    JS_CFUNC_DEF("TraceLog",1,js_TraceLog),
+    JS_CFUNC_DEF("SetTraceLogLevel",1,js_SetTraceLogLevel),
+    JS_CFUNC_DEF("SetLoadFileDataCallback",1,js_SetLoadFileDataCallback),
+    JS_CFUNC_DEF("SetSaveFileDataCallback",1,js_SetSaveFileDataCallback),
+    JS_CFUNC_DEF("SetLoadFileTextCallback",1,js_SetLoadFileTextCallback),
+    JS_CFUNC_DEF("SetSaveFileTextCallback",1,js_SetSaveFileTextCallback),
+    JS_CFUNC_DEF("LoadFileData",2,js_LoadFileData),
+    JS_CFUNC_DEF("SaveFileData",3,js_SaveFileData),
+    JS_CFUNC_DEF("LoadFileText",1,js_LoadFileText),
+    JS_CFUNC_DEF("SaveFileText",2,js_SaveFileText),
+    JS_CFUNC_DEF("FileExists",1,js_FileExists),
+    JS_CFUNC_DEF("DirectoryExists",1,js_DirectoryExists),
+    JS_CFUNC_DEF("IsFileExtension",2,js_IsFileExtension),
+    JS_CFUNC_DEF("GetFileLength",1,js_GetFileLength),
+    JS_CFUNC_DEF("GetFileExtension",1,js_GetFileExtension),
+    JS_CFUNC_DEF("GetFileName",1,js_GetFileName),
+    JS_CFUNC_DEF("GetFileNameWithoutExt",1,js_GetFileNameWithoutExt),
+    JS_CFUNC_DEF("GetDirectoryPath",1,js_GetDirectoryPath),
+    JS_CFUNC_DEF("GetPrevDirectoryPath",1,js_GetPrevDirectoryPath),
+    JS_CFUNC_DEF("GetWorkingDirectory",0,js_GetWorkingDirectory),
+    JS_CFUNC_DEF("GetApplicationDirectory",0,js_GetApplicationDirectory),
+    JS_CFUNC_DEF("MakeDirectory",1,js_MakeDirectory),
+    JS_CFUNC_DEF("ChangeDirectory",1,js_ChangeDirectory),
+    JS_CFUNC_DEF("IsPathFile",1,js_IsPathFile),
+    JS_CFUNC_DEF("IsFileNameValid",1,js_IsFileNameValid),
+    JS_CFUNC_DEF("LoadDirectoryFiles",1,js_LoadDirectoryFiles),
+    JS_CFUNC_DEF("LoadDirectoryFilesEx",3,js_LoadDirectoryFilesEx),
+    JS_CFUNC_DEF("IsFileDropped",0,js_IsFileDropped),
+    JS_CFUNC_DEF("LoadDroppedFiles",0,js_LoadDroppedFiles),
+    JS_CFUNC_DEF("GetFileModTime",1,js_GetFileModTime),
+    JS_CFUNC_DEF("ComputeCRC32",2,js_ComputeCRC32),
+    JS_CFUNC_DEF("ComputeMD5",2,js_ComputeMD5),
+    JS_CFUNC_DEF("ComputeSHA1",2,js_ComputeSHA1),
+    JS_CFUNC_DEF("LoadAutomationEventList",1,js_LoadAutomationEventList),
+    JS_CFUNC_DEF("UnloadAutomationEventList",1,js_UnloadAutomationEventList),
+    JS_CFUNC_DEF("ExportAutomationEventList",2,js_ExportAutomationEventList),
+    JS_CFUNC_DEF("SetAutomationEventList",1,js_SetAutomationEventList),
+    JS_CFUNC_DEF("SetAutomationEventBaseFrame",1,js_SetAutomationEventBaseFrame),
+    JS_CFUNC_DEF("StartAutomationEventRecording",0,js_StartAutomationEventRecording),
+    JS_CFUNC_DEF("StopAutomationEventRecording",0,js_StopAutomationEventRecording),
+    JS_CFUNC_DEF("PlayAutomationEvent",1,js_PlayAutomationEvent),
+    JS_CFUNC_DEF("IsKeyPressed",1,js_IsKeyPressed),
+    JS_CFUNC_DEF("IsKeyPressedRepeat",1,js_IsKeyPressedRepeat),
+    JS_CFUNC_DEF("IsKeyDown",1,js_IsKeyDown),
+    JS_CFUNC_DEF("IsKeyReleased",1,js_IsKeyReleased),
+    JS_CFUNC_DEF("IsKeyUp",1,js_IsKeyUp),
+    JS_CFUNC_DEF("GetKeyPressed",0,js_GetKeyPressed),
+    JS_CFUNC_DEF("GetCharPressed",0,js_GetCharPressed),
+    JS_CFUNC_DEF("GetKeyName",1,js_GetKeyName),
+    JS_CFUNC_DEF("SetExitKey",1,js_SetExitKey),
+    JS_CFUNC_DEF("IsGamepadAvailable",1,js_IsGamepadAvailable),
+    JS_CFUNC_DEF("GetGamepadName",1,js_GetGamepadName),
+    JS_CFUNC_DEF("IsGamepadButtonPressed",2,js_IsGamepadButtonPressed),
+    JS_CFUNC_DEF("IsGamepadButtonDown",2,js_IsGamepadButtonDown),
+    JS_CFUNC_DEF("IsGamepadButtonReleased",2,js_IsGamepadButtonReleased),
+    JS_CFUNC_DEF("IsGamepadButtonUp",2,js_IsGamepadButtonUp),
+    JS_CFUNC_DEF("GetGamepadButtonPressed",0,js_GetGamepadButtonPressed),
+    JS_CFUNC_DEF("GetGamepadAxisCount",1,js_GetGamepadAxisCount),
+    JS_CFUNC_DEF("GetGamepadAxisMovement",2,js_GetGamepadAxisMovement),
+    JS_CFUNC_DEF("SetGamepadMappings",1,js_SetGamepadMappings),
+    JS_CFUNC_DEF("SetGamepadVibration",4,js_SetGamepadVibration),
+    JS_CFUNC_DEF("IsMouseButtonPressed",1,js_IsMouseButtonPressed),
+    JS_CFUNC_DEF("IsMouseButtonDown",1,js_IsMouseButtonDown),
+    JS_CFUNC_DEF("IsMouseButtonReleased",1,js_IsMouseButtonReleased),
+    JS_CFUNC_DEF("IsMouseButtonUp",1,js_IsMouseButtonUp),
+    JS_CFUNC_DEF("GetMouseX",0,js_GetMouseX),
+    JS_CFUNC_DEF("GetMouseY",0,js_GetMouseY),
+    JS_CFUNC_DEF("GetMousePosition",0,js_GetMousePosition),
+    JS_CFUNC_DEF("GetMouseDelta",0,js_GetMouseDelta),
+    JS_CFUNC_DEF("SetMousePosition",2,js_SetMousePosition),
+    JS_CFUNC_DEF("SetMouseOffset",2,js_SetMouseOffset),
+    JS_CFUNC_DEF("SetMouseScale",2,js_SetMouseScale),
+    JS_CFUNC_DEF("GetMouseWheelMove",0,js_GetMouseWheelMove),
+    JS_CFUNC_DEF("GetMouseWheelMoveV",0,js_GetMouseWheelMoveV),
+    JS_CFUNC_DEF("SetMouseCursor",1,js_SetMouseCursor),
+    JS_CFUNC_DEF("GetTouchX",0,js_GetTouchX),
+    JS_CFUNC_DEF("GetTouchY",0,js_GetTouchY),
+    JS_CFUNC_DEF("GetTouchPosition",1,js_GetTouchPosition),
+    JS_CFUNC_DEF("GetTouchPointId",1,js_GetTouchPointId),
+    JS_CFUNC_DEF("GetTouchPointCount",0,js_GetTouchPointCount),
+    JS_CFUNC_DEF("SetGesturesEnabled",1,js_SetGesturesEnabled),
+    JS_CFUNC_DEF("IsGestureDetected",1,js_IsGestureDetected),
+    JS_CFUNC_DEF("GetGestureDetected",0,js_GetGestureDetected),
+    JS_CFUNC_DEF("GetGestureHoldDuration",0,js_GetGestureHoldDuration),
+    JS_CFUNC_DEF("GetGestureDragVector",0,js_GetGestureDragVector),
+    JS_CFUNC_DEF("GetGestureDragAngle",0,js_GetGestureDragAngle),
+    JS_CFUNC_DEF("GetGesturePinchVector",0,js_GetGesturePinchVector),
+    JS_CFUNC_DEF("GetGesturePinchAngle",0,js_GetGesturePinchAngle),
+    JS_CFUNC_DEF("UpdateCamera",2,js_UpdateCamera),
+    JS_CFUNC_DEF("UpdateCameraPro",4,js_UpdateCameraPro),
+    JS_CFUNC_DEF("SetShapesTexture",2,js_SetShapesTexture),
+    JS_CFUNC_DEF("GetShapesTexture",0,js_GetShapesTexture),
+    JS_CFUNC_DEF("GetShapesTextureRectangle",0,js_GetShapesTextureRectangle),
+    JS_CFUNC_DEF("DrawPixel",3,js_DrawPixel),
+    JS_CFUNC_DEF("DrawPixelV",2,js_DrawPixelV),
+    JS_CFUNC_DEF("DrawLine",5,js_DrawLine),
+    JS_CFUNC_DEF("DrawLineV",3,js_DrawLineV),
+    JS_CFUNC_DEF("DrawLineEx",4,js_DrawLineEx),
+    JS_CFUNC_DEF("DrawLineBezier",4,js_DrawLineBezier),
+    JS_CFUNC_DEF("DrawCircle",4,js_DrawCircle),
+    JS_CFUNC_DEF("DrawCircleSector",6,js_DrawCircleSector),
+    JS_CFUNC_DEF("DrawCircleSectorLines",6,js_DrawCircleSectorLines),
+    JS_CFUNC_DEF("DrawCircleGradient",5,js_DrawCircleGradient),
+    JS_CFUNC_DEF("DrawCircleV",3,js_DrawCircleV),
+    JS_CFUNC_DEF("DrawCircleLines",4,js_DrawCircleLines),
+    JS_CFUNC_DEF("DrawCircleLinesV",3,js_DrawCircleLinesV),
+    JS_CFUNC_DEF("DrawEllipse",5,js_DrawEllipse),
+    JS_CFUNC_DEF("DrawEllipseLines",5,js_DrawEllipseLines),
+    JS_CFUNC_DEF("DrawRing",7,js_DrawRing),
+    JS_CFUNC_DEF("DrawRingLines",7,js_DrawRingLines),
+    JS_CFUNC_DEF("DrawRectangle",5,js_DrawRectangle),
+    JS_CFUNC_DEF("DrawRectangleV",3,js_DrawRectangleV),
+    JS_CFUNC_DEF("DrawRectangleRec",2,js_DrawRectangleRec),
+    JS_CFUNC_DEF("DrawRectanglePro",4,js_DrawRectanglePro),
+    JS_CFUNC_DEF("DrawRectangleGradientV",6,js_DrawRectangleGradientV),
+    JS_CFUNC_DEF("DrawRectangleGradientH",6,js_DrawRectangleGradientH),
+    JS_CFUNC_DEF("DrawRectangleGradientEx",5,js_DrawRectangleGradientEx),
+    JS_CFUNC_DEF("DrawRectangleLines",5,js_DrawRectangleLines),
+    JS_CFUNC_DEF("DrawRectangleLinesEx",3,js_DrawRectangleLinesEx),
+    JS_CFUNC_DEF("DrawRectangleRounded",4,js_DrawRectangleRounded),
+    JS_CFUNC_DEF("DrawRectangleRoundedLines",4,js_DrawRectangleRoundedLines),
+    JS_CFUNC_DEF("DrawRectangleRoundedLinesEx",5,js_DrawRectangleRoundedLinesEx),
+    JS_CFUNC_DEF("DrawTriangle",4,js_DrawTriangle),
+    JS_CFUNC_DEF("DrawTriangleLines",4,js_DrawTriangleLines),
+    JS_CFUNC_DEF("DrawPoly",5,js_DrawPoly),
+    JS_CFUNC_DEF("DrawPolyLines",5,js_DrawPolyLines),
+    JS_CFUNC_DEF("DrawPolyLinesEx",6,js_DrawPolyLinesEx),
+    JS_CFUNC_DEF("DrawSplineLinear",4,js_DrawSplineLinear),
+    JS_CFUNC_DEF("DrawSplineBasis",4,js_DrawSplineBasis),
+    JS_CFUNC_DEF("DrawSplineCatmullRom",4,js_DrawSplineCatmullRom),
+    JS_CFUNC_DEF("DrawSplineBezierQuadratic",4,js_DrawSplineBezierQuadratic),
+    JS_CFUNC_DEF("DrawSplineBezierCubic",4,js_DrawSplineBezierCubic),
+    JS_CFUNC_DEF("DrawSplineSegmentLinear",4,js_DrawSplineSegmentLinear),
+    JS_CFUNC_DEF("DrawSplineSegmentBasis",6,js_DrawSplineSegmentBasis),
+    JS_CFUNC_DEF("DrawSplineSegmentCatmullRom",6,js_DrawSplineSegmentCatmullRom),
+    JS_CFUNC_DEF("DrawSplineSegmentBezierQuadratic",5,js_DrawSplineSegmentBezierQuadratic),
+    JS_CFUNC_DEF("DrawSplineSegmentBezierCubic",6,js_DrawSplineSegmentBezierCubic),
+    JS_CFUNC_DEF("GetSplinePointLinear",3,js_GetSplinePointLinear),
+    JS_CFUNC_DEF("GetSplinePointBasis",5,js_GetSplinePointBasis),
+    JS_CFUNC_DEF("GetSplinePointCatmullRom",5,js_GetSplinePointCatmullRom),
+    JS_CFUNC_DEF("GetSplinePointBezierQuad",4,js_GetSplinePointBezierQuad),
+    JS_CFUNC_DEF("GetSplinePointBezierCubic",5,js_GetSplinePointBezierCubic),
+    JS_CFUNC_DEF("CheckCollisionRecs",2,js_CheckCollisionRecs),
+    JS_CFUNC_DEF("CheckCollisionCircles",4,js_CheckCollisionCircles),
+    JS_CFUNC_DEF("CheckCollisionCircleRec",3,js_CheckCollisionCircleRec),
+    JS_CFUNC_DEF("CheckCollisionCircleLine",4,js_CheckCollisionCircleLine),
+    JS_CFUNC_DEF("CheckCollisionPointRec",2,js_CheckCollisionPointRec),
+    JS_CFUNC_DEF("CheckCollisionPointCircle",3,js_CheckCollisionPointCircle),
+    JS_CFUNC_DEF("CheckCollisionPointTriangle",4,js_CheckCollisionPointTriangle),
+    JS_CFUNC_DEF("CheckCollisionPointLine",4,js_CheckCollisionPointLine),
+    JS_CFUNC_DEF("GetCollisionRec",2,js_GetCollisionRec),
+    JS_CFUNC_DEF("LoadImage",1,js_LoadImage),
+    JS_CFUNC_DEF("LoadImageRaw",5,js_LoadImageRaw),
+    JS_CFUNC_DEF("LoadImageAnimFromMemory",4,js_LoadImageAnimFromMemory),
+    JS_CFUNC_DEF("LoadImageFromMemory",3,js_LoadImageFromMemory),
+    JS_CFUNC_DEF("LoadImageFromTexture",1,js_LoadImageFromTexture),
+    JS_CFUNC_DEF("LoadImageFromScreen",0,js_LoadImageFromScreen),
+    JS_CFUNC_DEF("IsImageValid",1,js_IsImageValid),
+    JS_CFUNC_DEF("UnloadImage",1,js_UnloadImage),
+    JS_CFUNC_DEF("ExportImage",2,js_ExportImage),
+    JS_CFUNC_DEF("ExportImageToMemory",3,js_ExportImageToMemory),
+    JS_CFUNC_DEF("GenImageColor",3,js_GenImageColor),
+    JS_CFUNC_DEF("GenImageGradientLinear",5,js_GenImageGradientLinear),
+    JS_CFUNC_DEF("GenImageGradientRadial",5,js_GenImageGradientRadial),
+    JS_CFUNC_DEF("GenImageGradientSquare",5,js_GenImageGradientSquare),
+    JS_CFUNC_DEF("GenImageChecked",6,js_GenImageChecked),
+    JS_CFUNC_DEF("GenImageWhiteNoise",3,js_GenImageWhiteNoise),
+    JS_CFUNC_DEF("GenImagePerlinNoise",5,js_GenImagePerlinNoise),
+    JS_CFUNC_DEF("GenImageCellular",3,js_GenImageCellular),
+    JS_CFUNC_DEF("GenImageText",3,js_GenImageText),
+    JS_CFUNC_DEF("ImageCopy",1,js_ImageCopy),
+    JS_CFUNC_DEF("ImageFromImage",2,js_ImageFromImage),
+    JS_CFUNC_DEF("ImageFromChannel",2,js_ImageFromChannel),
+    JS_CFUNC_DEF("ImageText",3,js_ImageText),
+    JS_CFUNC_DEF("ImageTextEx",5,js_ImageTextEx),
+    JS_CFUNC_DEF("ImageFormat",2,js_ImageFormat),
+    JS_CFUNC_DEF("ImageToPOT",2,js_ImageToPOT),
+    JS_CFUNC_DEF("ImageCrop",2,js_ImageCrop),
+    JS_CFUNC_DEF("ImageAlphaCrop",2,js_ImageAlphaCrop),
+    JS_CFUNC_DEF("ImageAlphaClear",3,js_ImageAlphaClear),
+    JS_CFUNC_DEF("ImageAlphaMask",2,js_ImageAlphaMask),
+    JS_CFUNC_DEF("ImageAlphaPremultiply",1,js_ImageAlphaPremultiply),
+    JS_CFUNC_DEF("ImageBlurGaussian",2,js_ImageBlurGaussian),
+    JS_CFUNC_DEF("ImageKernelConvolution",3,js_ImageKernelConvolution),
+    JS_CFUNC_DEF("ImageResize",3,js_ImageResize),
+    JS_CFUNC_DEF("ImageResizeNN",3,js_ImageResizeNN),
+    JS_CFUNC_DEF("ImageResizeCanvas",6,js_ImageResizeCanvas),
+    JS_CFUNC_DEF("ImageMipmaps",1,js_ImageMipmaps),
+    JS_CFUNC_DEF("ImageDither",5,js_ImageDither),
+    JS_CFUNC_DEF("ImageFlipVertical",1,js_ImageFlipVertical),
+    JS_CFUNC_DEF("ImageFlipHorizontal",1,js_ImageFlipHorizontal),
+    JS_CFUNC_DEF("ImageRotate",2,js_ImageRotate),
+    JS_CFUNC_DEF("ImageRotateCW",1,js_ImageRotateCW),
+    JS_CFUNC_DEF("ImageRotateCCW",1,js_ImageRotateCCW),
+    JS_CFUNC_DEF("ImageColorTint",2,js_ImageColorTint),
+    JS_CFUNC_DEF("ImageColorInvert",1,js_ImageColorInvert),
+    JS_CFUNC_DEF("ImageColorGrayscale",1,js_ImageColorGrayscale),
+    JS_CFUNC_DEF("ImageColorContrast",2,js_ImageColorContrast),
+    JS_CFUNC_DEF("ImageColorBrightness",2,js_ImageColorBrightness),
+    JS_CFUNC_DEF("ImageColorReplace",3,js_ImageColorReplace),
+    JS_CFUNC_DEF("LoadImageColors",1,js_LoadImageColors),
+    JS_CFUNC_DEF("GetImageAlphaBorder",2,js_GetImageAlphaBorder),
+    JS_CFUNC_DEF("GetImageColor",3,js_GetImageColor),
+    JS_CFUNC_DEF("ImageClearBackground",2,js_ImageClearBackground),
+    JS_CFUNC_DEF("ImageDrawPixel",4,js_ImageDrawPixel),
+    JS_CFUNC_DEF("ImageDrawPixelV",3,js_ImageDrawPixelV),
+    JS_CFUNC_DEF("ImageDrawLine",6,js_ImageDrawLine),
+    JS_CFUNC_DEF("ImageDrawLineV",4,js_ImageDrawLineV),
+    JS_CFUNC_DEF("ImageDrawLineEx",5,js_ImageDrawLineEx),
+    JS_CFUNC_DEF("ImageDrawCircle",5,js_ImageDrawCircle),
+    JS_CFUNC_DEF("ImageDrawCircleV",4,js_ImageDrawCircleV),
+    JS_CFUNC_DEF("ImageDrawCircleLines",5,js_ImageDrawCircleLines),
+    JS_CFUNC_DEF("ImageDrawCircleLinesV",4,js_ImageDrawCircleLinesV),
+    JS_CFUNC_DEF("ImageDrawRectangle",6,js_ImageDrawRectangle),
+    JS_CFUNC_DEF("ImageDrawRectangleV",4,js_ImageDrawRectangleV),
+    JS_CFUNC_DEF("ImageDrawRectangleRec",3,js_ImageDrawRectangleRec),
+    JS_CFUNC_DEF("ImageDrawRectangleLines",4,js_ImageDrawRectangleLines),
+    JS_CFUNC_DEF("ImageDrawTriangle",5,js_ImageDrawTriangle),
+    JS_CFUNC_DEF("ImageDrawTriangleEx",7,js_ImageDrawTriangleEx),
+    JS_CFUNC_DEF("ImageDrawTriangleLines",5,js_ImageDrawTriangleLines),
+    JS_CFUNC_DEF("ImageDrawTriangleFan",4,js_ImageDrawTriangleFan),
+    JS_CFUNC_DEF("ImageDrawTriangleStrip",4,js_ImageDrawTriangleStrip),
+    JS_CFUNC_DEF("ImageDraw",5,js_ImageDraw),
+    JS_CFUNC_DEF("ImageDrawText",6,js_ImageDrawText),
+    JS_CFUNC_DEF("ImageDrawTextEx",7,js_ImageDrawTextEx),
+    JS_CFUNC_DEF("LoadTexture",1,js_LoadTexture),
+    JS_CFUNC_DEF("LoadTextureFromImage",1,js_LoadTextureFromImage),
+    JS_CFUNC_DEF("LoadTextureCubemap",2,js_LoadTextureCubemap),
+    JS_CFUNC_DEF("LoadRenderTexture",2,js_LoadRenderTexture),
+    JS_CFUNC_DEF("IsTextureValid",1,js_IsTextureValid),
+    JS_CFUNC_DEF("UnloadTexture",1,js_UnloadTexture),
+    JS_CFUNC_DEF("IsRenderTextureValid",1,js_IsRenderTextureValid),
+    JS_CFUNC_DEF("UnloadRenderTexture",1,js_UnloadRenderTexture),
+    JS_CFUNC_DEF("UpdateTexture",2,js_UpdateTexture),
+    JS_CFUNC_DEF("UpdateTextureRec",3,js_UpdateTextureRec),
+    JS_CFUNC_DEF("GenTextureMipmaps",1,js_GenTextureMipmaps),
+    JS_CFUNC_DEF("SetTextureFilter",2,js_SetTextureFilter),
+    JS_CFUNC_DEF("SetTextureWrap",2,js_SetTextureWrap),
+    JS_CFUNC_DEF("DrawTexture",4,js_DrawTexture),
+    JS_CFUNC_DEF("DrawTextureV",3,js_DrawTextureV),
+    JS_CFUNC_DEF("DrawTextureEx",5,js_DrawTextureEx),
+    JS_CFUNC_DEF("DrawTextureRec",4,js_DrawTextureRec),
+    JS_CFUNC_DEF("DrawTexturePro",6,js_DrawTexturePro),
+    JS_CFUNC_DEF("DrawTextureNPatch",6,js_DrawTextureNPatch),
+    JS_CFUNC_DEF("ColorIsEqual",2,js_ColorIsEqual),
+    JS_CFUNC_DEF("Fade",2,js_Fade),
+    JS_CFUNC_DEF("ColorToInt",1,js_ColorToInt),
+    JS_CFUNC_DEF("ColorNormalize",1,js_ColorNormalize),
+    JS_CFUNC_DEF("ColorFromNormalized",1,js_ColorFromNormalized),
+    JS_CFUNC_DEF("ColorToHSV",1,js_ColorToHSV),
+    JS_CFUNC_DEF("ColorFromHSV",3,js_ColorFromHSV),
+    JS_CFUNC_DEF("ColorTint",2,js_ColorTint),
+    JS_CFUNC_DEF("ColorBrightness",2,js_ColorBrightness),
+    JS_CFUNC_DEF("ColorContrast",2,js_ColorContrast),
+    JS_CFUNC_DEF("ColorAlpha",2,js_ColorAlpha),
+    JS_CFUNC_DEF("ColorAlphaBlend",3,js_ColorAlphaBlend),
+    JS_CFUNC_DEF("ColorLerp",3,js_ColorLerp),
+    JS_CFUNC_DEF("GetColor",1,js_GetColor),
+    JS_CFUNC_DEF("GetPixelDataSize",3,js_GetPixelDataSize),
+    JS_CFUNC_DEF("GetFontDefault",0,js_GetFontDefault),
+    JS_CFUNC_DEF("LoadFont",1,js_LoadFont),
+    JS_CFUNC_DEF("LoadFontEx",4,js_LoadFontEx),
+    JS_CFUNC_DEF("LoadFontFromImage",3,js_LoadFontFromImage),
+    JS_CFUNC_DEF("IsFontValid",1,js_IsFontValid),
+    JS_CFUNC_DEF("UnloadFont",1,js_UnloadFont),
+    JS_CFUNC_DEF("DrawFPS",2,js_DrawFPS),
+    JS_CFUNC_DEF("DrawText",5,js_DrawText),
+    JS_CFUNC_DEF("DrawTextEx",6,js_DrawTextEx),
+    JS_CFUNC_DEF("DrawTextPro",8,js_DrawTextPro),
+    JS_CFUNC_DEF("DrawTextCodepoint",5,js_DrawTextCodepoint),
+    JS_CFUNC_DEF("SetTextLineSpacing",1,js_SetTextLineSpacing),
+    JS_CFUNC_DEF("MeasureText",2,js_MeasureText),
+    JS_CFUNC_DEF("MeasureTextEx",4,js_MeasureTextEx),
+    JS_CFUNC_DEF("GetGlyphIndex",2,js_GetGlyphIndex),
+    JS_CFUNC_DEF("GetGlyphAtlasRec",2,js_GetGlyphAtlasRec),
+    JS_CFUNC_DEF("TextCopy",2,js_TextCopy),
+    JS_CFUNC_DEF("TextIsEqual",2,js_TextIsEqual),
+    JS_CFUNC_DEF("TextLength",1,js_TextLength),
+    JS_CFUNC_DEF("TextFormat",2,js_TextFormat),
+    JS_CFUNC_DEF("TextSubtext",3,js_TextSubtext),
+    JS_CFUNC_DEF("TextReplace",3,js_TextReplace),
+    JS_CFUNC_DEF("TextInsert",3,js_TextInsert),
+    JS_CFUNC_DEF("TextJoin",3,js_TextJoin),
+    JS_CFUNC_DEF("TextSplit",3,js_TextSplit),
+    JS_CFUNC_DEF("TextAppend",3,js_TextAppend),
+    JS_CFUNC_DEF("TextFindIndex",2,js_TextFindIndex),
+    JS_CFUNC_DEF("TextToUpper",1,js_TextToUpper),
+    JS_CFUNC_DEF("TextToLower",1,js_TextToLower),
+    JS_CFUNC_DEF("TextToPascal",1,js_TextToPascal),
+    JS_CFUNC_DEF("TextToSnake",1,js_TextToSnake),
+    JS_CFUNC_DEF("TextToCamel",1,js_TextToCamel),
+    JS_CFUNC_DEF("TextToInteger",1,js_TextToInteger),
+    JS_CFUNC_DEF("TextToFloat",1,js_TextToFloat),
+    JS_CFUNC_DEF("DrawLine3D",3,js_DrawLine3D),
+    JS_CFUNC_DEF("DrawPoint3D",2,js_DrawPoint3D),
+    JS_CFUNC_DEF("DrawCircle3D",5,js_DrawCircle3D),
+    JS_CFUNC_DEF("DrawTriangle3D",4,js_DrawTriangle3D),
+    JS_CFUNC_DEF("DrawCube",5,js_DrawCube),
+    JS_CFUNC_DEF("DrawCubeV",3,js_DrawCubeV),
+    JS_CFUNC_DEF("DrawCubeWires",5,js_DrawCubeWires),
+    JS_CFUNC_DEF("DrawCubeWiresV",3,js_DrawCubeWiresV),
+    JS_CFUNC_DEF("DrawSphere",3,js_DrawSphere),
+    JS_CFUNC_DEF("DrawSphereEx",5,js_DrawSphereEx),
+    JS_CFUNC_DEF("DrawSphereWires",5,js_DrawSphereWires),
+    JS_CFUNC_DEF("DrawCylinder",6,js_DrawCylinder),
+    JS_CFUNC_DEF("DrawCylinderEx",6,js_DrawCylinderEx),
+    JS_CFUNC_DEF("DrawCylinderWires",6,js_DrawCylinderWires),
+    JS_CFUNC_DEF("DrawCylinderWiresEx",6,js_DrawCylinderWiresEx),
+    JS_CFUNC_DEF("DrawCapsule",6,js_DrawCapsule),
+    JS_CFUNC_DEF("DrawCapsuleWires",6,js_DrawCapsuleWires),
+    JS_CFUNC_DEF("DrawPlane",3,js_DrawPlane),
+    JS_CFUNC_DEF("DrawRay",2,js_DrawRay),
+    JS_CFUNC_DEF("DrawGrid",2,js_DrawGrid),
+    JS_CFUNC_DEF("LoadModel",1,js_LoadModel),
+    JS_CFUNC_DEF("LoadModelFromMesh",1,js_LoadModelFromMesh),
+    JS_CFUNC_DEF("IsModelValid",1,js_IsModelValid),
+    JS_CFUNC_DEF("UnloadModel",1,js_UnloadModel),
+    JS_CFUNC_DEF("GetModelBoundingBox",1,js_GetModelBoundingBox),
+    JS_CFUNC_DEF("DrawModel",4,js_DrawModel),
+    JS_CFUNC_DEF("DrawModelEx",6,js_DrawModelEx),
+    JS_CFUNC_DEF("DrawModelWires",4,js_DrawModelWires),
+    JS_CFUNC_DEF("DrawModelWiresEx",6,js_DrawModelWiresEx),
+    JS_CFUNC_DEF("DrawModelPoints",4,js_DrawModelPoints),
+    JS_CFUNC_DEF("DrawModelPointsEx",6,js_DrawModelPointsEx),
+    JS_CFUNC_DEF("DrawBoundingBox",2,js_DrawBoundingBox),
+    JS_CFUNC_DEF("DrawBillboard",5,js_DrawBillboard),
+    JS_CFUNC_DEF("DrawBillboardRec",6,js_DrawBillboardRec),
+    JS_CFUNC_DEF("DrawBillboardPro",9,js_DrawBillboardPro),
+    JS_CFUNC_DEF("UploadMesh",2,js_UploadMesh),
+    JS_CFUNC_DEF("UpdateMeshBuffer",5,js_UpdateMeshBuffer),
+    JS_CFUNC_DEF("UnloadMesh",1,js_UnloadMesh),
+    JS_CFUNC_DEF("DrawMesh",3,js_DrawMesh),
+    JS_CFUNC_DEF("DrawMeshInstanced",4,js_DrawMeshInstanced),
+    JS_CFUNC_DEF("GetMeshBoundingBox",1,js_GetMeshBoundingBox),
+    JS_CFUNC_DEF("GenMeshTangents",1,js_GenMeshTangents),
+    JS_CFUNC_DEF("ExportMesh",2,js_ExportMesh),
+    JS_CFUNC_DEF("ExportMeshAsCode",2,js_ExportMeshAsCode),
+    JS_CFUNC_DEF("GenMeshPoly",2,js_GenMeshPoly),
+    JS_CFUNC_DEF("GenMeshPlane",4,js_GenMeshPlane),
+    JS_CFUNC_DEF("GenMeshCube",3,js_GenMeshCube),
+    JS_CFUNC_DEF("GenMeshSphere",3,js_GenMeshSphere),
+    JS_CFUNC_DEF("GenMeshHemiSphere",3,js_GenMeshHemiSphere),
+    JS_CFUNC_DEF("GenMeshCylinder",3,js_GenMeshCylinder),
+    JS_CFUNC_DEF("GenMeshCone",3,js_GenMeshCone),
+    JS_CFUNC_DEF("GenMeshTorus",4,js_GenMeshTorus),
+    JS_CFUNC_DEF("GenMeshKnot",4,js_GenMeshKnot),
+    JS_CFUNC_DEF("GenMeshHeightmap",2,js_GenMeshHeightmap),
+    JS_CFUNC_DEF("GenMeshCubicmap",2,js_GenMeshCubicmap),
+    JS_CFUNC_DEF("LoadMaterialDefault",0,js_LoadMaterialDefault),
+    JS_CFUNC_DEF("IsMaterialValid",1,js_IsMaterialValid),
+    JS_CFUNC_DEF("UnloadMaterial",1,js_UnloadMaterial),
+    JS_CFUNC_DEF("SetMaterialTexture",3,js_SetMaterialTexture),
+    JS_CFUNC_DEF("SetModelMeshMaterial",3,js_SetModelMeshMaterial),
+    JS_CFUNC_DEF("UpdateModelAnimationBones",3,js_UpdateModelAnimationBones),
+    JS_CFUNC_DEF("CheckCollisionSpheres",4,js_CheckCollisionSpheres),
+    JS_CFUNC_DEF("CheckCollisionBoxes",2,js_CheckCollisionBoxes),
+    JS_CFUNC_DEF("CheckCollisionBoxSphere",3,js_CheckCollisionBoxSphere),
+    JS_CFUNC_DEF("GetRayCollisionSphere",3,js_GetRayCollisionSphere),
+    JS_CFUNC_DEF("GetRayCollisionBox",2,js_GetRayCollisionBox),
+    JS_CFUNC_DEF("GetRayCollisionMesh",3,js_GetRayCollisionMesh),
+    JS_CFUNC_DEF("GetRayCollisionTriangle",4,js_GetRayCollisionTriangle),
+    JS_CFUNC_DEF("GetRayCollisionQuad",5,js_GetRayCollisionQuad),
+    JS_CFUNC_DEF("InitAudioDevice",0,js_InitAudioDevice),
+    JS_CFUNC_DEF("CloseAudioDevice",0,js_CloseAudioDevice),
+    JS_CFUNC_DEF("IsAudioDeviceReady",0,js_IsAudioDeviceReady),
+    JS_CFUNC_DEF("SetMasterVolume",1,js_SetMasterVolume),
+    JS_CFUNC_DEF("GetMasterVolume",0,js_GetMasterVolume),
+    JS_CFUNC_DEF("LoadWave",1,js_LoadWave),
+    JS_CFUNC_DEF("LoadWaveFromMemory",3,js_LoadWaveFromMemory),
+    JS_CFUNC_DEF("IsWaveValid",1,js_IsWaveValid),
+    JS_CFUNC_DEF("LoadSound",1,js_LoadSound),
+    JS_CFUNC_DEF("LoadSoundFromWave",1,js_LoadSoundFromWave),
+    JS_CFUNC_DEF("LoadSoundAlias",1,js_LoadSoundAlias),
+    JS_CFUNC_DEF("IsSoundValid",1,js_IsSoundValid),
+    JS_CFUNC_DEF("UpdateSound",3,js_UpdateSound),
+    JS_CFUNC_DEF("UnloadWave",1,js_UnloadWave),
+    JS_CFUNC_DEF("UnloadSound",1,js_UnloadSound),
+    JS_CFUNC_DEF("UnloadSoundAlias",1,js_UnloadSoundAlias),
+    JS_CFUNC_DEF("ExportWave",2,js_ExportWave),
+    JS_CFUNC_DEF("PlaySound",1,js_PlaySound),
+    JS_CFUNC_DEF("StopSound",1,js_StopSound),
+    JS_CFUNC_DEF("PauseSound",1,js_PauseSound),
+    JS_CFUNC_DEF("ResumeSound",1,js_ResumeSound),
+    JS_CFUNC_DEF("IsSoundPlaying",1,js_IsSoundPlaying),
+    JS_CFUNC_DEF("SetSoundVolume",2,js_SetSoundVolume),
+    JS_CFUNC_DEF("SetSoundPitch",2,js_SetSoundPitch),
+    JS_CFUNC_DEF("SetSoundPan",2,js_SetSoundPan),
+    JS_CFUNC_DEF("WaveCopy",1,js_WaveCopy),
+    JS_CFUNC_DEF("WaveCrop",3,js_WaveCrop),
+    JS_CFUNC_DEF("WaveFormat",4,js_WaveFormat),
+    JS_CFUNC_DEF("LoadWaveSamples",1,js_LoadWaveSamples),
+    JS_CFUNC_DEF("UnloadWaveSamples",1,js_UnloadWaveSamples),
+    JS_CFUNC_DEF("LoadMusicStream",1,js_LoadMusicStream),
+    JS_CFUNC_DEF("LoadMusicStreamFromMemory",3,js_LoadMusicStreamFromMemory),
+    JS_CFUNC_DEF("IsMusicValid",1,js_IsMusicValid),
+    JS_CFUNC_DEF("UnloadMusicStream",1,js_UnloadMusicStream),
+    JS_CFUNC_DEF("PlayMusicStream",1,js_PlayMusicStream),
+    JS_CFUNC_DEF("IsMusicStreamPlaying",1,js_IsMusicStreamPlaying),
+    JS_CFUNC_DEF("UpdateMusicStream",1,js_UpdateMusicStream),
+    JS_CFUNC_DEF("StopMusicStream",1,js_StopMusicStream),
+    JS_CFUNC_DEF("PauseMusicStream",1,js_PauseMusicStream),
+    JS_CFUNC_DEF("ResumeMusicStream",1,js_ResumeMusicStream),
+    JS_CFUNC_DEF("SeekMusicStream",2,js_SeekMusicStream),
+    JS_CFUNC_DEF("SetMusicVolume",2,js_SetMusicVolume),
+    JS_CFUNC_DEF("SetMusicPitch",2,js_SetMusicPitch),
+    JS_CFUNC_DEF("SetMusicPan",2,js_SetMusicPan),
+    JS_CFUNC_DEF("GetMusicTimeLength",1,js_GetMusicTimeLength),
+    JS_CFUNC_DEF("GetMusicTimePlayed",1,js_GetMusicTimePlayed),
+    JS_CFUNC_DEF("LoadAudioStream",3,js_LoadAudioStream),
+    JS_CFUNC_DEF("IsAudioStreamValid",1,js_IsAudioStreamValid),
+    JS_CFUNC_DEF("UnloadAudioStream",1,js_UnloadAudioStream),
+    JS_CFUNC_DEF("UpdateAudioStream",3,js_UpdateAudioStream),
+    JS_CFUNC_DEF("IsAudioStreamProcessed",1,js_IsAudioStreamProcessed),
+    JS_CFUNC_DEF("PlayAudioStream",1,js_PlayAudioStream),
+    JS_CFUNC_DEF("PauseAudioStream",1,js_PauseAudioStream),
+    JS_CFUNC_DEF("ResumeAudioStream",1,js_ResumeAudioStream),
+    JS_CFUNC_DEF("IsAudioStreamPlaying",1,js_IsAudioStreamPlaying),
+    JS_CFUNC_DEF("StopAudioStream",1,js_StopAudioStream),
+    JS_CFUNC_DEF("SetAudioStreamVolume",2,js_SetAudioStreamVolume),
+    JS_CFUNC_DEF("SetAudioStreamPitch",2,js_SetAudioStreamPitch),
+    JS_CFUNC_DEF("SetAudioStreamPan",2,js_SetAudioStreamPan),
+    JS_CFUNC_DEF("SetAudioStreamBufferSizeDefault",1,js_SetAudioStreamBufferSizeDefault),
+    JS_CFUNC_DEF("AttachAudioMixedProcessor",1,js_AttachAudioMixedProcessor),
+    JS_CFUNC_DEF("DetachAudioMixedProcessor",1,js_DetachAudioMixedProcessor),
 };
 
 static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExportList(ctx, m,js_js_raylib_funcs,countof(js_js_raylib_funcs));
     js_declare_Vector2(ctx, m);
-    JSValue Vector2_constr = JS_NewCFunction2(ctx, js_Vector2_constructor,"Vector2)", 2, JS_CFUNC_constructor_or_func, 0);
+    JSValue Vector2_constr = JS_NewCFunction2(ctx, js_Vector2_constructor,"Vector2", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Vector2", Vector2_constr);
     js_declare_Vector3(ctx, m);
-    JSValue Vector3_constr = JS_NewCFunction2(ctx, js_Vector3_constructor,"Vector3)", 3, JS_CFUNC_constructor_or_func, 0);
+    JSValue Vector3_constr = JS_NewCFunction2(ctx, js_Vector3_constructor,"Vector3", 3, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Vector3", Vector3_constr);
     js_declare_Vector4(ctx, m);
-    JSValue Vector4_constr = JS_NewCFunction2(ctx, js_Vector4_constructor,"Vector4)", 4, JS_CFUNC_constructor_or_func, 0);
+    JSValue Vector4_constr = JS_NewCFunction2(ctx, js_Vector4_constructor,"Vector4", 4, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Vector4", Vector4_constr);
     js_declare_Matrix(ctx, m);
     js_declare_Color(ctx, m);
-    JSValue Color_constr = JS_NewCFunction2(ctx, js_Color_constructor,"Color)", 4, JS_CFUNC_constructor_or_func, 0);
+    JSValue Color_constr = JS_NewCFunction2(ctx, js_Color_constructor,"Color", 4, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Color", Color_constr);
     js_declare_Rectangle(ctx, m);
-    JSValue Rectangle_constr = JS_NewCFunction2(ctx, js_Rectangle_constructor,"Rectangle)", 4, JS_CFUNC_constructor_or_func, 0);
+    JSValue Rectangle_constr = JS_NewCFunction2(ctx, js_Rectangle_constructor,"Rectangle", 4, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Rectangle", Rectangle_constr);
     js_declare_Image(ctx, m);
-    JSValue Image_constr = JS_NewCFunction2(ctx, js_Image_constructor,"Image)", 5, JS_CFUNC_constructor_or_func, 0);
+    JSValue Image_constr = JS_NewCFunction2(ctx, js_Image_constructor,"Image", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Image", Image_constr);
     js_declare_Texture(ctx, m);
     js_declare_RenderTexture(ctx, m);
     js_declare_NPatchInfo(ctx, m);
-    JSValue NPatchInfo_constr = JS_NewCFunction2(ctx, js_NPatchInfo_constructor,"NPatchInfo)", 6, JS_CFUNC_constructor_or_func, 0);
+    JSValue NPatchInfo_constr = JS_NewCFunction2(ctx, js_NPatchInfo_constructor,"NPatchInfo", 6, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "NPatchInfo", NPatchInfo_constr);
     js_declare_GlyphInfo(ctx, m);
     js_declare_Font(ctx, m);
     js_declare_Camera3D(ctx, m);
-    JSValue Camera3D_constr = JS_NewCFunction2(ctx, js_Camera3D_constructor,"Camera3D)", 5, JS_CFUNC_constructor_or_func, 0);
+    JSValue Camera3D_constr = JS_NewCFunction2(ctx, js_Camera3D_constructor,"Camera3D", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Camera3D", Camera3D_constr);
     js_declare_Camera2D(ctx, m);
-    JSValue Camera2D_constr = JS_NewCFunction2(ctx, js_Camera2D_constructor,"Camera2D)", 4, JS_CFUNC_constructor_or_func, 0);
+    JSValue Camera2D_constr = JS_NewCFunction2(ctx, js_Camera2D_constructor,"Camera2D", 4, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Camera2D", Camera2D_constr);
     js_declare_Mesh(ctx, m);
-    JSValue Mesh_constr = JS_NewCFunction2(ctx, js_Mesh_constructor,"Mesh)", 17, JS_CFUNC_constructor_or_func, 0);
+    JSValue Mesh_constr = JS_NewCFunction2(ctx, js_Mesh_constructor,"Mesh", 17, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Mesh", Mesh_constr);
     js_declare_Shader(ctx, m);
     js_declare_MaterialMap(ctx, m);
@@ -20665,11 +20665,11 @@ static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     js_declare_Model(ctx, m);
     js_declare_ModelAnimation(ctx, m);
     js_declare_Ray(ctx, m);
-    JSValue Ray_constr = JS_NewCFunction2(ctx, js_Ray_constructor,"Ray)", 2, JS_CFUNC_constructor_or_func, 0);
+    JSValue Ray_constr = JS_NewCFunction2(ctx, js_Ray_constructor,"Ray", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Ray", Ray_constr);
     js_declare_RayCollision(ctx, m);
     js_declare_BoundingBox(ctx, m);
-    JSValue BoundingBox_constr = JS_NewCFunction2(ctx, js_BoundingBox_constructor,"BoundingBox)", 2, JS_CFUNC_constructor_or_func, 0);
+    JSValue BoundingBox_constr = JS_NewCFunction2(ctx, js_BoundingBox_constructor,"BoundingBox", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "BoundingBox", BoundingBox_constr);
     js_declare_Wave(ctx, m);
     js_declare_rAudioBuffer(ctx, m);
@@ -20678,7 +20678,7 @@ static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     js_declare_Sound(ctx, m);
     js_declare_Music(ctx, m);
     js_declare_VrDeviceInfo(ctx, m);
-    JSValue VrDeviceInfo_constr = JS_NewCFunction2(ctx, js_VrDeviceInfo_constructor,"VrDeviceInfo)", 9, JS_CFUNC_constructor_or_func, 0);
+    JSValue VrDeviceInfo_constr = JS_NewCFunction2(ctx, js_VrDeviceInfo_constructor,"VrDeviceInfo", 9, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "VrDeviceInfo", VrDeviceInfo_constr);
     js_declare_VrStereoConfig(ctx, m);
     js_declare_FilePathList(ctx, m);

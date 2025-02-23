@@ -58,7 +58,7 @@ function genMeshCustom()
 	mesh.normals=normals;
 
     // Upload mesh data from CPU (RAM) to GPU (VRAM) memory
-    uploadMesh(mesh, false);
+    UploadMesh(mesh, false);
 
     return mesh;
 }
@@ -70,24 +70,24 @@ var NUM_MODELS = 9;
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [core] example - javascript mesh generation");
+InitWindow(screenWidth, screenHeight, "raylib [core] example - javascript mesh generation");
 
 // We generate a checked image for texturing
-let checked = genImageChecked(2, 2, 1, 1, RED, GREEN);
-let texture = loadTextureFromImage(checked);
-unloadImage(checked);
+let checked = GenImageChecked(2, 2, 1, 1, RED, GREEN);
+let texture = LoadTextureFromImage(checked);
+UnloadImage(checked);
 
 let models=new Array(NUM_MODELS);
 
-models[0] = loadModelFromMesh(genMeshPlane(2, 2, 4, 3));
-models[1] = loadModelFromMesh(genMeshCube(2, 1, 2));
-models[2] = loadModelFromMesh(genMeshSphere(2, 32, 32));
-models[3] = loadModelFromMesh(genMeshHemiSphere(2, 16, 16));
-models[4] = loadModelFromMesh(genMeshCylinder(1, 2, 16));
-models[5] = loadModelFromMesh(genMeshTorus(0.25, 4, 16, 32));
-models[6] = loadModelFromMesh(genMeshKnot(1, 2, 16, 128));
-models[7] = loadModelFromMesh(genMeshPoly(5, 2.0));
-models[8] = loadModelFromMesh(genMeshCustom());
+models[0] = LoadModelFromMesh(GenMeshPlane(2, 2, 4, 3));
+models[1] = LoadModelFromMesh(GenMeshCube(2, 1, 2));
+models[2] = LoadModelFromMesh(GenMeshSphere(2, 32, 32));
+models[3] = LoadModelFromMesh(GenMeshHemiSphere(2, 16, 16));
+models[4] = LoadModelFromMesh(GenMeshCylinder(1, 2, 16));
+models[5] = LoadModelFromMesh(GenMeshTorus(0.25, 4, 16, 32));
+models[6] = LoadModelFromMesh(GenMeshKnot(1, 2, 16, 128));
+models[7] = LoadModelFromMesh(GenMeshPoly(5, 2.0));
+models[8] = LoadModelFromMesh(genMeshCustom());
 
 // Generated meshes could be exported as .obj files
 //ExportMesh(models[0].meshes[0], "plane.obj");
@@ -115,27 +115,27 @@ let position = new Vector3( 0.0, 0.0, 0.0 );
 
 let currentModel = 0;
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-	updateCamera(camera, CAMERA_ORBITAL);
+	UpdateCamera(camera, CAMERA_ORBITAL);
 	
-	if (isMouseButtonPressed(MOUSE_BUTTON_LEFT))
+	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
         currentModel = (currentModel + 1)%NUM_MODELS; // Cycle between the textures
     }
 
-    if (isKeyPressed(KEY_RIGHT))
+    if (IsKeyPressed(KEY_RIGHT))
     {
         currentModel++;
         if (currentModel >= NUM_MODELS) currentModel = 0;
     }
-    else if (isKeyPressed(KEY_LEFT))
+    else if (IsKeyPressed(KEY_LEFT))
     {
         currentModel--;
         if (currentModel < 0) currentModel = NUM_MODELS - 1;
@@ -144,46 +144,46 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 		
-		beginMode3D(camera);
+		BeginMode3D(camera);
 		
-			drawModel(models[currentModel], position, 1.0, WHITE);
-			drawGrid(10, 1.0);
+			DrawModel(models[currentModel], position, 1.0, WHITE);
+			DrawGrid(10, 1.0);
 			
-		endMode3D();
+		EndMode3D();
 		
-		drawRectangle(30, 400, 310, 30, fade(SKYBLUE, 0.5));
-        drawRectangleLines(30, 400, 310, 30, fade(DARKBLUE, 0.5));
-        drawText("MOUSE LEFT BUTTON to CYCLE PROCEDURAL MODELS", 40, 410, 10, BLUE);
+		DrawRectangle(30, 400, 310, 30, Fade(SKYBLUE, 0.5));
+        DrawRectangleLines(30, 400, 310, 30, Fade(DARKBLUE, 0.5));
+        DrawText("MOUSE LEFT BUTTON to CYCLE PROCEDURAL MODELS", 40, 410, 10, BLUE);
 		
         switch(currentModel)
         {
-            case 0: drawText("PLANE", 680, 10, 20, DARKBLUE); break;
-            case 1: drawText("CUBE", 680, 10, 20, DARKBLUE); break;
-            case 2: drawText("SPHERE", 680, 10, 20, DARKBLUE); break;
-            case 3: drawText("HEMISPHERE", 640, 10, 20, DARKBLUE); break;
-            case 4: drawText("CYLINDER", 680, 10, 20, DARKBLUE); break;
-            case 5: drawText("TORUS", 680, 10, 20, DARKBLUE); break;
-            case 6: drawText("KNOT", 680, 10, 20, DARKBLUE); break;
-            case 7: drawText("POLY", 680, 10, 20, DARKBLUE); break;
-            case 8: drawText("Custom (triangle)", 580, 10, 20, DARKBLUE); break;
+            case 0: DrawText("PLANE", 680, 10, 20, DARKBLUE); break;
+            case 1: DrawText("CUBE", 680, 10, 20, DARKBLUE); break;
+            case 2: DrawText("SPHERE", 680, 10, 20, DARKBLUE); break;
+            case 3: DrawText("HEMISPHERE", 640, 10, 20, DARKBLUE); break;
+            case 4: DrawText("CYLINDER", 680, 10, 20, DARKBLUE); break;
+            case 5: DrawText("TORUS", 680, 10, 20, DARKBLUE); break;
+            case 6: DrawText("KNOT", 680, 10, 20, DARKBLUE); break;
+            case 7: DrawText("POLY", 680, 10, 20, DARKBLUE); break;
+            case 8: DrawText("Custom (triangle)", 580, 10, 20, DARKBLUE); break;
             default: break;
         }
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadTexture(texture); // Unload texture
+UnloadTexture(texture); // Unload texture
 
 // Unload models data (GPU VRAM)
 for (let i = 0; i < NUM_MODELS; i++){
-	unloadModel(models[i]);
+	UnloadModel(models[i]);
 }
 
-closeWindow();        // Close window and OpenGL context
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

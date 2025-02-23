@@ -36,33 +36,33 @@ static int js_declare_GuiStyleProp(JSContext * ctx, JSModuleDef * m) {
     return 0;
 }
 
-static JSValue js_guiEnable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiEnable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiEnable();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDisable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiDisable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiDisable();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiLock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiLock();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiUnlock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiUnlock(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiUnlock();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiIsLocked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiIsLocked(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     bool returnVal = GuiIsLocked();
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
-static JSValue js_guiSetAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_alpha;
     int err_alpha = JS_ToFloat64(ctx, &double_alpha, argv[0]);
     if(err_alpha<0) {
@@ -74,7 +74,7 @@ static JSValue js_guiSetAlpha(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiSetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_state;
     int err_state = JS_ToInt32(ctx, &long_state, argv[0]);
     if(err_state<0) {
@@ -86,13 +86,13 @@ static JSValue js_guiSetState(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiGetState(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int returnVal = GuiGetState();
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
 
-static JSValue js_guiSetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -103,7 +103,7 @@ static JSValue js_guiSetFont(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiGetFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font returnVal = GuiGetFont();
     Font* ptr_ret = (Font*)js_malloc(ctx, sizeof(Font));
     *ptr_ret = returnVal;
@@ -112,7 +112,7 @@ static JSValue js_guiGetFont(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_guiSetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_control;
     int err_control = JS_ToInt32(ctx, &long_control, argv[0]);
     if(err_control<0) {
@@ -138,7 +138,7 @@ static JSValue js_guiSetStyle(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiGetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiGetStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_control;
     int err_control = JS_ToInt32(ctx, &long_control, argv[0]);
     if(err_control<0) {
@@ -158,7 +158,7 @@ static JSValue js_guiGetStyle(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiLoadStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLoadStyle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     JSValue da_fileName;
     int64_t size_fileName;
@@ -204,22 +204,22 @@ static JSValue js_guiLoadStyle(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiLoadStyleDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLoadStyleDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiLoadStyleDefault();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiEnableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiEnableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiEnableTooltip();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDisableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiDisableTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     GuiDisableTooltip();
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiSetTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetTooltip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * tooltip;
     JSValue da_tooltip;
     int64_t size_tooltip;
@@ -265,7 +265,7 @@ static JSValue js_guiSetTooltip(JSContext * ctx, JSValue this_val, int argc, JSV
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiIconText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiIconText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_iconId;
     int err_iconId = JS_ToInt32(ctx, &long_iconId, argv[0]);
     if(err_iconId<0) {
@@ -320,7 +320,7 @@ static JSValue js_guiIconText(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiSetIconScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSetIconScale(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_scale;
     int err_scale = JS_ToInt32(ctx, &long_scale, argv[0]);
     if(err_scale<0) {
@@ -332,7 +332,7 @@ static JSValue js_guiSetIconScale(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiDrawIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiDrawIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_iconId;
     int err_iconId = JS_ToInt32(ctx, &long_iconId, argv[0]);
     if(err_iconId<0) {
@@ -371,7 +371,7 @@ static JSValue js_guiDrawIcon(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_guiWindowBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiWindowBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -424,7 +424,7 @@ static JSValue js_guiWindowBox(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_guiGroupBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiGroupBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -477,7 +477,7 @@ static JSValue js_guiGroupBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLine(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -530,7 +530,7 @@ static JSValue js_guiLine(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return ret;
 }
 
-static JSValue js_guiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -583,7 +583,7 @@ static JSValue js_guiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -708,7 +708,7 @@ static JSValue js_guiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiLabel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLabel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -761,7 +761,7 @@ static JSValue js_guiLabel(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
-static JSValue js_guiButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -814,7 +814,7 @@ static JSValue js_guiButton(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_guiLabelButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiLabelButton(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -867,7 +867,7 @@ static JSValue js_guiLabelButton(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -993,7 +993,7 @@ static JSValue js_guiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_guiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1138,7 +1138,7 @@ static JSValue js_guiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiToggleSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiToggleSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1283,7 +1283,7 @@ static JSValue js_guiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1409,7 +1409,7 @@ static JSValue js_guiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiComboBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiComboBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1554,7 +1554,7 @@ static JSValue js_guiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1732,7 +1732,7 @@ static JSValue js_guiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -1993,7 +1993,7 @@ static JSValue js_guiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2254,7 +2254,7 @@ static JSValue js_guiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -2388,7 +2388,7 @@ static JSValue js_guiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_guiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2484,7 +2484,7 @@ static JSValue js_guiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_guiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -2630,7 +2630,7 @@ static JSValue js_guiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue
     return ret;
 }
 
-static JSValue js_guiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -2776,7 +2776,7 @@ static JSValue js_guiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_guiProgressBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiProgressBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -2922,7 +2922,7 @@ static JSValue js_guiProgressBar(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiStatusBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiStatusBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -2975,7 +2975,7 @@ static JSValue js_guiStatusBar(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_guiDummyRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiDummyRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3028,7 +3028,7 @@ static JSValue js_guiDummyRec(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3156,7 +3156,7 @@ static JSValue js_guiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     return ret;
 }
 
-static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3417,7 +3417,7 @@ static JSValue js_guiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -3638,7 +3638,7 @@ static JSValue js_guiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_guiMessageBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiMessageBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -3740,7 +3740,7 @@ static JSValue js_guiMessageBox(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_guiTextInputBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiTextInputBox(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
@@ -3913,7 +3913,7 @@ static JSValue js_guiTextInputBox(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_guiColorPicker(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorPicker(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -3993,7 +3993,7 @@ static JSValue js_guiColorPicker(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4066,7 +4066,7 @@ static JSValue js_guiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4220,7 +4220,7 @@ static JSValue js_guiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_guiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4365,7 +4365,7 @@ static JSValue js_guiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_guiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4438,7 +4438,7 @@ static JSValue js_guiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
-static JSValue js_guiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GuiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_bounds == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -4512,60 +4512,60 @@ static JSValue js_guiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static const JSCFunctionListEntry js_js_raygui_funcs[] = {
-    JS_CFUNC_DEF("guiEnable",0,js_guiEnable),
-    JS_CFUNC_DEF("guiDisable",0,js_guiDisable),
-    JS_CFUNC_DEF("guiLock",0,js_guiLock),
-    JS_CFUNC_DEF("guiUnlock",0,js_guiUnlock),
-    JS_CFUNC_DEF("guiIsLocked",0,js_guiIsLocked),
-    JS_CFUNC_DEF("guiSetAlpha",1,js_guiSetAlpha),
-    JS_CFUNC_DEF("guiSetState",1,js_guiSetState),
-    JS_CFUNC_DEF("guiGetState",0,js_guiGetState),
-    JS_CFUNC_DEF("guiSetFont",1,js_guiSetFont),
-    JS_CFUNC_DEF("guiGetFont",0,js_guiGetFont),
-    JS_CFUNC_DEF("guiSetStyle",3,js_guiSetStyle),
-    JS_CFUNC_DEF("guiGetStyle",2,js_guiGetStyle),
-    JS_CFUNC_DEF("guiLoadStyle",1,js_guiLoadStyle),
-    JS_CFUNC_DEF("guiLoadStyleDefault",0,js_guiLoadStyleDefault),
-    JS_CFUNC_DEF("guiEnableTooltip",0,js_guiEnableTooltip),
-    JS_CFUNC_DEF("guiDisableTooltip",0,js_guiDisableTooltip),
-    JS_CFUNC_DEF("guiSetTooltip",1,js_guiSetTooltip),
-    JS_CFUNC_DEF("guiIconText",2,js_guiIconText),
-    JS_CFUNC_DEF("guiSetIconScale",1,js_guiSetIconScale),
-    JS_CFUNC_DEF("guiDrawIcon",5,js_guiDrawIcon),
-    JS_CFUNC_DEF("guiWindowBox",2,js_guiWindowBox),
-    JS_CFUNC_DEF("guiGroupBox",2,js_guiGroupBox),
-    JS_CFUNC_DEF("guiLine",2,js_guiLine),
-    JS_CFUNC_DEF("guiPanel",2,js_guiPanel),
-    JS_CFUNC_DEF("guiScrollPanel",5,js_guiScrollPanel),
-    JS_CFUNC_DEF("guiLabel",2,js_guiLabel),
-    JS_CFUNC_DEF("guiButton",2,js_guiButton),
-    JS_CFUNC_DEF("guiLabelButton",2,js_guiLabelButton),
-    JS_CFUNC_DEF("guiToggle",3,js_guiToggle),
-    JS_CFUNC_DEF("guiToggleGroup",3,js_guiToggleGroup),
-    JS_CFUNC_DEF("guiToggleSlider",3,js_guiToggleSlider),
-    JS_CFUNC_DEF("guiCheckBox",3,js_guiCheckBox),
-    JS_CFUNC_DEF("guiComboBox",3,js_guiComboBox),
-    JS_CFUNC_DEF("guiDropdownBox",4,js_guiDropdownBox),
-    JS_CFUNC_DEF("guiSpinner",6,js_guiSpinner),
-    JS_CFUNC_DEF("guiValueBox",6,js_guiValueBox),
-    JS_CFUNC_DEF("guiValueBoxFloat",5,js_guiValueBoxFloat),
-    JS_CFUNC_DEF("guiTextBox",4,js_guiTextBox),
-    JS_CFUNC_DEF("guiSlider",6,js_guiSlider),
-    JS_CFUNC_DEF("guiSliderBar",6,js_guiSliderBar),
-    JS_CFUNC_DEF("guiProgressBar",6,js_guiProgressBar),
-    JS_CFUNC_DEF("guiStatusBar",2,js_guiStatusBar),
-    JS_CFUNC_DEF("guiDummyRec",2,js_guiDummyRec),
-    JS_CFUNC_DEF("guiGrid",5,js_guiGrid),
-    JS_CFUNC_DEF("guiListView",4,js_guiListView),
-    JS_CFUNC_DEF("guiListViewEx",6,js_guiListViewEx),
-    JS_CFUNC_DEF("guiMessageBox",4,js_guiMessageBox),
-    JS_CFUNC_DEF("guiTextInputBox",7,js_guiTextInputBox),
-    JS_CFUNC_DEF("guiColorPicker",3,js_guiColorPicker),
-    JS_CFUNC_DEF("guiColorPanel",3,js_guiColorPanel),
-    JS_CFUNC_DEF("guiColorBarAlpha",3,js_guiColorBarAlpha),
-    JS_CFUNC_DEF("guiColorBarHue",3,js_guiColorBarHue),
-    JS_CFUNC_DEF("guiColorPickerHSV",3,js_guiColorPickerHSV),
-    JS_CFUNC_DEF("guiColorPanelHSV",3,js_guiColorPanelHSV),
+    JS_CFUNC_DEF("GuiEnable",0,js_GuiEnable),
+    JS_CFUNC_DEF("GuiDisable",0,js_GuiDisable),
+    JS_CFUNC_DEF("GuiLock",0,js_GuiLock),
+    JS_CFUNC_DEF("GuiUnlock",0,js_GuiUnlock),
+    JS_CFUNC_DEF("GuiIsLocked",0,js_GuiIsLocked),
+    JS_CFUNC_DEF("GuiSetAlpha",1,js_GuiSetAlpha),
+    JS_CFUNC_DEF("GuiSetState",1,js_GuiSetState),
+    JS_CFUNC_DEF("GuiGetState",0,js_GuiGetState),
+    JS_CFUNC_DEF("GuiSetFont",1,js_GuiSetFont),
+    JS_CFUNC_DEF("GuiGetFont",0,js_GuiGetFont),
+    JS_CFUNC_DEF("GuiSetStyle",3,js_GuiSetStyle),
+    JS_CFUNC_DEF("GuiGetStyle",2,js_GuiGetStyle),
+    JS_CFUNC_DEF("GuiLoadStyle",1,js_GuiLoadStyle),
+    JS_CFUNC_DEF("GuiLoadStyleDefault",0,js_GuiLoadStyleDefault),
+    JS_CFUNC_DEF("GuiEnableTooltip",0,js_GuiEnableTooltip),
+    JS_CFUNC_DEF("GuiDisableTooltip",0,js_GuiDisableTooltip),
+    JS_CFUNC_DEF("GuiSetTooltip",1,js_GuiSetTooltip),
+    JS_CFUNC_DEF("GuiIconText",2,js_GuiIconText),
+    JS_CFUNC_DEF("GuiSetIconScale",1,js_GuiSetIconScale),
+    JS_CFUNC_DEF("GuiDrawIcon",5,js_GuiDrawIcon),
+    JS_CFUNC_DEF("GuiWindowBox",2,js_GuiWindowBox),
+    JS_CFUNC_DEF("GuiGroupBox",2,js_GuiGroupBox),
+    JS_CFUNC_DEF("GuiLine",2,js_GuiLine),
+    JS_CFUNC_DEF("GuiPanel",2,js_GuiPanel),
+    JS_CFUNC_DEF("GuiScrollPanel",5,js_GuiScrollPanel),
+    JS_CFUNC_DEF("GuiLabel",2,js_GuiLabel),
+    JS_CFUNC_DEF("GuiButton",2,js_GuiButton),
+    JS_CFUNC_DEF("GuiLabelButton",2,js_GuiLabelButton),
+    JS_CFUNC_DEF("GuiToggle",3,js_GuiToggle),
+    JS_CFUNC_DEF("GuiToggleGroup",3,js_GuiToggleGroup),
+    JS_CFUNC_DEF("GuiToggleSlider",3,js_GuiToggleSlider),
+    JS_CFUNC_DEF("GuiCheckBox",3,js_GuiCheckBox),
+    JS_CFUNC_DEF("GuiComboBox",3,js_GuiComboBox),
+    JS_CFUNC_DEF("GuiDropdownBox",4,js_GuiDropdownBox),
+    JS_CFUNC_DEF("GuiSpinner",6,js_GuiSpinner),
+    JS_CFUNC_DEF("GuiValueBox",6,js_GuiValueBox),
+    JS_CFUNC_DEF("GuiValueBoxFloat",5,js_GuiValueBoxFloat),
+    JS_CFUNC_DEF("GuiTextBox",4,js_GuiTextBox),
+    JS_CFUNC_DEF("GuiSlider",6,js_GuiSlider),
+    JS_CFUNC_DEF("GuiSliderBar",6,js_GuiSliderBar),
+    JS_CFUNC_DEF("GuiProgressBar",6,js_GuiProgressBar),
+    JS_CFUNC_DEF("GuiStatusBar",2,js_GuiStatusBar),
+    JS_CFUNC_DEF("GuiDummyRec",2,js_GuiDummyRec),
+    JS_CFUNC_DEF("GuiGrid",5,js_GuiGrid),
+    JS_CFUNC_DEF("GuiListView",4,js_GuiListView),
+    JS_CFUNC_DEF("GuiListViewEx",6,js_GuiListViewEx),
+    JS_CFUNC_DEF("GuiMessageBox",4,js_GuiMessageBox),
+    JS_CFUNC_DEF("GuiTextInputBox",7,js_GuiTextInputBox),
+    JS_CFUNC_DEF("GuiColorPicker",3,js_GuiColorPicker),
+    JS_CFUNC_DEF("GuiColorPanel",3,js_GuiColorPanel),
+    JS_CFUNC_DEF("GuiColorBarAlpha",3,js_GuiColorBarAlpha),
+    JS_CFUNC_DEF("GuiColorBarHue",3,js_GuiColorBarHue),
+    JS_CFUNC_DEF("GuiColorPickerHSV",3,js_GuiColorPickerHSV),
+    JS_CFUNC_DEF("GuiColorPanelHSV",3,js_GuiColorPanelHSV),
 };
 
 static int js_js_raygui_init(JSContext * ctx, JSModuleDef * m) {

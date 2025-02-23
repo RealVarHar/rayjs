@@ -167,7 +167,7 @@ static int js_declare_Light(JSContext * ctx, JSModuleDef * m) {
     return 0;
 }
 
-static JSValue js_createLight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CreateLight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_type;
     int err_type = JS_ToInt32(ctx, &long_type, argv[0]);
     if(err_type<0) {
@@ -207,7 +207,7 @@ static JSValue js_createLight(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_updateLightValues(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UpdateLightValues(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
     if(ptr_shader == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -225,8 +225,8 @@ static JSValue js_updateLightValues(JSContext * ctx, JSValue this_val, int argc,
 }
 
 static const JSCFunctionListEntry js_js_rlights_funcs[] = {
-    JS_CFUNC_DEF("createLight",5,js_createLight),
-    JS_CFUNC_DEF("updateLightValues",2,js_updateLightValues),
+    JS_CFUNC_DEF("CreateLight",5,js_CreateLight),
+    JS_CFUNC_DEF("UpdateLightValues",2,js_UpdateLightValues),
 };
 
 static int js_js_rlights_init(JSContext * ctx, JSModuleDef * m) {

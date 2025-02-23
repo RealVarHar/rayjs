@@ -18,13 +18,13 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [shapes] example - raylib logo using shapes");
+InitWindow(screenWidth, screenHeight, "raylib [shapes] example - raylib logo using shapes");
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
@@ -33,22 +33,22 @@ while (!windowShouldClose())    // Detect window close button or ESC key
     
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        drawRectangle(screenWidth/2 - 128, screenHeight/2 - 128, 256, 256, BLACK);
-        drawRectangle(screenWidth/2 - 112, screenHeight/2 - 112, 224, 224, GOLD);
-        drawText("rayjs", screenWidth/2 - 38, screenHeight/2 + 48, 50, BLACK);
+        DrawRectangle(screenWidth/2 - 128, screenHeight/2 - 128, 256, 256, BLACK);
+        DrawRectangle(screenWidth/2 - 112, screenHeight/2 - 112, 224, 224, GOLD);
+        DrawText("rayjs", screenWidth/2 - 38, screenHeight/2 + 48, 50, BLACK);
 
-        drawText("this is NOT a texture!", 350, 370, 10, GRAY);
+        DrawText("this is NOT a texture!", 350, 370, 10, GRAY);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-closeWindow();        // Close window and OpenGL context
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------
 

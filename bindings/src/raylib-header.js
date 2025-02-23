@@ -113,7 +113,7 @@ export class RayJsHeader {
         this.callbackLookup[api.name]="callback_" + api.name;
     }
     addCallback(apiName,callbackName,attachMultiple=false){
-        //TODO: transform their (void *) types into proper ones (for fucks sake)
+        //TODO: transform their (void *) types into proper ones
         this.callbackGen.statement(`static trampolineContext * ${callbackName}_arr = NULL`);
         if(attachMultiple){
             this.callbackGen.statement(`static size_t ${callbackName}_size = 0`);
@@ -216,7 +216,7 @@ export class RayJsHeader {
     addApiFunction(api) {
         const options = api.binding || {};
         if (options.ignore) return;
-        const jName = options.jsName || api.name.charAt(0).toLowerCase() + api.name.slice(1);
+        const jName = options.jsName || api.name;
         console.log("Binding function " + api.name);
         const fun = this.functionGen.jsBindingFunction(jName);
         if (options.body) {
@@ -391,7 +391,7 @@ export class RayJsHeader {
         this.moduleInit.call(classDecl.getTag("_name"), ["ctx", "m"]);
         if (options?.createConstructor || options?.createEmptyConstructor) {
             const body = this.functionGen.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId);
-            this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name})", ${struct.fields.length}, JS_CFUNC_constructor_or_func, 0)`);
+            this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name}", ${struct.fields.length}, JS_CFUNC_constructor, 0)`);
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
         }

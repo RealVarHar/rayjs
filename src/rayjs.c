@@ -41,7 +41,7 @@
 
 #include "cutils.h"
 #include "quickjs.h"
-#include "quickjs-libc.h"
+#include "modules/quickjs-libc.h"
 
 #ifdef QJS_USE_MIMALLOC
 #include <mimalloc.h>
@@ -63,22 +63,32 @@ static const int trailer_size = TRAILER_SIZE;
 #include <raylib.h>
 #include "rayjs_base.c"
 
-
+static JSValue app_update_finish(JSContext *ctx,int argc, JSValue *argv){
+    JSValue resolve = argv[0];
+    JSValue ret = JS_Call(ctx, resolve, JS_UNDEFINED,0,NULL);// resolve()
+    //js_promise_resolve_function_call 0 argc is ok
+    JS_FreeValue(ctx, ret);
+    return JS_UNDEFINED;
+}
 int app_update_quickjs(JSContext *ctx){
-    JSContext *ctx1;
-    int err;
-
-    /* execute the pending jobs */
-    for(;;) {
-        err = JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx1);
-        if (err <= 0) {
-            if (err < 0) {
-                js_std_dump_error(ctx1);
-            }
-            break;
-        }
+    //We need to call pool to allow async processing between frames
+    //This basically runs await setTimeout(0)
+    JSValue resolving_funcs[2];//dont set to JS_UNDEFINED, see js_promise_executor_new
+    JSValue args[1];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+    if (JS_IsException(promise)){
+        return 0;
     }
-    return 0;
+    args[0]=resolving_funcs[0];
+    JS_EnqueueJob(ctx, app_update_finish, 1, args);
+    JSValue val = js_std_await(ctx, promise);
+    if (JS_IsException(val)){
+        js_std_dump_error(ctx);
+    }
+    JS_FreeValue(ctx, val);
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    return 1;
 }
 static bool is_standalone(const char *exe)
 {
@@ -129,14 +139,14 @@ static JSValue load_standalone_module(JSContext *ctx)
     return JS_GetModuleNamespace(ctx, m);
 }
 
-#include "bindings/js_raylib.h"
-#include "bindings/js_raymath.h"
-#include "bindings/js_rcamera.h"
-#include "bindings/js_raygui.h"
-#include "bindings/js_rlights.h"
-#include "bindings/js_reasings.h"
-#include "bindings/js_rlgl.h"
-#include "bindings/js_rlightmapper.h"
+#include "modules/js_raylib.h"
+#include "modules/js_raymath.h"
+#include "modules/js_rcamera.h"
+#include "modules/js_raygui.h"
+#include "modules/js_rlights.h"
+#include "modules/js_reasings.h"
+#include "modules/js_rlgl.h"
+#include "modules/js_rlightmapper.h"
 
 static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *filename, int eval_flags){
     JSValue val;
@@ -311,34 +321,6 @@ static const JSMallocFunctions trace_mf = {
     js_trace_realloc,
     js__malloc_usable_size
 };
-
-#ifdef QJS_USE_MIMALLOC
-static void *js_mi_calloc(void *opaque, size_t count, size_t size){
-    return mi_calloc(count, size);
-}
-
-static void *js_mi_malloc(void *opaque, size_t size){
-    return mi_malloc(size);
-}
-
-static void js_mi_free(void *opaque, void *ptr){
-    if (!ptr)
-        return;
-    mi_free(ptr);
-}
-
-static void *js_mi_realloc(void *opaque, void *ptr, size_t size){
-    return mi_realloc(ptr, size);
-}
-
-static const JSMallocFunctions mi_mf = {
-    js_mi_calloc,
-    js_mi_malloc,
-    js_mi_free,
-    js_mi_realloc,
-    mi_malloc_usable_size
-};
-#endif
 
 #define PROG_NAME "rayjs"
 
@@ -555,29 +537,24 @@ int main(int argc, char** argv){
         help();
 
 start:
-
+    default_dump=dump_flags;
     if (trace_memory) {
         js_trace_malloc_init(&trace_data);
         rt = JS_NewRuntime2(&trace_mf, &trace_data);
+        if (dump_flags != 0)
+            JS_SetDumpFlags(rt, dump_flags);
     } else {
-#ifdef QJS_USE_MIMALLOC
-        rt = JS_NewRuntime2(&mi_mf, NULL);
-#else
-        rt = JS_NewRuntime();
-#endif
+        rt = JS_NewRuntime3();
     }
     if (!rt) {
         fprintf(stderr, "rayjs: cannot allocate JS runtime\n");
         exit(2);
     }
+    js_std_init_handlers(rt);
     if (memory_limit >= 0)
         JS_SetMemoryLimit(rt, (size_t)memory_limit);
     if (stack_size >= 0)
         JS_SetMaxStackSize(rt, (size_t)stack_size);
-    if (dump_flags != 0)
-        JS_SetDumpFlags(rt, dump_flags);
-    js_std_set_worker_new_context_func(JS_NewCustomContext);
-    js_std_init_handlers(rt);
     ctx = JS_NewCustomContext(rt);
     if (!ctx) {
         fprintf(stderr, "rayjs: cannot allocate JS context\n");
@@ -689,6 +666,7 @@ start:
         JS_ComputeMemoryUsage(rt, &stats);
         JS_DumpMemoryUsage(stdout, &stats, rt);
     }
+
     js_std_free_handlers(rt);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);

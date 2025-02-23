@@ -10918,11 +10918,11 @@ const resourceUnloadAll = () => {
     }
 };
 exports.resourceUnloadAll = resourceUnloadAll;
-exports.textureLoad = loadResourceFunc(loadTexture, unloadTexture);
+exports.textureLoad = loadResourceFunc(LoadTexture, UnloadTexture);
 exports.fontLoad = loadResourceFunc((id) => {
     const split = id.split(':');
-    return loadFontEx(split[0], parseInt(split[1]) * getWindowScaleDPI().x);
-}, unloadFont);
+    return LoadFontEx(split[0], parseInt(split[1]) * GetWindowScaleDPI().x);
+}, UnloadFont);
 
 
 /***/ })
@@ -10983,9 +10983,9 @@ class Game {
             ...windowDefaults,
             ...options
         };
-        setConfigFlags(this.config.flags);
-        initWindow(this.config.width, this.config.height, this.config.title);
-        setTargetFPS(this.config.targetFps);
+        SetConfigFlags(this.config.flags);
+        InitWindow(this.config.width, this.config.height, this.config.title);
+        SetTargetFPS(this.config.targetFps);
     }
     quit() {
         this.shouldQuit = true;
@@ -10999,19 +10999,19 @@ class Game {
             throw exception;
     }
     run(root) {
-        while (!windowShouldClose() && !this.shouldQuit) {
+        while (!WindowShouldClose() && !this.shouldQuit) {
             const activePromises = (0, promise_extensions_1.dispatchPromises)();
             root.notify("$update");
-            beginDrawing();
-            clearBackground(this.clearColor);
+            BeginDrawing();
+            ClearBackground(this.clearColor);
             root.notify("$beforeDraw");
             root.notify("$draw");
             root.notify("$afterDraw");
-            drawText("Active promises: " + activePromises, 10, 10, 8, RAYWHITE);
-            endDrawing();
+            DrawText("Active promises: " + activePromises, 10, 10, 8, RAYWHITE);
+            EndDrawing();
         }
         (0, resource_1.resourceUnloadAll)();
-        closeWindow();
+        CloseWindow();
     }
 }
 var NotifyOrder;
@@ -11070,16 +11070,16 @@ const createResource = (c) => {
 class NodeCamera extends Node {
     constructor() {
         super(...arguments);
-        this.camera = new Camera2D(new Vector2(getScreenWidth() / 2.0, getScreenHeight() / 2.0), new Vector2(0, 0), 0, 1);
+        this.camera = new Camera2D(new Vector2(GetScreenWidth() / 2.0, GetScreenHeight() / 2.0), new Vector2(0, 0), 0, 1);
     }
     $update() {
-        this.camera.offset = new Vector2(getScreenWidth() / 2.0, getScreenHeight() / 2.0);
+        this.camera.offset = new Vector2(GetScreenWidth() / 2.0, GetScreenHeight() / 2.0);
     }
     $beforeDraw() {
-        beginMode2D(this.camera);
+        BeginMode2D(this.camera);
     }
     $afterDraw() {
-        endMode2D();
+        EndMode2D();
     }
 }
 class Node2D extends Node {
@@ -11117,7 +11117,7 @@ class ResourceTexture2D extends Resource {
     constructor() {
         super(...arguments);
         this._texture = new ObservableValue(this.path$.pipe((0, rxjs_1.map)(x => x ? (0, resource_1.textureLoad)(x) : null)), null);
-        this._size = new ObservableValue(this._texture.observable.pipe((0, rxjs_1.map)(x => x ? new Vector2(x.width, x.height) : vector2Zero())), vector2Zero());
+        this._size = new ObservableValue(this._texture.observable.pipe((0, rxjs_1.map)(x => x ? new Vector2(x.width, x.height) : Vector2Zero())), Vector2Zero());
     }
     get texture$() { return this._texture.observable; }
     get texture() { return this._texture.value; }
@@ -11151,7 +11151,7 @@ class ResourceTileset extends Resource {
 class Tilemap extends Node2D {
     constructor() {
         super(...arguments);
-        this.size = vector2Zero();
+        this.size = Vector2Zero();
         this.data = [];
     }
     fill(fn) {
@@ -11170,7 +11170,7 @@ class Tilemap extends Node2D {
     $draw() {
         const data = this.data;
         if (!this.tileset) {
-            traceLog(LOG_WARNING, "No tileset found");
+            TraceLog(LOG_WARNING, "No tileset found");
             return;
         }
         const texture = this.tileset.textureResource?.texture;
@@ -11187,7 +11187,7 @@ class Tilemap extends Node2D {
                 const src = this.tileset.rectangles[tileId];
                 position.x = this.position.x + (x * tilesize.x);
                 position.y = this.position.y + (y * tilesize.y);
-                drawTextureRec(texture, src, position, WHITE);
+                DrawTextureRec(texture, src, position, WHITE);
             }
         }
     }

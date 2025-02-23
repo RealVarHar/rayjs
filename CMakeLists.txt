@@ -64,13 +64,12 @@ set(quickjs_version 2024-09-28)
 set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/quickjs)
 set(quickjs_sources
 	${quickjs_sources_root}/quickjs.h
-	${quickjs_sources_root}/quickjs-libc.h
 	${quickjs_sources_root}/quickjs.c
 	${quickjs_sources_root}/libregexp.c
 	${quickjs_sources_root}/libunicode.c
 	${quickjs_sources_root}/libbf.c
 	${quickjs_sources_root}/cutils.c
-	${quickjs_sources_root}/quickjs-libc.c
+	${quickjs_sources_root}/cutils.h
 	${quickjs_sources_root}/gen/repl.c
 	${quickjs_sources_root}/gen/standalone.c
 )
@@ -82,6 +81,7 @@ if(RAYJS_USE_MIMALLOC)
 	target_compile_definitions(quickjs PUBLIC QJS_USE_MIMALLOC )
 endif()
 target_include_directories(quickjs PRIVATE ${quickjs_sources_root})
+target_link_libraries(quickjs)
 
 add_library(lightmapper INTERFACE)
 target_include_directories(lightmapper INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lightmapper)
@@ -100,6 +100,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE thirdparty/raygui/src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/shaders)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/others)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external)
 
 set(RAYJS_LINK_LIBRARIES "quickjs" "raylib" "lightmapper" )
 if(RAYJS_USE_MIMALLOC)

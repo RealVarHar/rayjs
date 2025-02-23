@@ -18,7 +18,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [models] example - cubesmap loading and drawing");
+InitWindow(screenWidth, screenHeight, "raylib [models] example - cubesmap loading and drawing");
 
 // Define the camera to look into our 3d world
 const position = new Vector3(16.0, 14.0, 16.0);     // Camera position
@@ -28,67 +28,67 @@ const fovy = 45.0;                                  // Camera field-of-view Y
 const projection = CAMERA_PERSPECTIVE;              // Camera projection type
 const camera = new Camera3D(position, target, up, fovy, projection)
 
-let image = loadImage("resources/cubicmap.png");      // Load cubicmap image (RAM)
-let cubicmap = loadTextureFromImage(image);       // Convert image to texture to display (VRAM)
+let image = LoadImage("resources/cubicmap.png");      // Load cubicmap image (RAM)
+let cubicmap = LoadTextureFromImage(image);       // Convert image to texture to display (VRAM)
 
-const mesh = genMeshCubicmap(image, new Vector3(1.0, 1.0, 1.0));
-const floor = loadModelFromMesh(mesh);
+const mesh = GenMeshCubicmap(image, new Vector3(1.0, 1.0, 1.0));
+const floor = LoadModelFromMesh(mesh);
 
 // NOTE: By default each cube is mapped to one part of texture atlas
-let texture = loadTexture("resources/cubicmap_atlas.png");    // Load map texture
+let texture = LoadTexture("resources/cubicmap_atlas.png");    // Load map texture
 
 //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;    // Set map diffuse texture
-const mat = loadMaterialDefault()
-setMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture);
+const mat = LoadMaterialDefault()
+SetMaterialTexture(mat, MATERIAL_MAP_DIFFUSE, texture);
 let materials = floor.materials;
 materials[0] = mat;
 floor.materials = materials;
 
 const mapPosition = new Vector3(-16.0, 0.0, -8.0);          // Set model position
 
-unloadImage(image);  // Unload cubesmap image from RAM, already uploaded to VRAM
+UnloadImage(image);  // Unload cubesmap image from RAM, already uploaded to VRAM
 
-setTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())        // Detect window close button or ESC key
+while (!WindowShouldClose())        // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    updateCamera(camera, CAMERA_ORBITAL);
+    UpdateCamera(camera, CAMERA_ORBITAL);
     //----------------------------------------------------------------------------------
     
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        beginMode3D(camera);
+        BeginMode3D(camera);
 
-            drawModel(floor, mapPosition, 1.0, WHITE);
+            DrawModel(floor, mapPosition, 1.0, WHITE);
 
-        endMode3D();
+        EndMode3D();
 
-        drawTextureEx(cubicmap, new Vector2(screenWidth - cubicmap.width*4.0 - 20, 20.0), 0.0, 4.0, WHITE);
-        drawRectangleLines(screenWidth - cubicmap.width*4 - 20, 20, cubicmap.width*4, cubicmap.height*4, GREEN);
+        DrawTextureEx(cubicmap, new Vector2(screenWidth - cubicmap.width*4.0 - 20, 20.0), 0.0, 4.0, WHITE);
+        DrawRectangleLines(screenWidth - cubicmap.width*4 - 20, 20, cubicmap.width*4, cubicmap.height*4, GREEN);
 
-        drawText("cubicmap image used to", 658, 90, 10, GRAY);
-        drawText("generate map 3d model", 658, 104, 10, GRAY);
+        DrawText("cubicmap image used to", 658, 90, 10, GRAY);
+        DrawText("generate map 3d model", 658, 104, 10, GRAY);
 
-        drawFPS(10, 10);
+        DrawFPS(10, 10);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadTexture(cubicmap);
-unloadTexture(texture);
-unloadModel(floor);
+UnloadTexture(cubicmap);
+UnloadTexture(texture);
+UnloadModel(floor);
 
-closeWindow();              // Close window and OpenGL context
+CloseWindow();              // Close window and OpenGL context
 //--------------------------------------------------------------------------------------
 

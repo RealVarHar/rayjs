@@ -10,7 +10,7 @@
 #include <reasings.h>
 
 
-static JSValue js_easeLinearNone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseLinearNone(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -44,7 +44,7 @@ static JSValue js_easeLinearNone(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_easeLinearIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseLinearIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -78,7 +78,7 @@ static JSValue js_easeLinearIn(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_easeLinearOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseLinearOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -112,7 +112,7 @@ static JSValue js_easeLinearOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeLinearInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseLinearInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -146,7 +146,7 @@ static JSValue js_easeLinearInOut(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_easeSineIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseSineIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -180,7 +180,7 @@ static JSValue js_easeSineIn(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_easeSineOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseSineOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -214,7 +214,7 @@ static JSValue js_easeSineOut(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeSineInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseSineInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -248,7 +248,7 @@ static JSValue js_easeSineInOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeCircIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCircIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -282,7 +282,7 @@ static JSValue js_easeCircIn(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_easeCircOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCircOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -316,7 +316,7 @@ static JSValue js_easeCircOut(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeCircInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCircInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -350,7 +350,7 @@ static JSValue js_easeCircInOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeCubicIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCubicIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -384,7 +384,7 @@ static JSValue js_easeCubicIn(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeCubicOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCubicOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -418,7 +418,7 @@ static JSValue js_easeCubicOut(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_easeCubicInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseCubicInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -452,7 +452,7 @@ static JSValue js_easeCubicInOut(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_easeQuadIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseQuadIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -486,7 +486,7 @@ static JSValue js_easeQuadIn(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_easeQuadOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseQuadOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -520,7 +520,7 @@ static JSValue js_easeQuadOut(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeQuadInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseQuadInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -554,7 +554,7 @@ static JSValue js_easeQuadInOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeExpoIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseExpoIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -588,7 +588,7 @@ static JSValue js_easeExpoIn(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_easeExpoOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseExpoOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -622,7 +622,7 @@ static JSValue js_easeExpoOut(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeExpoInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseExpoInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -656,7 +656,7 @@ static JSValue js_easeExpoInOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeBackIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBackIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -690,7 +690,7 @@ static JSValue js_easeBackIn(JSContext * ctx, JSValue this_val, int argc, JSValu
     return ret;
 }
 
-static JSValue js_easeBackOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBackOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -724,7 +724,7 @@ static JSValue js_easeBackOut(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_easeBackInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBackInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -758,7 +758,7 @@ static JSValue js_easeBackInOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeBounceOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBounceOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -792,7 +792,7 @@ static JSValue js_easeBounceOut(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeBounceIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBounceIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -826,7 +826,7 @@ static JSValue js_easeBounceIn(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
-static JSValue js_easeBounceInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseBounceInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -860,7 +860,7 @@ static JSValue js_easeBounceInOut(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_easeElasticIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseElasticIn(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -894,7 +894,7 @@ static JSValue js_easeElasticIn(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
-static JSValue js_easeElasticOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseElasticOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -928,7 +928,7 @@ static JSValue js_easeElasticOut(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_easeElasticInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EaseElasticInOut(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     double double_t;
     int err_t = JS_ToFloat64(ctx, &double_t, argv[0]);
     if(err_t<0) {
@@ -963,34 +963,34 @@ static JSValue js_easeElasticInOut(JSContext * ctx, JSValue this_val, int argc, 
 }
 
 static const JSCFunctionListEntry js_js_reasings_funcs[] = {
-    JS_CFUNC_DEF("easeLinearNone",4,js_easeLinearNone),
-    JS_CFUNC_DEF("easeLinearIn",4,js_easeLinearIn),
-    JS_CFUNC_DEF("easeLinearOut",4,js_easeLinearOut),
-    JS_CFUNC_DEF("easeLinearInOut",4,js_easeLinearInOut),
-    JS_CFUNC_DEF("easeSineIn",4,js_easeSineIn),
-    JS_CFUNC_DEF("easeSineOut",4,js_easeSineOut),
-    JS_CFUNC_DEF("easeSineInOut",4,js_easeSineInOut),
-    JS_CFUNC_DEF("easeCircIn",4,js_easeCircIn),
-    JS_CFUNC_DEF("easeCircOut",4,js_easeCircOut),
-    JS_CFUNC_DEF("easeCircInOut",4,js_easeCircInOut),
-    JS_CFUNC_DEF("easeCubicIn",4,js_easeCubicIn),
-    JS_CFUNC_DEF("easeCubicOut",4,js_easeCubicOut),
-    JS_CFUNC_DEF("easeCubicInOut",4,js_easeCubicInOut),
-    JS_CFUNC_DEF("easeQuadIn",4,js_easeQuadIn),
-    JS_CFUNC_DEF("easeQuadOut",4,js_easeQuadOut),
-    JS_CFUNC_DEF("easeQuadInOut",4,js_easeQuadInOut),
-    JS_CFUNC_DEF("easeExpoIn",4,js_easeExpoIn),
-    JS_CFUNC_DEF("easeExpoOut",4,js_easeExpoOut),
-    JS_CFUNC_DEF("easeExpoInOut",4,js_easeExpoInOut),
-    JS_CFUNC_DEF("easeBackIn",4,js_easeBackIn),
-    JS_CFUNC_DEF("easeBackOut",4,js_easeBackOut),
-    JS_CFUNC_DEF("easeBackInOut",4,js_easeBackInOut),
-    JS_CFUNC_DEF("easeBounceOut",4,js_easeBounceOut),
-    JS_CFUNC_DEF("easeBounceIn",4,js_easeBounceIn),
-    JS_CFUNC_DEF("easeBounceInOut",4,js_easeBounceInOut),
-    JS_CFUNC_DEF("easeElasticIn",4,js_easeElasticIn),
-    JS_CFUNC_DEF("easeElasticOut",4,js_easeElasticOut),
-    JS_CFUNC_DEF("easeElasticInOut",4,js_easeElasticInOut),
+    JS_CFUNC_DEF("EaseLinearNone",4,js_EaseLinearNone),
+    JS_CFUNC_DEF("EaseLinearIn",4,js_EaseLinearIn),
+    JS_CFUNC_DEF("EaseLinearOut",4,js_EaseLinearOut),
+    JS_CFUNC_DEF("EaseLinearInOut",4,js_EaseLinearInOut),
+    JS_CFUNC_DEF("EaseSineIn",4,js_EaseSineIn),
+    JS_CFUNC_DEF("EaseSineOut",4,js_EaseSineOut),
+    JS_CFUNC_DEF("EaseSineInOut",4,js_EaseSineInOut),
+    JS_CFUNC_DEF("EaseCircIn",4,js_EaseCircIn),
+    JS_CFUNC_DEF("EaseCircOut",4,js_EaseCircOut),
+    JS_CFUNC_DEF("EaseCircInOut",4,js_EaseCircInOut),
+    JS_CFUNC_DEF("EaseCubicIn",4,js_EaseCubicIn),
+    JS_CFUNC_DEF("EaseCubicOut",4,js_EaseCubicOut),
+    JS_CFUNC_DEF("EaseCubicInOut",4,js_EaseCubicInOut),
+    JS_CFUNC_DEF("EaseQuadIn",4,js_EaseQuadIn),
+    JS_CFUNC_DEF("EaseQuadOut",4,js_EaseQuadOut),
+    JS_CFUNC_DEF("EaseQuadInOut",4,js_EaseQuadInOut),
+    JS_CFUNC_DEF("EaseExpoIn",4,js_EaseExpoIn),
+    JS_CFUNC_DEF("EaseExpoOut",4,js_EaseExpoOut),
+    JS_CFUNC_DEF("EaseExpoInOut",4,js_EaseExpoInOut),
+    JS_CFUNC_DEF("EaseBackIn",4,js_EaseBackIn),
+    JS_CFUNC_DEF("EaseBackOut",4,js_EaseBackOut),
+    JS_CFUNC_DEF("EaseBackInOut",4,js_EaseBackInOut),
+    JS_CFUNC_DEF("EaseBounceOut",4,js_EaseBounceOut),
+    JS_CFUNC_DEF("EaseBounceIn",4,js_EaseBounceIn),
+    JS_CFUNC_DEF("EaseBounceInOut",4,js_EaseBounceInOut),
+    JS_CFUNC_DEF("EaseElasticIn",4,js_EaseElasticIn),
+    JS_CFUNC_DEF("EaseElasticOut",4,js_EaseElasticOut),
+    JS_CFUNC_DEF("EaseElasticInOut",4,js_EaseElasticInOut),
 };
 
 static int js_js_reasings_init(JSContext * ctx, JSModuleDef * m) {

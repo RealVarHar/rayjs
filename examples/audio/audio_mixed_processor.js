@@ -1,108 +1,75 @@
+import * as os from "qjs:os";
 import * as rl from 'rayjs:raylib';
 for (const key in rl) { globalThis[key] = rl[key] };
 
-/*******************************************************************************************
-*
-*   raylib [audio] example - Mixed audio processing
-*
-*   Example originally created with raylib 4.2, last time updated with raylib 4.2
-*
-*   Example contributed by hkc (@hatkidchan) and reviewed by Ramon Santamaria (@raysan5)
-*
-*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-*   BSD-like license that allows static linking with closed source software
-*
-*   Copyright (c) 2023 hkc (@hatkidchan)
-*
-********************************************************************************************/
-
-var exponent = 1;                 // Audio exponentiation value
-var averageVolume = new Float32Array(400);   // Average volume history
-
-//------------------------------------------------------------------------------------
-// Audio processing function
-//------------------------------------------------------------------------------------
-//WARNING! ProcessAudio is called by multithreaded AudioMixedProcessor
-//Make sure that no names are shared with runtime above, example: i++ will crash as it will overflow averageVolume at line 90
-//It would be smart to push this to a worker
-function ProcessAudio(buffer, frames){
-    let samples = buffer;   // Samples internally stored as <float>s
-    let average = 0;               // Temporary average volume
-
-    for (let frame = 0; frame < frames; frame++){
-        let left = samples[frame * 2 + 0], right = samples[frame * 2 + 1];
-
-        left = Math.pow(Math.abs(left), exponent) * ( (left < 0)? -1 : 1 );
-        right = Math.pow(Math.abs(right), exponent) * ( (right < 0)? -1 : 1 );
-
-        average += Math.abs(left) / frames;   // accumulating average volume
-        average += Math.abs(right) / frames;
-    }
-
-    // Moving history to the left
-    for (let j = 0; j < 399; j++) averageVolume[j] = averageVolume[j + 1];
-
-    averageVolume[399] = average;         // Adding last average value
-}
-
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
-
 // Initialization
 //--------------------------------------------------------------------------------------
+var exponent = 1;
+var averageVolume = new Float32Array(400);   // Average volume history
 const screenWidth = 800;
 const screenHeight = 450;
-initWindow(screenWidth, screenHeight, "raylib [audio] example - processing mixed output");
-initAudioDevice();              // Initialize audio device
-attachAudioMixedProcessor(ProcessAudio);
-let music = loadMusicStream("resources/country.mp3");
-let sound = loadSound("resources/coin.wav");
+InitWindow(screenWidth, screenHeight, "raylib [audio] example - processing mixed output");
+InitAudioDevice();              // Initialize audio device
+let myWorker = new os.Worker("./audio_mixed_processor_worker.js");
+myWorker.onmessage = function(e){
+    //called as an asynchronous responce to postMessage
+    averageVolume=e.data;
+};
+let music = LoadMusicStream("resources/country.mp3");
+let sound = LoadSound("resources/coin.wav");
 
-playMusicStream(music);
+PlayMusicStream(music);
 
-setTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    updateMusicStream(music);   // Update music buffer with new stream data
+    UpdateMusicStream(music);   // Update music buffer with new stream data
     // Modify processing variables
     //----------------------------------------------------------------------------------
-    if (isKeyPressed(KEY_LEFT)) exponent -= 0.05;
-    if (isKeyPressed(KEY_RIGHT)) exponent += 0.05;
+    if (IsKeyPressed(KEY_LEFT)) exponent -= 0.05;
+    if (IsKeyPressed(KEY_RIGHT)) exponent += 0.05;
 
     if (exponent <= 0.5) exponent = 0.5;
     if (exponent >= 3) exponent = 3;
-    if (isKeyPressed(KEY_SPACE)) playSound(sound);
+    myWorker.postMessage(exponent);// Ask worker to print its data and update exponent
+    if (IsKeyPressed(KEY_SPACE)) PlaySound(sound);
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
-        clearBackground(RAYWHITE);
+    BeginDrawing();
+        ClearBackground(RAYWHITE);
 
-        drawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, LIGHTGRAY);
+        DrawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, LIGHTGRAY);
 
-        drawText(textFormat("EXPONENT = %.2f", exponent), 215, 180, 20, LIGHTGRAY);
-        drawRectangle(199, 199, 402, 34, LIGHTGRAY);
+        DrawText(TextFormat("EXPONENT = %.2f", exponent), 215, 180, 20, LIGHTGRAY);
+        DrawRectangle(199, 199, 402, 34, LIGHTGRAY);
         for (let i = 0; i < 400; i++){
-            drawLine(201 + i, 232 - Math.floor(averageVolume[i] * 32), 201 + i, 232, MAROON);
+            DrawLine(201 + i, 232 - Math.floor(averageVolume[i] * 32), 201 + i, 232, MAROON);
         }
-        drawRectangleLines(199, 199, 402, 34, GRAY);
-        drawText("PRESS SPACE TO PLAY OTHER SOUND", 200, 250, 20, LIGHTGRAY);
-        drawText("USE LEFT AND RIGHT ARROWS TO ALTER DISTORTION", 140, 280, 20, LIGHTGRAY);
-    endDrawing();
+        DrawRectangleLines(199, 199, 402, 34, GRAY);
+        DrawText("PRESS SPACE TO PLAY OTHER SOUND", 200, 250, 20, LIGHTGRAY);
+        DrawText("USE LEFT AND RIGHT ARROWS TO ALTER DISTORTION", 140, 280, 20, LIGHTGRAY);
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 // De-Initialization
 //--------------------------------------------------------------------------------------
-stopMusicStream(music);
-detachAudioMixedProcessor(ProcessAudio);  // Disconnect audio processor
-unloadSound(sound);   // Unload music stream buffers from RAM
-unloadMusicStream(music);   // Unload music stream buffers from RAM
+StopMusicStream(music);
+await new Promise(r=>{
+    myWorker.onmessage = function(e){
+        if(e.data===0)r();//answered, dead
+    };
+    myWorker.postMessage(0);// Ask worker to die
+});
+myWorker=undefined; // unasigning worker closes it
 
-closeAudioDevice();         // Close audio device (music streaming is automatically stopped)
+UnloadSound(sound);   // Unload music stream buffers from RAM
+UnloadMusicStream(music);   // Unload music stream buffers from RAM
 
-closeWindow();              // Close window and OpenGL context
+CloseAudioDevice();         // Close audio device
+
+CloseWindow();              // Close window and OpenGL context
 //--------------------------------------------------------------------------------------*/

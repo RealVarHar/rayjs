@@ -11,7 +11,7 @@
 #include <raylib.h>
 
 
-static JSValue js_getCameraForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -25,7 +25,7 @@ static JSValue js_getCameraForward(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_getCameraUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -39,7 +39,7 @@ static JSValue js_getCameraUp(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
-static JSValue js_getCameraRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -53,7 +53,7 @@ static JSValue js_getCameraRight(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
-static JSValue js_cameraMoveForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraMoveForward(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -76,7 +76,7 @@ static JSValue js_cameraMoveForward(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -93,7 +93,7 @@ static JSValue js_cameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSVa
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraMoveRight(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -116,7 +116,7 @@ static JSValue js_cameraMoveRight(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -133,7 +133,7 @@ static JSValue js_cameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -156,7 +156,7 @@ static JSValue js_cameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraPitch(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -191,7 +191,7 @@ static JSValue js_cameraPitch(JSContext * ctx, JSValue this_val, int argc, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_cameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_CameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -208,7 +208,7 @@ static JSValue js_cameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraViewMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -222,7 +222,7 @@ static JSValue js_getCameraViewMatrix(JSContext * ctx, JSValue this_val, int arg
     return ret;
 }
 
-static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetCameraProjectionMatrix(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Camera * camera = (Camera *)JS_GetOpaque(argv[0], js_Camera3D_class_id);
     if(camera == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Camera");
@@ -244,18 +244,18 @@ static JSValue js_getCameraProjectionMatrix(JSContext * ctx, JSValue this_val, i
 }
 
 static const JSCFunctionListEntry js_js_rcamera_funcs[] = {
-    JS_CFUNC_DEF("getCameraForward",1,js_getCameraForward),
-    JS_CFUNC_DEF("getCameraUp",1,js_getCameraUp),
-    JS_CFUNC_DEF("getCameraRight",1,js_getCameraRight),
-    JS_CFUNC_DEF("cameraMoveForward",3,js_cameraMoveForward),
-    JS_CFUNC_DEF("cameraMoveUp",2,js_cameraMoveUp),
-    JS_CFUNC_DEF("cameraMoveRight",3,js_cameraMoveRight),
-    JS_CFUNC_DEF("cameraMoveToTarget",2,js_cameraMoveToTarget),
-    JS_CFUNC_DEF("cameraYaw",3,js_cameraYaw),
-    JS_CFUNC_DEF("cameraPitch",5,js_cameraPitch),
-    JS_CFUNC_DEF("cameraRoll",2,js_cameraRoll),
-    JS_CFUNC_DEF("getCameraViewMatrix",1,js_getCameraViewMatrix),
-    JS_CFUNC_DEF("getCameraProjectionMatrix",2,js_getCameraProjectionMatrix),
+    JS_CFUNC_DEF("GetCameraForward",1,js_GetCameraForward),
+    JS_CFUNC_DEF("GetCameraUp",1,js_GetCameraUp),
+    JS_CFUNC_DEF("GetCameraRight",1,js_GetCameraRight),
+    JS_CFUNC_DEF("CameraMoveForward",3,js_CameraMoveForward),
+    JS_CFUNC_DEF("CameraMoveUp",2,js_CameraMoveUp),
+    JS_CFUNC_DEF("CameraMoveRight",3,js_CameraMoveRight),
+    JS_CFUNC_DEF("CameraMoveToTarget",2,js_CameraMoveToTarget),
+    JS_CFUNC_DEF("CameraYaw",3,js_CameraYaw),
+    JS_CFUNC_DEF("CameraPitch",5,js_CameraPitch),
+    JS_CFUNC_DEF("CameraRoll",2,js_CameraRoll),
+    JS_CFUNC_DEF("GetCameraViewMatrix",1,js_GetCameraViewMatrix),
+    JS_CFUNC_DEF("GetCameraProjectionMatrix",2,js_GetCameraProjectionMatrix),
 };
 
 static int js_js_rcamera_init(JSContext * ctx, JSModuleDef * m) {

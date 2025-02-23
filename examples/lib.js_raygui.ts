@@ -4,113 +4,113 @@ declare var GuiStyleProp: {
     prototype: GuiStyleProp;
 }
 /** undefined */
-declare function guiEnable(): void;
+declare function GuiEnable(): void;
 /** undefined */
-declare function guiDisable(): void;
+declare function GuiDisable(): void;
 /** undefined */
-declare function guiLock(): void;
+declare function GuiLock(): void;
 /** undefined */
-declare function guiUnlock(): void;
+declare function GuiUnlock(): void;
 /** undefined */
-declare function guiIsLocked(): boolean;
+declare function GuiIsLocked(): boolean;
 /** undefined */
-declare function guiSetAlpha(alpha: number): void;
+declare function GuiSetAlpha(alpha: number): void;
 /** undefined */
-declare function guiSetState(state: number): void;
+declare function GuiSetState(state: number): void;
 /** undefined */
-declare function guiGetState(): number;
+declare function GuiGetState(): number;
 /** undefined */
-declare function guiSetFont(font: Font): void;
+declare function GuiSetFont(font: Font): void;
 /** undefined */
-declare function guiGetFont(): Font;
+declare function GuiGetFont(): Font;
 /** undefined */
-declare function guiSetStyle(control: number, property: number, value: number): void;
+declare function GuiSetStyle(control: number, property: number, value: number): void;
 /** undefined */
-declare function guiGetStyle(control: number, property: number): number;
+declare function GuiGetStyle(control: number, property: number): number;
 /** undefined */
-declare function guiLoadStyle(fileName: string | undefined | null): void;
+declare function GuiLoadStyle(fileName: string | undefined | null): void;
 /** undefined */
-declare function guiLoadStyleDefault(): void;
+declare function GuiLoadStyleDefault(): void;
 /** undefined */
-declare function guiEnableTooltip(): void;
+declare function GuiEnableTooltip(): void;
 /** undefined */
-declare function guiDisableTooltip(): void;
+declare function GuiDisableTooltip(): void;
 /** undefined */
-declare function guiSetTooltip(tooltip: string | undefined | null): void;
+declare function GuiSetTooltip(tooltip: string | undefined | null): void;
 /** undefined */
-declare function guiIconText(iconId: number, text: string | undefined | null): string | undefined | null;
+declare function GuiIconText(iconId: number, text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function guiSetIconScale(scale: number): void;
+declare function GuiSetIconScale(scale: number): void;
 /** undefined */
-declare function guiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void;
+declare function GuiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void;
 /** undefined */
-declare function guiWindowBox(bounds: Rectangle, title: string | undefined | null): number;
+declare function GuiWindowBox(bounds: Rectangle, title: string | undefined | null): number;
 /** undefined */
-declare function guiGroupBox(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiGroupBox(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiLine(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiLine(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiPanel(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiPanel(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiScrollPanel(bounds: Rectangle, text: string | undefined | null, content: Rectangle, scroll: Vector2 &, view: Rectangle &): number;
+declare function GuiScrollPanel(bounds: Rectangle, text: string | undefined | null, content: Rectangle, scroll: Vector2 &, view: Rectangle &): number;
 /** undefined */
-declare function guiLabel(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiLabel(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiButton(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiButton(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiLabelButton(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiLabelButton(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiToggle(bounds: Rectangle, text: string | undefined | null, active: bool &): number;
+declare function GuiToggle(bounds: Rectangle, text: string | undefined | null, active: bool &): number;
 /** undefined */
-declare function guiToggleGroup(bounds: Rectangle, text: string | undefined | null, active: int &): number;
+declare function GuiToggleGroup(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** undefined */
-declare function guiToggleSlider(bounds: Rectangle, text: string | undefined | null, active: int &): number;
+declare function GuiToggleSlider(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** undefined */
-declare function guiCheckBox(bounds: Rectangle, text: string | undefined | null, checked: bool &): number;
+declare function GuiCheckBox(bounds: Rectangle, text: string | undefined | null, checked: bool &): number;
 /** undefined */
-declare function guiComboBox(bounds: Rectangle, text: string | undefined | null, active: int &): number;
+declare function GuiComboBox(bounds: Rectangle, text: string | undefined | null, active: int &): number;
 /** undefined */
-declare function guiDropdownBox(bounds: Rectangle, text: string | undefined | null, active: int &, editMode: boolean): number;
+declare function GuiDropdownBox(bounds: Rectangle, text: string | undefined | null, active: int &, editMode: boolean): number;
 /** undefined */
-declare function guiSpinner(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
+declare function GuiSpinner(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
 /** undefined */
-declare function guiValueBox(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
+declare function GuiValueBox(bounds: Rectangle, text: string | undefined | null, value: int &, minValue: number, maxValue: number, editMode: boolean): number;
 /** undefined */
-declare function guiValueBoxFloat(bounds: Rectangle, text: string | undefined | null, textValue: string | undefined | null, value: float &, editMode: boolean): number;
+declare function GuiValueBoxFloat(bounds: Rectangle, text: string | undefined | null, textValue: string | undefined | null, value: float &, editMode: boolean): number;
 /** undefined */
-declare function guiTextBox(bounds: Rectangle, text: string | undefined | null, textSize: number, editMode: boolean): number;
+declare function GuiTextBox(bounds: Rectangle, text: string | undefined | null, textSize: number, editMode: boolean): number;
 /** undefined */
-declare function guiSlider(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
+declare function GuiSlider(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** undefined */
-declare function guiSliderBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
+declare function GuiSliderBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** undefined */
-declare function guiProgressBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
+declare function GuiProgressBar(bounds: Rectangle, textLeft: string | undefined | null, textRight: string | undefined | null, value: float &, minValue: number, maxValue: number): number;
 /** undefined */
-declare function guiStatusBar(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiStatusBar(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiDummyRec(bounds: Rectangle, text: string | undefined | null): number;
+declare function GuiDummyRec(bounds: Rectangle, text: string | undefined | null): number;
 /** undefined */
-declare function guiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2 &): number;
+declare function GuiGrid(bounds: Rectangle, text: string | undefined | null, spacing: number, subdivs: number, mouseCell: Vector2 &): number;
 /** undefined */
-declare function guiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: int &, active: int &): number;
+declare function GuiListView(bounds: Rectangle, text: string | undefined | null, scrollIndex: int &, active: int &): number;
 /** undefined */
-declare function guiListViewEx(bounds: Rectangle, text: char *, count: number, scrollIndex: int &, active: int &, focus: int): number;
+declare function GuiListViewEx(bounds: Rectangle, text: char *, count: number, scrollIndex: int &, active: int &, focus: int): number;
 /** undefined */
-declare function guiMessageBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null): number;
+declare function GuiMessageBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null): number;
 /** undefined */
-declare function guiTextInputBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null, text: string | undefined | null, textMaxSize: number, secretViewActive: bool): number;
+declare function GuiTextInputBox(bounds: Rectangle, title: string | undefined | null, message: string | undefined | null, buttons: string | undefined | null, text: string | undefined | null, textMaxSize: number, secretViewActive: bool): number;
 /** undefined */
-declare function guiColorPicker(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
+declare function GuiColorPicker(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
 /** undefined */
-declare function guiColorPanel(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
+declare function GuiColorPanel(bounds: Rectangle, text: string | undefined | null, color: Color &): number;
 /** undefined */
-declare function guiColorBarAlpha(bounds: Rectangle, text: string | undefined | null, alpha: float &): number;
+declare function GuiColorBarAlpha(bounds: Rectangle, text: string | undefined | null, alpha: float &): number;
 /** undefined */
-declare function guiColorBarHue(bounds: Rectangle, text: string | undefined | null, value: float &): number;
+declare function GuiColorBarHue(bounds: Rectangle, text: string | undefined | null, value: float &): number;
 /** undefined */
-declare function guiColorPickerHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
+declare function GuiColorPickerHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
 /** undefined */
-declare function guiColorPanelHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
+declare function GuiColorPanelHSV(bounds: Rectangle, text: string | undefined | null, colorHsv: Vector3 &): number;
 /**  */
 declare var STATE_NORMAL: number;
 /**  */

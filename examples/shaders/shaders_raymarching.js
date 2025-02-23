@@ -6,8 +6,8 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = [800];
 const screenHeight = [450];
 
-setConfigFlags(FLAG_WINDOW_RESIZABLE);
-initWindow(screenWidth, screenHeight, "raylib [shaders] example - raymarching shapes");
+SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+InitWindow(screenWidth, screenHeight, "raylib [shaders] example - raymarching shapes");
 
 const position = new Vector3(2.5, 2.5, 3.0);        // Camera position
 const target = new Vector3(0.0, 0.0, 0.7);          // Camera looking at point
@@ -18,70 +18,70 @@ const camera = new Camera3D(position,target, up, fovy, projection);
 
 // Load raymarching shader
 // NOTE: Defining 0 (NULL) for vertex shader forces usage of internal default vertex shader
-const shader = loadShader(null, "resources/shaders/glsl330/raymarching.fs");
+const shader = LoadShader(null, "resources/shaders/glsl330/raymarching.fs");
 
 // Get shader locations for required uniforms
-const viewEyeLoc = getShaderLocation(shader, "viewEye");
-const viewCenterLoc = getShaderLocation(shader, "viewCenter");
-const runTimeLoc = getShaderLocation(shader, "runTime");
-const resolutionLoc = getShaderLocation(shader, "resolution");
+const viewEyeLoc = GetShaderLocation(shader, "viewEye");
+const viewCenterLoc = GetShaderLocation(shader, "viewCenter");
+const runTimeLoc = GetShaderLocation(shader, "runTime");
+const resolutionLoc = GetShaderLocation(shader, "resolution");
 
-const scale = getWindowScaleDPI()
+const scale = GetWindowScaleDPI()
 let resolution = [screenWidth[0], screenHeight[0]];
-setShaderValue(shader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+SetShaderValue(shader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
 let runTime = 0.0;
 
-disableCursor();                    // Limit cursor to relative movement inside the window
-setTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+DisableCursor();                    // Limit cursor to relative movement inside the window
+SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())        // Detect window close button or ESC key
+while (!WindowShouldClose())        // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    updateCamera(camera, CAMERA_FIRST_PERSON);
+    UpdateCamera(camera, CAMERA_FIRST_PERSON);
 	let cameraPos=[ camera.position.x, camera.position.y, camera.position.z ];
 	let cameraTarget=[ camera.target.x, camera.target.y, camera.target.z ];
 
-    const deltaTime = getFrameTime();
+    const deltaTime = GetFrameTime();
     runTime += deltaTime;
 
     // Set shader required uniform values
-    setShaderValue(shader, viewEyeLoc, cameraPos, SHADER_UNIFORM_VEC3);
-    setShaderValue(shader, viewCenterLoc, cameraTarget, SHADER_UNIFORM_VEC3);
-    setShaderValue(shader, runTimeLoc, runTime, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, viewEyeLoc, cameraPos, SHADER_UNIFORM_VEC3);
+    SetShaderValue(shader, viewCenterLoc, cameraTarget, SHADER_UNIFORM_VEC3);
+    SetShaderValue(shader, runTimeLoc, runTime, SHADER_UNIFORM_FLOAT);
 
     // Check if screen is resized
-    if (isWindowResized())
+    if (IsWindowResized())
     {
 		resolution[0]=GetScreenWidth();
 		resolution[1]=GetScreenHeight();
-        setShaderValue(shader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+        SetShaderValue(shader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
     }
     //----------------------------------------------------------------------------------
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
         // We only draw a white full-screen rectangle,
         // frame is generated in shader using raymarching
-        beginShaderMode(shader);
-            drawRectangle(0, 0, getScreenWidth(), getScreenHeight(), WHITE);
-        endShaderMode();
+        BeginShaderMode(shader);
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
+        EndShaderMode();
 
-        drawText("(c) Raymarching shader by Iñigo Quilez. MIT License.", getScreenWidth() - 280, getScreenHeight() - 20, 10, BLACK);
+        DrawText("(c) Raymarching shader by Iñigo Quilez. MIT License.", GetScreenWidth() - 280, GetScreenHeight() - 20, 10, BLACK);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadShader(shader)
-closeWindow();                  // Close window and OpenGL context
+UnloadShader(shader)
+CloseWindow();                  // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

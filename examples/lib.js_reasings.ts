@@ -1,56 +1,56 @@
 /** undefined */
-declare function easeLinearNone(t: number, b: number, c: number, d: number): number;
+declare function EaseLinearNone(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeLinearIn(t: number, b: number, c: number, d: number): number;
+declare function EaseLinearIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeLinearOut(t: number, b: number, c: number, d: number): number;
+declare function EaseLinearOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeLinearInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseLinearInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeSineIn(t: number, b: number, c: number, d: number): number;
+declare function EaseSineIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeSineOut(t: number, b: number, c: number, d: number): number;
+declare function EaseSineOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeSineInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseSineInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCircIn(t: number, b: number, c: number, d: number): number;
+declare function EaseCircIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCircOut(t: number, b: number, c: number, d: number): number;
+declare function EaseCircOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCircInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseCircInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCubicIn(t: number, b: number, c: number, d: number): number;
+declare function EaseCubicIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCubicOut(t: number, b: number, c: number, d: number): number;
+declare function EaseCubicOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeCubicInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseCubicInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeQuadIn(t: number, b: number, c: number, d: number): number;
+declare function EaseQuadIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeQuadOut(t: number, b: number, c: number, d: number): number;
+declare function EaseQuadOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeQuadInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseQuadInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeExpoIn(t: number, b: number, c: number, d: number): number;
+declare function EaseExpoIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeExpoOut(t: number, b: number, c: number, d: number): number;
+declare function EaseExpoOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeExpoInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseExpoInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBackIn(t: number, b: number, c: number, d: number): number;
+declare function EaseBackIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBackOut(t: number, b: number, c: number, d: number): number;
+declare function EaseBackOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBackInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseBackInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBounceOut(t: number, b: number, c: number, d: number): number;
+declare function EaseBounceOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBounceIn(t: number, b: number, c: number, d: number): number;
+declare function EaseBounceIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeBounceInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseBounceInOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeElasticIn(t: number, b: number, c: number, d: number): number;
+declare function EaseElasticIn(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeElasticOut(t: number, b: number, c: number, d: number): number;
+declare function EaseElasticOut(t: number, b: number, c: number, d: number): number;
 /** undefined */
-declare function easeElasticInOut(t: number, b: number, c: number, d: number): number;
+declare function EaseElasticInOut(t: number, b: number, c: number, d: number): number;

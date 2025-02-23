@@ -293,1053 +293,1053 @@ declare var AutomationEventList: {
     prototype: AutomationEventList;
 }
 /** undefined */
-declare function initWindow(width: number, height: number, title: string | undefined | null): void;
+declare function InitWindow(width: number, height: number, title: string | undefined | null): void;
 /** undefined */
-declare function closeWindow(): void;
+declare function CloseWindow(): void;
 /** undefined */
-declare function windowShouldClose(): boolean;
+declare function WindowShouldClose(): boolean;
 /** undefined */
-declare function isWindowReady(): boolean;
+declare function IsWindowReady(): boolean;
 /** undefined */
-declare function isWindowFullscreen(): boolean;
+declare function IsWindowFullscreen(): boolean;
 /** undefined */
-declare function isWindowHidden(): boolean;
+declare function IsWindowHidden(): boolean;
 /** undefined */
-declare function isWindowMinimized(): boolean;
+declare function IsWindowMinimized(): boolean;
 /** undefined */
-declare function isWindowMaximized(): boolean;
+declare function IsWindowMaximized(): boolean;
 /** undefined */
-declare function isWindowFocused(): boolean;
+declare function IsWindowFocused(): boolean;
 /** undefined */
-declare function isWindowResized(): boolean;
+declare function IsWindowResized(): boolean;
 /** undefined */
-declare function isWindowState(flag: number): boolean;
+declare function IsWindowState(flag: number): boolean;
 /** undefined */
-declare function setWindowState(flags: number): void;
+declare function SetWindowState(flags: number): void;
 /** undefined */
-declare function clearWindowState(flags: number): void;
+declare function ClearWindowState(flags: number): void;
 /** undefined */
-declare function toggleFullscreen(): void;
+declare function ToggleFullscreen(): void;
 /** undefined */
-declare function toggleBorderlessWindowed(): void;
+declare function ToggleBorderlessWindowed(): void;
 /** undefined */
-declare function maximizeWindow(): void;
+declare function MaximizeWindow(): void;
 /** undefined */
-declare function minimizeWindow(): void;
+declare function MinimizeWindow(): void;
 /** undefined */
-declare function restoreWindow(): void;
+declare function RestoreWindow(): void;
 /** undefined */
-declare function setWindowIcon(image: Image): void;
+declare function SetWindowIcon(image: Image): void;
 /** undefined */
-declare function setWindowTitle(title: string | undefined | null): void;
+declare function SetWindowTitle(title: string | undefined | null): void;
 /** undefined */
-declare function setWindowPosition(x: number, y: number): void;
+declare function SetWindowPosition(x: number, y: number): void;
 /** undefined */
-declare function setWindowMonitor(monitor: number): void;
+declare function SetWindowMonitor(monitor: number): void;
 /** undefined */
-declare function setWindowMinSize(width: number, height: number): void;
+declare function SetWindowMinSize(width: number, height: number): void;
 /** undefined */
-declare function setWindowMaxSize(width: number, height: number): void;
+declare function SetWindowMaxSize(width: number, height: number): void;
 /** undefined */
-declare function setWindowSize(width: number, height: number): void;
+declare function SetWindowSize(width: number, height: number): void;
 /** undefined */
-declare function setWindowOpacity(opacity: number): void;
+declare function SetWindowOpacity(opacity: number): void;
 /** undefined */
-declare function setWindowFocused(): void;
+declare function SetWindowFocused(): void;
 /** undefined */
-declare function getScreenWidth(): number;
+declare function GetScreenWidth(): number;
 /** undefined */
-declare function getScreenHeight(): number;
+declare function GetScreenHeight(): number;
 /** undefined */
-declare function getRenderWidth(): number;
+declare function GetRenderWidth(): number;
 /** undefined */
-declare function getRenderHeight(): number;
+declare function GetRenderHeight(): number;
 /** undefined */
-declare function getMonitorCount(): number;
+declare function GetMonitorCount(): number;
 /** undefined */
-declare function getCurrentMonitor(): number;
+declare function GetCurrentMonitor(): number;
 /** undefined */
-declare function getMonitorPosition(monitor: number): Vector2;
+declare function GetMonitorPosition(monitor: number): Vector2;
 /** undefined */
-declare function getMonitorWidth(monitor: number): number;
+declare function GetMonitorWidth(monitor: number): number;
 /** undefined */
-declare function getMonitorHeight(monitor: number): number;
+declare function GetMonitorHeight(monitor: number): number;
 /** undefined */
-declare function getMonitorPhysicalWidth(monitor: number): number;
+declare function GetMonitorPhysicalWidth(monitor: number): number;
 /** undefined */
-declare function getMonitorPhysicalHeight(monitor: number): number;
+declare function GetMonitorPhysicalHeight(monitor: number): number;
 /** undefined */
-declare function getMonitorRefreshRate(monitor: number): number;
+declare function GetMonitorRefreshRate(monitor: number): number;
 /** undefined */
-declare function getWindowPosition(): Vector2;
+declare function GetWindowPosition(): Vector2;
 /** undefined */
-declare function getWindowScaleDPI(): Vector2;
+declare function GetWindowScaleDPI(): Vector2;
 /** undefined */
-declare function getMonitorName(monitor: number): string | undefined | null;
+declare function GetMonitorName(monitor: number): string | undefined | null;
 /** undefined */
-declare function setClipboardText(text: string | undefined | null): void;
+declare function SetClipboardText(text: string | undefined | null): void;
 /** undefined */
-declare function getClipboardText(): string | undefined | null;
+declare function GetClipboardText(): string | undefined | null;
 /** undefined */
-declare function getClipboardImage(): Image;
+declare function GetClipboardImage(): Image;
 /** undefined */
-declare function enableEventWaiting(): void;
+declare function EnableEventWaiting(): void;
 /** undefined */
-declare function disableEventWaiting(): void;
+declare function DisableEventWaiting(): void;
 /** undefined */
-declare function showCursor(): void;
+declare function ShowCursor(): void;
 /** undefined */
-declare function hideCursor(): void;
+declare function HideCursor(): void;
 /** undefined */
-declare function isCursorHidden(): boolean;
+declare function IsCursorHidden(): boolean;
 /** undefined */
-declare function enableCursor(): void;
+declare function EnableCursor(): void;
 /** undefined */
-declare function disableCursor(): void;
+declare function DisableCursor(): void;
 /** undefined */
-declare function isCursorOnScreen(): boolean;
+declare function IsCursorOnScreen(): boolean;
 /** undefined */
-declare function clearBackground(color: Color): void;
+declare function ClearBackground(color: Color): void;
 /** undefined */
-declare function beginDrawing(): void;
+declare function BeginDrawing(): void;
 /** undefined */
-declare function endDrawing(): void;
+declare function EndDrawing(): void;
 /** undefined */
-declare function beginMode2D(camera: Camera2D): void;
+declare function BeginMode2D(camera: Camera2D): void;
 /** undefined */
-declare function endMode2D(): void;
+declare function EndMode2D(): void;
 /** undefined */
-declare function beginMode3D(camera: Camera3D): void;
+declare function BeginMode3D(camera: Camera3D): void;
 /** undefined */
-declare function endMode3D(): void;
+declare function EndMode3D(): void;
 /** undefined */
-declare function beginTextureMode(target: RenderTexture): void;
+declare function BeginTextureMode(target: RenderTexture): void;
 /** undefined */
-declare function endTextureMode(): void;
+declare function EndTextureMode(): void;
 /** undefined */
-declare function beginShaderMode(shader: Shader): void;
+declare function BeginShaderMode(shader: Shader): void;
 /** undefined */
-declare function endShaderMode(): void;
+declare function EndShaderMode(): void;
 /** undefined */
-declare function beginBlendMode(mode: number): void;
+declare function BeginBlendMode(mode: number): void;
 /** undefined */
-declare function endBlendMode(): void;
+declare function EndBlendMode(): void;
 /** undefined */
-declare function beginScissorMode(x: number, y: number, width: number, height: number): void;
+declare function BeginScissorMode(x: number, y: number, width: number, height: number): void;
 /** undefined */
-declare function endScissorMode(): void;
+declare function EndScissorMode(): void;
 /** undefined */
-declare function beginVrStereoMode(config: VrStereoConfig): void;
+declare function BeginVrStereoMode(config: VrStereoConfig): void;
 /** undefined */
-declare function endVrStereoMode(): void;
+declare function EndVrStereoMode(): void;
 /** undefined */
-declare function loadVrStereoConfig(device: VrDeviceInfo): VrStereoConfig;
+declare function LoadVrStereoConfig(device: VrDeviceInfo): VrStereoConfig;
 /** undefined */
-declare function unloadVrStereoConfig(config: VrStereoConfig): void;
+declare function UnloadVrStereoConfig(config: VrStereoConfig): void;
 /** undefined */
-declare function loadShader(vsFileName: string | undefined | null, fsFileName: string | undefined | null): Shader;
+declare function LoadShader(vsFileName: string | undefined | null, fsFileName: string | undefined | null): Shader;
 /** undefined */
-declare function loadShaderFromMemory(vsCode: string | undefined | null, fsCode: string | undefined | null): Shader;
+declare function LoadShaderFromMemory(vsCode: string | undefined | null, fsCode: string | undefined | null): Shader;
 /** undefined */
-declare function isShaderValid(shader: Shader): boolean;
+declare function IsShaderValid(shader: Shader): boolean;
 /** undefined */
-declare function getShaderLocation(shader: Shader, uniformName: string | undefined | null): number;
+declare function GetShaderLocation(shader: Shader, uniformName: string | undefined | null): number;
 /** undefined */
-declare function getShaderLocationAttrib(shader: Shader, attribName: string | undefined | null): number;
+declare function GetShaderLocationAttrib(shader: Shader, attribName: string | undefined | null): number;
 /** undefined */
-declare function setShaderValue(shader: Shader, locIndex: number, value: void &, uniformType: number): void;
+declare function SetShaderValue(shader: Shader, locIndex: number, value: void &, uniformType: number): void;
 /** undefined */
-declare function setShaderValueV(shader: Shader, locIndex: number, values: any, uniformType: number, count: number): void;
+declare function SetShaderValueV(shader: Shader, locIndex: number, values: any, uniformType: number, count: number): void;
 /** undefined */
-declare function setShaderValueMatrix(shader: Shader, locIndex: number, mat: Matrix): void;
+declare function SetShaderValueMatrix(shader: Shader, locIndex: number, mat: Matrix): void;
 /** undefined */
-declare function setShaderValueTexture(shader: Shader, locIndex: number, texture: Texture): void;
+declare function SetShaderValueTexture(shader: Shader, locIndex: number, texture: Texture): void;
 /** undefined */
-declare function unloadShader(shader: Shader): void;
+declare function UnloadShader(shader: Shader): void;
 /** undefined */
-declare function getScreenToWorldRay(position: Vector2, camera: Camera3D): Ray;
+declare function GetScreenToWorldRay(position: Vector2, camera: Camera3D): Ray;
 /** undefined */
-declare function getScreenToWorldRayEx(position: Vector2, camera: Camera3D, width: number, height: number): Ray;
+declare function GetScreenToWorldRayEx(position: Vector2, camera: Camera3D, width: number, height: number): Ray;
 /** undefined */
-declare function getWorldToScreen(position: Vector3, camera: Camera3D): Vector2;
+declare function GetWorldToScreen(position: Vector3, camera: Camera3D): Vector2;
 /** undefined */
-declare function getWorldToScreenEx(position: Vector3, camera: Camera3D, width: number, height: number): Vector2;
+declare function GetWorldToScreenEx(position: Vector3, camera: Camera3D, width: number, height: number): Vector2;
 /** undefined */
-declare function getWorldToScreen2D(position: Vector2, camera: Camera2D): Vector2;
+declare function GetWorldToScreen2D(position: Vector2, camera: Camera2D): Vector2;
 /** undefined */
-declare function getScreenToWorld2D(position: Vector2, camera: Camera2D): Vector2;
+declare function GetScreenToWorld2D(position: Vector2, camera: Camera2D): Vector2;
 /** undefined */
-declare function getCameraMatrix(camera: Camera3D): Matrix;
+declare function GetCameraMatrix(camera: Camera3D): Matrix;
 /** undefined */
-declare function getCameraMatrix2D(camera: Camera2D): Matrix;
+declare function GetCameraMatrix2D(camera: Camera2D): Matrix;
 /** undefined */
-declare function setTargetFPS(fps: number): void;
+declare function SetTargetFPS(fps: number): void;
 /** undefined */
-declare function getFrameTime(): number;
+declare function GetFrameTime(): number;
 /** undefined */
-declare function getTime(): number;
+declare function GetTime(): number;
 /** undefined */
-declare function getFPS(): number;
+declare function GetFPS(): number;
 /** undefined */
-declare function setRandomSeed(seed: number): void;
+declare function SetRandomSeed(seed: number): void;
 /** undefined */
-declare function getRandomValue(min: number, max: number): number;
+declare function GetRandomValue(min: number, max: number): number;
 /** undefined */
-declare function loadRandomSequence(count: number, min: number, max: number): int;
+declare function LoadRandomSequence(count: number, min: number, max: number): int;
 /** undefined */
-declare function takeScreenshot(fileName: string | undefined | null): void;
+declare function TakeScreenshot(fileName: string | undefined | null): void;
 /** undefined */
-declare function setConfigFlags(flags: number): void;
+declare function SetConfigFlags(flags: number): void;
 /** undefined */
-declare function openURL(url: string | undefined | null): void;
+declare function OpenURL(url: string | undefined | null): void;
 /** undefined */
-declare function traceLog(logLevel: number): void;
+declare function TraceLog(logLevel: number): void;
 /** undefined */
-declare function setTraceLogLevel(logLevel: number): void;
+declare function SetTraceLogLevel(logLevel: number): void;
 /** undefined */
-declare function setLoadFileDataCallback(callback: LoadFileDataCallback): void;
+declare function SetLoadFileDataCallback(callback: LoadFileDataCallback): void;
 /** undefined */
-declare function setSaveFileDataCallback(callback: SaveFileDataCallback): void;
+declare function SetSaveFileDataCallback(callback: SaveFileDataCallback): void;
 /** undefined */
-declare function setLoadFileTextCallback(callback: LoadFileTextCallback): void;
+declare function SetLoadFileTextCallback(callback: LoadFileTextCallback): void;
 /** undefined */
-declare function setSaveFileTextCallback(callback: SaveFileTextCallback): void;
+declare function SetSaveFileTextCallback(callback: SaveFileTextCallback): void;
 /** undefined */
-declare function loadFileData(fileName: string | undefined | null, dataSize: int &): ArrayBuffer;
+declare function LoadFileData(fileName: string | undefined | null, dataSize: int &): ArrayBuffer;
 /** undefined */
-declare function saveFileData(fileName: string | undefined | null, data: any, dataSize: number): boolean;
+declare function SaveFileData(fileName: string | undefined | null, data: any, dataSize: number): boolean;
 /** undefined */
-declare function loadFileText(fileName: string | undefined | null): string | undefined | null;
+declare function LoadFileText(fileName: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function saveFileText(fileName: string | undefined | null, text: string | undefined | null): boolean;
+declare function SaveFileText(fileName: string | undefined | null, text: string | undefined | null): boolean;
 /** undefined */
-declare function fileExists(fileName: string | undefined | null): boolean;
+declare function FileExists(fileName: string | undefined | null): boolean;
 /** undefined */
-declare function directoryExists(dirPath: string | undefined | null): boolean;
+declare function DirectoryExists(dirPath: string | undefined | null): boolean;
 /** undefined */
-declare function isFileExtension(fileName: string | undefined | null, ext: string | undefined | null): boolean;
+declare function IsFileExtension(fileName: string | undefined | null, ext: string | undefined | null): boolean;
 /** undefined */
-declare function getFileLength(fileName: string | undefined | null): number;
+declare function GetFileLength(fileName: string | undefined | null): number;
 /** undefined */
-declare function getFileExtension(fileName: string | undefined | null): string | undefined | null;
+declare function GetFileExtension(fileName: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function getFileName(filePath: string | undefined | null): string | undefined | null;
+declare function GetFileName(filePath: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function getFileNameWithoutExt(filePath: string | undefined | null): string | undefined | null;
+declare function GetFileNameWithoutExt(filePath: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function getDirectoryPath(filePath: string | undefined | null): string | undefined | null;
+declare function GetDirectoryPath(filePath: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function getPrevDirectoryPath(dirPath: string | undefined | null): string | undefined | null;
+declare function GetPrevDirectoryPath(dirPath: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function getWorkingDirectory(): string | undefined | null;
+declare function GetWorkingDirectory(): string | undefined | null;
 /** undefined */
-declare function getApplicationDirectory(): string | undefined | null;
+declare function GetApplicationDirectory(): string | undefined | null;
 /** undefined */
-declare function makeDirectory(dirPath: string | undefined | null): number;
+declare function MakeDirectory(dirPath: string | undefined | null): number;
 /** undefined */
-declare function changeDirectory(dir: string | undefined | null): boolean;
+declare function ChangeDirectory(dir: string | undefined | null): boolean;
 /** undefined */
-declare function isPathFile(path: string | undefined | null): boolean;
+declare function IsPathFile(path: string | undefined | null): boolean;
 /** undefined */
-declare function isFileNameValid(fileName: string | undefined | null): boolean;
+declare function IsFileNameValid(fileName: string | undefined | null): boolean;
 /** undefined */
-declare function loadDirectoryFiles(dirPath: string | undefined | null): string[];
+declare function LoadDirectoryFiles(dirPath: string | undefined | null): string[];
 /** undefined */
-declare function loadDirectoryFilesEx(basePath: string | undefined | null, filter: string | undefined | null, scanSubdirs: boolean): string[];
+declare function LoadDirectoryFilesEx(basePath: string | undefined | null, filter: string | undefined | null, scanSubdirs: boolean): string[];
 /** undefined */
-declare function isFileDropped(): boolean;
+declare function IsFileDropped(): boolean;
 /** undefined */
-declare function loadDroppedFiles(): string[];
+declare function LoadDroppedFiles(): string[];
 /** undefined */
-declare function getFileModTime(fileName: string | undefined | null): number;
+declare function GetFileModTime(fileName: string | undefined | null): number;
 /** undefined */
-declare function computeCRC32(data: ArrayBuffer, dataSize: number): number;
+declare function ComputeCRC32(data: ArrayBuffer, dataSize: number): number;
 /** undefined */
-declare function computeMD5(data: ArrayBuffer, dataSize: number): unsigned int;
+declare function ComputeMD5(data: ArrayBuffer, dataSize: number): unsigned int;
 /** undefined */
-declare function computeSHA1(data: ArrayBuffer, dataSize: number): unsigned int;
+declare function ComputeSHA1(data: ArrayBuffer, dataSize: number): unsigned int;
 /** undefined */
-declare function loadAutomationEventList(fileName: string | undefined | null): AutomationEventList;
+declare function LoadAutomationEventList(fileName: string | undefined | null): AutomationEventList;
 /** undefined */
-declare function unloadAutomationEventList(list: AutomationEventList): void;
+declare function UnloadAutomationEventList(list: AutomationEventList): void;
 /** undefined */
-declare function exportAutomationEventList(list: AutomationEventList, fileName: string | undefined | null): boolean;
+declare function ExportAutomationEventList(list: AutomationEventList, fileName: string | undefined | null): boolean;
 /** undefined */
-declare function setAutomationEventList(list: AutomationEventList &): void;
+declare function SetAutomationEventList(list: AutomationEventList &): void;
 /** undefined */
-declare function setAutomationEventBaseFrame(frame: number): void;
+declare function SetAutomationEventBaseFrame(frame: number): void;
 /** undefined */
-declare function startAutomationEventRecording(): void;
+declare function StartAutomationEventRecording(): void;
 /** undefined */
-declare function stopAutomationEventRecording(): void;
+declare function StopAutomationEventRecording(): void;
 /** undefined */
-declare function playAutomationEvent(event: AutomationEvent): void;
+declare function PlayAutomationEvent(event: AutomationEvent): void;
 /** undefined */
-declare function isKeyPressed(key: number): boolean;
+declare function IsKeyPressed(key: number): boolean;
 /** undefined */
-declare function isKeyPressedRepeat(key: number): boolean;
+declare function IsKeyPressedRepeat(key: number): boolean;
 /** undefined */
-declare function isKeyDown(key: number): boolean;
+declare function IsKeyDown(key: number): boolean;
 /** undefined */
-declare function isKeyReleased(key: number): boolean;
+declare function IsKeyReleased(key: number): boolean;
 /** undefined */
-declare function isKeyUp(key: number): boolean;
+declare function IsKeyUp(key: number): boolean;
 /** undefined */
-declare function getKeyPressed(): number;
+declare function GetKeyPressed(): number;
 /** undefined */
-declare function getCharPressed(): number;
+declare function GetCharPressed(): number;
 /** undefined */
-declare function getKeyName(key: number): string | undefined | null;
+declare function GetKeyName(key: number): string | undefined | null;
 /** undefined */
-declare function setExitKey(key: number): void;
+declare function SetExitKey(key: number): void;
 /** undefined */
-declare function isGamepadAvailable(gamepad: number): boolean;
+declare function IsGamepadAvailable(gamepad: number): boolean;
 /** undefined */
-declare function getGamepadName(gamepad: number): string | undefined | null;
+declare function GetGamepadName(gamepad: number): string | undefined | null;
 /** undefined */
-declare function isGamepadButtonPressed(gamepad: number, button: number): boolean;
+declare function IsGamepadButtonPressed(gamepad: number, button: number): boolean;
 /** undefined */
-declare function isGamepadButtonDown(gamepad: number, button: number): boolean;
+declare function IsGamepadButtonDown(gamepad: number, button: number): boolean;
 /** undefined */
-declare function isGamepadButtonReleased(gamepad: number, button: number): boolean;
+declare function IsGamepadButtonReleased(gamepad: number, button: number): boolean;
 /** undefined */
-declare function isGamepadButtonUp(gamepad: number, button: number): boolean;
+declare function IsGamepadButtonUp(gamepad: number, button: number): boolean;
 /** undefined */
-declare function getGamepadButtonPressed(): number;
+declare function GetGamepadButtonPressed(): number;
 /** undefined */
-declare function getGamepadAxisCount(gamepad: number): number;
+declare function GetGamepadAxisCount(gamepad: number): number;
 /** undefined */
-declare function getGamepadAxisMovement(gamepad: number, axis: number): number;
+declare function GetGamepadAxisMovement(gamepad: number, axis: number): number;
 /** undefined */
-declare function setGamepadMappings(mappings: string | undefined | null): number;
+declare function SetGamepadMappings(mappings: string | undefined | null): number;
 /** undefined */
-declare function setGamepadVibration(gamepad: number, leftMotor: number, rightMotor: number, duration: number): void;
+declare function SetGamepadVibration(gamepad: number, leftMotor: number, rightMotor: number, duration: number): void;
 /** undefined */
-declare function isMouseButtonPressed(button: number): boolean;
+declare function IsMouseButtonPressed(button: number): boolean;
 /** undefined */
-declare function isMouseButtonDown(button: number): boolean;
+declare function IsMouseButtonDown(button: number): boolean;
 /** undefined */
-declare function isMouseButtonReleased(button: number): boolean;
+declare function IsMouseButtonReleased(button: number): boolean;
 /** undefined */
-declare function isMouseButtonUp(button: number): boolean;
+declare function IsMouseButtonUp(button: number): boolean;
 /** undefined */
-declare function getMouseX(): number;
+declare function GetMouseX(): number;
 /** undefined */
-declare function getMouseY(): number;
+declare function GetMouseY(): number;
 /** undefined */
-declare function getMousePosition(): Vector2;
+declare function GetMousePosition(): Vector2;
 /** undefined */
-declare function getMouseDelta(): Vector2;
+declare function GetMouseDelta(): Vector2;
 /** undefined */
-declare function setMousePosition(x: number, y: number): void;
+declare function SetMousePosition(x: number, y: number): void;
 /** undefined */
-declare function setMouseOffset(offsetX: number, offsetY: number): void;
+declare function SetMouseOffset(offsetX: number, offsetY: number): void;
 /** undefined */
-declare function setMouseScale(scaleX: number, scaleY: number): void;
+declare function SetMouseScale(scaleX: number, scaleY: number): void;
 /** undefined */
-declare function getMouseWheelMove(): number;
+declare function GetMouseWheelMove(): number;
 /** undefined */
-declare function getMouseWheelMoveV(): Vector2;
+declare function GetMouseWheelMoveV(): Vector2;
 /** undefined */
-declare function setMouseCursor(cursor: number): void;
+declare function SetMouseCursor(cursor: number): void;
 /** undefined */
-declare function getTouchX(): number;
+declare function GetTouchX(): number;
 /** undefined */
-declare function getTouchY(): number;
+declare function GetTouchY(): number;
 /** undefined */
-declare function getTouchPosition(index: number): Vector2;
+declare function GetTouchPosition(index: number): Vector2;
 /** undefined */
-declare function getTouchPointId(index: number): number;
+declare function GetTouchPointId(index: number): number;
 /** undefined */
-declare function getTouchPointCount(): number;
+declare function GetTouchPointCount(): number;
 /** undefined */
-declare function setGesturesEnabled(flags: number): void;
+declare function SetGesturesEnabled(flags: number): void;
 /** undefined */
-declare function isGestureDetected(gesture: number): boolean;
+declare function IsGestureDetected(gesture: number): boolean;
 /** undefined */
-declare function getGestureDetected(): number;
+declare function GetGestureDetected(): number;
 /** undefined */
-declare function getGestureHoldDuration(): number;
+declare function GetGestureHoldDuration(): number;
 /** undefined */
-declare function getGestureDragVector(): Vector2;
+declare function GetGestureDragVector(): Vector2;
 /** undefined */
-declare function getGestureDragAngle(): number;
+declare function GetGestureDragAngle(): number;
 /** undefined */
-declare function getGesturePinchVector(): Vector2;
+declare function GetGesturePinchVector(): Vector2;
 /** undefined */
-declare function getGesturePinchAngle(): number;
+declare function GetGesturePinchAngle(): number;
 /** undefined */
-declare function updateCamera(camera: Camera &, mode: number): void;
+declare function UpdateCamera(camera: Camera &, mode: number): void;
 /** undefined */
-declare function updateCameraPro(camera: Camera &, movement: Vector3, rotation: Vector3, zoom: number): void;
+declare function UpdateCameraPro(camera: Camera &, movement: Vector3, rotation: Vector3, zoom: number): void;
 /** undefined */
-declare function setShapesTexture(texture: Texture, source: Rectangle): void;
+declare function SetShapesTexture(texture: Texture, source: Rectangle): void;
 /** undefined */
-declare function getShapesTexture(): Texture;
+declare function GetShapesTexture(): Texture;
 /** undefined */
-declare function getShapesTextureRectangle(): Rectangle;
+declare function GetShapesTextureRectangle(): Rectangle;
 /** undefined */
-declare function drawPixel(posX: number, posY: number, color: Color): void;
+declare function DrawPixel(posX: number, posY: number, color: Color): void;
 /** undefined */
-declare function drawPixelV(position: Vector2, color: Color): void;
+declare function DrawPixelV(position: Vector2, color: Color): void;
 /** undefined */
-declare function drawLine(startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
+declare function DrawLine(startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
 /** undefined */
-declare function drawLineV(startPos: Vector2, endPos: Vector2, color: Color): void;
+declare function DrawLineV(startPos: Vector2, endPos: Vector2, color: Color): void;
 /** undefined */
-declare function drawLineEx(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void;
+declare function DrawLineEx(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawLineBezier(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void;
+declare function DrawLineBezier(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawCircle(centerX: number, centerY: number, radius: number, color: Color): void;
+declare function DrawCircle(centerX: number, centerY: number, radius: number, color: Color): void;
 /** undefined */
-declare function drawCircleSector(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
+declare function DrawCircleSector(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawCircleSectorLines(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
+declare function DrawCircleSectorLines(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawCircleGradient(centerX: number, centerY: number, radius: number, inner: Color, outer: Color): void;
+declare function DrawCircleGradient(centerX: number, centerY: number, radius: number, inner: Color, outer: Color): void;
 /** undefined */
-declare function drawCircleV(center: Vector2, radius: number, color: Color): void;
+declare function DrawCircleV(center: Vector2, radius: number, color: Color): void;
 /** undefined */
-declare function drawCircleLines(centerX: number, centerY: number, radius: number, color: Color): void;
+declare function DrawCircleLines(centerX: number, centerY: number, radius: number, color: Color): void;
 /** undefined */
-declare function drawCircleLinesV(center: Vector2, radius: number, color: Color): void;
+declare function DrawCircleLinesV(center: Vector2, radius: number, color: Color): void;
 /** undefined */
-declare function drawEllipse(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void;
+declare function DrawEllipse(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void;
 /** undefined */
-declare function drawEllipseLines(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void;
+declare function DrawEllipseLines(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void;
 /** undefined */
-declare function drawRing(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
+declare function DrawRing(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawRingLines(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
+declare function DrawRingLines(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawRectangle(posX: number, posY: number, width: number, height: number, color: Color): void;
+declare function DrawRectangle(posX: number, posY: number, width: number, height: number, color: Color): void;
 /** undefined */
-declare function drawRectangleV(position: Vector2, size: Vector2, color: Color): void;
+declare function DrawRectangleV(position: Vector2, size: Vector2, color: Color): void;
 /** undefined */
-declare function drawRectangleRec(rec: Rectangle, color: Color): void;
+declare function DrawRectangleRec(rec: Rectangle, color: Color): void;
 /** undefined */
-declare function drawRectanglePro(rec: Rectangle, origin: Vector2, rotation: number, color: Color): void;
+declare function DrawRectanglePro(rec: Rectangle, origin: Vector2, rotation: number, color: Color): void;
 /** undefined */
-declare function drawRectangleGradientV(posX: number, posY: number, width: number, height: number, top: Color, bottom: Color): void;
+declare function DrawRectangleGradientV(posX: number, posY: number, width: number, height: number, top: Color, bottom: Color): void;
 /** undefined */
-declare function drawRectangleGradientH(posX: number, posY: number, width: number, height: number, left: Color, right: Color): void;
+declare function DrawRectangleGradientH(posX: number, posY: number, width: number, height: number, left: Color, right: Color): void;
 /** undefined */
-declare function drawRectangleGradientEx(rec: Rectangle, topLeft: Color, bottomLeft: Color, topRight: Color, bottomRight: Color): void;
+declare function DrawRectangleGradientEx(rec: Rectangle, topLeft: Color, bottomLeft: Color, topRight: Color, bottomRight: Color): void;
 /** undefined */
-declare function drawRectangleLines(posX: number, posY: number, width: number, height: number, color: Color): void;
+declare function DrawRectangleLines(posX: number, posY: number, width: number, height: number, color: Color): void;
 /** undefined */
-declare function drawRectangleLinesEx(rec: Rectangle, lineThick: number, color: Color): void;
+declare function DrawRectangleLinesEx(rec: Rectangle, lineThick: number, color: Color): void;
 /** undefined */
-declare function drawRectangleRounded(rec: Rectangle, roundness: number, segments: number, color: Color): void;
+declare function DrawRectangleRounded(rec: Rectangle, roundness: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawRectangleRoundedLines(rec: Rectangle, roundness: number, segments: number, color: Color): void;
+declare function DrawRectangleRoundedLines(rec: Rectangle, roundness: number, segments: number, color: Color): void;
 /** undefined */
-declare function drawRectangleRoundedLinesEx(rec: Rectangle, roundness: number, segments: number, lineThick: number, color: Color): void;
+declare function DrawRectangleRoundedLinesEx(rec: Rectangle, roundness: number, segments: number, lineThick: number, color: Color): void;
 /** undefined */
-declare function drawTriangle(v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function DrawTriangle(v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** undefined */
-declare function drawTriangleLines(v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function DrawTriangleLines(v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** undefined */
-declare function drawPoly(center: Vector2, sides: number, radius: number, rotation: number, color: Color): void;
+declare function DrawPoly(center: Vector2, sides: number, radius: number, rotation: number, color: Color): void;
 /** undefined */
-declare function drawPolyLines(center: Vector2, sides: number, radius: number, rotation: number, color: Color): void;
+declare function DrawPolyLines(center: Vector2, sides: number, radius: number, rotation: number, color: Color): void;
 /** undefined */
-declare function drawPolyLinesEx(center: Vector2, sides: number, radius: number, rotation: number, lineThick: number, color: Color): void;
+declare function DrawPolyLinesEx(center: Vector2, sides: number, radius: number, rotation: number, lineThick: number, color: Color): void;
 /** undefined */
-declare function drawSplineLinear(points: Vector2, pointCount: number, thick: number, color: Color): void;
+declare function DrawSplineLinear(points: Vector2, pointCount: number, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineBasis(points: Vector2, pointCount: number, thick: number, color: Color): void;
+declare function DrawSplineBasis(points: Vector2, pointCount: number, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineCatmullRom(points: Vector2, pointCount: number, thick: number, color: Color): void;
+declare function DrawSplineCatmullRom(points: Vector2, pointCount: number, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineBezierQuadratic(points: Vector2, pointCount: number, thick: number, color: Color): void;
+declare function DrawSplineBezierQuadratic(points: Vector2, pointCount: number, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineBezierCubic(points: Vector2, pointCount: number, thick: number, color: Color): void;
+declare function DrawSplineBezierCubic(points: Vector2, pointCount: number, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineSegmentLinear(p1: Vector2, p2: Vector2, thick: number, color: Color): void;
+declare function DrawSplineSegmentLinear(p1: Vector2, p2: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineSegmentBasis(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, thick: number, color: Color): void;
+declare function DrawSplineSegmentBasis(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineSegmentCatmullRom(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, thick: number, color: Color): void;
+declare function DrawSplineSegmentCatmullRom(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineSegmentBezierQuadratic(p1: Vector2, c2: Vector2, p3: Vector2, thick: number, color: Color): void;
+declare function DrawSplineSegmentBezierQuadratic(p1: Vector2, c2: Vector2, p3: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function drawSplineSegmentBezierCubic(p1: Vector2, c2: Vector2, c3: Vector2, p4: Vector2, thick: number, color: Color): void;
+declare function DrawSplineSegmentBezierCubic(p1: Vector2, c2: Vector2, c3: Vector2, p4: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function getSplinePointLinear(startPos: Vector2, endPos: Vector2, t: number): Vector2;
+declare function GetSplinePointLinear(startPos: Vector2, endPos: Vector2, t: number): Vector2;
 /** undefined */
-declare function getSplinePointBasis(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, t: number): Vector2;
+declare function GetSplinePointBasis(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, t: number): Vector2;
 /** undefined */
-declare function getSplinePointCatmullRom(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, t: number): Vector2;
+declare function GetSplinePointCatmullRom(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2, t: number): Vector2;
 /** undefined */
-declare function getSplinePointBezierQuad(p1: Vector2, c2: Vector2, p3: Vector2, t: number): Vector2;
+declare function GetSplinePointBezierQuad(p1: Vector2, c2: Vector2, p3: Vector2, t: number): Vector2;
 /** undefined */
-declare function getSplinePointBezierCubic(p1: Vector2, c2: Vector2, c3: Vector2, p4: Vector2, t: number): Vector2;
+declare function GetSplinePointBezierCubic(p1: Vector2, c2: Vector2, c3: Vector2, p4: Vector2, t: number): Vector2;
 /** undefined */
-declare function checkCollisionRecs(rec1: Rectangle, rec2: Rectangle): boolean;
+declare function CheckCollisionRecs(rec1: Rectangle, rec2: Rectangle): boolean;
 /** undefined */
-declare function checkCollisionCircles(center1: Vector2, radius1: number, center2: Vector2, radius2: number): boolean;
+declare function CheckCollisionCircles(center1: Vector2, radius1: number, center2: Vector2, radius2: number): boolean;
 /** undefined */
-declare function checkCollisionCircleRec(center: Vector2, radius: number, rec: Rectangle): boolean;
+declare function CheckCollisionCircleRec(center: Vector2, radius: number, rec: Rectangle): boolean;
 /** undefined */
-declare function checkCollisionCircleLine(center: Vector2, radius: number, p1: Vector2, p2: Vector2): boolean;
+declare function CheckCollisionCircleLine(center: Vector2, radius: number, p1: Vector2, p2: Vector2): boolean;
 /** undefined */
-declare function checkCollisionPointRec(point: Vector2, rec: Rectangle): boolean;
+declare function CheckCollisionPointRec(point: Vector2, rec: Rectangle): boolean;
 /** undefined */
-declare function checkCollisionPointCircle(point: Vector2, center: Vector2, radius: number): boolean;
+declare function CheckCollisionPointCircle(point: Vector2, center: Vector2, radius: number): boolean;
 /** undefined */
-declare function checkCollisionPointTriangle(point: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): boolean;
+declare function CheckCollisionPointTriangle(point: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): boolean;
 /** undefined */
-declare function checkCollisionPointLine(point: Vector2, p1: Vector2, p2: Vector2, threshold: number): boolean;
+declare function CheckCollisionPointLine(point: Vector2, p1: Vector2, p2: Vector2, threshold: number): boolean;
 /** undefined */
-declare function getCollisionRec(rec1: Rectangle, rec2: Rectangle): Rectangle;
+declare function GetCollisionRec(rec1: Rectangle, rec2: Rectangle): Rectangle;
 /** undefined */
-declare function loadImage(fileName: string | undefined | null): Image;
+declare function LoadImage(fileName: string | undefined | null): Image;
 /** undefined */
-declare function loadImageRaw(fileName: string | undefined | null, width: number, height: number, format: number, headerSize: number): Image;
+declare function LoadImageRaw(fileName: string | undefined | null, width: number, height: number, format: number, headerSize: number): Image;
 /** undefined */
-declare function loadImageAnimFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number, frames: int &): Image;
+declare function LoadImageAnimFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number, frames: int &): Image;
 /** undefined */
-declare function loadImageFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Image;
+declare function LoadImageFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Image;
 /** undefined */
-declare function loadImageFromTexture(texture: Texture): Image;
+declare function LoadImageFromTexture(texture: Texture): Image;
 /** undefined */
-declare function loadImageFromScreen(): Image;
+declare function LoadImageFromScreen(): Image;
 /** undefined */
-declare function isImageValid(image: Image): boolean;
+declare function IsImageValid(image: Image): boolean;
 /** undefined */
-declare function unloadImage(image: Image): void;
+declare function UnloadImage(image: Image): void;
 /** undefined */
-declare function exportImage(image: Image, fileName: string | undefined | null): boolean;
+declare function ExportImage(image: Image, fileName: string | undefined | null): boolean;
 /** undefined */
-declare function exportImageToMemory(image: Image, fileType: string | undefined | null, fileSize: int &): ArrayBuffer;
+declare function ExportImageToMemory(image: Image, fileType: string | undefined | null, fileSize: int &): ArrayBuffer;
 /** undefined */
-declare function genImageColor(width: number, height: number, color: Color): Image;
+declare function GenImageColor(width: number, height: number, color: Color): Image;
 /** undefined */
-declare function genImageGradientLinear(width: number, height: number, direction: number, start: Color, end: Color): Image;
+declare function GenImageGradientLinear(width: number, height: number, direction: number, start: Color, end: Color): Image;
 /** undefined */
-declare function genImageGradientRadial(width: number, height: number, density: number, inner: Color, outer: Color): Image;
+declare function GenImageGradientRadial(width: number, height: number, density: number, inner: Color, outer: Color): Image;
 /** undefined */
-declare function genImageGradientSquare(width: number, height: number, density: number, inner: Color, outer: Color): Image;
+declare function GenImageGradientSquare(width: number, height: number, density: number, inner: Color, outer: Color): Image;
 /** undefined */
-declare function genImageChecked(width: number, height: number, checksX: number, checksY: number, col1: Color, col2: Color): Image;
+declare function GenImageChecked(width: number, height: number, checksX: number, checksY: number, col1: Color, col2: Color): Image;
 /** undefined */
-declare function genImageWhiteNoise(width: number, height: number, factor: number): Image;
+declare function GenImageWhiteNoise(width: number, height: number, factor: number): Image;
 /** undefined */
-declare function genImagePerlinNoise(width: number, height: number, offsetX: number, offsetY: number, scale: number): Image;
+declare function GenImagePerlinNoise(width: number, height: number, offsetX: number, offsetY: number, scale: number): Image;
 /** undefined */
-declare function genImageCellular(width: number, height: number, tileSize: number): Image;
+declare function GenImageCellular(width: number, height: number, tileSize: number): Image;
 /** undefined */
-declare function genImageText(width: number, height: number, text: string | undefined | null): Image;
+declare function GenImageText(width: number, height: number, text: string | undefined | null): Image;
 /** undefined */
-declare function imageCopy(image: Image): Image;
+declare function ImageCopy(image: Image): Image;
 /** undefined */
-declare function imageFromImage(image: Image, rec: Rectangle): Image;
+declare function ImageFromImage(image: Image, rec: Rectangle): Image;
 /** undefined */
-declare function imageFromChannel(image: Image, selectedChannel: number): Image;
+declare function ImageFromChannel(image: Image, selectedChannel: number): Image;
 /** undefined */
-declare function imageText(text: string | undefined | null, fontSize: number, color: Color): Image;
+declare function ImageText(text: string | undefined | null, fontSize: number, color: Color): Image;
 /** undefined */
-declare function imageTextEx(font: Font, text: string | undefined | null, fontSize: number, spacing: number, tint: Color): Image;
+declare function ImageTextEx(font: Font, text: string | undefined | null, fontSize: number, spacing: number, tint: Color): Image;
 /** undefined */
-declare function imageFormat(image: Image &, newFormat: number): void;
+declare function ImageFormat(image: Image &, newFormat: number): void;
 /** undefined */
-declare function imageToPOT(image: Image &, fill: Color): void;
+declare function ImageToPOT(image: Image &, fill: Color): void;
 /** undefined */
-declare function imageCrop(image: Image &, crop: Rectangle): void;
+declare function ImageCrop(image: Image &, crop: Rectangle): void;
 /** undefined */
-declare function imageAlphaCrop(image: Image &, threshold: number): void;
+declare function ImageAlphaCrop(image: Image &, threshold: number): void;
 /** undefined */
-declare function imageAlphaClear(image: Image &, color: Color, threshold: number): void;
+declare function ImageAlphaClear(image: Image &, color: Color, threshold: number): void;
 /** undefined */
-declare function imageAlphaMask(image: Image &, alphaMask: Image): void;
+declare function ImageAlphaMask(image: Image &, alphaMask: Image): void;
 /** undefined */
-declare function imageAlphaPremultiply(image: Image &): void;
+declare function ImageAlphaPremultiply(image: Image &): void;
 /** undefined */
-declare function imageBlurGaussian(image: Image &, blurSize: number): void;
+declare function ImageBlurGaussian(image: Image &, blurSize: number): void;
 /** undefined */
-declare function imageKernelConvolution(image: Image &, kernel: float, kernelSize: number): void;
+declare function ImageKernelConvolution(image: Image &, kernel: float, kernelSize: number): void;
 /** undefined */
-declare function imageResize(image: Image &, newWidth: number, newHeight: number): void;
+declare function ImageResize(image: Image &, newWidth: number, newHeight: number): void;
 /** undefined */
-declare function imageResizeNN(image: Image &, newWidth: number, newHeight: number): void;
+declare function ImageResizeNN(image: Image &, newWidth: number, newHeight: number): void;
 /** undefined */
-declare function imageResizeCanvas(image: Image &, newWidth: number, newHeight: number, offsetX: number, offsetY: number, fill: Color): void;
+declare function ImageResizeCanvas(image: Image &, newWidth: number, newHeight: number, offsetX: number, offsetY: number, fill: Color): void;
 /** undefined */
-declare function imageMipmaps(image: Image &): void;
+declare function ImageMipmaps(image: Image &): void;
 /** undefined */
-declare function imageDither(image: Image &, rBpp: number, gBpp: number, bBpp: number, aBpp: number): void;
+declare function ImageDither(image: Image &, rBpp: number, gBpp: number, bBpp: number, aBpp: number): void;
 /** undefined */
-declare function imageFlipVertical(image: Image &): void;
+declare function ImageFlipVertical(image: Image &): void;
 /** undefined */
-declare function imageFlipHorizontal(image: Image &): void;
+declare function ImageFlipHorizontal(image: Image &): void;
 /** undefined */
-declare function imageRotate(image: Image &, degrees: number): void;
+declare function ImageRotate(image: Image &, degrees: number): void;
 /** undefined */
-declare function imageRotateCW(image: Image &): void;
+declare function ImageRotateCW(image: Image &): void;
 /** undefined */
-declare function imageRotateCCW(image: Image &): void;
+declare function ImageRotateCCW(image: Image &): void;
 /** undefined */
-declare function imageColorTint(image: Image &, color: Color): void;
+declare function ImageColorTint(image: Image &, color: Color): void;
 /** undefined */
-declare function imageColorInvert(image: Image &): void;
+declare function ImageColorInvert(image: Image &): void;
 /** undefined */
-declare function imageColorGrayscale(image: Image &): void;
+declare function ImageColorGrayscale(image: Image &): void;
 /** undefined */
-declare function imageColorContrast(image: Image &, contrast: number): void;
+declare function ImageColorContrast(image: Image &, contrast: number): void;
 /** undefined */
-declare function imageColorBrightness(image: Image &, brightness: number): void;
+declare function ImageColorBrightness(image: Image &, brightness: number): void;
 /** undefined */
-declare function imageColorReplace(image: Image &, color: Color, replace: Color): void;
+declare function ImageColorReplace(image: Image &, color: Color, replace: Color): void;
 /** undefined */
-declare function loadImageColors(image: Image): ArrayBuffer;
+declare function LoadImageColors(image: Image): ArrayBuffer;
 /** undefined */
-declare function getImageAlphaBorder(image: Image, threshold: number): Rectangle;
+declare function GetImageAlphaBorder(image: Image, threshold: number): Rectangle;
 /** undefined */
-declare function getImageColor(image: Image, x: number, y: number): Color;
+declare function GetImageColor(image: Image, x: number, y: number): Color;
 /** undefined */
-declare function imageClearBackground(dst: Image &, color: Color): void;
+declare function ImageClearBackground(dst: Image &, color: Color): void;
 /** undefined */
-declare function imageDrawPixel(dst: Image &, posX: number, posY: number, color: Color): void;
+declare function ImageDrawPixel(dst: Image &, posX: number, posY: number, color: Color): void;
 /** undefined */
-declare function imageDrawPixelV(dst: Image &, position: Vector2, color: Color): void;
+declare function ImageDrawPixelV(dst: Image &, position: Vector2, color: Color): void;
 /** undefined */
-declare function imageDrawLine(dst: Image &, startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
+declare function ImageDrawLine(dst: Image &, startPosX: number, startPosY: number, endPosX: number, endPosY: number, color: Color): void;
 /** undefined */
-declare function imageDrawLineV(dst: Image &, start: Vector2, end: Vector2, color: Color): void;
+declare function ImageDrawLineV(dst: Image &, start: Vector2, end: Vector2, color: Color): void;
 /** undefined */
-declare function imageDrawLineEx(dst: Image &, start: Vector2, end: Vector2, thick: number, color: Color): void;
+declare function ImageDrawLineEx(dst: Image &, start: Vector2, end: Vector2, thick: number, color: Color): void;
 /** undefined */
-declare function imageDrawCircle(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
+declare function ImageDrawCircle(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
 /** undefined */
-declare function imageDrawCircleV(dst: Image &, center: Vector2, radius: number, color: Color): void;
+declare function ImageDrawCircleV(dst: Image &, center: Vector2, radius: number, color: Color): void;
 /** undefined */
-declare function imageDrawCircleLines(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
+declare function ImageDrawCircleLines(dst: Image &, centerX: number, centerY: number, radius: number, color: Color): void;
 /** undefined */
-declare function imageDrawCircleLinesV(dst: Image &, center: Vector2, radius: number, color: Color): void;
+declare function ImageDrawCircleLinesV(dst: Image &, center: Vector2, radius: number, color: Color): void;
 /** undefined */
-declare function imageDrawRectangle(dst: Image &, posX: number, posY: number, width: number, height: number, color: Color): void;
+declare function ImageDrawRectangle(dst: Image &, posX: number, posY: number, width: number, height: number, color: Color): void;
 /** undefined */
-declare function imageDrawRectangleV(dst: Image &, position: Vector2, size: Vector2, color: Color): void;
+declare function ImageDrawRectangleV(dst: Image &, position: Vector2, size: Vector2, color: Color): void;
 /** undefined */
-declare function imageDrawRectangleRec(dst: Image &, rec: Rectangle, color: Color): void;
+declare function ImageDrawRectangleRec(dst: Image &, rec: Rectangle, color: Color): void;
 /** undefined */
-declare function imageDrawRectangleLines(dst: Image &, rec: Rectangle, thick: number, color: Color): void;
+declare function ImageDrawRectangleLines(dst: Image &, rec: Rectangle, thick: number, color: Color): void;
 /** undefined */
-declare function imageDrawTriangle(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function ImageDrawTriangle(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** undefined */
-declare function imageDrawTriangleEx(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, c1: Color, c2: Color, c3: Color): void;
+declare function ImageDrawTriangleEx(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, c1: Color, c2: Color, c3: Color): void;
 /** undefined */
-declare function imageDrawTriangleLines(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
+declare function ImageDrawTriangleLines(dst: Image &, v1: Vector2, v2: Vector2, v3: Vector2, color: Color): void;
 /** undefined */
-declare function imageDrawTriangleFan(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
+declare function ImageDrawTriangleFan(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
 /** undefined */
-declare function imageDrawTriangleStrip(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
+declare function ImageDrawTriangleStrip(dst: Image &, points: Vector2, pointCount: number, color: Color): void;
 /** undefined */
-declare function imageDraw(dst: Image &, src: Image, srcRec: Rectangle, dstRec: Rectangle, tint: Color): void;
+declare function ImageDraw(dst: Image &, src: Image, srcRec: Rectangle, dstRec: Rectangle, tint: Color): void;
 /** undefined */
-declare function imageDrawText(dst: Image &, text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
+declare function ImageDrawText(dst: Image &, text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
 /** undefined */
-declare function imageDrawTextEx(dst: Image &, font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
+declare function ImageDrawTextEx(dst: Image &, font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
 /** undefined */
-declare function loadTexture(fileName: string | undefined | null): Texture;
+declare function LoadTexture(fileName: string | undefined | null): Texture;
 /** undefined */
-declare function loadTextureFromImage(image: Image): Texture;
+declare function LoadTextureFromImage(image: Image): Texture;
 /** undefined */
-declare function loadTextureCubemap(image: Image, layout: number): Texture;
+declare function LoadTextureCubemap(image: Image, layout: number): Texture;
 /** undefined */
-declare function loadRenderTexture(width: number, height: number): RenderTexture;
+declare function LoadRenderTexture(width: number, height: number): RenderTexture;
 /** undefined */
-declare function isTextureValid(texture: Texture): boolean;
+declare function IsTextureValid(texture: Texture): boolean;
 /** undefined */
-declare function unloadTexture(texture: Texture): void;
+declare function UnloadTexture(texture: Texture): void;
 /** undefined */
-declare function isRenderTextureValid(target: RenderTexture): boolean;
+declare function IsRenderTextureValid(target: RenderTexture): boolean;
 /** undefined */
-declare function unloadRenderTexture(target: RenderTexture): void;
+declare function UnloadRenderTexture(target: RenderTexture): void;
 /** undefined */
-declare function updateTexture(texture: Texture, pixels: any): void;
+declare function UpdateTexture(texture: Texture, pixels: any): void;
 /** undefined */
-declare function updateTextureRec(texture: Texture, rec: Rectangle, pixels: any): void;
+declare function UpdateTextureRec(texture: Texture, rec: Rectangle, pixels: any): void;
 /** undefined */
-declare function genTextureMipmaps(texture: Texture2D &): void;
+declare function GenTextureMipmaps(texture: Texture2D &): void;
 /** undefined */
-declare function setTextureFilter(texture: Texture, filter: number): void;
+declare function SetTextureFilter(texture: Texture, filter: number): void;
 /** undefined */
-declare function setTextureWrap(texture: Texture, wrap: number): void;
+declare function SetTextureWrap(texture: Texture, wrap: number): void;
 /** undefined */
-declare function drawTexture(texture: Texture, posX: number, posY: number, tint: Color): void;
+declare function DrawTexture(texture: Texture, posX: number, posY: number, tint: Color): void;
 /** undefined */
-declare function drawTextureV(texture: Texture, position: Vector2, tint: Color): void;
+declare function DrawTextureV(texture: Texture, position: Vector2, tint: Color): void;
 /** undefined */
-declare function drawTextureEx(texture: Texture, position: Vector2, rotation: number, scale: number, tint: Color): void;
+declare function DrawTextureEx(texture: Texture, position: Vector2, rotation: number, scale: number, tint: Color): void;
 /** undefined */
-declare function drawTextureRec(texture: Texture, source: Rectangle, position: Vector2, tint: Color): void;
+declare function DrawTextureRec(texture: Texture, source: Rectangle, position: Vector2, tint: Color): void;
 /** undefined */
-declare function drawTexturePro(texture: Texture, source: Rectangle, dest: Rectangle, origin: Vector2, rotation: number, tint: Color): void;
+declare function DrawTexturePro(texture: Texture, source: Rectangle, dest: Rectangle, origin: Vector2, rotation: number, tint: Color): void;
 /** undefined */
-declare function drawTextureNPatch(texture: Texture, nPatchInfo: NPatchInfo, dest: Rectangle, origin: Vector2, rotation: number, tint: Color): void;
+declare function DrawTextureNPatch(texture: Texture, nPatchInfo: NPatchInfo, dest: Rectangle, origin: Vector2, rotation: number, tint: Color): void;
 /** undefined */
-declare function colorIsEqual(col1: Color, col2: Color): boolean;
+declare function ColorIsEqual(col1: Color, col2: Color): boolean;
 /** undefined */
-declare function fade(color: Color, alpha: number): Color;
+declare function Fade(color: Color, alpha: number): Color;
 /** undefined */
-declare function colorToInt(color: Color): number;
+declare function ColorToInt(color: Color): number;
 /** undefined */
-declare function colorNormalize(color: Color): Vector4;
+declare function ColorNormalize(color: Color): Vector4;
 /** undefined */
-declare function colorFromNormalized(normalized: Vector4): Color;
+declare function ColorFromNormalized(normalized: Vector4): Color;
 /** undefined */
-declare function colorToHSV(color: Color): Vector3;
+declare function ColorToHSV(color: Color): Vector3;
 /** undefined */
-declare function colorFromHSV(hue: number, saturation: number, value: number): Color;
+declare function ColorFromHSV(hue: number, saturation: number, value: number): Color;
 /** undefined */
-declare function colorTint(color: Color, tint: Color): Color;
+declare function ColorTint(color: Color, tint: Color): Color;
 /** undefined */
-declare function colorBrightness(color: Color, factor: number): Color;
+declare function ColorBrightness(color: Color, factor: number): Color;
 /** undefined */
-declare function colorContrast(color: Color, contrast: number): Color;
+declare function ColorContrast(color: Color, contrast: number): Color;
 /** undefined */
-declare function colorAlpha(color: Color, alpha: number): Color;
+declare function ColorAlpha(color: Color, alpha: number): Color;
 /** undefined */
-declare function colorAlphaBlend(dst: Color, src: Color, tint: Color): Color;
+declare function ColorAlphaBlend(dst: Color, src: Color, tint: Color): Color;
 /** undefined */
-declare function colorLerp(color1: Color, color2: Color, factor: number): Color;
+declare function ColorLerp(color1: Color, color2: Color, factor: number): Color;
 /** undefined */
-declare function getColor(hexValue: number): Color;
+declare function GetColor(hexValue: number): Color;
 /** undefined */
-declare function getPixelDataSize(width: number, height: number, format: number): number;
+declare function GetPixelDataSize(width: number, height: number, format: number): number;
 /** undefined */
-declare function getFontDefault(): Font;
+declare function GetFontDefault(): Font;
 /** undefined */
-declare function loadFont(fileName: string | undefined | null): Font;
+declare function LoadFont(fileName: string | undefined | null): Font;
 /** undefined */
-declare function loadFontEx(fileName: string | undefined | null, fontSize: number, codepoints: int, codepointCount: number): Font;
+declare function LoadFontEx(fileName: string | undefined | null, fontSize: number, codepoints: int, codepointCount: number): Font;
 /** undefined */
-declare function loadFontFromImage(image: Image, key: Color, firstChar: number): Font;
+declare function LoadFontFromImage(image: Image, key: Color, firstChar: number): Font;
 /** undefined */
-declare function isFontValid(font: Font): boolean;
+declare function IsFontValid(font: Font): boolean;
 /** undefined */
-declare function unloadFont(font: Font): void;
+declare function UnloadFont(font: Font): void;
 /** undefined */
-declare function drawFPS(posX: number, posY: number): void;
+declare function DrawFPS(posX: number, posY: number): void;
 /** undefined */
-declare function drawText(text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
+declare function DrawText(text: string | undefined | null, posX: number, posY: number, fontSize: number, color: Color): void;
 /** undefined */
-declare function drawTextEx(font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
+declare function DrawTextEx(font: Font, text: string | undefined | null, position: Vector2, fontSize: number, spacing: number, tint: Color): void;
 /** undefined */
-declare function drawTextPro(font: Font, text: string | undefined | null, position: Vector2, origin: Vector2, rotation: number, fontSize: number, spacing: number, tint: Color): void;
+declare function DrawTextPro(font: Font, text: string | undefined | null, position: Vector2, origin: Vector2, rotation: number, fontSize: number, spacing: number, tint: Color): void;
 /** undefined */
-declare function drawTextCodepoint(font: Font, codepoint: number, position: Vector2, fontSize: number, tint: Color): void;
+declare function DrawTextCodepoint(font: Font, codepoint: number, position: Vector2, fontSize: number, tint: Color): void;
 /** undefined */
-declare function setTextLineSpacing(spacing: number): void;
+declare function SetTextLineSpacing(spacing: number): void;
 /** undefined */
-declare function measureText(text: string | undefined | null, fontSize: number): number;
+declare function MeasureText(text: string | undefined | null, fontSize: number): number;
 /** undefined */
-declare function measureTextEx(font: Font, text: string | undefined | null, fontSize: number, spacing: number): Vector2;
+declare function MeasureTextEx(font: Font, text: string | undefined | null, fontSize: number, spacing: number): Vector2;
 /** undefined */
-declare function getGlyphIndex(font: Font, codepoint: number): number;
+declare function GetGlyphIndex(font: Font, codepoint: number): number;
 /** undefined */
-declare function getGlyphAtlasRec(font: Font, codepoint: number): Rectangle;
+declare function GetGlyphAtlasRec(font: Font, codepoint: number): Rectangle;
 /** undefined */
-declare function textCopy(dst: char &, src: string | undefined | null): number;
+declare function TextCopy(dst: char &, src: string | undefined | null): number;
 /** undefined */
-declare function textIsEqual(text1: string | undefined | null, text2: string | undefined | null): boolean;
+declare function TextIsEqual(text1: string | undefined | null, text2: string | undefined | null): boolean;
 /** undefined */
-declare function textLength(text: string | undefined | null): number;
+declare function TextLength(text: string | undefined | null): number;
 /** undefined */
-declare function textFormat(text: string | undefined | null, args: ...): string | undefined | null;
+declare function TextFormat(text: string | undefined | null, args: ...): string | undefined | null;
 /** undefined */
-declare function textSubtext(text: string | undefined | null, position: number, length: number): string | undefined | null;
+declare function TextSubtext(text: string | undefined | null, position: number, length: number): string | undefined | null;
 /** undefined */
-declare function textReplace(text: string | undefined | null, replace: string | undefined | null, by: string | undefined | null): string | undefined | null;
+declare function TextReplace(text: string | undefined | null, replace: string | undefined | null, by: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textInsert(text: string | undefined | null, insert: string | undefined | null, position: number): string | undefined | null;
+declare function TextInsert(text: string | undefined | null, insert: string | undefined | null, position: number): string | undefined | null;
 /** undefined */
-declare function textJoin(textList: char *, count: number, delimiter: string | undefined | null): string | undefined | null;
+declare function TextJoin(textList: char *, count: number, delimiter: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textSplit(text: string | undefined | null, delimiter: char, count: int &): char *;
+declare function TextSplit(text: string | undefined | null, delimiter: char, count: int &): char *;
 /** undefined */
-declare function textAppend(text: string | undefined | null, append: string | undefined | null, position: int &): void;
+declare function TextAppend(text: string | undefined | null, append: string | undefined | null, position: int &): void;
 /** undefined */
-declare function textFindIndex(text: string | undefined | null, find: string | undefined | null): number;
+declare function TextFindIndex(text: string | undefined | null, find: string | undefined | null): number;
 /** undefined */
-declare function textToUpper(text: string | undefined | null): string | undefined | null;
+declare function TextToUpper(text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textToLower(text: string | undefined | null): string | undefined | null;
+declare function TextToLower(text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textToPascal(text: string | undefined | null): string | undefined | null;
+declare function TextToPascal(text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textToSnake(text: string | undefined | null): string | undefined | null;
+declare function TextToSnake(text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textToCamel(text: string | undefined | null): string | undefined | null;
+declare function TextToCamel(text: string | undefined | null): string | undefined | null;
 /** undefined */
-declare function textToInteger(text: string | undefined | null): number;
+declare function TextToInteger(text: string | undefined | null): number;
 /** undefined */
-declare function textToFloat(text: string | undefined | null): number;
+declare function TextToFloat(text: string | undefined | null): number;
 /** undefined */
-declare function drawLine3D(startPos: Vector3, endPos: Vector3, color: Color): void;
+declare function DrawLine3D(startPos: Vector3, endPos: Vector3, color: Color): void;
 /** undefined */
-declare function drawPoint3D(position: Vector3, color: Color): void;
+declare function DrawPoint3D(position: Vector3, color: Color): void;
 /** undefined */
-declare function drawCircle3D(center: Vector3, radius: number, rotationAxis: Vector3, rotationAngle: number, color: Color): void;
+declare function DrawCircle3D(center: Vector3, radius: number, rotationAxis: Vector3, rotationAngle: number, color: Color): void;
 /** undefined */
-declare function drawTriangle3D(v1: Vector3, v2: Vector3, v3: Vector3, color: Color): void;
+declare function DrawTriangle3D(v1: Vector3, v2: Vector3, v3: Vector3, color: Color): void;
 /** undefined */
-declare function drawCube(position: Vector3, width: number, height: number, length: number, color: Color): void;
+declare function DrawCube(position: Vector3, width: number, height: number, length: number, color: Color): void;
 /** undefined */
-declare function drawCubeV(position: Vector3, size: Vector3, color: Color): void;
+declare function DrawCubeV(position: Vector3, size: Vector3, color: Color): void;
 /** undefined */
-declare function drawCubeWires(position: Vector3, width: number, height: number, length: number, color: Color): void;
+declare function DrawCubeWires(position: Vector3, width: number, height: number, length: number, color: Color): void;
 /** undefined */
-declare function drawCubeWiresV(position: Vector3, size: Vector3, color: Color): void;
+declare function DrawCubeWiresV(position: Vector3, size: Vector3, color: Color): void;
 /** undefined */
-declare function drawSphere(centerPos: Vector3, radius: number, color: Color): void;
+declare function DrawSphere(centerPos: Vector3, radius: number, color: Color): void;
 /** undefined */
-declare function drawSphereEx(centerPos: Vector3, radius: number, rings: number, slices: number, color: Color): void;
+declare function DrawSphereEx(centerPos: Vector3, radius: number, rings: number, slices: number, color: Color): void;
 /** undefined */
-declare function drawSphereWires(centerPos: Vector3, radius: number, rings: number, slices: number, color: Color): void;
+declare function DrawSphereWires(centerPos: Vector3, radius: number, rings: number, slices: number, color: Color): void;
 /** undefined */
-declare function drawCylinder(position: Vector3, radiusTop: number, radiusBottom: number, height: number, slices: number, color: Color): void;
+declare function DrawCylinder(position: Vector3, radiusTop: number, radiusBottom: number, height: number, slices: number, color: Color): void;
 /** undefined */
-declare function drawCylinderEx(startPos: Vector3, endPos: Vector3, startRadius: number, endRadius: number, sides: number, color: Color): void;
+declare function DrawCylinderEx(startPos: Vector3, endPos: Vector3, startRadius: number, endRadius: number, sides: number, color: Color): void;
 /** undefined */
-declare function drawCylinderWires(position: Vector3, radiusTop: number, radiusBottom: number, height: number, slices: number, color: Color): void;
+declare function DrawCylinderWires(position: Vector3, radiusTop: number, radiusBottom: number, height: number, slices: number, color: Color): void;
 /** undefined */
-declare function drawCylinderWiresEx(startPos: Vector3, endPos: Vector3, startRadius: number, endRadius: number, sides: number, color: Color): void;
+declare function DrawCylinderWiresEx(startPos: Vector3, endPos: Vector3, startRadius: number, endRadius: number, sides: number, color: Color): void;
 /** undefined */
-declare function drawCapsule(startPos: Vector3, endPos: Vector3, radius: number, slices: number, rings: number, color: Color): void;
+declare function DrawCapsule(startPos: Vector3, endPos: Vector3, radius: number, slices: number, rings: number, color: Color): void;
 /** undefined */
-declare function drawCapsuleWires(startPos: Vector3, endPos: Vector3, radius: number, slices: number, rings: number, color: Color): void;
+declare function DrawCapsuleWires(startPos: Vector3, endPos: Vector3, radius: number, slices: number, rings: number, color: Color): void;
 /** undefined */
-declare function drawPlane(centerPos: Vector3, size: Vector2, color: Color): void;
+declare function DrawPlane(centerPos: Vector3, size: Vector2, color: Color): void;
 /** undefined */
-declare function drawRay(ray: Ray, color: Color): void;
+declare function DrawRay(ray: Ray, color: Color): void;
 /** undefined */
-declare function drawGrid(slices: number, spacing: number): void;
+declare function DrawGrid(slices: number, spacing: number): void;
 /** undefined */
-declare function loadModel(fileName: string | undefined | null): Model;
+declare function LoadModel(fileName: string | undefined | null): Model;
 /** undefined */
-declare function loadModelFromMesh(mesh: Mesh): Model;
+declare function LoadModelFromMesh(mesh: Mesh): Model;
 /** undefined */
-declare function isModelValid(model: Model): boolean;
+declare function IsModelValid(model: Model): boolean;
 /** undefined */
-declare function unloadModel(model: Model): void;
+declare function UnloadModel(model: Model): void;
 /** undefined */
-declare function getModelBoundingBox(model: Model): BoundingBox;
+declare function GetModelBoundingBox(model: Model): BoundingBox;
 /** undefined */
-declare function drawModel(model: Model, position: Vector3, scale: number, tint: Color): void;
+declare function DrawModel(model: Model, position: Vector3, scale: number, tint: Color): void;
 /** undefined */
-declare function drawModelEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
+declare function DrawModelEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
 /** undefined */
-declare function drawModelWires(model: Model, position: Vector3, scale: number, tint: Color): void;
+declare function DrawModelWires(model: Model, position: Vector3, scale: number, tint: Color): void;
 /** undefined */
-declare function drawModelWiresEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
+declare function DrawModelWiresEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
 /** undefined */
-declare function drawModelPoints(model: Model, position: Vector3, scale: number, tint: Color): void;
+declare function DrawModelPoints(model: Model, position: Vector3, scale: number, tint: Color): void;
 /** undefined */
-declare function drawModelPointsEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
+declare function DrawModelPointsEx(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: number, scale: Vector3, tint: Color): void;
 /** undefined */
-declare function drawBoundingBox(box: BoundingBox, color: Color): void;
+declare function DrawBoundingBox(box: BoundingBox, color: Color): void;
 /** undefined */
-declare function drawBillboard(camera: Camera3D, texture: Texture, position: Vector3, scale: number, tint: Color): void;
+declare function DrawBillboard(camera: Camera3D, texture: Texture, position: Vector3, scale: number, tint: Color): void;
 /** undefined */
-declare function drawBillboardRec(camera: Camera3D, texture: Texture, source: Rectangle, position: Vector3, size: Vector2, tint: Color): void;
+declare function DrawBillboardRec(camera: Camera3D, texture: Texture, source: Rectangle, position: Vector3, size: Vector2, tint: Color): void;
 /** undefined */
-declare function drawBillboardPro(camera: Camera3D, texture: Texture, source: Rectangle, position: Vector3, up: Vector3, size: Vector2, origin: Vector2, rotation: number, tint: Color): void;
+declare function DrawBillboardPro(camera: Camera3D, texture: Texture, source: Rectangle, position: Vector3, up: Vector3, size: Vector2, origin: Vector2, rotation: number, tint: Color): void;
 /** undefined */
-declare function uploadMesh(mesh: Mesh &, dynamic: boolean): void;
+declare function UploadMesh(mesh: Mesh &, dynamic: boolean): void;
 /** undefined */
-declare function updateMeshBuffer(mesh: Mesh, index: number, data: any, dataSize: number, offset: number): void;
+declare function UpdateMeshBuffer(mesh: Mesh, index: number, data: any, dataSize: number, offset: number): void;
 /** undefined */
-declare function unloadMesh(mesh: Mesh): void;
+declare function UnloadMesh(mesh: Mesh): void;
 /** undefined */
-declare function drawMesh(mesh: Mesh, material: Material, transform: Matrix): void;
+declare function DrawMesh(mesh: Mesh, material: Material, transform: Matrix): void;
 /** undefined */
-declare function drawMeshInstanced(mesh: Mesh, material: Material, transforms: Matrix, instances: number): void;
+declare function DrawMeshInstanced(mesh: Mesh, material: Material, transforms: Matrix, instances: number): void;
 /** undefined */
-declare function getMeshBoundingBox(mesh: Mesh): BoundingBox;
+declare function GetMeshBoundingBox(mesh: Mesh): BoundingBox;
 /** undefined */
-declare function genMeshTangents(mesh: Mesh &): void;
+declare function GenMeshTangents(mesh: Mesh &): void;
 /** undefined */
-declare function exportMesh(mesh: Mesh, fileName: string | undefined | null): boolean;
+declare function ExportMesh(mesh: Mesh, fileName: string | undefined | null): boolean;
 /** undefined */
-declare function exportMeshAsCode(mesh: Mesh, fileName: string | undefined | null): boolean;
+declare function ExportMeshAsCode(mesh: Mesh, fileName: string | undefined | null): boolean;
 /** undefined */
-declare function genMeshPoly(sides: number, radius: number): Mesh;
+declare function GenMeshPoly(sides: number, radius: number): Mesh;
 /** undefined */
-declare function genMeshPlane(width: number, length: number, resX: number, resZ: number): Mesh;
+declare function GenMeshPlane(width: number, length: number, resX: number, resZ: number): Mesh;
 /** undefined */
-declare function genMeshCube(width: number, height: number, length: number): Mesh;
+declare function GenMeshCube(width: number, height: number, length: number): Mesh;
 /** undefined */
-declare function genMeshSphere(radius: number, rings: number, slices: number): Mesh;
+declare function GenMeshSphere(radius: number, rings: number, slices: number): Mesh;
 /** undefined */
-declare function genMeshHemiSphere(radius: number, rings: number, slices: number): Mesh;
+declare function GenMeshHemiSphere(radius: number, rings: number, slices: number): Mesh;
 /** undefined */
-declare function genMeshCylinder(radius: number, height: number, slices: number): Mesh;
+declare function GenMeshCylinder(radius: number, height: number, slices: number): Mesh;
 /** undefined */
-declare function genMeshCone(radius: number, height: number, slices: number): Mesh;
+declare function GenMeshCone(radius: number, height: number, slices: number): Mesh;
 /** undefined */
-declare function genMeshTorus(radius: number, size: number, radSeg: number, sides: number): Mesh;
+declare function GenMeshTorus(radius: number, size: number, radSeg: number, sides: number): Mesh;
 /** undefined */
-declare function genMeshKnot(radius: number, size: number, radSeg: number, sides: number): Mesh;
+declare function GenMeshKnot(radius: number, size: number, radSeg: number, sides: number): Mesh;
 /** undefined */
-declare function genMeshHeightmap(heightmap: Image, size: Vector3): Mesh;
+declare function GenMeshHeightmap(heightmap: Image, size: Vector3): Mesh;
 /** undefined */
-declare function genMeshCubicmap(cubicmap: Image, cubeSize: Vector3): Mesh;
+declare function GenMeshCubicmap(cubicmap: Image, cubeSize: Vector3): Mesh;
 /** undefined */
-declare function loadMaterialDefault(): Material;
+declare function LoadMaterialDefault(): Material;
 /** undefined */
-declare function isMaterialValid(material: Material): boolean;
+declare function IsMaterialValid(material: Material): boolean;
 /** undefined */
-declare function unloadMaterial(material: Material): void;
+declare function UnloadMaterial(material: Material): void;
 /** undefined */
-declare function setMaterialTexture(material: Material &, mapType: number, texture: Texture): void;
+declare function SetMaterialTexture(material: Material &, mapType: number, texture: Texture): void;
 /** undefined */
-declare function setModelMeshMaterial(model: Model &, meshId: number, materialId: number): void;
+declare function SetModelMeshMaterial(model: Model &, meshId: number, materialId: number): void;
 /** undefined */
-declare function updateModelAnimationBones(model: Model, anim: ModelAnimation, frame: number): void;
+declare function UpdateModelAnimationBones(model: Model, anim: ModelAnimation, frame: number): void;
 /** undefined */
-declare function checkCollisionSpheres(center1: Vector3, radius1: number, center2: Vector3, radius2: number): boolean;
+declare function CheckCollisionSpheres(center1: Vector3, radius1: number, center2: Vector3, radius2: number): boolean;
 /** undefined */
-declare function checkCollisionBoxes(box1: BoundingBox, box2: BoundingBox): boolean;
+declare function CheckCollisionBoxes(box1: BoundingBox, box2: BoundingBox): boolean;
 /** undefined */
-declare function checkCollisionBoxSphere(box: BoundingBox, center: Vector3, radius: number): boolean;
+declare function CheckCollisionBoxSphere(box: BoundingBox, center: Vector3, radius: number): boolean;
 /** undefined */
-declare function getRayCollisionSphere(ray: Ray, center: Vector3, radius: number): RayCollision;
+declare function GetRayCollisionSphere(ray: Ray, center: Vector3, radius: number): RayCollision;
 /** undefined */
-declare function getRayCollisionBox(ray: Ray, box: BoundingBox): RayCollision;
+declare function GetRayCollisionBox(ray: Ray, box: BoundingBox): RayCollision;
 /** undefined */
-declare function getRayCollisionMesh(ray: Ray, mesh: Mesh, transform: Matrix): RayCollision;
+declare function GetRayCollisionMesh(ray: Ray, mesh: Mesh, transform: Matrix): RayCollision;
 /** undefined */
-declare function getRayCollisionTriangle(ray: Ray, p1: Vector3, p2: Vector3, p3: Vector3): RayCollision;
+declare function GetRayCollisionTriangle(ray: Ray, p1: Vector3, p2: Vector3, p3: Vector3): RayCollision;
 /** undefined */
-declare function getRayCollisionQuad(ray: Ray, p1: Vector3, p2: Vector3, p3: Vector3, p4: Vector3): RayCollision;
+declare function GetRayCollisionQuad(ray: Ray, p1: Vector3, p2: Vector3, p3: Vector3, p4: Vector3): RayCollision;
 /** undefined */
-declare function initAudioDevice(): void;
+declare function InitAudioDevice(): void;
 /** undefined */
-declare function closeAudioDevice(): void;
+declare function CloseAudioDevice(): void;
 /** undefined */
-declare function isAudioDeviceReady(): boolean;
+declare function IsAudioDeviceReady(): boolean;
 /** undefined */
-declare function setMasterVolume(volume: number): void;
+declare function SetMasterVolume(volume: number): void;
 /** undefined */
-declare function getMasterVolume(): number;
+declare function GetMasterVolume(): number;
 /** undefined */
-declare function loadWave(fileName: string | undefined | null): Wave;
+declare function LoadWave(fileName: string | undefined | null): Wave;
 /** undefined */
-declare function loadWaveFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Wave;
+declare function LoadWaveFromMemory(fileType: string | undefined | null, fileData: ArrayBuffer, dataSize: number): Wave;
 /** undefined */
-declare function isWaveValid(wave: Wave): boolean;
+declare function IsWaveValid(wave: Wave): boolean;
 /** undefined */
-declare function loadSound(fileName: string | undefined | null): Sound;
+declare function LoadSound(fileName: string | undefined | null): Sound;
 /** undefined */
-declare function loadSoundFromWave(wave: Wave): Sound;
+declare function LoadSoundFromWave(wave: Wave): Sound;
 /** undefined */
-declare function loadSoundAlias(source: Sound): Sound;
+declare function LoadSoundAlias(source: Sound): Sound;
 /** undefined */
-declare function isSoundValid(sound: Sound): boolean;
+declare function IsSoundValid(sound: Sound): boolean;
 /** undefined */
-declare function updateSound(sound: Sound, data: any, sampleCount: number): void;
+declare function UpdateSound(sound: Sound, data: any, sampleCount: number): void;
 /** undefined */
-declare function unloadWave(wave: Wave): void;
+declare function UnloadWave(wave: Wave): void;
 /** undefined */
-declare function unloadSound(sound: Sound): void;
+declare function UnloadSound(sound: Sound): void;
 /** undefined */
-declare function unloadSoundAlias(alias: Sound): void;
+declare function UnloadSoundAlias(alias: Sound): void;
 /** undefined */
-declare function exportWave(wave: Wave, fileName: string | undefined | null): boolean;
+declare function ExportWave(wave: Wave, fileName: string | undefined | null): boolean;
 /** undefined */
-declare function playSound(sound: Sound): void;
+declare function PlaySound(sound: Sound): void;
 /** undefined */
-declare function stopSound(sound: Sound): void;
+declare function StopSound(sound: Sound): void;
 /** undefined */
-declare function pauseSound(sound: Sound): void;
+declare function PauseSound(sound: Sound): void;
 /** undefined */
-declare function resumeSound(sound: Sound): void;
+declare function ResumeSound(sound: Sound): void;
 /** undefined */
-declare function isSoundPlaying(sound: Sound): boolean;
+declare function IsSoundPlaying(sound: Sound): boolean;
 /** undefined */
-declare function setSoundVolume(sound: Sound, volume: number): void;
+declare function SetSoundVolume(sound: Sound, volume: number): void;
 /** undefined */
-declare function setSoundPitch(sound: Sound, pitch: number): void;
+declare function SetSoundPitch(sound: Sound, pitch: number): void;
 /** undefined */
-declare function setSoundPan(sound: Sound, pan: number): void;
+declare function SetSoundPan(sound: Sound, pan: number): void;
 /** undefined */
-declare function waveCopy(wave: Wave): Wave;
+declare function WaveCopy(wave: Wave): Wave;
 /** undefined */
-declare function waveCrop(wave: Wave &, initFrame: number, finalFrame: number): void;
+declare function WaveCrop(wave: Wave &, initFrame: number, finalFrame: number): void;
 /** undefined */
-declare function waveFormat(wave: Wave &, sampleRate: number, sampleSize: number, channels: number): void;
+declare function WaveFormat(wave: Wave &, sampleRate: number, sampleSize: number, channels: number): void;
 /** undefined */
-declare function loadWaveSamples(wave: Wave): ArrayBuffer;
+declare function LoadWaveSamples(wave: Wave): ArrayBuffer;
 /** undefined */
-declare function unloadWaveSamples(samples: float &): void;
+declare function UnloadWaveSamples(samples: float &): void;
 /** undefined */
-declare function loadMusicStream(fileName: string | undefined | null): Music;
+declare function LoadMusicStream(fileName: string | undefined | null): Music;
 /** undefined */
-declare function loadMusicStreamFromMemory(fileType: string | undefined | null, data: ArrayBuffer, dataSize: number): Music;
+declare function LoadMusicStreamFromMemory(fileType: string | undefined | null, data: ArrayBuffer, dataSize: number): Music;
 /** undefined */
-declare function isMusicValid(music: Music): boolean;
+declare function IsMusicValid(music: Music): boolean;
 /** undefined */
-declare function unloadMusicStream(music: Music): void;
+declare function UnloadMusicStream(music: Music): void;
 /** undefined */
-declare function playMusicStream(music: Music): void;
+declare function PlayMusicStream(music: Music): void;
 /** undefined */
-declare function isMusicStreamPlaying(music: Music): boolean;
+declare function IsMusicStreamPlaying(music: Music): boolean;
 /** undefined */
-declare function updateMusicStream(music: Music): void;
+declare function UpdateMusicStream(music: Music): void;
 /** undefined */
-declare function stopMusicStream(music: Music): void;
+declare function StopMusicStream(music: Music): void;
 /** undefined */
-declare function pauseMusicStream(music: Music): void;
+declare function PauseMusicStream(music: Music): void;
 /** undefined */
-declare function resumeMusicStream(music: Music): void;
+declare function ResumeMusicStream(music: Music): void;
 /** undefined */
-declare function seekMusicStream(music: Music, position: number): void;
+declare function SeekMusicStream(music: Music, position: number): void;
 /** undefined */
-declare function setMusicVolume(music: Music, volume: number): void;
+declare function SetMusicVolume(music: Music, volume: number): void;
 /** undefined */
-declare function setMusicPitch(music: Music, pitch: number): void;
+declare function SetMusicPitch(music: Music, pitch: number): void;
 /** undefined */
-declare function setMusicPan(music: Music, pan: number): void;
+declare function SetMusicPan(music: Music, pan: number): void;
 /** undefined */
-declare function getMusicTimeLength(music: Music): number;
+declare function GetMusicTimeLength(music: Music): number;
 /** undefined */
-declare function getMusicTimePlayed(music: Music): number;
+declare function GetMusicTimePlayed(music: Music): number;
 /** undefined */
-declare function loadAudioStream(sampleRate: number, sampleSize: number, channels: number): AudioStream;
+declare function LoadAudioStream(sampleRate: number, sampleSize: number, channels: number): AudioStream;
 /** undefined */
-declare function isAudioStreamValid(stream: AudioStream): boolean;
+declare function IsAudioStreamValid(stream: AudioStream): boolean;
 /** undefined */
-declare function unloadAudioStream(stream: AudioStream): void;
+declare function UnloadAudioStream(stream: AudioStream): void;
 /** undefined */
-declare function updateAudioStream(stream: AudioStream, data: any, frameCount: number): void;
+declare function UpdateAudioStream(stream: AudioStream, data: any, frameCount: number): void;
 /** undefined */
-declare function isAudioStreamProcessed(stream: AudioStream): boolean;
+declare function IsAudioStreamProcessed(stream: AudioStream): boolean;
 /** undefined */
-declare function playAudioStream(stream: AudioStream): void;
+declare function PlayAudioStream(stream: AudioStream): void;
 /** undefined */
-declare function pauseAudioStream(stream: AudioStream): void;
+declare function PauseAudioStream(stream: AudioStream): void;
 /** undefined */
-declare function resumeAudioStream(stream: AudioStream): void;
+declare function ResumeAudioStream(stream: AudioStream): void;
 /** undefined */
-declare function isAudioStreamPlaying(stream: AudioStream): boolean;
+declare function IsAudioStreamPlaying(stream: AudioStream): boolean;
 /** undefined */
-declare function stopAudioStream(stream: AudioStream): void;
+declare function StopAudioStream(stream: AudioStream): void;
 /** undefined */
-declare function setAudioStreamVolume(stream: AudioStream, volume: number): void;
+declare function SetAudioStreamVolume(stream: AudioStream, volume: number): void;
 /** undefined */
-declare function setAudioStreamPitch(stream: AudioStream, pitch: number): void;
+declare function SetAudioStreamPitch(stream: AudioStream, pitch: number): void;
 /** undefined */
-declare function setAudioStreamPan(stream: AudioStream, pan: number): void;
+declare function SetAudioStreamPan(stream: AudioStream, pan: number): void;
 /** undefined */
-declare function setAudioStreamBufferSizeDefault(size: number): void;
+declare function SetAudioStreamBufferSizeDefault(size: number): void;
 /** undefined */
-declare function attachAudioMixedProcessor(processor: AudioMixedProcessor): void;
+declare function AttachAudioMixedProcessor(processor: AudioMixedProcessor): void;
 /** undefined */
-declare function detachAudioMixedProcessor(processor: AudioCallback): void;
+declare function DetachAudioMixedProcessor(processor: AudioCallback): void;
 /**  */
 declare var false: number;
 /**  */

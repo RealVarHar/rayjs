@@ -30,7 +30,7 @@ let LOGO=0,TITLE=1,GAMEPLAY=2,ENDING=3;
 var screenWidth = 800;
 var screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [core] example - basic screen manager");
+InitWindow(screenWidth, screenHeight, "raylib [core] example - basic screen manager");
 
 var currentScreen = LOGO;
 
@@ -38,11 +38,11 @@ var currentScreen = LOGO;
 
 var framesCounter = 0;          // Useful to count frames
 
-setTargetFPS(60);               // Set desired framerate (frames-per-second)
+SetTargetFPS(60);               // Set desired framerate (frames-per-second)
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ while (!windowShouldClose())    // Detect window close button or ESC key
             // TODO: Update TITLE screen variables here!
 
             // Press enter to change to GAMEPLAY screen
-            if (isKeyPressed(KEY_ENTER) || isGestureDetected(GESTURE_TAP))
+            if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
             {
                 currentScreen = GAMEPLAY;
             }
@@ -75,7 +75,7 @@ while (!windowShouldClose())    // Detect window close button or ESC key
             // TODO: Update GAMEPLAY screen variables here!
 
             // Press enter to change to ENDING screen
-            if (isKeyPressed(KEY_ENTER) || isGestureDetected(GESTURE_TAP))
+            if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
             {
                 currentScreen = ENDING;
             }
@@ -85,7 +85,7 @@ while (!windowShouldClose())    // Detect window close button or ESC key
             // TODO: Update ENDING screen variables here!
 
             // Press enter to return to TITLE screen
-            if (isKeyPressed(KEY_ENTER) || isGestureDetected(GESTURE_TAP))
+            if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
             {
                 currentScreen = TITLE;
             }
@@ -96,47 +96,47 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
         switch(currentScreen)
         {
             case LOGO:
             {
                 // TODO: Draw LOGO screen here!
-                drawText("LOGO SCREEN", 20, 20, 40, LIGHTGRAY);
-                drawText("WAIT for 2 SECONDS...", 290, 220, 20, GRAY);
+                DrawText("LOGO SCREEN", 20, 20, 40, LIGHTGRAY);
+                DrawText("WAIT for 2 SECONDS...", 290, 220, 20, GRAY);
 
             } break;
             case TITLE:
             {
                 // TODO: Draw TITLE screen here!
-                drawRectangle(0, 0, screenWidth, screenHeight, GREEN);
-                drawText("TITLE SCREEN", 20, 20, 40, DARKGREEN);
-                drawText("PRESS ENTER or TAP to JUMP to GAMEPLAY SCREEN", 120, 220, 20, DARKGREEN);
+                DrawRectangle(0, 0, screenWidth, screenHeight, GREEN);
+                DrawText("TITLE SCREEN", 20, 20, 40, DARKGREEN);
+                DrawText("PRESS ENTER or TAP to JUMP to GAMEPLAY SCREEN", 120, 220, 20, DARKGREEN);
 
             } break;
             case GAMEPLAY:
             {
                 // TODO: Draw GAMEPLAY screen here!
-                drawRectangle(0, 0, screenWidth, screenHeight, PURPLE);
-                drawText("GAMEPLAY SCREEN", 20, 20, 40, MAROON);
-                drawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
+                DrawRectangle(0, 0, screenWidth, screenHeight, PURPLE);
+                DrawText("GAMEPLAY SCREEN", 20, 20, 40, MAROON);
+                DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
 
             } break;
             case ENDING:
             {
                 // TODO: Draw ENDING screen here!
-                drawRectangle(0, 0, screenWidth, screenHeight, BLUE);
-                drawText("ENDING SCREEN", 20, 20, 40, DARKBLUE);
-                drawText("PRESS ENTER or TAP to RETURN to TITLE SCREEN", 120, 220, 20, DARKBLUE);
+                DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
+                DrawText("ENDING SCREEN", 20, 20, 40, DARKBLUE);
+                DrawText("PRESS ENTER or TAP to RETURN to TITLE SCREEN", 120, 220, 20, DARKBLUE);
 
             } break;
             default: break;
         }
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
@@ -145,5 +145,5 @@ while (!windowShouldClose())    // Detect window close button or ESC key
 
 // TODO: Unload all loaded data (textures, fonts, audio) here!
 
-closeWindow();        // Close window and OpenGL context
+CloseWindow();        // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

@@ -19,20 +19,20 @@ declare var LightmapperConfig: {
     prototype: LightmapperConfig;
 }
 /** undefined */
-declare function getDefaultLightmapperConfig(): LightmapperConfig;
+declare function GetDefaultLightmapperConfig(): LightmapperConfig;
 /** undefined */
-declare function loadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper;
+declare function LoadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper;
 /** undefined */
-declare function loadMaterialLightmapper(emissiveColor: Color, intensity: number): Material;
+declare function LoadMaterialLightmapper(emissiveColor: Color, intensity: number): Material;
 /** undefined */
-declare function unloadLightmapper(lm: Lightmapper): void;
+declare function UnloadLightmapper(lm: Lightmapper): void;
 /** undefined */
-declare function beginLightmap(): void;
+declare function BeginLightmap(): void;
 /** undefined */
-declare function endLightmap(): void;
+declare function EndLightmap(): void;
 /** undefined */
-declare function beginLightmapFragment(lm: Lightmapper &): boolean;
+declare function BeginLightmapFragment(lm: Lightmapper &): boolean;
 /** undefined */
-declare function endLightmapFragment(lm: Lightmapper &): void;
+declare function EndLightmapFragment(lm: Lightmapper &): void;
 /** undefined */
-declare function loadImageFromLightmapper(lm: Lightmapper): Image;
+declare function LoadImageFromLightmapper(lm: Lightmapper): Image;

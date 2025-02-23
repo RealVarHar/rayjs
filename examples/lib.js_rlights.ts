@@ -10,9 +10,9 @@ declare var Light: {
     prototype: Light;
 }
 /** undefined */
-declare function createLight(type: number, position: Vector3, target: Vector3, color: Color, shader: Shader): Light;
+declare function CreateLight(type: number, position: Vector3, target: Vector3, color: Color, shader: Shader): Light;
 /** undefined */
-declare function updateLightValues(shader: Shader, light: Light): void;
+declare function UpdateLightValues(shader: Shader, light: Light): void;
 /**  */
 declare var LIGHT_DIRECTIONAL: number;
 /**  */

@@ -233,7 +233,7 @@ static int js_declare_LightmapperConfig(JSContext * ctx, JSModuleDef * m) {
     return 0;
 }
 
-static JSValue js_getDefaultLightmapperConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_GetDefaultLightmapperConfig(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     LightmapperConfig returnVal = GetDefaultLightmapperConfig();
     LightmapperConfig* ptr_ret = (LightmapperConfig*)js_malloc(ctx, sizeof(LightmapperConfig));
     *ptr_ret = returnVal;
@@ -242,7 +242,7 @@ static JSValue js_getDefaultLightmapperConfig(JSContext * ctx, JSValue this_val,
     return ret;
 }
 
-static JSValue js_loadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_w;
     int err_w = JS_ToInt32(ctx, &long_w, argv[0]);
     if(err_w<0) {
@@ -277,7 +277,7 @@ static JSValue js_loadLightmapper(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
-static JSValue js_loadMaterialLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadMaterialLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Color* ptr_emissiveColor = (Color*)JS_GetOpaque(argv[0], js_Color_class_id);
     if(ptr_emissiveColor == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -299,7 +299,7 @@ static JSValue js_loadMaterialLightmapper(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
-static JSValue js_unloadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_UnloadLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* ptr_lm = (Lightmapper*)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(ptr_lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -310,17 +310,17 @@ static JSValue js_unloadLightmapper(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     BeginLightmap();
     return JS_UNDEFINED;
 }
 
-static JSValue js_endLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndLightmap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     EndLightmap();
     return JS_UNDEFINED;
 }
 
-static JSValue js_beginLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_BeginLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper * lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Lightmapper");
@@ -331,7 +331,7 @@ static JSValue js_beginLightmapFragment(JSContext * ctx, JSValue this_val, int a
     return ret;
 }
 
-static JSValue js_endLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_EndLightmapFragment(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper * lm = (Lightmapper *)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not match type Lightmapper");
@@ -341,7 +341,7 @@ static JSValue js_endLightmapFragment(JSContext * ctx, JSValue this_val, int arg
     return JS_UNDEFINED;
 }
 
-static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+static JSValue js_LoadImageFromLightmapper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Lightmapper* ptr_lm = (Lightmapper*)JS_GetOpaque(argv[0], js_Lightmapper_class_id);
     if(ptr_lm == NULL) {
         JS_ThrowTypeError(ctx, "argv[0] does not allow null");
@@ -357,15 +357,15 @@ static JSValue js_loadImageFromLightmapper(JSContext * ctx, JSValue this_val, in
 }
 
 static const JSCFunctionListEntry js_js_rlightmapper_funcs[] = {
-    JS_CFUNC_DEF("getDefaultLightmapperConfig",0,js_getDefaultLightmapperConfig),
-    JS_CFUNC_DEF("loadLightmapper",4,js_loadLightmapper),
-    JS_CFUNC_DEF("loadMaterialLightmapper",2,js_loadMaterialLightmapper),
-    JS_CFUNC_DEF("unloadLightmapper",1,js_unloadLightmapper),
-    JS_CFUNC_DEF("beginLightmap",0,js_beginLightmap),
-    JS_CFUNC_DEF("endLightmap",0,js_endLightmap),
-    JS_CFUNC_DEF("beginLightmapFragment",1,js_beginLightmapFragment),
-    JS_CFUNC_DEF("endLightmapFragment",1,js_endLightmapFragment),
-    JS_CFUNC_DEF("loadImageFromLightmapper",1,js_loadImageFromLightmapper),
+    JS_CFUNC_DEF("GetDefaultLightmapperConfig",0,js_GetDefaultLightmapperConfig),
+    JS_CFUNC_DEF("LoadLightmapper",4,js_LoadLightmapper),
+    JS_CFUNC_DEF("LoadMaterialLightmapper",2,js_LoadMaterialLightmapper),
+    JS_CFUNC_DEF("UnloadLightmapper",1,js_UnloadLightmapper),
+    JS_CFUNC_DEF("BeginLightmap",0,js_BeginLightmap),
+    JS_CFUNC_DEF("EndLightmap",0,js_EndLightmap),
+    JS_CFUNC_DEF("BeginLightmapFragment",1,js_BeginLightmapFragment),
+    JS_CFUNC_DEF("EndLightmapFragment",1,js_EndLightmapFragment),
+    JS_CFUNC_DEF("LoadImageFromLightmapper",1,js_LoadImageFromLightmapper),
 };
 
 static int js_js_rlightmapper_init(JSContext * ctx, JSModuleDef * m) {
