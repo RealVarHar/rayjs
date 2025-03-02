@@ -2882,7 +2882,7 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     Quaternion q = *ptr_q;
     Vector3 * outAxis;
     int64_t size_outAxis;
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_outAxis)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2913,7 +2913,7 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     }
     float * outAngle;
     int64_t size_outAngle;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_outAngle)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;

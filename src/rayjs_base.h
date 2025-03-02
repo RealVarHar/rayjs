@@ -12,6 +12,8 @@ typedef struct memoryNode{
 typedef struct trampolineContext {
     JSContext * ctx;
     JSValue func_obj;
+    JSValue thread_id;
+
 } trampolineContext;
 #include "rayjs_generated.c"
 #endif

@@ -186,7 +186,7 @@ static JSValue js_GuiLoadStyle(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     GuiLoadStyle((const char *)fileName);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
+    if(JS_IsArray(argv[0]) == 1) {
         js_free(ctx, fileName);
     }
     else if(JS_IsString(argv[0]) == 1) {
@@ -247,7 +247,7 @@ static JSValue js_GuiSetTooltip(JSContext * ctx, JSValue this_val, int argc, JSV
         }
     }
     GuiSetTooltip((const char *)tooltip);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
+    if(JS_IsArray(argv[0]) == 1) {
         js_free(ctx, tooltip);
     }
     else if(JS_IsString(argv[0]) == 1) {
@@ -300,7 +300,7 @@ static JSValue js_GuiIconText(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     const char * returnVal = GuiIconText(iconId, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -405,7 +405,7 @@ static JSValue js_GuiWindowBox(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     int returnVal = GuiWindowBox(bounds, (const char *)title);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, title);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -458,7 +458,7 @@ static JSValue js_GuiGroupBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     int returnVal = GuiGroupBox(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -511,7 +511,7 @@ static JSValue js_GuiLine(JSContext * ctx, JSValue this_val, int argc, JSValue *
         }
     }
     int returnVal = GuiLine(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -564,7 +564,7 @@ static JSValue js_GuiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue 
         }
     }
     int returnVal = GuiPanel(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -623,7 +623,7 @@ static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     if(ptr_content == NULL) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -646,7 +646,7 @@ static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     if(scroll == NULL) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -668,7 +668,7 @@ static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     if(view == NULL) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -689,7 +689,7 @@ static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
     int returnVal = GuiScrollPanel(bounds, (const char *)text, content, scroll, view);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -742,7 +742,7 @@ static JSValue js_GuiLabel(JSContext * ctx, JSValue this_val, int argc, JSValue 
         }
     }
     int returnVal = GuiLabel(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -795,7 +795,7 @@ static JSValue js_GuiButton(JSContext * ctx, JSValue this_val, int argc, JSValue
         }
     }
     int returnVal = GuiButton(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -848,7 +848,7 @@ static JSValue js_GuiLabelButton(JSContext * ctx, JSValue this_val, int argc, JS
         }
     }
     int returnVal = GuiLabelButton(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -903,9 +903,9 @@ static JSValue js_GuiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
     bool * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -942,7 +942,7 @@ static JSValue js_GuiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
     else {
         int js_js_active = JS_ToBool(ctx, argv[2]);
         if(js_js_active<0) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -964,11 +964,11 @@ static JSValue js_GuiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
         active = &js_active;
     }
     int returnVal = GuiToggle(bounds, (const char *)text, active);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewBool(ctx, active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -983,7 +983,7 @@ static JSValue js_GuiToggle(JSContext * ctx, JSValue this_val, int argc, JSValue
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1029,9 +1029,9 @@ static JSValue js_GuiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
     int * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1080,7 +1080,7 @@ static JSValue js_GuiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
             int32_t long_js_active;
             int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[2]);
             if(err_js_active<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -1103,11 +1103,11 @@ static JSValue js_GuiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
         }
     }
     int returnVal = GuiToggleGroup(bounds, (const char *)text, active);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1122,7 +1122,7 @@ static JSValue js_GuiToggleGroup(JSContext * ctx, JSValue this_val, int argc, JS
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1174,9 +1174,9 @@ static JSValue js_GuiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
     int * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1225,7 +1225,7 @@ static JSValue js_GuiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
             int32_t long_js_active;
             int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[2]);
             if(err_js_active<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -1248,11 +1248,11 @@ static JSValue js_GuiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
         }
     }
     int returnVal = GuiToggleSlider(bounds, (const char *)text, active);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1267,7 +1267,7 @@ static JSValue js_GuiToggleSlider(JSContext * ctx, JSValue this_val, int argc, J
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1319,9 +1319,9 @@ static JSValue js_GuiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     bool * checked;
     JSValue da_checked;
     int64_t size_checked;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_checked)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1358,7 +1358,7 @@ static JSValue js_GuiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     else {
         int js_js_checked = JS_ToBool(ctx, argv[2]);
         if(js_js_checked<0) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1380,11 +1380,11 @@ static JSValue js_GuiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         checked = &js_checked;
     }
     int returnVal = GuiCheckBox(bounds, (const char *)text, checked);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewBool(ctx, checked[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1399,7 +1399,7 @@ static JSValue js_GuiCheckBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, checked);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1445,9 +1445,9 @@ static JSValue js_GuiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1496,7 +1496,7 @@ static JSValue js_GuiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             int32_t long_js_active;
             int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[2]);
             if(err_js_active<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -1519,11 +1519,11 @@ static JSValue js_GuiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     int returnVal = GuiComboBox(bounds, (const char *)text, active);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1538,7 +1538,7 @@ static JSValue js_GuiComboBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1590,9 +1590,9 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
     int * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1641,7 +1641,7 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
             int32_t long_js_active;
             int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[2]);
             if(err_js_active<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -1665,7 +1665,7 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
     }
     int js_editMode = JS_ToBool(ctx, argv[3]);
     if(js_editMode<0) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -1680,7 +1680,7 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, active);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1697,11 +1697,11 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
     }
     bool editMode = js_editMode;
     int returnVal = GuiDropdownBox(bounds, (const char *)text, active, editMode);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1716,7 +1716,7 @@ static JSValue js_GuiDropdownBox(JSContext * ctx, JSValue this_val, int argc, JS
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1771,11 +1771,11 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     int * value;
     JSValue da_value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_value)==-1) {
             if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
             }
-            else if(JS_IsArray(ctx,argv[1]) == 1) {
+            else if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -1826,7 +1826,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
             if(err_js_value<0) {
                 if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
                 }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                else if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -1853,7 +1853,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     if(err_minValue<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -1868,7 +1868,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1889,7 +1889,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     if(err_maxValue<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -1904,7 +1904,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1924,7 +1924,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     if(js_editMode<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -1939,7 +1939,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1956,13 +1956,13 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     bool editMode = js_editMode;
     int returnVal = GuiSpinner(bounds, (const char *)text, value, minValue, maxValue, editMode);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -1977,7 +1977,7 @@ static JSValue js_GuiSpinner(JSContext * ctx, JSValue this_val, int argc, JSValu
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -2032,11 +2032,11 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * value;
     JSValue da_value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_value)==-1) {
             if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
             }
-            else if(JS_IsArray(ctx,argv[1]) == 1) {
+            else if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -2087,7 +2087,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             if(err_js_value<0) {
                 if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
                 }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                else if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -2114,7 +2114,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     if(err_minValue<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -2129,7 +2129,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -2150,7 +2150,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     if(err_maxValue<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -2165,7 +2165,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -2185,7 +2185,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     if(js_editMode<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -2200,7 +2200,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
                 js_free(ctx, &da_text);
             }
         }
-        if(JS_IsArray(ctx,argv[2]) == 1) {
+        if(JS_IsArray(argv[2]) == 1) {
             js_free(ctx, value);
         }
         else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -2217,13 +2217,13 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     bool editMode = js_editMode;
     int returnVal = GuiValueBox(bounds, (const char *)text, value, minValue, maxValue, editMode);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -2238,7 +2238,7 @@ static JSValue js_GuiValueBox(JSContext * ctx, JSValue this_val, int argc, JSVal
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -2323,7 +2323,7 @@ static JSValue js_GuiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, 
     }
     float * value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2379,7 +2379,7 @@ static JSValue js_GuiValueBoxFloat(JSContext * ctx, JSValue this_val, int argc, 
     }
     bool editMode = js_editMode;
     int returnVal = GuiValueBoxFloat(bounds, (const char *)text, textValue, value, editMode);
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewFloat64(ctx, (double)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
@@ -2424,7 +2424,7 @@ static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
     int32_t long_textSize;
     int err_textSize = JS_ToInt32(ctx, &long_textSize, argv[2]);
     if(err_textSize<0) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -2445,7 +2445,7 @@ static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
     int textSize = (int)long_textSize;
     int js_editMode = JS_ToBool(ctx, argv[3]);
     if(js_editMode<0) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -2465,7 +2465,7 @@ static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     bool editMode = js_editMode;
     int returnVal = GuiTextBox(bounds, text, textSize, editMode);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -2556,7 +2556,7 @@ static JSValue js_GuiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue
     }
     float * value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2621,7 +2621,7 @@ static JSValue js_GuiSlider(JSContext * ctx, JSValue this_val, int argc, JSValue
     }
     float maxValue = (float)double_maxValue;
     int returnVal = GuiSlider(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewFloat64(ctx, (double)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
@@ -2702,7 +2702,7 @@ static JSValue js_GuiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     float * value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2767,7 +2767,7 @@ static JSValue js_GuiSliderBar(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     float maxValue = (float)double_maxValue;
     int returnVal = GuiSliderBar(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewFloat64(ctx, (double)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
@@ -2848,7 +2848,7 @@ static JSValue js_GuiProgressBar(JSContext * ctx, JSValue this_val, int argc, JS
     }
     float * value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_value)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2913,7 +2913,7 @@ static JSValue js_GuiProgressBar(JSContext * ctx, JSValue this_val, int argc, JS
     }
     float maxValue = (float)double_maxValue;
     int returnVal = GuiProgressBar(bounds, (const char *)textLeft, (const char *)textRight, value, minValue, maxValue);
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewFloat64(ctx, (double)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
@@ -2956,7 +2956,7 @@ static JSValue js_GuiStatusBar(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     int returnVal = GuiStatusBar(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -3009,7 +3009,7 @@ static JSValue js_GuiDummyRec(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     int returnVal = GuiDummyRec(bounds, (const char *)text);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -3069,7 +3069,7 @@ static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     if(err_spacing<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -3093,7 +3093,7 @@ static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     if(err_subdivs<0) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -3116,7 +3116,7 @@ static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     if(mouseCell == NULL) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -3137,7 +3137,7 @@ static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
     int returnVal = GuiGrid(bounds, (const char *)text, spacing, subdivs, mouseCell);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -3192,9 +3192,9 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * scrollIndex;
     JSValue da_scrollIndex;
     int64_t size_scrollIndex;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_scrollIndex)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -3243,7 +3243,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
             int32_t long_js_scrollIndex;
             int err_js_scrollIndex = JS_ToInt32(ctx, &long_js_scrollIndex, argv[2]);
             if(err_js_scrollIndex<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -3268,9 +3268,9 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * active;
     JSValue da_active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_active)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -3285,7 +3285,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
                     js_free(ctx, &da_text);
                 }
             }
-            if(JS_IsArray(ctx,argv[2]) == 1) {
+            if(JS_IsArray(argv[2]) == 1) {
                 js_free(ctx, scrollIndex);
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -3331,7 +3331,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
             int32_t long_js_active;
             int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[3]);
             if(err_js_active<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -3346,7 +3346,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
                         js_free(ctx, &da_text);
                     }
                 }
-                if(JS_IsArray(ctx,argv[2]) == 1) {
+                if(JS_IsArray(argv[2]) == 1) {
                     js_free(ctx, scrollIndex);
                 }
                 else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -3366,15 +3366,15 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     int returnVal = GuiListView(bounds, (const char *)text, scrollIndex, active);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewInt32(ctx, (long)scrollIndex[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -3389,7 +3389,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, scrollIndex);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -3401,7 +3401,7 @@ static JSValue js_GuiListView(JSContext * ctx, JSValue this_val, int argc, JSVal
             js_free(ctx, &da_scrollIndex);
         }
     }
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         js_free(ctx, active);
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
@@ -3428,7 +3428,7 @@ static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     Rectangle bounds = *ptr_bounds;
     char * * text;
     int64_t size_text;
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -3482,7 +3482,7 @@ static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     int count = (int)long_count;
     int * scrollIndex;
     int64_t size_scrollIndex;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_scrollIndex)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -3532,7 +3532,7 @@ static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     int * active;
     int64_t size_active;
-    if(JS_IsArray(ctx,argv[4]) == 1) {
+    if(JS_IsArray(argv[4]) == 1) {
         if(JS_GetLength(ctx,argv[4],&size_active)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -3582,7 +3582,7 @@ static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     int * focus;
     int64_t size_focus;
-    if(JS_IsArray(ctx,argv[5]) == 1) {
+    if(JS_IsArray(argv[5]) == 1) {
         if(JS_GetLength(ctx,argv[5],&size_focus)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -3625,11 +3625,11 @@ static JSValue js_GuiListViewEx(JSContext * ctx, JSValue this_val, int argc, JSV
         }
     }
     int returnVal = GuiListViewEx(bounds, (const char * *)text, count, scrollIndex, active, focus);
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         JSValue js_argv3 = JS_NewInt32(ctx, (long)scrollIndex[0]);
         JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[4]) == 1) {
+    if(JS_IsArray(argv[4]) == 1) {
         JSValue js_argv4 = JS_NewInt32(ctx, (long)active[0]);
         JS_DefinePropertyValueUint32(ctx,argv[4],0,js_argv4,JS_PROP_C_W_E);
     }
@@ -3878,7 +3878,7 @@ static JSValue js_GuiTextInputBox(JSContext * ctx, JSValue this_val, int argc, J
     if(JS_IsNull(argv[6]) || JS_IsUndefined(argv[6])) {
         secretViewActive = NULL;
     }
-    else if(JS_IsArray(ctx,argv[6]) == 1) {
+    else if(JS_IsArray(argv[6]) == 1) {
         if(JS_GetLength(ctx,argv[6],&size_secretViewActive)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -3953,7 +3953,7 @@ static JSValue js_GuiColorPicker(JSContext * ctx, JSValue this_val, int argc, JS
     if(color == NULL) {
         if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
         }
-        else if(JS_IsArray(ctx,argv[1]) == 1) {
+        else if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -3974,7 +3974,7 @@ static JSValue js_GuiColorPicker(JSContext * ctx, JSValue this_val, int argc, JS
     int returnVal = GuiColorPicker(bounds, (const char *)text, color);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4028,7 +4028,7 @@ static JSValue js_GuiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Color * color = (Color *)JS_GetOpaque(argv[2], js_Color_class_id);
     if(color == NULL) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -4047,7 +4047,7 @@ static JSValue js_GuiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSV
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPanel(bounds, (const char *)text, color);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4105,11 +4105,11 @@ static JSValue js_GuiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
     float * alpha;
     JSValue da_alpha;
     int64_t size_alpha;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_alpha)==-1) {
             if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
             }
-            else if(JS_IsArray(ctx,argv[1]) == 1) {
+            else if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -4160,7 +4160,7 @@ static JSValue js_GuiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
             if(err_js_alpha<0) {
                 if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
                 }
-                else if(JS_IsArray(ctx,argv[1]) == 1) {
+                else if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -4183,13 +4183,13 @@ static JSValue js_GuiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
         }
     }
     int returnVal = GuiColorBarAlpha(bounds, (const char *)text, alpha);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewFloat64(ctx, (double)alpha[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
-    else if(JS_IsArray(ctx,argv[1]) == 1) {
+    else if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4204,7 +4204,7 @@ static JSValue js_GuiColorBarAlpha(JSContext * ctx, JSValue this_val, int argc, 
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, alpha);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -4256,9 +4256,9 @@ static JSValue js_GuiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
     float * value;
     JSValue da_value;
     int64_t size_value;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_value)==-1) {
-            if(JS_IsArray(ctx,argv[1]) == 1) {
+            if(JS_IsArray(argv[1]) == 1) {
                 js_free(ctx, text);
             }
             else if(JS_IsString(argv[1]) == 1) {
@@ -4307,7 +4307,7 @@ static JSValue js_GuiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
             double double_js_value;
             int err_js_value = JS_ToFloat64(ctx, &double_js_value, argv[2]);
             if(err_js_value<0) {
-                if(JS_IsArray(ctx,argv[1]) == 1) {
+                if(JS_IsArray(argv[1]) == 1) {
                     js_free(ctx, text);
                 }
                 else if(JS_IsString(argv[1]) == 1) {
@@ -4330,11 +4330,11 @@ static JSValue js_GuiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
         }
     }
     int returnVal = GuiColorBarHue(bounds, (const char *)text, value);
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         JSValue js_argv2 = JS_NewFloat64(ctx, (double)value[0]);
         JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
     }
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4349,7 +4349,7 @@ static JSValue js_GuiColorBarHue(JSContext * ctx, JSValue this_val, int argc, JS
             js_free(ctx, &da_text);
         }
     }
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, value);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -4400,7 +4400,7 @@ static JSValue js_GuiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc,
     }
     Vector3 * colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -4419,7 +4419,7 @@ static JSValue js_GuiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPickerHSV(bounds, (const char *)text, colorHsv);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4473,7 +4473,7 @@ static JSValue js_GuiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
     }
     Vector3 * colorHsv = (Vector3 *)JS_GetOpaque(argv[2], js_Vector3_class_id);
     if(colorHsv == NULL) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
         else if(JS_IsString(argv[1]) == 1) {
@@ -4492,7 +4492,7 @@ static JSValue js_GuiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPanelHSV(bounds, (const char *)text, colorHsv);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -4595,7 +4595,7 @@ static int js_js_raygui_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExport(ctx, m, "DROPDOWNBOX", JS_NewInt32(ctx, DROPDOWNBOX));
     JS_SetModuleExport(ctx, m, "TEXTBOX", JS_NewInt32(ctx, TEXTBOX));
     JS_SetModuleExport(ctx, m, "VALUEBOX", JS_NewInt32(ctx, VALUEBOX));
-    JS_SetModuleExport(ctx, m, "SPINNER", JS_NewInt32(ctx, SPINNER));
+    JS_SetModuleExport(ctx, m, "CONTROL11", JS_NewInt32(ctx, CONTROL11));
     JS_SetModuleExport(ctx, m, "LISTVIEW", JS_NewInt32(ctx, LISTVIEW));
     JS_SetModuleExport(ctx, m, "COLORPICKER", JS_NewInt32(ctx, COLORPICKER));
     JS_SetModuleExport(ctx, m, "SCROLLBAR", JS_NewInt32(ctx, SCROLLBAR));
@@ -4640,12 +4640,13 @@ static int js_js_raygui_init(JSContext * ctx, JSModuleDef * m) {
     JS_SetModuleExport(ctx, m, "DROPDOWN_ARROW_HIDDEN", JS_NewInt32(ctx, DROPDOWN_ARROW_HIDDEN));
     JS_SetModuleExport(ctx, m, "DROPDOWN_ROLL_UP", JS_NewInt32(ctx, DROPDOWN_ROLL_UP));
     JS_SetModuleExport(ctx, m, "TEXT_READONLY", JS_NewInt32(ctx, TEXT_READONLY));
-    JS_SetModuleExport(ctx, m, "SPIN_BUTTON_WIDTH", JS_NewInt32(ctx, SPIN_BUTTON_WIDTH));
-    JS_SetModuleExport(ctx, m, "SPIN_BUTTON_SPACING", JS_NewInt32(ctx, SPIN_BUTTON_SPACING));
+    JS_SetModuleExport(ctx, m, "SPINNER_BUTTON_WIDTH", JS_NewInt32(ctx, SPINNER_BUTTON_WIDTH));
+    JS_SetModuleExport(ctx, m, "SPINNER_BUTTON_SPACING", JS_NewInt32(ctx, SPINNER_BUTTON_SPACING));
     JS_SetModuleExport(ctx, m, "LIST_ITEMS_HEIGHT", JS_NewInt32(ctx, LIST_ITEMS_HEIGHT));
     JS_SetModuleExport(ctx, m, "LIST_ITEMS_SPACING", JS_NewInt32(ctx, LIST_ITEMS_SPACING));
     JS_SetModuleExport(ctx, m, "SCROLLBAR_WIDTH", JS_NewInt32(ctx, SCROLLBAR_WIDTH));
     JS_SetModuleExport(ctx, m, "SCROLLBAR_SIDE", JS_NewInt32(ctx, SCROLLBAR_SIDE));
+    JS_SetModuleExport(ctx, m, "LIST_ITEMS_BORDER_NORMAL", JS_NewInt32(ctx, LIST_ITEMS_BORDER_NORMAL));
     JS_SetModuleExport(ctx, m, "LIST_ITEMS_BORDER_WIDTH", JS_NewInt32(ctx, LIST_ITEMS_BORDER_WIDTH));
     JS_SetModuleExport(ctx, m, "COLOR_SELECTOR_SIZE", JS_NewInt32(ctx, COLOR_SELECTOR_SIZE));
     JS_SetModuleExport(ctx, m, "HUEBAR_WIDTH", JS_NewInt32(ctx, HUEBAR_WIDTH));
@@ -4945,7 +4946,7 @@ JSModuleDef * js_init_module_js_raygui(JSContext * ctx, const char * module_name
     JS_AddModuleExport(ctx, m, "DROPDOWNBOX");
     JS_AddModuleExport(ctx, m, "TEXTBOX");
     JS_AddModuleExport(ctx, m, "VALUEBOX");
-    JS_AddModuleExport(ctx, m, "SPINNER");
+    JS_AddModuleExport(ctx, m, "CONTROL11");
     JS_AddModuleExport(ctx, m, "LISTVIEW");
     JS_AddModuleExport(ctx, m, "COLORPICKER");
     JS_AddModuleExport(ctx, m, "SCROLLBAR");
@@ -4990,12 +4991,13 @@ JSModuleDef * js_init_module_js_raygui(JSContext * ctx, const char * module_name
     JS_AddModuleExport(ctx, m, "DROPDOWN_ARROW_HIDDEN");
     JS_AddModuleExport(ctx, m, "DROPDOWN_ROLL_UP");
     JS_AddModuleExport(ctx, m, "TEXT_READONLY");
-    JS_AddModuleExport(ctx, m, "SPIN_BUTTON_WIDTH");
-    JS_AddModuleExport(ctx, m, "SPIN_BUTTON_SPACING");
+    JS_AddModuleExport(ctx, m, "SPINNER_BUTTON_WIDTH");
+    JS_AddModuleExport(ctx, m, "SPINNER_BUTTON_SPACING");
     JS_AddModuleExport(ctx, m, "LIST_ITEMS_HEIGHT");
     JS_AddModuleExport(ctx, m, "LIST_ITEMS_SPACING");
     JS_AddModuleExport(ctx, m, "SCROLLBAR_WIDTH");
     JS_AddModuleExport(ctx, m, "SCROLLBAR_SIDE");
+    JS_AddModuleExport(ctx, m, "LIST_ITEMS_BORDER_NORMAL");
     JS_AddModuleExport(ctx, m, "LIST_ITEMS_BORDER_WIDTH");
     JS_AddModuleExport(ctx, m, "COLOR_SELECTOR_SIZE");
     JS_AddModuleExport(ctx, m, "HUEBAR_WIDTH");

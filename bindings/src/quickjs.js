@@ -166,7 +166,7 @@ export class QuickJsGenerator extends CodeGenerator {
             let arr;
             if(addArray) {
                 //TODO: allow dynamic binding of array properties
-                arr = ctx[ctxif](`JS_IsArray(ctx,${src}) == 1`);
+                arr = ctx[ctxif](`JS_IsArray(${src}) == 1`);
                 let srclen = sizeVars.pop();
                 let size=srclen;
                 //get length from existing jsArray
@@ -502,55 +502,86 @@ export class QuickJsGenerator extends CodeGenerator {
                             attachmode='detach';
                             allocName=allocName.substr('detach'.length);
                         }
+                        const threaded = this.root.callbackArgs[callbackId].threaded;
                         allocName=allocName+`_${tmpname}`;
                         if(attachmode!=='detach'){
                             //Store function and give it new context (in case it is shared ans async)
                             this.declare('trampolineContext',`ctx_${tmpname}`);
-                            this.call('JS_NewCustomContext',['JS_GetRuntime(ctx)'],{type:'JSContext *',name:'ctx2'});
-                            this.statement(`ctx_${tmpname}.ctx = ctx2`);
-                            //TODO: copy the full context?
-                            this.statement(`ctx_${tmpname}.func_obj = ${src}`);//store as whole, but compare as ${src}.u.ptr
+                            this.statement(`ctx_${tmpname}.ctx = ctx`);
+                            this.statement(`ctx_${tmpname}.func_obj = ${src}`);//store as whole, but compare as ${src}.u.ptr (in threaded, use js_isequal)
+                        }
+                        function addrt(fi){
+                            fi.call('JS_NewRuntime3',[],{name:'rt',type:"JSRuntime*"});
+                            fi.if('!rt').returnExp('JS_EXCEPTION');
+                            fi.call('JS_DupContext',['ctx']);
+                            fi.call('JS_SetMaxStackSize',['rt','0']);
+                            fi.call('js_std_init_handlers',['rt']);
+                            fi.call('JS_NewCustomContext',['rt'],{name:`${allocName}_ctx`});
+                        }
+                        function freert(fi){
+                            fi.call('JS_GetRuntime',[`${allocName}_ctx`],{type:'JSRuntime*', name:'rt'});
+                            fi.call('JS_FreeContext',[`${allocName}_ctx`]);
+                            fi.call('JS_FreeContext',[`ctx`]);
+                            fi.call('js_std_free_handlers',[`rt`]);
+                            fi.call('JS_FreeRuntime',[`rt`]);
                         }
                         if(attachmode==='set'){
-                            this.root.addCallback(callbackId,allocName,false);
+                            this.root.addCallback(callbackId,allocName,false,threaded);
                             let fi = this.if(`JS_IsUndefined(${src}) || JS_IsNull(${src})`);
+                                //unset
+                                fi.call('JS_FreeValue',[`${allocName}_arr->ctx`,`${allocName}_arr->func_obj`]);
+                                fi.call('JS_FreeContext',[`${allocName}_arr->ctx`]);
                                 fi.declare('trampolineContext *',`${allocName}_arr`,false,`NULL`,true);
+                                if(threaded)freert(fi);
                             fi = this.elsif(`JS_IsFunction(ctx,${src})==1`);
-                                fi.call('JS_DupValue',['ctx', src]);
-                                fi.call('JS_DupValue',['ctx2',src]);
                                 let fi2 = fi.if(`${allocName}_arr != NULL`);
+                                    //reset
                                     fi2.call('JS_FreeValue',[`${allocName}_arr->ctx`,`${allocName}_arr->func_obj`]);
                                     fi2.call('JS_FreeContext',[`${allocName}_arr->ctx`]);
+                                if(threaded){
+                                    fi2=fi2.else();
+                                        //set
+                                        addrt(fi2);
+                                }
+                                if(threaded){
+                                    this.call('js_copyWorker',['ctx',`${allocName}_ctx`],{name:'ctx_processor.thread_id'});
+                                }
                                 fi.declare('trampolineContext *',`${allocName}_arr`,false,`&ctx_${tmpname}`,true);
-                            fi = this.else();
-                                fi.returnExp(flags.altReturn||"JS_EXCEPTION");
+                            fi = this.else().returnExp(flags.altReturn||"JS_EXCEPTION");
+                            //prepare for call
                             if(!flags.supressDeclaration) this.declare('void *',name,false);
                             fi = this.if(`${allocName}_arr == NULL`);
                                 fi.declare('void *',name,false,'NULL',true);
                             fi = this.else();
                                 fi.declare('void *',name,false,allocName+'_c',true);
-
-                        }else
-                        if(attachmode==='attach'){
                             this.call('JS_DupValue',['ctx',src]);
-                            this.call('JS_DupValue',['ctx2',src]);
 
-                            this.root.addCallback(callbackId,allocName,true);
+                        }else if(attachmode==='attach'){
+                            this.root.addCallback(callbackId,allocName,true,threaded);
                             this.declare('void *',name,false,allocName+'_c',flags.supressDeclaration);
-                            let fi = this.if(`JS_IsFunction(ctx,${src})==0`);
-                                fi.returnExp(flags.altReturn||"JS_EXCEPTION");
-
-                            fi.declare('void *',name,false,allocName+'_c',flags.supressDeclaration);
+                            let fi;
+                            if(threaded){
+                                //threaded does not support direct calls yet
+                                fi = this.if(`argc==0 || (JS_IsString(${src}) == 0 && JS_IsNumber(${src}) == 0)`);
+                                fi.call('JS_ThrowTypeError',['ctx',`"${src} must be string or number"`]);
+                            }else{
+                                fi = this.if(`JS_IsFunction(ctx,${src})==0`);
+                                fi.call('JS_ThrowTypeError',['ctx',`"${src} must be a function"`]);
+                            }
+                            fi.returnExp(flags.altReturn||"JS_EXCEPTION");
                             //Attaching functions is infrequent, no realloc optimization
                             fi=this.if(`${allocName}_size==0`);
-                                fi.call('js_malloc',['ctx',`sizeof(void *) * 3`],{name:`${allocName}_arr`});
-                                fi.declare('trampolineContext *',`${allocName}_arr[${allocName}_size]`,false,`ctx_${tmpname}`,true);
-                                fi.statement(`${allocName}_size++`);
+                                if(threaded)addrt(fi);
+                                fi.call('js_malloc',['ctx',`sizeof(trampolineContext)`],{name:`${allocName}_arr`});
                             fi=this.else();
-                                fi.call('js_realloc',['ctx',`${allocName}_arr`,`sizeof(void *) * ${allocName}_size`],{name:`${allocName}_arr`});
-                                fi.declare('trampolineContext *',`${allocName}_arr[${allocName}_size]`,false,`ctx_${tmpname}`,true);
-                                fi.statement(`${allocName}_size++`);
-                                fi.returnExp(flags.altReturn||"JS_UNDEFINED");//Dont call the real attach
+                                fi.call('js_realloc',['ctx',`${allocName}_arr`,`sizeof(trampolineContext) * ${allocName}_size`],{name:`${allocName}_arr`});
+                            this.call('JS_DupValue',['ctx',src]);
+                            if(threaded){
+                                this.call('js_copyWorker',['ctx',`${allocName}_ctx`],{name:'ctx_processor.thread_id'});
+                            }
+                            this.declare('trampolineContext *',`${allocName}_arr[${allocName}_size]`,false,`ctx_${tmpname}`,true);
+                            this.statement(`${allocName}_size++`);
+                            fi=this.if(`${allocName}_size>1`).returnExp(flags.altReturn||"JS_UNDEFINED");//Dont call the real attach
                         }else if(attachmode==='detach'){
                             //find in ffiAllocName the pointer and remove it
                             this.declare('int',`${tmpname}_pos`);
@@ -562,6 +593,7 @@ export class QuickJsGenerator extends CodeGenerator {
                                 fi = fo.if(`${allocName}_arr[${iter}].func_obj.u.ptr == ${tmpname}_ptr`);
                                     fi.call('JS_FreeValue',[`ctx`,`${allocName}_arr[${iter}].func_obj`]);
                                     fi.call('JS_FreeValue',[`${allocName}_arr[${iter}].ctx`,`${allocName}_arr[${iter}].func_obj`]);
+                                    if(threaded)fi.call('JS_FreeValue',[`${allocName}_arr[${iter}].ctx`,`${allocName}_arr[${iter}].thread_id`]);
                                     fi.call('JS_FreeContext',[`${allocName}_arr[${iter}].ctx`]);
                                     let fi2 = fi.for(undefined, `${allocName}_size-1`, iter,'++');
                                         fi2.statement(`${allocName}_arr[${iter}]=${allocName}_arr[${iter}+1]`);
@@ -570,6 +602,7 @@ export class QuickJsGenerator extends CodeGenerator {
                                     fi.statement(`break`);
                             fi= this.if(`${allocName}_size!=0`);
                                 fi.returnExp(flags.altReturn||"JS_UNDEFINED");
+                            if(threaded)freert(this);
                         }else{
                             throw new Error("Cannot convert into parameter type: " + type);
                         }
@@ -694,7 +727,7 @@ export class QuickJsGenerator extends CodeGenerator {
             /*Experimental*/
             if(flags.supressDeclaration){
                 //Check only supported if previously defined (AKA. returns by pointer)
-                arr = arr.if(`JS_IsArray(ctx,${name}) == 1`);
+                arr = arr.if(`JS_IsArray(${name}) == 1`);
             }else{
                 arr.call('JS_NewArray',['ctx'],{type:'JSValue', name});
             }
@@ -808,7 +841,7 @@ export class QuickJsGenerator extends CodeGenerator {
             //Check if IsArray
             let arr;
             if(type!='void *'){
-                arr=ctx[ctxif](`JS_IsArray(ctx,${src}) == 1`);
+                arr=ctx[ctxif](`JS_IsArray(${src}) == 1`);
                 arr.call('js_free',['ctx',name]);
                 ctxif='elsif';
             }

@@ -14,4 +14,5 @@
 	url = https://github.com/ands/lightmapper.git
 [submodule "thirdparty/mimalloc"]
 	path = thirdparty/mimalloc
-	url = D:/project/rayjs/buildEnv/thirdparty/mimalloc
+	url = https://github.com/microsoft/mimalloc.git
+	branch = dev

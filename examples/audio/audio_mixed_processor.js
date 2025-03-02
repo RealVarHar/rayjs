@@ -4,6 +4,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
 
 // Initialization
 //--------------------------------------------------------------------------------------
+try{
 var exponent = 1;
 var averageVolume = new Float32Array(400);   // Average volume history
 const screenWidth = 800;
@@ -20,7 +21,7 @@ let sound = LoadSound("resources/coin.wav");
 
 PlayMusicStream(music);
 
-SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+SetTargetFPS(600);               // Set our game to run at 60 frames-per-second
 //--------------------------------------------------------------------------------------
 // Main game loop
 while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -73,3 +74,6 @@ CloseAudioDevice();         // Close audio device
 
 CloseWindow();              // Close window and OpenGL context
 //--------------------------------------------------------------------------------------*/
+}catch(e){
+    console.log(JSON.stringify(e));
+}

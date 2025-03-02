@@ -199,7 +199,7 @@ static JSValue js_rlMultMatrixf(JSContext * ctx, JSValue this_val, int argc, JSV
     float * matf;
     JSValue da_matf;
     int64_t size_matf;
-    if(JS_IsArray(ctx,argv[0]) == 1) {
+    if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_matf)==-1) {
             return JS_EXCEPTION;
         }
@@ -243,7 +243,7 @@ static JSValue js_rlMultMatrixf(JSContext * ctx, JSValue this_val, int argc, JSV
         }
     }
     rlMultMatrixf((const float *)matf);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
+    if(JS_IsArray(argv[0]) == 1) {
         JSValue js_argv0 = JS_NewFloat64(ctx, (double)matf[0]);
         JS_DefinePropertyValueUint32(ctx,argv[0],0,js_argv0,JS_PROP_C_W_E);
     }
@@ -2018,7 +2018,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     int format = (int)long_format;
     unsigned int * glInternalFormat;
     int64_t size_glInternalFormat;
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_glInternalFormat)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2062,7 +2062,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glFormat;
     int64_t size_glFormat;
-    if(JS_IsArray(ctx,argv[2]) == 1) {
+    if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_glFormat)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2106,7 +2106,7 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glType;
     int64_t size_glType;
-    if(JS_IsArray(ctx,argv[3]) == 1) {
+    if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_glType)==-1) {
             memoryClear(ctx, memoryHead);
             return JS_EXCEPTION;
@@ -2211,7 +2211,7 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
     int * mipmaps;
     JSValue da_mipmaps;
     int64_t size_mipmaps;
-    if(JS_IsArray(ctx,argv[4]) == 1) {
+    if(JS_IsArray(argv[4]) == 1) {
         if(JS_GetLength(ctx,argv[4],&size_mipmaps)==-1) {
             return JS_EXCEPTION;
         }
@@ -2249,7 +2249,7 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
         }
     }
     rlGenTextureMipmaps(id, width, height, format, mipmaps);
-    if(JS_IsArray(ctx,argv[4]) == 1) {
+    if(JS_IsArray(argv[4]) == 1) {
         js_free(ctx, mipmaps);
     }
     else if(JS_IsArrayBuffer(argv[4]) == 1) {
@@ -2457,7 +2457,7 @@ static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, J
     int32_t long_type;
     int err_type = JS_ToInt32(ctx, &long_type, argv[1]);
     if(err_type<0) {
-        if(JS_IsArray(ctx,argv[0]) == 1) {
+        if(JS_IsArray(argv[0]) == 1) {
             js_free(ctx, shaderCode);
         }
         else if(JS_IsString(argv[0]) == 1) {
@@ -2477,7 +2477,7 @@ static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, J
     }
     int type = (int)long_type;
     unsigned int returnVal = rlCompileShader((const char *)shaderCode, type);
-    if(JS_IsArray(ctx,argv[0]) == 1) {
+    if(JS_IsArray(argv[0]) == 1) {
         js_free(ctx, shaderCode);
     }
     else if(JS_IsString(argv[0]) == 1) {
@@ -2563,7 +2563,7 @@ static JSValue js_rlGetLocationUniform(JSContext * ctx, JSValue this_val, int ar
         }
     }
     int returnVal = rlGetLocationUniform(shaderId, (const char *)uniformName);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, uniformName);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -2617,7 +2617,7 @@ static JSValue js_rlGetLocationAttrib(JSContext * ctx, JSValue this_val, int arg
         }
     }
     int returnVal = rlGetLocationAttrib(shaderId, (const char *)attribName);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, attribName);
     }
     else if(JS_IsString(argv[1]) == 1) {
@@ -2665,7 +2665,7 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
     Matrix * mat;
     JSValue da_mat;
     int64_t size_mat;
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_mat)==-1) {
             return JS_EXCEPTION;
         }
@@ -2693,7 +2693,7 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
     int32_t long_count;
     int err_count = JS_ToInt32(ctx, &long_count, argv[2]);
     if(err_count<0) {
-        if(JS_IsArray(ctx,argv[1]) == 1) {
+        if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, mat);
         }
         else if(JS_IsArrayBuffer(argv[1]) == 1) {
@@ -2704,7 +2704,7 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
     }
     int count = (int)long_count;
     rlSetUniformMatrices(locIndex, (const Matrix *)mat, count);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, mat);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
@@ -2743,7 +2743,7 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
     int * locs;
     JSValue da_locs;
     int64_t size_locs;
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_locs)==-1) {
             return JS_EXCEPTION;
         }
@@ -2781,7 +2781,7 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     rlSetShader(id, locs);
-    if(JS_IsArray(ctx,argv[1]) == 1) {
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, locs);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {

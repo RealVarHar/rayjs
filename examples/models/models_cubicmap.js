@@ -23,7 +23,7 @@ InitWindow(screenWidth, screenHeight, "raylib [models] example - cubesmap loadin
 // Define the camera to look into our 3d world
 const position = new Vector3(16.0, 14.0, 16.0);     // Camera position
 const target = new Vector3(0.0, 0.0, 0.0);          // Camera looking at point
-const up = Vector3(0.0, 1.0, 0.0);                  // Camera up vector (rotation towards target)
+const up = new Vector3(0.0, 1.0, 0.0);                  // Camera up vector (rotation towards target)
 const fovy = 45.0;                                  // Camera field-of-view Y
 const projection = CAMERA_PERSPECTIVE;              // Camera projection type
 const camera = new Camera3D(position, target, up, fovy, projection)

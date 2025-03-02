@@ -18,73 +18,73 @@ for (const key in rl) { globalThis[key] = rl[key] };
 const screenWidth = 800;
 const screenHeight = 450;
 
-initWindow(screenWidth, screenHeight, "raylib [audio] example - music playing (streaming)");
+InitWindow(screenWidth, screenHeight, "raylib [audio] example - music playing (streaming)");
 
-initAudioDevice();              // Initialize audio device
+InitAudioDevice();              // Initialize audio device
 
-const music = loadMusicStream("resources/country.mp3");
+const music = LoadMusicStream("resources/country.mp3");
 
-playMusicStream(music);
+PlayMusicStream(music);
 
 let timePlayed = 0.0;        // Time played normalized [0.0f..1.0f]
 let pause = false;             // Music playing paused
 
-setTargetFPS(30);               // Set our game to run at 30 frames-per-second
+SetTargetFPS(30);               // Set our game to run at 30 frames-per-second
 //--------------------------------------------------------------------------------------
 
 // Main game loop
-while (!windowShouldClose())    // Detect window close button or ESC key
+while (!WindowShouldClose())    // Detect window close button or ESC key
 {
     // Update
     //----------------------------------------------------------------------------------
-    updateMusicStream(music);   // Update music buffer with new stream data
+    UpdateMusicStream(music);   // Update music buffer with new stream data
     
     // Restart music playing (stop and play)
-    if (isKeyPressed(KEY_SPACE))
+    if (IsKeyPressed(KEY_SPACE))
     {
-        stopMusicStream(music);
-        playMusicStream(music);
+        StopMusicStream(music);
+        PlayMusicStream(music);
     }
 
     // Pause/Resume music playing
-    if (isKeyPressed(KEY_P))
+    if (IsKeyPressed(KEY_P))
     {
         pause = !pause;
 
-        if (pause) pauseMusicStream(music);
-        else resumeMusicStream(music);
+        if (pause) PauseMusicStream(music);
+        else ResumeMusicStream(music);
     }
 
     // Get normalized time played for current music stream
-    timePlayed = getMusicTimePlayed(music)/getMusicTimeLength(music);
+    timePlayed = GetMusicTimePlayed(music)/GetMusicTimeLength(music);
 
     if (timePlayed > 1.0) timePlayed = 1.0;   // Make sure time played is no longer than music
     //----------------------------------------------------------------------------------
 
     // Draw
     //----------------------------------------------------------------------------------
-    beginDrawing();
+    BeginDrawing();
 
-        clearBackground(RAYWHITE);
+        ClearBackground(RAYWHITE);
 
-        drawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, LIGHTGRAY);
+        DrawText("MUSIC SHOULD BE PLAYING!", 255, 150, 20, LIGHTGRAY);
 
-        drawRectangle(200, 200, 400, 12, LIGHTGRAY);
-        drawRectangle(200, 200, (timePlayed*400.0), 12, MAROON);
-        drawRectangleLines(200, 200, 400, 12, GRAY);
+        DrawRectangle(200, 200, 400, 12, LIGHTGRAY);
+        DrawRectangle(200, 200, (timePlayed*400.0), 12, MAROON);
+        DrawRectangleLines(200, 200, 400, 12, GRAY);
 
-        drawText("PRESS SPACE TO RESTART MUSIC", 215, 250, 20, LIGHTGRAY);
-        drawText("PRESS P TO PAUSE/RESUME MUSIC", 208, 280, 20, LIGHTGRAY);
+        DrawText("PRESS SPACE TO RESTART MUSIC", 215, 250, 20, LIGHTGRAY);
+        DrawText("PRESS P TO PAUSE/RESUME MUSIC", 208, 280, 20, LIGHTGRAY);
 
-    endDrawing();
+    EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
 // De-Initialization
 //--------------------------------------------------------------------------------------
-unloadMusicStream(music);   // Unload music stream buffers from RAM
+UnloadMusicStream(music);   // Unload music stream buffers from RAM
 
-closeAudioDevice();         // Close audio device (music streaming is automatically stopped)
+CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
 
-closeWindow();              // Close window and OpenGL context
+CloseWindow();              // Close window and OpenGL context
 //--------------------------------------------------------------------------------------

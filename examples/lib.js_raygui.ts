@@ -160,7 +160,7 @@ declare var TEXTBOX: number;
 /**  */
 declare var VALUEBOX: number;
 /**  */
-declare var SPINNER: number;
+declare var CONTROL11: number;
 /**  */
 declare var LISTVIEW: number;
 /**  */
@@ -250,9 +250,9 @@ declare var DROPDOWN_ROLL_UP: number;
 /**  */
 declare var TEXT_READONLY: number;
 /**  */
-declare var SPIN_BUTTON_WIDTH: number;
+declare var SPINNER_BUTTON_WIDTH: number;
 /**  */
-declare var SPIN_BUTTON_SPACING: number;
+declare var SPINNER_BUTTON_SPACING: number;
 /**  */
 declare var LIST_ITEMS_HEIGHT: number;
 /**  */
@@ -261,6 +261,8 @@ declare var LIST_ITEMS_SPACING: number;
 declare var SCROLLBAR_WIDTH: number;
 /**  */
 declare var SCROLLBAR_SIDE: number;
+/**  */
+declare var LIST_ITEMS_BORDER_NORMAL: number;
 /**  */
 declare var LIST_ITEMS_BORDER_WIDTH: number;
 /**  */

@@ -105,6 +105,7 @@ export class RayJsHeader {
         console.log("Binding callback " + api.name);
         let args=[];
         args.returnType=api.returnType;
+        args.threaded=options.threaded===true;
         for(let i=0;i<api.params.length;i++){
             let arg={ type: api.params[i].type, name: "arg_"+api.params[i].name, sizeVars:api.params[i].sizeVars||[] };
             args.push(arg);
@@ -112,12 +113,11 @@ export class RayJsHeader {
         this.callbackArgs["callback_" + api.name]=args;
         this.callbackLookup[api.name]="callback_" + api.name;
     }
-    addCallback(apiName,callbackName,attachMultiple=false){
+    addCallback(apiName,callbackName,attachMultiple=false,threaded=false){
         //TODO: transform their (void *) types into proper ones
         this.callbackGen.statement(`static trampolineContext * ${callbackName}_arr = NULL`);
-        if(attachMultiple){
-            this.callbackGen.statement(`static size_t ${callbackName}_size = 0`);
-        }
+        if(threaded)this.callbackGen.statement(`static JSContext * ${callbackName}_ctx = NULL`);
+        if(attachMultiple)this.callbackGen.statement(`static size_t ${callbackName}_size = 0`);
         let api=this.callbackArgs[apiName];
         const sub = this.callbackGen.function(callbackName+'_c', api.returnType, api, true);
         let dynamicAlloc=false;
@@ -139,7 +139,7 @@ export class RayJsHeader {
 
         function addcall(sub,arr){
             sub.declare('trampolineContext','tctx',false,`${arr}`);
-            sub.declare('JSContext *','ctx',false,'tctx.ctx');
+            sub.declare('JSContext *','ctx',false,threaded?`${callbackName}_ctx`:'tctx.ctx');
             //init parameters
             for(let i=0;i<api.length;i++){
                 let type=api[i].type;
@@ -158,13 +158,19 @@ export class RayJsHeader {
                     sub.cToJs(type,'js'+i,api[i].name,{dynamicAlloc,altReturn:sub.getDefaultReturn(api.returnType)},0,structuredClone(api[i].sizeVars));
                 }
             }
-            sub.declare('JSValue','argv[]',false,'{'+api.map((el,i)=>'js'+i).join(',')+'}');
-            //No idea why, but internally, qjs sometimes moves contex count, since this is threaded, additional dup is called so that we dont end up freeing runtime
-            sub.call('JS_DupContext',[`ctx`]);
-            sub.call('JS_DupValue',['ctx', 'tctx.func_obj']);
-            sub.call('JS_Call',['ctx', 'tctx.func_obj', 'JS_UNDEFINED', `${api.length}`,'argv'],{type:'JSValue',name:'js_ret'});
-            sub.call('JS_FreeValue',['ctx','tctx.func_obj']);
-            sub.call('JS_FreeContext',[`ctx`]);
+            let argv=api.map((el,i)=>'js'+i);
+            if(threaded){
+                sub.declare('JSValue','argv[]',false,'{'+['tctx.func_obj'].concat(argv).join(',')+'}');
+                sub.call('js_postMessage',['ctx', 'tctx.thread_id', `${argv.length+1}`,'argv'],{type:'JSValue',name:'js_ret'});
+            }else{
+                sub.declare('JSValue','argv[]',false,'{'+argv.join(',')+'}');
+                /* extra dups based on code documentation and stability testing */
+                sub.call('JS_DupContext',[`ctx`]);
+                sub.call('JS_DupValue',['ctx', 'tctx.func_obj']);
+                sub.call('JS_Call',['ctx', 'tctx.func_obj', 'JS_UNDEFINED', `${argv.length}`,'argv'],{type:'JSValue',name:'js_ret'});
+                sub.call('JS_FreeValue',['ctx','tctx.func_obj']);
+                sub.call('JS_FreeContext',[`ctx`]);
+            }
             let cleanupList=['js_ret'];
             function errorCleanupFn(ctx){
                 if(dynamicAlloc){
@@ -176,10 +182,12 @@ export class RayJsHeader {
             }
             //cleanup
             for (let i = 0; i < api.length; i++) {
+                let j=i;
+                if(threaded)j++;
                 if(!api[i].type.endsWith('&')){
-                    sub.call('JS_FreeValue',['ctx',`argv[${i}]`]);
+                    sub.call('JS_FreeValue',['ctx',`argv[${j}]`]);
                 }else{
-                    cleanupList.push(`argv[${i}]`);
+                    cleanupList.push(`argv[${j}]`);
                 }
             }
             let finish=sub;
@@ -189,10 +197,7 @@ export class RayJsHeader {
             //save references
             for (let i = 0; i < api.length; i++) {
                 if(api[i].type.endsWith('&')){
-                    //let jsType=api[i].type.replaceAll(" &",'');
                     finish.jsToC(api[i].type,api[i].name,'js'+i,{allowNull:false,supressDeclaration:true,supressAllocation:true,jsType:'array',altReturn:sub.getDefaultReturn(api.returnType)},0,errorCleanupFn,structuredClone(api[i].sizeVars));
-                    finish.call('JS_FreeValue',['ctx',`argv[${i}]`]);
-                    cleanupList=cleanupList.filter(a=>a!==`argv[${i}]`);
                 }
             }
             if(api.returnType!=='void'){
@@ -205,8 +210,6 @@ export class RayJsHeader {
         }
         sub.declare('JSValue','func1');
         if(attachMultiple){
-            sub.declare('trampolineContext *','tctx');
-            sub.declare('JSContext *','ctx');
             let fo=sub.for(0, `${callbackName}_size`);
                 addcall(fo,`${callbackName}_arr[i]`);
         }else{
@@ -278,7 +281,7 @@ export class RayJsHeader {
                 } else {
                     //cleans parameters initialized before an error
                     //TODO: reorder parameters to limit amount of code generated in cleanup
-                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc},0,(ctx)=>{errorCleanupFn(ctx,i)});
+                    fun.jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
                 }
             }
             // call c function

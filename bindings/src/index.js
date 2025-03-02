@@ -659,7 +659,7 @@ function main() {
                     t1.statement('subformat[subformatlen]=0');
                     t2=t1.if("format[lasth]=='%'");
                         t2.declare('int','i',false,'lasth',true);
-                        t2.statement("buffer[l]='%';");
+                        t2.statement("buffer[l]='%'");
                         t2.statement("l++");
                         t2.statement("continue");
                     t1.statement('memset(char_ptr,0,ilen * sizeof(char))');
@@ -782,6 +782,7 @@ function main() {
     //ignore("AttachAudioMixedProcessor");//Working on this
     att = modules['core'].getCallback("AudioCallback");
     att.params[0].type='float *';
+    att.binding.threaded = true;
     //audioCallback has different sizes depending on what called it
     cb = structuredClone(att);
     cb.name='AudioStreamCallback';
