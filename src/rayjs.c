@@ -32,9 +32,6 @@
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
-#if !defined(_MSC_VER)
-#include <unistd.h>
-#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
@@ -60,8 +57,9 @@ static const int trailer_size = TRAILER_SIZE;
 
 #include <external/glad.h>
 #include <GLFW/glfw3.h>
-#include <raylib.h>
 #include "rayjs_base.c"
+#include "rayjs_base.h"
+#include <raylib.h>
 
 static JSValue app_update_finish(JSContext *ctx,int argc, JSValue *argv){
     JSValue resolve = argv[0];
@@ -149,6 +147,7 @@ static JSValue load_standalone_module(JSContext *ctx)
 #include "modules/js_rlightmapper.h"
 
 static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *filename, int eval_flags){
+	bool use_realpath;
     JSValue val;
     int ret;
 
@@ -158,7 +157,10 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,const char *fil
         val = JS_Eval(ctx, buf, buf_len, filename,
                       eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
         if (!JS_IsException(val)) {
-            if (js_module_set_import_meta(ctx, val, true, true) < 0) {
+            // ex. "<cmdline>" pr "/dev/stdin"
+            use_realpath =
+                !(*filename == '<' || !strncmp(filename, "/dev/", 5));
+            if (js_module_set_import_meta(ctx, val, use_realpath, true) < 0) {
                 js_std_dump_error(ctx);
                 ret = -1;
                 goto end;
@@ -330,8 +332,8 @@ void help(void){
            "-h  --help         list options\n"
            "-e  --eval EXPR    evaluate EXPR\n"
            "-i  --interactive  go to interactive mode\n"
-           "-m  --module       load as ES6 module (default=autodetect)\n"
-           "    --script       load as ES6 script (default=autodetect)\n"
+           "-C  --script       load as JS classic script (default=autodetect)\n"
+           "-m  --module       load as ES module (default=autodetect)\n"
            "-I  --include file include an additional file\n"
            "    --std          make 'std','os','bjson','raylib' available to script\n"
            "-T  --trace        trace memory allocation\n"
@@ -388,16 +390,16 @@ int main(int argc, char** argv){
     while (optind < argc && *argv[optind] == '-') {
         char *arg = argv[optind] + 1;
         const char *longopt = "";
-        char *opt_arg = NULL;
+        char *optarg = NULL;
         /* a single - is not an option, it also stops argument scanning */
         if (!*arg)
             break;
         optind++;
         if (*arg == '-') {
             longopt = arg + 1;
-            opt_arg = strchr(longopt, '=');
-            if (opt_arg)
-                *opt_arg++ = '\0';
+            optarg = strchr(longopt, '=');
+            if (optarg)
+                *optarg++ = '\0';
             arg += strlen(arg);
             /* -- stops argument scanning */
             if (!*longopt)
@@ -407,22 +409,22 @@ int main(int argc, char** argv){
             char opt = *arg;
             if (opt) {
                 arg++;
-                if (!opt_arg && *arg)
-                    opt_arg = arg;
+                if (!optarg && *arg)
+                    optarg = arg;
             }
             if (opt == 'h' || opt == '?' || !strcmp(longopt, "help")) {
                 help();
                 continue;
             }
             if (opt == 'e' || !strcmp(longopt, "eval")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "rayjs: missing expression for -e\n");
-                        exit(2);
+                        exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                expr = opt_arg;
+                expr = optarg;
                 break;
             }
             if (opt == 'I' || !strcmp(longopt, "include")) {
@@ -445,7 +447,7 @@ int main(int argc, char** argv){
                 module = 1;
                 continue;
             }
-            if (!strcmp(longopt, "script")) {
+            if (opt == 'C' || !strcmp(longopt, "script")) {
                 module = 0;
                 continue;
             }
@@ -454,7 +456,7 @@ int main(int argc, char** argv){
                 continue;
             }
             if (opt == 'D' || !strcmp(longopt, "dump-flags")) {
-                dump_flags = opt_arg ? strtol(opt_arg, NULL, 16) : 0;
+                dump_flags = optarg ? strtol(optarg, NULL, 16) : 0;
                 break;
             }
             if (opt == 'T' || !strcmp(longopt, "trace")) {
@@ -470,58 +472,58 @@ int main(int argc, char** argv){
                 continue;
             }
             if (!strcmp(longopt, "memory-limit")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "expecting memory limit");
                         exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                memory_limit = parse_limit(opt_arg);
+                memory_limit = parse_limit(optarg);
                 break;
             }
             if (!strcmp(longopt, "stack-size")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "expecting stack size");
                         exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                stack_size = parse_limit(opt_arg);
+                stack_size = parse_limit(optarg);
                 break;
             }
             if (opt == 'c' || !strcmp(longopt, "compile")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "qjs: missing file for -c\n");
                         exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                compile_file = opt_arg;
+                compile_file = optarg;
                 break;
             }
             if (opt == 'o' || !strcmp(longopt, "out")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "qjs: missing file for -o\n");
                         exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                out = opt_arg;
+                out = optarg;
                 break;
             }
             if (!strcmp(longopt, "exe")) {
-                if (!opt_arg) {
+                if (!optarg) {
                     if (optind >= argc) {
                         fprintf(stderr, "qjs: missing file for --exe\n");
                         exit(1);
                     }
-                    opt_arg = argv[optind++];
+                    optarg = argv[optind++];
                 }
-                exe = opt_arg;
+                exe = optarg;
                 break;
             }
             if (opt) {
@@ -541,6 +543,7 @@ start:
     if (trace_memory) {
         js_trace_malloc_init(&trace_data);
         rt = JS_NewRuntime2(&trace_mf, &trace_data);
+        js_declare_ArrayProxy_RT(rt);
         if (dump_flags != 0)
             JS_SetDumpFlags(rt, dump_flags);
     } else {
@@ -550,11 +553,13 @@ start:
         fprintf(stderr, "rayjs: cannot allocate JS runtime\n");
         exit(2);
     }
-    js_std_init_handlers(rt);
+    js_std_set_worker_new_context_func(JS_NewCustomContext);
+    js_std_set_worker_new_runtime_func(JS_NewRuntime3);
     if (memory_limit >= 0)
         JS_SetMemoryLimit(rt, (size_t)memory_limit);
     if (stack_size >= 0)
         JS_SetMaxStackSize(rt, (size_t)stack_size);
+    js_std_init_handlers(rt);
     ctx = JS_NewCustomContext(rt);
     if (!ctx) {
         fprintf(stderr, "rayjs: cannot allocate JS context\n");
@@ -592,8 +597,7 @@ start:
                 "globalThis.raygui = raygui;\n"
                 "globalThis.rlights = rlights;\n"
                 "globalThis.rlgl = rlgl;\n"
-                "globalThis.reasings = reasings;\n"
-                ;
+                "globalThis.reasings = reasings;\n";
             eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
         }
 
@@ -624,13 +628,14 @@ start:
             args[0] = JS_NewString(ctx, compile_file);
             args[1] = JS_NewString(ctx, out);
             args[2] = JS_NewString(ctx, exe != NULL ? exe : argv[0]);
-            ret = JS_Call(ctx, func, JS_UNDEFINED, countof(args), args);
+            ret = JS_Call(ctx, func, JS_UNDEFINED, 3, (JSValueConst *)args);
             JS_FreeValue(ctx, func);
             JS_FreeValue(ctx, args[0]);
             JS_FreeValue(ctx, args[1]);
             JS_FreeValue(ctx, args[2]);
         } else if (expr) {
-            if (eval_buf(ctx, expr, strlen(expr), "<cmdline>", 0))
+            int flags = module ? JS_EVAL_TYPE_MODULE : 0;
+            if (eval_buf(ctx, expr, strlen(expr), "<cmdline>", flags))
                 goto fail;
         } else if (optind >= argc) {
             /* interactive mode */
@@ -666,7 +671,6 @@ start:
         JS_ComputeMemoryUsage(rt, &stats);
         JS_DumpMemoryUsage(stdout, &stats, rt);
     }
-
     js_std_free_handlers(rt);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);

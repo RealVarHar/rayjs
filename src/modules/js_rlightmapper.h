@@ -45,10 +45,10 @@ static JSValue js_Lightmapper_get_progress(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Lightmapper_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Lightmapper", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("w",js_Lightmapper_get_w,NULL),
     JS_CGETSET_DEF("h",js_Lightmapper_get_h,NULL),
     JS_CGETSET_DEF("progress",js_Lightmapper_get_progress,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Lightmapper", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Lightmapper(JSContext * ctx, JSModuleDef * m) {
@@ -212,6 +212,7 @@ static JSValue js_LightmapperConfig_set_cameraToSurfaceDistanceModifier(JSContex
 }
 
 static const JSCFunctionListEntry js_LightmapperConfig_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","LightmapperConfig", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("hemisphereSize",js_LightmapperConfig_get_hemisphereSize,js_LightmapperConfig_set_hemisphereSize),
     JS_CGETSET_DEF("zNear",js_LightmapperConfig_get_zNear,js_LightmapperConfig_set_zNear),
     JS_CGETSET_DEF("zFar",js_LightmapperConfig_get_zFar,js_LightmapperConfig_set_zFar),
@@ -219,7 +220,6 @@ static const JSCFunctionListEntry js_LightmapperConfig_proto_funcs[] = {
     JS_CGETSET_DEF("interpolationPasses",js_LightmapperConfig_get_interpolationPasses,js_LightmapperConfig_set_interpolationPasses),
     JS_CGETSET_DEF("interpolationThreshold",js_LightmapperConfig_get_interpolationThreshold,js_LightmapperConfig_set_interpolationThreshold),
     JS_CGETSET_DEF("cameraToSurfaceDistanceModifier",js_LightmapperConfig_get_cameraToSurfaceDistanceModifier,js_LightmapperConfig_set_cameraToSurfaceDistanceModifier),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","LightmapperConfig", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_LightmapperConfig(JSContext * ctx, JSModuleDef * m) {

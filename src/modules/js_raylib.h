@@ -130,9 +130,9 @@ static JSValue js_Vector2_set_y(JSContext* ctx, JSValue this_val, JSValue v) {
 }
 
 static const JSCFunctionListEntry js_Vector2_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector2", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("x",js_Vector2_get_x,js_Vector2_set_x),
     JS_CGETSET_DEF("y",js_Vector2_get_y,js_Vector2_set_y),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector2", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Vector2(JSContext * ctx, JSModuleDef * m) {
@@ -214,10 +214,10 @@ static JSValue js_Vector3_set_z(JSContext* ctx, JSValue this_val, JSValue v) {
 }
 
 static const JSCFunctionListEntry js_Vector3_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector3", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("x",js_Vector3_get_x,js_Vector3_set_x),
     JS_CGETSET_DEF("y",js_Vector3_get_y,js_Vector3_set_y),
     JS_CGETSET_DEF("z",js_Vector3_get_z,js_Vector3_set_z),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector3", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Vector3(JSContext * ctx, JSModuleDef * m) {
@@ -319,11 +319,11 @@ static JSValue js_Vector4_set_w(JSContext* ctx, JSValue this_val, JSValue v) {
 }
 
 static const JSCFunctionListEntry js_Vector4_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector4", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("x",js_Vector4_get_x,js_Vector4_set_x),
     JS_CGETSET_DEF("y",js_Vector4_get_y,js_Vector4_set_y),
     JS_CGETSET_DEF("z",js_Vector4_get_z,js_Vector4_set_z),
     JS_CGETSET_DEF("w",js_Vector4_get_w,js_Vector4_set_w),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Vector4", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Vector4(JSContext * ctx, JSModuleDef * m) {
@@ -447,11 +447,11 @@ static JSValue js_Color_set_a(JSContext* ctx, JSValue this_val, JSValue v) {
 }
 
 static const JSCFunctionListEntry js_Color_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Color", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("r",js_Color_get_r,js_Color_set_r),
     JS_CGETSET_DEF("g",js_Color_get_g,js_Color_set_g),
     JS_CGETSET_DEF("b",js_Color_get_b,js_Color_set_b),
     JS_CGETSET_DEF("a",js_Color_get_a,js_Color_set_a),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Color", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Color(JSContext * ctx, JSModuleDef * m) {
@@ -553,11 +553,11 @@ static JSValue js_Rectangle_set_height(JSContext* ctx, JSValue this_val, JSValue
 }
 
 static const JSCFunctionListEntry js_Rectangle_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Rectangle", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("x",js_Rectangle_get_x,js_Rectangle_set_x),
     JS_CGETSET_DEF("y",js_Rectangle_get_y,js_Rectangle_set_y),
     JS_CGETSET_DEF("width",js_Rectangle_get_width,js_Rectangle_set_width),
     JS_CGETSET_DEF("height",js_Rectangle_get_height,js_Rectangle_set_height),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Rectangle", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Rectangle(JSContext * ctx, JSModuleDef * m) {
@@ -581,22 +581,27 @@ static void js_Image_finalizer(JSRuntime * rt, JSValue val) {
 static JSValue js_Image_set_data(JSContext* ctx, JSValue this_val, JSValue v) {
     Image* ptr = JS_GetOpaque2(ctx, this_val, js_Image_class_id);
     void * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
     if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        void * js_value = (void *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        void * js_value = (void *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (void *)jsc_malloc(ctx, size_value * sizeof(void *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
         JS_ThrowTypeError(ctx, "v does not match type void *");
         return JS_EXCEPTION;
     }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
     if(ptr->data!=NULL) {
-        js_free(ctx, ptr->data);
+        jsc_free(ctx, ptr->data);
     }
     ptr->data = value;
     return JS_UNDEFINED;
@@ -683,12 +688,12 @@ static JSValue js_Image_set_format(JSContext* ctx, JSValue this_val, JSValue v) 
 }
 
 static const JSCFunctionListEntry js_Image_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Image", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("data",NULL,js_Image_set_data),
     JS_CGETSET_DEF("width",js_Image_get_width,js_Image_set_width),
     JS_CGETSET_DEF("height",js_Image_get_height,js_Image_set_height),
     JS_CGETSET_DEF("mipmaps",js_Image_get_mipmaps,js_Image_set_mipmaps),
     JS_CGETSET_DEF("format",js_Image_get_format,js_Image_set_format),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Image", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Image(JSContext * ctx, JSModuleDef * m) {
@@ -738,11 +743,11 @@ static JSValue js_Texture_get_format(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Texture_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Texture", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("width",js_Texture_get_width,NULL),
     JS_CGETSET_DEF("height",js_Texture_get_height,NULL),
     JS_CGETSET_DEF("mipmaps",js_Texture_get_mipmaps,NULL),
     JS_CGETSET_DEF("format",js_Texture_get_format,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Texture", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Texture(JSContext * ctx, JSModuleDef * m) {
@@ -791,10 +796,10 @@ static JSValue js_RenderTexture_get_depth(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_RenderTexture_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","RenderTexture", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("id",js_RenderTexture_get_id,NULL),
     JS_CGETSET_DEF("texture",js_RenderTexture_get_texture,NULL),
     JS_CGETSET_DEF("depth",js_RenderTexture_get_depth,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","RenderTexture", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_RenderTexture(JSContext * ctx, JSModuleDef * m) {
@@ -938,13 +943,13 @@ static JSValue js_NPatchInfo_set_layout(JSContext* ctx, JSValue this_val, JSValu
 }
 
 static const JSCFunctionListEntry js_NPatchInfo_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","NPatchInfo", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("source",js_NPatchInfo_get_source,js_NPatchInfo_set_source),
     JS_CGETSET_DEF("left",js_NPatchInfo_get_left,js_NPatchInfo_set_left),
     JS_CGETSET_DEF("top",js_NPatchInfo_get_top,js_NPatchInfo_set_top),
     JS_CGETSET_DEF("right",js_NPatchInfo_get_right,js_NPatchInfo_set_right),
     JS_CGETSET_DEF("bottom",js_NPatchInfo_get_bottom,js_NPatchInfo_set_bottom),
     JS_CGETSET_DEF("layout",js_NPatchInfo_get_layout,js_NPatchInfo_set_layout),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","NPatchInfo", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_NPatchInfo(JSContext * ctx, JSModuleDef * m) {
@@ -1019,11 +1024,11 @@ static JSValue js_Font_get_texture(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Font_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Font", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("baseSize",js_Font_get_baseSize,NULL),
     JS_CGETSET_DEF("glyphCount",js_Font_get_glyphCount,NULL),
     JS_CGETSET_DEF("glyphPadding",js_Font_get_glyphPadding,NULL),
     JS_CGETSET_DEF("texture",js_Font_get_texture,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Font", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Font(JSContext * ctx, JSModuleDef * m) {
@@ -1141,12 +1146,12 @@ static JSValue js_Camera3D_set_projection(JSContext* ctx, JSValue this_val, JSVa
 }
 
 static const JSCFunctionListEntry js_Camera3D_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Camera3D", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("position",js_Camera3D_get_position,js_Camera3D_set_position),
     JS_CGETSET_DEF("target",js_Camera3D_get_target,js_Camera3D_set_target),
     JS_CGETSET_DEF("up",NULL,js_Camera3D_set_up),
     JS_CGETSET_DEF("fovy",js_Camera3D_get_fovy,js_Camera3D_set_fovy),
     JS_CGETSET_DEF("projection",js_Camera3D_get_projection,js_Camera3D_set_projection),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Camera3D", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Camera3D(JSContext * ctx, JSModuleDef * m) {
@@ -1252,11 +1257,11 @@ static JSValue js_Camera2D_set_zoom(JSContext* ctx, JSValue this_val, JSValue v)
 }
 
 static const JSCFunctionListEntry js_Camera2D_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Camera2D", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("offset",js_Camera2D_get_offset,js_Camera2D_set_offset),
     JS_CGETSET_DEF("target",js_Camera2D_get_target,js_Camera2D_set_target),
     JS_CGETSET_DEF("rotation",js_Camera2D_get_rotation,js_Camera2D_set_rotation),
     JS_CGETSET_DEF("zoom",js_Camera2D_get_zoom,js_Camera2D_set_zoom),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Camera2D", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Camera2D(JSContext * ctx, JSModuleDef * m) {
@@ -1317,23 +1322,105 @@ static JSValue js_Mesh_set_triangleCount(JSContext* ctx, JSValue this_val, JSVal
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_get_vertices(JSContext* ctx, JSValue this_val) {
-    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    float * vertices = ptr->vertices;
+static JSValue js_Mesh_vertices_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->vertexCount*3; i0++){
-        JSValue js_ret = JS_NewFloat64(ctx, (double)vertices[i0]);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*3; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->vertices[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_vertices_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_vertices_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            float src = ((Mesh *)ptr)->vertices[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_vertices_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->vertices[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_vertices_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_vertices(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_vertices_values,.keys = js_Mesh_vertices_keys,.get = js_Mesh_vertices_get,.set = js_Mesh_vertices_set,.has = js_Mesh_vertices_has});
     return ret;
 }
 
 static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1352,12 +1439,10 @@ static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v)
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1373,34 +1458,122 @@ static JSValue js_Mesh_set_vertices(JSContext* ctx, JSValue this_val, JSValue v)
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->vertices!=NULL) {
-        js_free(ctx, ptr->vertices);
+        jsc_free(ctx, ptr->vertices);
     }
     ptr->vertices = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_get_texcoords(JSContext* ctx, JSValue this_val) {
-    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    float * texcoords = ptr->texcoords;
+static JSValue js_Mesh_texcoords_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->vertexCount*2; i0++){
-        JSValue js_ret = JS_NewFloat64(ctx, (double)texcoords[i0]);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->texcoords[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_texcoords_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_texcoords_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*2) {
+            float src = ((Mesh *)ptr)->texcoords[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_texcoords_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->texcoords[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_texcoords_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_texcoords(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_texcoords_values,.keys = js_Mesh_texcoords_keys,.get = js_Mesh_texcoords_get,.set = js_Mesh_texcoords_set,.has = js_Mesh_texcoords_has});
     return ret;
 }
 
 static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1419,12 +1592,10 @@ static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1440,12 +1611,18 @@ static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->texcoords!=NULL) {
-        js_free(ctx, ptr->texcoords);
+        jsc_free(ctx, ptr->texcoords);
     }
     ptr->texcoords = value;
     return JS_UNDEFINED;
@@ -1454,8 +1631,15 @@ static JSValue js_Mesh_set_texcoords(JSContext* ctx, JSValue this_val, JSValue v
 static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1474,12 +1658,10 @@ static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1495,34 +1677,122 @@ static JSValue js_Mesh_set_texcoords2(JSContext* ctx, JSValue this_val, JSValue 
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->texcoords2!=NULL) {
-        js_free(ctx, ptr->texcoords2);
+        jsc_free(ctx, ptr->texcoords2);
     }
     ptr->texcoords2 = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Mesh_get_normals(JSContext* ctx, JSValue this_val) {
-    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
-    float * normals = ptr->normals;
+static JSValue js_Mesh_normals_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->vertexCount*3; i0++){
-        JSValue js_ret = JS_NewFloat64(ctx, (double)normals[i0]);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*3; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->normals[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_normals_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_normals_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            float src = ((Mesh *)ptr)->normals[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_normals_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->normals[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_normals_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_normals(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_normals_values,.keys = js_Mesh_normals_keys,.get = js_Mesh_normals_get,.set = js_Mesh_normals_set,.has = js_Mesh_normals_has});
     return ret;
 }
 
 static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1541,12 +1811,10 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1562,12 +1830,18 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->normals!=NULL) {
-        js_free(ctx, ptr->normals);
+        jsc_free(ctx, ptr->normals);
     }
     ptr->normals = value;
     return JS_UNDEFINED;
@@ -1576,8 +1850,15 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
 static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1596,12 +1877,10 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1617,12 +1896,18 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->tangents!=NULL) {
-        js_free(ctx, ptr->tangents);
+        jsc_free(ctx, ptr->tangents);
     }
     ptr->tangents = value;
     return JS_UNDEFINED;
@@ -1631,8 +1916,15 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
 static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     unsigned char * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1651,12 +1943,10 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        unsigned char * js_value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        unsigned char * js_value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (unsigned char *)jsc_malloc(ctx, size_value * sizeof(unsigned char *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1672,12 +1962,18 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type unsigned char *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->colors!=NULL) {
-        js_free(ctx, ptr->colors);
+        jsc_free(ctx, ptr->colors);
     }
     ptr->colors = value;
     return JS_UNDEFINED;
@@ -1686,8 +1982,15 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
 static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     unsigned short * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1706,12 +2009,10 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        unsigned short * js_value = (unsigned short *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        unsigned short * js_value = (unsigned short *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (unsigned short *)jsc_malloc(ctx, size_value * sizeof(unsigned short *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1727,12 +2028,18 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type unsigned short *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->indices!=NULL) {
-        js_free(ctx, ptr->indices);
+        jsc_free(ctx, ptr->indices);
     }
     ptr->indices = value;
     return JS_UNDEFINED;
@@ -1741,8 +2048,15 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
 static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1761,12 +2075,10 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1782,12 +2094,18 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->animVertices!=NULL) {
-        js_free(ctx, ptr->animVertices);
+        jsc_free(ctx, ptr->animVertices);
     }
     ptr->animVertices = value;
     return JS_UNDEFINED;
@@ -1796,8 +2114,15 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
 static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1816,12 +2141,10 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1837,12 +2160,18 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->animNormals!=NULL) {
-        js_free(ctx, ptr->animNormals);
+        jsc_free(ctx, ptr->animNormals);
     }
     ptr->animNormals = value;
     return JS_UNDEFINED;
@@ -1851,8 +2180,15 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
 static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     unsigned char * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1871,12 +2207,10 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        unsigned char * js_value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        unsigned char * js_value = (unsigned char *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (unsigned char *)jsc_malloc(ctx, size_value * sizeof(unsigned char *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1892,12 +2226,18 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type unsigned char *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->boneIds!=NULL) {
-        js_free(ctx, ptr->boneIds);
+        jsc_free(ctx, ptr->boneIds);
     }
     ptr->boneIds = value;
     return JS_UNDEFINED;
@@ -1906,8 +2246,15 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
 static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -1926,12 +2273,10 @@ static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -1947,18 +2292,25 @@ static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
         }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
     }
     if(ptr->boneWeights!=NULL) {
-        js_free(ctx, ptr->boneWeights);
+        jsc_free(ctx, ptr->boneWeights);
     }
     ptr->boneWeights = value;
     return JS_UNDEFINED;
 }
 
 static const JSCFunctionListEntry js_Mesh_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Mesh", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("vertexCount",js_Mesh_get_vertexCount,js_Mesh_set_vertexCount),
     JS_CGETSET_DEF("triangleCount",js_Mesh_get_triangleCount,js_Mesh_set_triangleCount),
     JS_CGETSET_DEF("vertices",js_Mesh_get_vertices,js_Mesh_set_vertices),
@@ -1972,7 +2324,6 @@ static const JSCFunctionListEntry js_Mesh_proto_funcs[] = {
     JS_CGETSET_DEF("animNormals",NULL,js_Mesh_set_animNormals),
     JS_CGETSET_DEF("boneIds",NULL,js_Mesh_set_boneIds),
     JS_CGETSET_DEF("boneWeights",NULL,js_Mesh_set_boneWeights),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Mesh", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Mesh(JSContext * ctx, JSModuleDef * m) {
@@ -2001,8 +2352,8 @@ static JSValue js_Shader_get_id(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Shader_proto_funcs[] = {
-    JS_CGETSET_DEF("id",js_Shader_get_id,NULL),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","Shader", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("id",js_Shader_get_id,NULL),
 };
 
 static int js_declare_Shader(JSContext * ctx, JSModuleDef * m) {
@@ -2078,10 +2429,10 @@ static JSValue js_MaterialMap_set_value(JSContext* ctx, JSValue this_val, JSValu
 }
 
 static const JSCFunctionListEntry js_MaterialMap_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","MaterialMap", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("texture",NULL,js_MaterialMap_set_texture),
     JS_CGETSET_DEF("color",js_MaterialMap_get_color,js_MaterialMap_set_color),
     JS_CGETSET_DEF("value",js_MaterialMap_get_value,js_MaterialMap_set_value),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","MaterialMap", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_MaterialMap(JSContext * ctx, JSModuleDef * m) {
@@ -2124,78 +2475,102 @@ static JSValue js_Material_set_shader(JSContext* ctx, JSValue this_val, JSValue 
     return JS_UNDEFINED;
 }
 
-static JSValue js_Material_get_maps(JSContext* ctx, JSValue this_val) {
-    Material* ptr = JS_GetOpaque2(ctx, this_val, js_Material_class_id);
-    MaterialMap * maps = ptr->maps;
+static JSValue js_Material_maps_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    MaterialMap* ptr_js_ret0 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret0 = maps[0];
-    JSValue js_ret0 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret0, ptr_js_ret0);
-    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret1 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret1 = maps[1];
-    JSValue js_ret1 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret1, ptr_js_ret1);
-    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret2 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret2 = maps[2];
-    JSValue js_ret2 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret2, ptr_js_ret2);
-    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret3 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret3 = maps[3];
-    JSValue js_ret3 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret3, ptr_js_ret3);
-    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret4 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret4 = maps[4];
-    JSValue js_ret4 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret4, ptr_js_ret4);
-    JS_DefinePropertyValueUint32(ctx,ret,4,js_ret4,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret5 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret5 = maps[5];
-    JSValue js_ret5 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret5, ptr_js_ret5);
-    JS_DefinePropertyValueUint32(ctx,ret,5,js_ret5,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret6 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret6 = maps[6];
-    JSValue js_ret6 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret6, ptr_js_ret6);
-    JS_DefinePropertyValueUint32(ctx,ret,6,js_ret6,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret7 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret7 = maps[7];
-    JSValue js_ret7 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret7, ptr_js_ret7);
-    JS_DefinePropertyValueUint32(ctx,ret,7,js_ret7,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret8 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret8 = maps[8];
-    JSValue js_ret8 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret8, ptr_js_ret8);
-    JS_DefinePropertyValueUint32(ctx,ret,8,js_ret8,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret9 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret9 = maps[9];
-    JSValue js_ret9 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret9, ptr_js_ret9);
-    JS_DefinePropertyValueUint32(ctx,ret,9,js_ret9,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret10 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret10 = maps[10];
-    JSValue js_ret10 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret10, ptr_js_ret10);
-    JS_DefinePropertyValueUint32(ctx,ret,10,js_ret10,JS_PROP_C_W_E);
-    MaterialMap* ptr_js_ret11 = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
-    *ptr_js_ret11 = maps[11];
-    JSValue js_ret11 = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
-    JS_SetOpaque(js_ret11, ptr_js_ret11);
-    JS_DefinePropertyValueUint32(ctx,ret,11,js_ret11,JS_PROP_C_W_E);
+    for(int i0=0; i0 < 12; i0++){
+        MaterialMap* ptr_js_ret = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+        *ptr_js_ret = ((Material *)ptr)->maps[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Material_maps_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 12;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Material_maps_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)12);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<12) {
+            MaterialMap src = ((Material *)ptr)->maps[property];
+            MaterialMap* ptr_ret = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Material_maps_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        MaterialMap* ptr_ret = (MaterialMap*)JS_GetOpaque(set_to, js_MaterialMap_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        MaterialMap ret = *ptr_ret;
+        ((Material *)ptr)->maps[property] = ret;
+    }
+    return true;
+}
+
+static int js_Material_maps_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<12) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Material_get_maps(JSContext* ctx, JSValue this_val) {
+    Material* ptr = JS_GetOpaque2(ctx, this_val, js_Material_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Material_maps_values,.keys = js_Material_maps_keys,.get = js_Material_maps_get,.set = js_Material_maps_set,.has = js_Material_maps_has});
     return ret;
 }
 
 static const JSCFunctionListEntry js_Material_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Material", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("shader",js_Material_get_shader,js_Material_set_shader),
     JS_CGETSET_DEF("maps",js_Material_get_maps,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Material", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Material(JSContext * ctx, JSModuleDef * m) {
@@ -2296,26 +2671,110 @@ static JSValue js_Model_get_materialCount(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
-static JSValue js_Model_get_meshes(JSContext* ctx, JSValue this_val) {
-    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
-    Mesh * meshes = ptr->meshes;
+static JSValue js_Model_meshes_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->meshCount; i0++){
+    for(int i0=0; i0 < ((Model *)ptr)->meshCount; i0++){
         Mesh* ptr_js_ret = (Mesh*)js_malloc(ctx, sizeof(Mesh));
-        *ptr_js_ret = meshes[i0];
+        *ptr_js_ret = ((Model *)ptr)->meshes[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_Mesh_class_id);
         JS_SetOpaque(js_ret, ptr_js_ret);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Model_meshes_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Model *)ptr)->meshCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Model_meshes_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Model *)ptr)->meshCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->meshCount) {
+            Mesh src = ((Model *)ptr)->meshes[property];
+            Mesh* ptr_ret = (Mesh*)js_malloc(ctx, sizeof(Mesh));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_Mesh_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Model_meshes_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Mesh* ptr_ret = (Mesh*)JS_GetOpaque(set_to, js_Mesh_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        Mesh ret = *ptr_ret;
+        ((Model *)ptr)->meshes[property] = ret;
+    }
+    return true;
+}
+
+static int js_Model_meshes_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->meshCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Model_get_meshes(JSContext* ctx, JSValue this_val) {
+    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Model_meshes_values,.keys = js_Model_meshes_keys,.get = js_Model_meshes_get,.set = js_Model_meshes_set,.has = js_Model_meshes_has});
     return ret;
 }
 
 static JSValue js_Model_set_meshes(JSContext* ctx, JSValue this_val, JSValue v) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     Mesh * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -2333,44 +2792,132 @@ static JSValue js_Model_set_meshes(JSContext* ctx, JSValue this_val, JSValue v) 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        Mesh * js_value = (Mesh *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        Mesh * js_value = (Mesh *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (Mesh *)jsc_malloc(ctx, size_value * sizeof(Mesh *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
         JS_ThrowTypeError(ctx, "v does not match type Mesh *");
         return JS_EXCEPTION;
     }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
     if(ptr->meshes!=NULL) {
-        js_free(ctx, ptr->meshes);
+        jsc_free(ctx, ptr->meshes);
     }
     ptr->meshes = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Model_get_materials(JSContext* ctx, JSValue this_val) {
-    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
-    Material * materials = ptr->materials;
+static JSValue js_Model_materials_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->materialCount; i0++){
+    for(int i0=0; i0 < ((Model *)ptr)->materialCount; i0++){
         Material* ptr_js_ret = (Material*)js_malloc(ctx, sizeof(Material));
-        *ptr_js_ret = materials[i0];
+        *ptr_js_ret = ((Model *)ptr)->materials[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_Material_class_id);
         JS_SetOpaque(js_ret, ptr_js_ret);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Model_materials_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Model *)ptr)->materialCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Model_materials_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Model *)ptr)->materialCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->materialCount) {
+            Material src = ((Model *)ptr)->materials[property];
+            Material* ptr_ret = (Material*)js_malloc(ctx, sizeof(Material));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_Material_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Model_materials_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Material* ptr_ret = (Material*)JS_GetOpaque(set_to, js_Material_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        Material ret = *ptr_ret;
+        ((Model *)ptr)->materials[property] = ret;
+    }
+    return true;
+}
+
+static int js_Model_materials_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->materialCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Model_get_materials(JSContext* ctx, JSValue this_val) {
+    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Model_materials_values,.keys = js_Model_materials_keys,.get = js_Model_materials_get,.set = js_Model_materials_set,.has = js_Model_materials_has});
     return ret;
 }
 
 static JSValue js_Model_set_materials(JSContext* ctx, JSValue this_val, JSValue v) {
     Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
     Material * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
@@ -2388,33 +2935,112 @@ static JSValue js_Model_set_materials(JSContext* ctx, JSValue this_val, JSValue 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        Material * js_value = (Material *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        Material * js_value = (Material *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (Material *)jsc_malloc(ctx, size_value * sizeof(Material *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
         JS_ThrowTypeError(ctx, "v does not match type Material *");
         return JS_EXCEPTION;
     }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
     if(ptr->materials!=NULL) {
-        js_free(ctx, ptr->materials);
+        jsc_free(ctx, ptr->materials);
     }
     ptr->materials = value;
     return JS_UNDEFINED;
 }
 
-static JSValue js_Model_get_meshMaterial(JSContext* ctx, JSValue this_val) {
-    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
-    int * meshMaterial = ptr->meshMaterial;
+static JSValue js_Model_meshMaterial_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->meshCount; i0++){
-        JSValue js_ret = JS_NewInt32(ctx, (long)meshMaterial[i0]);
+    for(int i0=0; i0 < ((Model *)ptr)->meshCount; i0++){
+        JSValue js_ret = JS_NewInt32(ctx, (long)((Model *)ptr)->meshMaterial[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Model_meshMaterial_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Model *)ptr)->meshCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Model_meshMaterial_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Model *)ptr)->meshCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->meshCount) {
+            int src = ((Model *)ptr)->meshMaterial[property];
+            JSValue ret = JS_NewInt32(ctx, (long)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Model_meshMaterial_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        int32_t long_ret;
+        int err_ret = JS_ToInt32(ctx, &long_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        int ret = (int)long_ret;
+        ((Model *)ptr)->meshMaterial[property] = ret;
+    }
+    return true;
+}
+
+static int js_Model_meshMaterial_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->meshCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Model_get_meshMaterial(JSContext* ctx, JSValue this_val) {
+    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Model_meshMaterial_values,.keys = js_Model_meshMaterial_keys,.get = js_Model_meshMaterial_get,.set = js_Model_meshMaterial_set,.has = js_Model_meshMaterial_has});
     return ret;
 }
 
@@ -2425,37 +3051,192 @@ static JSValue js_Model_get_boneCount(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
-static JSValue js_Model_get_bones(JSContext* ctx, JSValue this_val) {
-    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
-    BoneInfo * bones = ptr->bones;
+static JSValue js_Model_bones_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->boneCount; i0++){
+    for(int i0=0; i0 < ((Model *)ptr)->boneCount; i0++){
         BoneInfo* ptr_js_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
-        *ptr_js_ret = bones[i0];
+        *ptr_js_ret = ((Model *)ptr)->bones[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
         JS_SetOpaque(js_ret, ptr_js_ret);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
-    return ret;
-}
-
-static JSValue js_Model_get_bindPose(JSContext* ctx, JSValue this_val) {
-    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
-    Transform * bindPose = ptr->bindPose;
-    JSValue ret;
-    ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < ptr->boneCount; i0++){
-        Transform* ptr_js_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
-        *ptr_js_ret = bindPose[i0];
-        JSValue js_ret = JS_NewObjectClass(ctx, js_Transform_class_id);
-        JS_SetOpaque(js_ret, ptr_js_ret);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
     }
     return ret;
 }
 
+static int js_Model_bones_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Model *)ptr)->boneCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Model_bones_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Model *)ptr)->boneCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->boneCount) {
+            BoneInfo src = ((Model *)ptr)->bones[property];
+            BoneInfo* ptr_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Model_bones_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        BoneInfo* ptr_ret = (BoneInfo*)JS_GetOpaque(set_to, js_BoneInfo_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        BoneInfo ret = *ptr_ret;
+        ((Model *)ptr)->bones[property] = ret;
+    }
+    return true;
+}
+
+static int js_Model_bones_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->boneCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Model_get_bones(JSContext* ctx, JSValue this_val) {
+    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Model_bones_values,.keys = js_Model_bones_keys,.get = js_Model_bones_get,.set = js_Model_bones_set,.has = js_Model_bones_has});
+    return ret;
+}
+
+static JSValue js_Model_bindPose_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Model *)ptr)->boneCount; i0++){
+        Transform* ptr_js_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
+        *ptr_js_ret = ((Model *)ptr)->bindPose[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_Transform_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Model_bindPose_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Model *)ptr)->boneCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Model_bindPose_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Model *)ptr)->boneCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->boneCount) {
+            Transform src = ((Model *)ptr)->bindPose[property];
+            Transform* ptr_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_Transform_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Model_bindPose_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Transform* ptr_ret = (Transform*)JS_GetOpaque(set_to, js_Transform_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        Transform ret = *ptr_ret;
+        ((Model *)ptr)->bindPose[property] = ret;
+    }
+    return true;
+}
+
+static int js_Model_bindPose_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Model *)ptr)->boneCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Model_get_bindPose(JSContext* ctx, JSValue this_val) {
+    Model* ptr = JS_GetOpaque2(ctx, this_val, js_Model_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Model_bindPose_values,.keys = js_Model_bindPose_keys,.get = js_Model_bindPose_get,.set = js_Model_bindPose_set,.has = js_Model_bindPose_has});
+    return ret;
+}
+
 static const JSCFunctionListEntry js_Model_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Model", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("transform",js_Model_get_transform,js_Model_set_transform),
     JS_CGETSET_DEF("meshCount",js_Model_get_meshCount,NULL),
     JS_CGETSET_DEF("materialCount",js_Model_get_materialCount,NULL),
@@ -2465,7 +3246,6 @@ static const JSCFunctionListEntry js_Model_proto_funcs[] = {
     JS_CGETSET_DEF("boneCount",js_Model_get_boneCount,NULL),
     JS_CGETSET_DEF("bones",js_Model_get_bones,NULL),
     JS_CGETSET_DEF("bindPose",js_Model_get_bindPose,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Model", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Model(JSContext * ctx, JSModuleDef * m) {
@@ -2533,9 +3313,9 @@ static JSValue js_Ray_set_direction(JSContext* ctx, JSValue this_val, JSValue v)
 }
 
 static const JSCFunctionListEntry js_Ray_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Ray", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("position",NULL,js_Ray_set_position),
     JS_CGETSET_DEF("direction",NULL,js_Ray_set_direction),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Ray", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Ray(JSContext * ctx, JSModuleDef * m) {
@@ -2591,11 +3371,11 @@ static JSValue js_RayCollision_get_normal(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_RayCollision_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","RayCollision", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("hit",js_RayCollision_get_hit,NULL),
     JS_CGETSET_DEF("distance",js_RayCollision_get_distance,NULL),
     JS_CGETSET_DEF("point",js_RayCollision_get_point,NULL),
     JS_CGETSET_DEF("normal",js_RayCollision_get_normal,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","RayCollision", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_RayCollision(JSContext * ctx, JSModuleDef * m) {
@@ -2661,9 +3441,9 @@ static JSValue js_BoundingBox_set_max(JSContext* ctx, JSValue this_val, JSValue 
 }
 
 static const JSCFunctionListEntry js_BoundingBox_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","BoundingBox", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("min",js_BoundingBox_get_min,js_BoundingBox_set_min),
     JS_CGETSET_DEF("max",js_BoundingBox_get_max,js_BoundingBox_set_max),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","BoundingBox", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_BoundingBox(JSContext * ctx, JSModuleDef * m) {
@@ -2713,11 +3493,11 @@ static JSValue js_Wave_get_channels(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Wave_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Wave", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("frameCount",js_Wave_get_frameCount,NULL),
     JS_CGETSET_DEF("sampleRate",js_Wave_get_sampleRate,NULL),
     JS_CGETSET_DEF("sampleSize",js_Wave_get_sampleSize,NULL),
     JS_CGETSET_DEF("channels",js_Wave_get_channels,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Wave", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Wave(JSContext * ctx, JSModuleDef * m) {
@@ -2812,8 +3592,8 @@ static JSValue js_Sound_get_frameCount(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Sound_proto_funcs[] = {
-    JS_CGETSET_DEF("frameCount",js_Sound_get_frameCount,NULL),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","Sound", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("frameCount",js_Sound_get_frameCount,NULL),
 };
 
 static int js_declare_Sound(JSContext * ctx, JSModuleDef * m) {
@@ -2868,10 +3648,10 @@ static JSValue js_Music_get_ctxType(JSContext* ctx, JSValue this_val) {
 }
 
 static const JSCFunctionListEntry js_Music_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Music", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("frameCount",js_Music_get_frameCount,NULL),
     JS_CGETSET_DEF("looping",js_Music_get_looping,js_Music_set_looping),
     JS_CGETSET_DEF("ctxType",js_Music_get_ctxType,NULL),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Music", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Music(JSContext * ctx, JSModuleDef * m) {
@@ -3032,27 +3812,105 @@ static JSValue js_VrDeviceInfo_set_interpupillaryDistance(JSContext* ctx, JSValu
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_lensDistortionValues(JSContext* ctx, JSValue this_val) {
-    VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    float * lensDistortionValues = ptr->lensDistortionValues;
+static JSValue js_VrDeviceInfo_lensDistortionValues_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    JSValue js_ret0 = JS_NewFloat64(ctx, (double)lensDistortionValues[0]);
-    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
-    JSValue js_ret1 = JS_NewFloat64(ctx, (double)lensDistortionValues[1]);
-    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
-    JSValue js_ret2 = JS_NewFloat64(ctx, (double)lensDistortionValues[2]);
-    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
-    JSValue js_ret3 = JS_NewFloat64(ctx, (double)lensDistortionValues[3]);
-    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
+    for(int i0=0; i0 < 4; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrDeviceInfo *)ptr)->lensDistortionValues[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrDeviceInfo_lensDistortionValues_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrDeviceInfo_lensDistortionValues_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            float src = ((VrDeviceInfo *)ptr)->lensDistortionValues[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrDeviceInfo_lensDistortionValues_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrDeviceInfo *)ptr)->lensDistortionValues[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrDeviceInfo_lensDistortionValues_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrDeviceInfo_get_lensDistortionValues(JSContext* ctx, JSValue this_val) {
+    VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrDeviceInfo_lensDistortionValues_values,.keys = js_VrDeviceInfo_lensDistortionValues_keys,.get = js_VrDeviceInfo_lensDistortionValues_get,.set = js_VrDeviceInfo_lensDistortionValues_set,.has = js_VrDeviceInfo_lensDistortionValues_has});
     return ret;
 }
 
 static JSValue js_VrDeviceInfo_set_lensDistortionValues(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         value = (float *)jsc_malloc(ctx, 4 * sizeof(float));
         for(int i0=0; i0 < 4; i0++){
@@ -3068,12 +3926,10 @@ static JSValue js_VrDeviceInfo_set_lensDistortionValues(JSContext* ctx, JSValue 
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -3089,35 +3945,119 @@ static JSValue js_VrDeviceInfo_set_lensDistortionValues(JSContext* ctx, JSValue 
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
         }
     }
     memcpy(ptr->lensDistortionValues, value, 4 * sizeof(float ));
     return JS_UNDEFINED;
 }
 
-static JSValue js_VrDeviceInfo_get_chromaAbCorrection(JSContext* ctx, JSValue this_val) {
-    VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
-    float * chromaAbCorrection = ptr->chromaAbCorrection;
+static JSValue js_VrDeviceInfo_chromaAbCorrection_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    JSValue js_ret0 = JS_NewFloat64(ctx, (double)chromaAbCorrection[0]);
-    JS_DefinePropertyValueUint32(ctx,ret,0,js_ret0,JS_PROP_C_W_E);
-    JSValue js_ret1 = JS_NewFloat64(ctx, (double)chromaAbCorrection[1]);
-    JS_DefinePropertyValueUint32(ctx,ret,1,js_ret1,JS_PROP_C_W_E);
-    JSValue js_ret2 = JS_NewFloat64(ctx, (double)chromaAbCorrection[2]);
-    JS_DefinePropertyValueUint32(ctx,ret,2,js_ret2,JS_PROP_C_W_E);
-    JSValue js_ret3 = JS_NewFloat64(ctx, (double)chromaAbCorrection[3]);
-    JS_DefinePropertyValueUint32(ctx,ret,3,js_ret3,JS_PROP_C_W_E);
+    for(int i0=0; i0 < 4; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrDeviceInfo *)ptr)->chromaAbCorrection[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrDeviceInfo_chromaAbCorrection_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrDeviceInfo_chromaAbCorrection_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            float src = ((VrDeviceInfo *)ptr)->chromaAbCorrection[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrDeviceInfo_chromaAbCorrection_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrDeviceInfo *)ptr)->chromaAbCorrection[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrDeviceInfo_chromaAbCorrection_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrDeviceInfo_get_chromaAbCorrection(JSContext* ctx, JSValue this_val) {
+    VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrDeviceInfo_chromaAbCorrection_values,.keys = js_VrDeviceInfo_chromaAbCorrection_keys,.get = js_VrDeviceInfo_chromaAbCorrection_get,.set = js_VrDeviceInfo_chromaAbCorrection_set,.has = js_VrDeviceInfo_chromaAbCorrection_has});
     return ret;
 }
 
 static JSValue js_VrDeviceInfo_set_chromaAbCorrection(JSContext* ctx, JSValue this_val, JSValue v) {
     VrDeviceInfo* ptr = JS_GetOpaque2(ctx, this_val, js_VrDeviceInfo_class_id);
     float * value;
+    bool freesrc_value = false;
     JSValue da_value;
     int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
     if(JS_IsArray(v) == 1) {
         value = (float *)jsc_malloc(ctx, 4 * sizeof(float));
         for(int i0=0; i0 < 4; i0++){
@@ -3133,12 +4073,10 @@ static JSValue js_VrDeviceInfo_set_chromaAbCorrection(JSContext* ctx, JSValue th
         }
     }
     else if(JS_IsArrayBuffer(v) == 1) {
-        da_value = JS_DupValue(ctx,v);
         size_t size_value;
-        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
         value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
         memcpy(value, js_value, size_value);
-        JS_FreeValuePtr(ctx, &da_value);
     }
     else {
         JSClassID classid_value = JS_GetClassID(v);
@@ -3154,8 +4092,14 @@ static JSValue js_VrDeviceInfo_set_chromaAbCorrection(JSContext* ctx, JSValue th
             JS_FreeValuePtr(ctx, &da_value);
         }
         else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
             JS_ThrowTypeError(ctx, "v does not match type float *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
         }
     }
     memcpy(ptr->chromaAbCorrection, value, 4 * sizeof(float ));
@@ -3163,6 +4107,7 @@ static JSValue js_VrDeviceInfo_set_chromaAbCorrection(JSContext* ctx, JSValue th
 }
 
 static const JSCFunctionListEntry js_VrDeviceInfo_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","VrDeviceInfo", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("hResolution",js_VrDeviceInfo_get_hResolution,js_VrDeviceInfo_set_hResolution),
     JS_CGETSET_DEF("vResolution",js_VrDeviceInfo_get_vResolution,js_VrDeviceInfo_set_vResolution),
     JS_CGETSET_DEF("hScreenSize",js_VrDeviceInfo_get_hScreenSize,js_VrDeviceInfo_set_hScreenSize),
@@ -3172,7 +4117,6 @@ static const JSCFunctionListEntry js_VrDeviceInfo_proto_funcs[] = {
     JS_CGETSET_DEF("interpupillaryDistance",js_VrDeviceInfo_get_interpupillaryDistance,js_VrDeviceInfo_set_interpupillaryDistance),
     JS_CGETSET_DEF("lensDistortionValues",js_VrDeviceInfo_get_lensDistortionValues,js_VrDeviceInfo_set_lensDistortionValues),
     JS_CGETSET_DEF("chromaAbCorrection",js_VrDeviceInfo_get_chromaAbCorrection,js_VrDeviceInfo_set_chromaAbCorrection),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","VrDeviceInfo", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_VrDeviceInfo(JSContext * ctx, JSModuleDef * m) {
@@ -3292,7 +4236,14 @@ static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName
     JS_FreeValue(ctx, tctx.func_obj);
     JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
+    bool freesrc_arg_dataSize = false;
     int64_t size_arg_dataSize;
+    if(JS_GetClassID(js1) == js_ArrayProxy_class_id) {
+        void * opaque_arg_dataSize = JS_GetOpaque(js1, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_arg_dataSize = *(ArrayProxy_class *)opaque_arg_dataSize;
+        js1 = AP_arg_dataSize.values(ctx, AP_arg_dataSize.opaque, 0, false);
+        freesrc_arg_dataSize = true;
+    }
     if(JS_IsArray(js1) == 1) {
         if(JS_GetLength(ctx,js1,&size_arg_dataSize)==-1) {
             JS_FreeValue(ctx, js_ret);
@@ -3319,8 +4270,15 @@ static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName
     else {
     }
     unsigned char * resp;
+    bool freesrc_resp = false;
     JSValue da_resp;
     int64_t size_resp;
+    if(JS_GetClassID(js_ret) == js_ArrayProxy_class_id) {
+        void * opaque_resp = JS_GetOpaque(js_ret, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_resp = *(ArrayProxy_class *)opaque_resp;
+        js_ret = AP_resp.values(ctx, AP_resp.opaque, 0, false);
+        freesrc_resp = true;
+    }
     if(JS_IsArray(js_ret) == 1) {
         if(JS_GetLength(ctx,js_ret,&size_resp)==-1) {
             JS_FreeValue(ctx, js_ret);
@@ -3341,9 +4299,8 @@ static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName
         }
     }
     else if(JS_IsArrayBuffer(js_ret) == 1) {
-        da_resp = JS_DupValue(ctx,js_ret);
         size_t size_resp;
-        resp = (unsigned char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+        resp = (unsigned char *)JS_GetArrayBuffer(ctx, &size_resp, js_ret);
     }
     else {
         JSClassID classid_resp = JS_GetClassID(js_ret);
@@ -3358,8 +4315,14 @@ static unsigned char * LoadFileDataCallback_callback_c(const char * arg_fileName
         else {
             JS_FreeValue(ctx, js_ret);
             JS_FreeValue(ctx, argv[1]);
+            if(freesrc_resp) {
+                JS_FreeValue(ctx, js_ret);
+            }
             JS_ThrowTypeError(ctx, "js_ret does not match type unsigned char *");
             return NULL;
+        }
+        if(freesrc_resp) {
+            JS_FreeValue(ctx, js_ret);
         }
     }
     JS_FreeValue(ctx, js_ret);
@@ -3416,15 +4379,15 @@ static char * LoadFileTextCallback_callback_c(const char * arg_fileName) {
     JS_FreeContext(ctx);
     JS_FreeValue(ctx, argv[0]);
     char * resp;
+    bool freesrc_resp = false;
     JSValue da_resp;
     int64_t size_resp;
     if(JS_IsString(js_ret) == 1) {
         resp = (char *)JS_ToCStringLen(ctx, &size_resp, js_ret);
     }
     else if(JS_IsArrayBuffer(js_ret) == 1) {
-        da_resp = JS_DupValue(ctx,js_ret);
         size_t size_resp;
-        resp = (char *)JS_GetArrayBuffer(ctx, &size_resp, da_resp);
+        resp = (char *)JS_GetArrayBuffer(ctx, &size_resp, js_ret);
     }
     else {
         JSClassID classid_resp = JS_GetClassID(js_ret);
@@ -3438,8 +4401,14 @@ static char * LoadFileTextCallback_callback_c(const char * arg_fileName) {
         }
         else {
             JS_FreeValue(ctx, js_ret);
+            if(freesrc_resp) {
+                JS_FreeValue(ctx, js_ret);
+            }
             JS_ThrowTypeError(ctx, "js_ret does not match type char *");
             return NULL;
+        }
+        if(freesrc_resp) {
+            JS_FreeValue(ctx, js_ret);
         }
     }
     JS_FreeValue(ctx, js_ret);
@@ -3495,7 +4464,14 @@ static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int
         JSValue js_ret = js_postMessage(ctx, tctx.thread_id, 3, argv);
         JS_FreeValue(ctx, argv[2]);
         if(i==AudioMixedProcessor_processor_size-1) {
+            bool freesrc_arg_bufferData = false;
             int64_t size_arg_bufferData;
+            if(JS_GetClassID(js0) == js_ArrayProxy_class_id) {
+                void * opaque_arg_bufferData = JS_GetOpaque(js0, js_ArrayProxy_class_id);
+                ArrayProxy_class AP_arg_bufferData = *(ArrayProxy_class *)opaque_arg_bufferData;
+                js0 = AP_arg_bufferData.values(ctx, AP_arg_bufferData.opaque, 0, false);
+                freesrc_arg_bufferData = true;
+            }
             if(JS_IsArray(js0) == 1) {
                 if(JS_GetLength(ctx,js0,&size_arg_bufferData)==-1) {
                     JS_FreeValue(ctx, js_ret);
@@ -3522,8 +4498,14 @@ static void AudioMixedProcessor_processor_c(float * arg_bufferData, unsigned int
             else {
                 JS_FreeValue(ctx, js_ret);
                 JS_FreeValue(ctx, argv[1]);
+                if(freesrc_arg_bufferData) {
+                    JS_FreeValue(ctx, js0);
+                }
                 JS_ThrowTypeError(ctx, "js0 does not match type float *");
                 return  ;
+            }
+            if(freesrc_arg_bufferData) {
+                JS_FreeValue(ctx, js0);
             }
             JS_FreeValue(ctx, js_ret);
             JS_FreeValue(ctx, argv[1]);
@@ -3984,15 +4966,15 @@ static JSValue js_InitWindow(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     int height = (int)long_height;
     char * title;
+    bool freesrc_title = false;
     JSValue da_title;
     int64_t size_title;
     if(JS_IsString(argv[2]) == 1) {
         title = (char *)JS_ToCStringLen(ctx, &size_title, argv[2]);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_title = JS_DupValue(ctx,argv[2]);
         size_t size_title;
-        title = (char *)JS_GetArrayBuffer(ctx, &size_title, da_title);
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, argv[2]);
     }
     else {
         JSClassID classid_title = JS_GetClassID(argv[2]);
@@ -4005,8 +4987,14 @@ static JSValue js_InitWindow(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_title-=offset_title;
         }
         else {
+            if(freesrc_title) {
+                JS_FreeValue(ctx, argv[2]);
+            }
             JS_ThrowTypeError(ctx, "argv[2] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_title) {
+            JS_FreeValue(ctx, argv[2]);
         }
     }
     InitWindow(width, height, (const char *)title);
@@ -4156,15 +5144,15 @@ static JSValue js_SetWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSV
 
 static JSValue js_SetWindowTitle(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * title;
+    bool freesrc_title = false;
     JSValue da_title;
     int64_t size_title;
     if(JS_IsString(argv[0]) == 1) {
         title = (char *)JS_ToCStringLen(ctx, &size_title, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_title = JS_DupValue(ctx,argv[0]);
         size_t size_title;
-        title = (char *)JS_GetArrayBuffer(ctx, &size_title, da_title);
+        title = (char *)JS_GetArrayBuffer(ctx, &size_title, argv[0]);
     }
     else {
         JSClassID classid_title = JS_GetClassID(argv[0]);
@@ -4177,8 +5165,14 @@ static JSValue js_SetWindowTitle(JSContext * ctx, JSValue this_val, int argc, JS
             size_title-=offset_title;
         }
         else {
+            if(freesrc_title) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_title) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     SetWindowTitle((const char *)title);
@@ -4456,15 +5450,15 @@ static JSValue js_GetMonitorName(JSContext * ctx, JSValue this_val, int argc, JS
 
 static JSValue js_SetClipboardText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -4477,8 +5471,14 @@ static JSValue js_SetClipboardText(JSContext * ctx, JSValue this_val, int argc, 
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     SetClipboardText((const char *)text);
@@ -4754,10 +5754,9 @@ static JSValue js_LoadShader(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, vsFileName);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_vsFileName = JS_DupValue(ctx,argv[0]);
         size_t size_vsFileName;
-        vsFileName = (char *)JS_GetArrayBuffer(ctx, &size_vsFileName, da_vsFileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_vsFileName);
+        vsFileName = (char *)JS_GetArrayBuffer(ctx, &size_vsFileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, vsFileName);
     }
     else {
         JSClassID classid_vsFileName = JS_GetClassID(argv[0]);
@@ -4783,10 +5782,9 @@ static JSValue js_LoadShader(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fsFileName);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fsFileName = JS_DupValue(ctx,argv[1]);
         size_t size_fsFileName;
-        fsFileName = (char *)JS_GetArrayBuffer(ctx, &size_fsFileName, da_fsFileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fsFileName);
+        fsFileName = (char *)JS_GetArrayBuffer(ctx, &size_fsFileName, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fsFileName);
     }
     else {
         JSClassID classid_fsFileName = JS_GetClassID(argv[1]);
@@ -4824,10 +5822,9 @@ static JSValue js_LoadShaderFromMemory(JSContext * ctx, JSValue this_val, int ar
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, vsCode);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_vsCode = JS_DupValue(ctx,argv[0]);
         size_t size_vsCode;
-        vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, da_vsCode);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_vsCode);
+        vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, vsCode);
     }
     else {
         JSClassID classid_vsCode = JS_GetClassID(argv[0]);
@@ -4853,10 +5850,9 @@ static JSValue js_LoadShaderFromMemory(JSContext * ctx, JSValue this_val, int ar
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fsCode);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fsCode = JS_DupValue(ctx,argv[1]);
         size_t size_fsCode;
-        fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, da_fsCode);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fsCode);
+        fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fsCode);
     }
     else {
         JSClassID classid_fsCode = JS_GetClassID(argv[1]);
@@ -4904,15 +5900,15 @@ static JSValue js_GetShaderLocation(JSContext * ctx, JSValue this_val, int argc,
     }
     Shader shader = *ptr_shader;
     char * uniformName;
+    bool freesrc_uniformName = false;
     JSValue da_uniformName;
     int64_t size_uniformName;
     if(JS_IsString(argv[1]) == 1) {
         uniformName = (char *)JS_ToCStringLen(ctx, &size_uniformName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_uniformName = JS_DupValue(ctx,argv[1]);
         size_t size_uniformName;
-        uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, da_uniformName);
+        uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, argv[1]);
     }
     else {
         JSClassID classid_uniformName = JS_GetClassID(argv[1]);
@@ -4925,8 +5921,14 @@ static JSValue js_GetShaderLocation(JSContext * ctx, JSValue this_val, int argc,
             size_uniformName-=offset_uniformName;
         }
         else {
+            if(freesrc_uniformName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_uniformName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int returnVal = GetShaderLocation(shader, (const char *)uniformName);
@@ -4957,15 +5959,15 @@ static JSValue js_GetShaderLocationAttrib(JSContext * ctx, JSValue this_val, int
     }
     Shader shader = *ptr_shader;
     char * attribName;
+    bool freesrc_attribName = false;
     JSValue da_attribName;
     int64_t size_attribName;
     if(JS_IsString(argv[1]) == 1) {
         attribName = (char *)JS_ToCStringLen(ctx, &size_attribName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_attribName = JS_DupValue(ctx,argv[1]);
         size_t size_attribName;
-        attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, da_attribName);
+        attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, argv[1]);
     }
     else {
         JSClassID classid_attribName = JS_GetClassID(argv[1]);
@@ -4978,8 +5980,14 @@ static JSValue js_GetShaderLocationAttrib(JSContext * ctx, JSValue this_val, int
             size_attribName-=offset_attribName;
         }
         else {
+            if(freesrc_attribName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_attribName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int returnVal = GetShaderLocationAttrib(shader, (const char *)attribName);
@@ -5028,8 +6036,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
     switch(uniformType) {
         case SHADER_UNIFORM_FLOAT:{
             float * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
@@ -5048,9 +6063,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (float *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (float *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5079,8 +6093,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_VEC2:{
             float * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (float *)js_malloc(ctx, 2 * sizeof(float));
                 for(int i0=0; i0 < 2; i0++){
@@ -5096,9 +6117,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (float *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (float *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5111,8 +6131,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5121,8 +6147,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_VEC3:{
             float * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (float *)js_malloc(ctx, 3 * sizeof(float));
                 for(int i0=0; i0 < 3; i0++){
@@ -5138,9 +6171,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (float *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (float *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5153,8 +6185,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5163,8 +6201,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_VEC4:{
             float * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (float *)js_malloc(ctx, 4 * sizeof(float));
                 for(int i0=0; i0 < 4; i0++){
@@ -5180,9 +6225,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (float *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (float *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5195,8 +6239,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5206,8 +6256,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         case SHADER_UNIFORM_INT:
         case SHADER_UNIFORM_SAMPLER2D:{
             int * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
@@ -5226,9 +6283,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (int *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (int *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5257,8 +6313,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_IVEC2:{
             int * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (int *)js_malloc(ctx, 2 * sizeof(int));
                 for(int i0=0; i0 < 2; i0++){
@@ -5274,9 +6337,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (int *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (int *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5289,8 +6351,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5299,8 +6367,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_IVEC3:{
             int * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (int *)js_malloc(ctx, 3 * sizeof(int));
                 for(int i0=0; i0 < 3; i0++){
@@ -5316,9 +6391,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (int *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (int *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5331,8 +6405,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5341,8 +6421,15 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
         }
         case SHADER_UNIFORM_IVEC4:{
             int * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 val = (int *)js_malloc(ctx, 4 * sizeof(int));
                 for(int i0=0; i0 < 4; i0++){
@@ -5358,9 +6445,8 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (int *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (int *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5373,8 +6459,14 @@ static JSValue js_SetShaderValue(JSContext * ctx, JSValue this_val, int argc, JS
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5430,8 +6522,15 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
         case SHADER_UNIFORM_VEC3:
         case SHADER_UNIFORM_VEC4:{
             float * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
@@ -5450,9 +6549,8 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (float *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (float *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5465,8 +6563,14 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void *)val;
@@ -5479,8 +6583,15 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
         case SHADER_UNIFORM_IVEC3:
         case SHADER_UNIFORM_IVEC4:{
             int * val;
+            bool freesrc_val = false;
             JSValue da_val;
             int64_t size_val;
+            if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+                void * opaque_val = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+                ArrayProxy_class AP_val = *(ArrayProxy_class *)opaque_val;
+                argv[2] = AP_val.values(ctx, AP_val.opaque, 0, false);
+                freesrc_val = true;
+            }
             if(JS_IsArray(argv[2]) == 1) {
                 if(JS_GetLength(ctx,argv[2],&size_val)==-1) {
                     return JS_EXCEPTION;
@@ -5499,9 +6610,8 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
                 }
             }
             else if(JS_IsArrayBuffer(argv[2]) == 1) {
-                da_val = JS_DupValue(ctx,argv[2]);
                 size_t size_val;
-                val = (int *)JS_GetArrayBuffer(ctx, &size_val, da_val);
+                val = (int *)JS_GetArrayBuffer(ctx, &size_val, argv[2]);
             }
             else {
                 JSClassID classid_val = JS_GetClassID(argv[2]);
@@ -5514,8 +6624,14 @@ static JSValue js_SetShaderValueV(JSContext * ctx, JSValue this_val, int argc, J
                     size_val-=offset_val;
                 }
                 else {
+                    if(freesrc_val) {
+                        JS_FreeValue(ctx, argv[2]);
+                    }
                     JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
                     return JS_EXCEPTION;
+                }
+                if(freesrc_val) {
+                    JS_FreeValue(ctx, argv[2]);
                 }
             }
             value = (void*)val;
@@ -5875,15 +6991,15 @@ static JSValue js_LoadRandomSequence(JSContext * ctx, JSValue this_val, int argc
 
 static JSValue js_TakeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -5896,8 +7012,14 @@ static JSValue js_TakeScreenshot(JSContext * ctx, JSValue this_val, int argc, JS
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     TakeScreenshot((const char *)fileName);
@@ -5933,15 +7055,15 @@ static JSValue js_SetConfigFlags(JSContext * ctx, JSValue this_val, int argc, JS
 
 static JSValue js_OpenURL(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * url;
+    bool freesrc_url = false;
     JSValue da_url;
     int64_t size_url;
     if(JS_IsString(argv[0]) == 1) {
         url = (char *)JS_ToCStringLen(ctx, &size_url, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_url = JS_DupValue(ctx,argv[0]);
         size_t size_url;
-        url = (char *)JS_GetArrayBuffer(ctx, &size_url, da_url);
+        url = (char *)JS_GetArrayBuffer(ctx, &size_url, argv[0]);
     }
     else {
         JSClassID classid_url = JS_GetClassID(argv[0]);
@@ -5954,8 +7076,14 @@ static JSValue js_OpenURL(JSContext * ctx, JSValue this_val, int argc, JSValue *
             size_url-=offset_url;
         }
         else {
+            if(freesrc_url) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_url) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     OpenURL((const char *)url);
@@ -5998,10 +7126,9 @@ static JSValue js_TraceLog(JSContext * ctx, JSValue this_val, int argc, JSValue 
             memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text[i0]);
         }
         else if(JS_IsArrayBuffer(argv[i0+1]) == 1) {
-            JSValue da_texti0 = JS_DupValue(ctx,argv[i0+1]);
             size_t size_texti0;
-            text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
-            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
+            text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, argv[i0+1]);
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text[i0]);
         }
         else {
             JSClassID classid_texti0 = JS_GetClassID(argv[i0+1]);
@@ -6184,15 +7311,15 @@ static JSValue js_SetSaveFileTextCallback(JSContext * ctx, JSValue this_val, int
 
 static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6205,13 +7332,26 @@ static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
         }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
+        }
     }
     int * dataSize;
+    bool freesrc_dataSize = false;
     JSValue da_dataSize;
     int64_t size_dataSize;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_dataSize = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_dataSize = *(ArrayProxy_class *)opaque_dataSize;
+        argv[1] = AP_dataSize.values(ctx, AP_dataSize.opaque, 0, false);
+        freesrc_dataSize = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_dataSize)==-1) {
             if(JS_IsArray(argv[0]) == 1) {
@@ -6245,9 +7385,8 @@ static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_dataSize = JS_DupValue(ctx,argv[1]);
         size_t size_dataSize;
-        dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, da_dataSize);
+        dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, argv[1]);
     }
     else {
         JSClassID classid_dataSize = JS_GetClassID(argv[1]);
@@ -6337,10 +7476,9 @@ static JSValue js_SaveFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6362,10 +7500,9 @@ static JSValue js_SaveFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
     void * data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
     }
     else {
         memoryClear(ctx, memoryHead);
@@ -6388,15 +7525,15 @@ static JSValue js_SaveFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
 
 static JSValue js_LoadFileText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6409,8 +7546,14 @@ static JSValue js_LoadFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = LoadFileText((const char *)fileName);
@@ -6445,10 +7588,9 @@ static JSValue js_SaveFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6474,10 +7616,9 @@ static JSValue js_SaveFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -6504,15 +7645,15 @@ static JSValue js_SaveFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
 
 static JSValue js_FileExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6525,8 +7666,14 @@ static JSValue js_FileExists(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     bool returnVal = FileExists((const char *)fileName);
@@ -6551,15 +7698,15 @@ static JSValue js_FileExists(JSContext * ctx, JSValue this_val, int argc, JSValu
 
 static JSValue js_DirectoryExists(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
+    bool freesrc_dirPath = false;
     JSValue da_dirPath;
     int64_t size_dirPath;
     if(JS_IsString(argv[0]) == 1) {
         dirPath = (char *)JS_ToCStringLen(ctx, &size_dirPath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_dirPath = JS_DupValue(ctx,argv[0]);
         size_t size_dirPath;
-        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, da_dirPath);
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, argv[0]);
     }
     else {
         JSClassID classid_dirPath = JS_GetClassID(argv[0]);
@@ -6572,8 +7719,14 @@ static JSValue js_DirectoryExists(JSContext * ctx, JSValue this_val, int argc, J
             size_dirPath-=offset_dirPath;
         }
         else {
+            if(freesrc_dirPath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_dirPath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     bool returnVal = DirectoryExists((const char *)dirPath);
@@ -6606,10 +7759,9 @@ static JSValue js_IsFileExtension(JSContext * ctx, JSValue this_val, int argc, J
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6635,10 +7787,9 @@ static JSValue js_IsFileExtension(JSContext * ctx, JSValue this_val, int argc, J
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, ext);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_ext = JS_DupValue(ctx,argv[1]);
         size_t size_ext;
-        ext = (char *)JS_GetArrayBuffer(ctx, &size_ext, da_ext);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_ext);
+        ext = (char *)JS_GetArrayBuffer(ctx, &size_ext, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, ext);
     }
     else {
         JSClassID classid_ext = JS_GetClassID(argv[1]);
@@ -6665,15 +7816,15 @@ static JSValue js_IsFileExtension(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_GetFileLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6686,8 +7837,14 @@ static JSValue js_GetFileLength(JSContext * ctx, JSValue this_val, int argc, JSV
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int returnVal = GetFileLength((const char *)fileName);
@@ -6712,15 +7869,15 @@ static JSValue js_GetFileLength(JSContext * ctx, JSValue this_val, int argc, JSV
 
 static JSValue js_GetFileExtension(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -6733,8 +7890,14 @@ static JSValue js_GetFileExtension(JSContext * ctx, JSValue this_val, int argc, 
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     const char * returnVal = GetFileExtension((const char *)fileName);
@@ -6760,15 +7923,15 @@ static JSValue js_GetFileExtension(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_GetFileName(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
+    bool freesrc_filePath = false;
     JSValue da_filePath;
     int64_t size_filePath;
     if(JS_IsString(argv[0]) == 1) {
         filePath = (char *)JS_ToCStringLen(ctx, &size_filePath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_filePath = JS_DupValue(ctx,argv[0]);
         size_t size_filePath;
-        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, da_filePath);
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, argv[0]);
     }
     else {
         JSClassID classid_filePath = JS_GetClassID(argv[0]);
@@ -6781,8 +7944,14 @@ static JSValue js_GetFileName(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_filePath-=offset_filePath;
         }
         else {
+            if(freesrc_filePath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_filePath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     const char * returnVal = GetFileName((const char *)filePath);
@@ -6808,15 +7977,15 @@ static JSValue js_GetFileName(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_GetFileNameWithoutExt(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
+    bool freesrc_filePath = false;
     JSValue da_filePath;
     int64_t size_filePath;
     if(JS_IsString(argv[0]) == 1) {
         filePath = (char *)JS_ToCStringLen(ctx, &size_filePath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_filePath = JS_DupValue(ctx,argv[0]);
         size_t size_filePath;
-        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, da_filePath);
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, argv[0]);
     }
     else {
         JSClassID classid_filePath = JS_GetClassID(argv[0]);
@@ -6829,8 +7998,14 @@ static JSValue js_GetFileNameWithoutExt(JSContext * ctx, JSValue this_val, int a
             size_filePath-=offset_filePath;
         }
         else {
+            if(freesrc_filePath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_filePath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     const char * returnVal = GetFileNameWithoutExt((const char *)filePath);
@@ -6856,15 +8031,15 @@ static JSValue js_GetFileNameWithoutExt(JSContext * ctx, JSValue this_val, int a
 
 static JSValue js_GetDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * filePath;
+    bool freesrc_filePath = false;
     JSValue da_filePath;
     int64_t size_filePath;
     if(JS_IsString(argv[0]) == 1) {
         filePath = (char *)JS_ToCStringLen(ctx, &size_filePath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_filePath = JS_DupValue(ctx,argv[0]);
         size_t size_filePath;
-        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, da_filePath);
+        filePath = (char *)JS_GetArrayBuffer(ctx, &size_filePath, argv[0]);
     }
     else {
         JSClassID classid_filePath = JS_GetClassID(argv[0]);
@@ -6877,8 +8052,14 @@ static JSValue js_GetDirectoryPath(JSContext * ctx, JSValue this_val, int argc, 
             size_filePath-=offset_filePath;
         }
         else {
+            if(freesrc_filePath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_filePath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     const char * returnVal = GetDirectoryPath((const char *)filePath);
@@ -6904,15 +8085,15 @@ static JSValue js_GetDirectoryPath(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_GetPrevDirectoryPath(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
+    bool freesrc_dirPath = false;
     JSValue da_dirPath;
     int64_t size_dirPath;
     if(JS_IsString(argv[0]) == 1) {
         dirPath = (char *)JS_ToCStringLen(ctx, &size_dirPath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_dirPath = JS_DupValue(ctx,argv[0]);
         size_t size_dirPath;
-        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, da_dirPath);
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, argv[0]);
     }
     else {
         JSClassID classid_dirPath = JS_GetClassID(argv[0]);
@@ -6925,8 +8106,14 @@ static JSValue js_GetPrevDirectoryPath(JSContext * ctx, JSValue this_val, int ar
             size_dirPath-=offset_dirPath;
         }
         else {
+            if(freesrc_dirPath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_dirPath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     const char * returnVal = GetPrevDirectoryPath((const char *)dirPath);
@@ -6966,15 +8153,15 @@ static JSValue js_GetApplicationDirectory(JSContext * ctx, JSValue this_val, int
 
 static JSValue js_MakeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
+    bool freesrc_dirPath = false;
     JSValue da_dirPath;
     int64_t size_dirPath;
     if(JS_IsString(argv[0]) == 1) {
         dirPath = (char *)JS_ToCStringLen(ctx, &size_dirPath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_dirPath = JS_DupValue(ctx,argv[0]);
         size_t size_dirPath;
-        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, da_dirPath);
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, argv[0]);
     }
     else {
         JSClassID classid_dirPath = JS_GetClassID(argv[0]);
@@ -6987,8 +8174,14 @@ static JSValue js_MakeDirectory(JSContext * ctx, JSValue this_val, int argc, JSV
             size_dirPath-=offset_dirPath;
         }
         else {
+            if(freesrc_dirPath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_dirPath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int returnVal = MakeDirectory((const char *)dirPath);
@@ -7013,15 +8206,15 @@ static JSValue js_MakeDirectory(JSContext * ctx, JSValue this_val, int argc, JSV
 
 static JSValue js_ChangeDirectory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dir;
+    bool freesrc_dir = false;
     JSValue da_dir;
     int64_t size_dir;
     if(JS_IsString(argv[0]) == 1) {
         dir = (char *)JS_ToCStringLen(ctx, &size_dir, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_dir = JS_DupValue(ctx,argv[0]);
         size_t size_dir;
-        dir = (char *)JS_GetArrayBuffer(ctx, &size_dir, da_dir);
+        dir = (char *)JS_GetArrayBuffer(ctx, &size_dir, argv[0]);
     }
     else {
         JSClassID classid_dir = JS_GetClassID(argv[0]);
@@ -7034,8 +8227,14 @@ static JSValue js_ChangeDirectory(JSContext * ctx, JSValue this_val, int argc, J
             size_dir-=offset_dir;
         }
         else {
+            if(freesrc_dir) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_dir) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     bool returnVal = ChangeDirectory((const char *)dir);
@@ -7060,15 +8259,15 @@ static JSValue js_ChangeDirectory(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_IsPathFile(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * path;
+    bool freesrc_path = false;
     JSValue da_path;
     int64_t size_path;
     if(JS_IsString(argv[0]) == 1) {
         path = (char *)JS_ToCStringLen(ctx, &size_path, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_path = JS_DupValue(ctx,argv[0]);
         size_t size_path;
-        path = (char *)JS_GetArrayBuffer(ctx, &size_path, da_path);
+        path = (char *)JS_GetArrayBuffer(ctx, &size_path, argv[0]);
     }
     else {
         JSClassID classid_path = JS_GetClassID(argv[0]);
@@ -7081,8 +8280,14 @@ static JSValue js_IsPathFile(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_path-=offset_path;
         }
         else {
+            if(freesrc_path) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_path) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     bool returnVal = IsPathFile((const char *)path);
@@ -7107,15 +8312,15 @@ static JSValue js_IsPathFile(JSContext * ctx, JSValue this_val, int argc, JSValu
 
 static JSValue js_IsFileNameValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -7128,8 +8333,14 @@ static JSValue js_IsFileNameValid(JSContext * ctx, JSValue this_val, int argc, J
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     bool returnVal = IsFileNameValid((const char *)fileName);
@@ -7154,15 +8365,15 @@ static JSValue js_IsFileNameValid(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_LoadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * dirPath;
+    bool freesrc_dirPath = false;
     JSValue da_dirPath;
     int64_t size_dirPath;
     if(JS_IsString(argv[0]) == 1) {
         dirPath = (char *)JS_ToCStringLen(ctx, &size_dirPath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_dirPath = JS_DupValue(ctx,argv[0]);
         size_t size_dirPath;
-        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, da_dirPath);
+        dirPath = (char *)JS_GetArrayBuffer(ctx, &size_dirPath, argv[0]);
     }
     else {
         JSClassID classid_dirPath = JS_GetClassID(argv[0]);
@@ -7175,8 +8386,14 @@ static JSValue js_LoadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc
             size_dirPath-=offset_dirPath;
         }
         else {
+            if(freesrc_dirPath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_dirPath) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     FilePathList files = LoadDirectoryFiles(dirPath);
@@ -7191,15 +8408,15 @@ static JSValue js_LoadDirectoryFiles(JSContext * ctx, JSValue this_val, int argc
 
 static JSValue js_LoadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * basePath;
+    bool freesrc_basePath = false;
     JSValue da_basePath;
     int64_t size_basePath;
     if(JS_IsString(argv[0]) == 1) {
         basePath = (char *)JS_ToCStringLen(ctx, &size_basePath, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_basePath = JS_DupValue(ctx,argv[0]);
         size_t size_basePath;
-        basePath = (char *)JS_GetArrayBuffer(ctx, &size_basePath, da_basePath);
+        basePath = (char *)JS_GetArrayBuffer(ctx, &size_basePath, argv[0]);
     }
     else {
         JSClassID classid_basePath = JS_GetClassID(argv[0]);
@@ -7212,20 +8429,26 @@ static JSValue js_LoadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int ar
             size_basePath-=offset_basePath;
         }
         else {
+            if(freesrc_basePath) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
         }
+        if(freesrc_basePath) {
+            JS_FreeValue(ctx, argv[0]);
+        }
     }
     char * filter;
+    bool freesrc_filter = false;
     JSValue da_filter;
     int64_t size_filter;
     if(JS_IsString(argv[1]) == 1) {
         filter = (char *)JS_ToCStringLen(ctx, &size_filter, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_filter = JS_DupValue(ctx,argv[1]);
         size_t size_filter;
-        filter = (char *)JS_GetArrayBuffer(ctx, &size_filter, da_filter);
+        filter = (char *)JS_GetArrayBuffer(ctx, &size_filter, argv[1]);
     }
     else {
         JSClassID classid_filter = JS_GetClassID(argv[1]);
@@ -7238,8 +8461,14 @@ static JSValue js_LoadDirectoryFilesEx(JSContext * ctx, JSValue this_val, int ar
             size_filter-=offset_filter;
         }
         else {
+            if(freesrc_filter) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_filter) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int js_scanSubdirs = JS_ToBool(ctx, argv[2]);
@@ -7277,15 +8506,15 @@ static JSValue js_LoadDroppedFiles(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_GetFileModTime(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -7298,8 +8527,14 @@ static JSValue js_GetFileModTime(JSContext * ctx, JSValue this_val, int argc, JS
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     long returnVal = GetFileModTime((const char *)fileName);
@@ -7324,8 +8559,15 @@ static JSValue js_GetFileModTime(JSContext * ctx, JSValue this_val, int argc, JS
 
 static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        freesrc_data = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
@@ -7344,9 +8586,8 @@ static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_data = JS_DupValue(ctx,argv[0]);
         size_t size_data;
-        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
     }
     else {
         JSClassID classid_data = JS_GetClassID(argv[0]);
@@ -7359,8 +8600,14 @@ static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_data-=offset_data;
         }
         else {
+            if(freesrc_data) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_dataSize;
@@ -7401,8 +8648,15 @@ static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSVa
 
 static JSValue js_ComputeMD5(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        freesrc_data = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
@@ -7421,9 +8675,8 @@ static JSValue js_ComputeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_data = JS_DupValue(ctx,argv[0]);
         size_t size_data;
-        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
     }
     else {
         JSClassID classid_data = JS_GetClassID(argv[0]);
@@ -7436,8 +8689,14 @@ static JSValue js_ComputeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_data-=offset_data;
         }
         else {
+            if(freesrc_data) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_dataSize;
@@ -7487,8 +8746,15 @@ static JSValue js_ComputeMD5(JSContext * ctx, JSValue this_val, int argc, JSValu
 
 static JSValue js_ComputeSHA1(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        freesrc_data = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
             return JS_EXCEPTION;
@@ -7507,9 +8773,8 @@ static JSValue js_ComputeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_data = JS_DupValue(ctx,argv[0]);
         size_t size_data;
-        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
     }
     else {
         JSClassID classid_data = JS_GetClassID(argv[0]);
@@ -7522,8 +8787,14 @@ static JSValue js_ComputeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_data-=offset_data;
         }
         else {
+            if(freesrc_data) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_dataSize;
@@ -7575,15 +8846,15 @@ static JSValue js_ComputeSHA1(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_LoadAutomationEventList(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -7596,8 +8867,14 @@ static JSValue js_LoadAutomationEventList(JSContext * ctx, JSValue this_val, int
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     AutomationEventList returnVal = LoadAutomationEventList((const char *)fileName);
@@ -7642,15 +8919,15 @@ static JSValue js_ExportAutomationEventList(JSContext * ctx, JSValue this_val, i
     }
     AutomationEventList list = *ptr_list;
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[1]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[1]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[1]);
@@ -7663,8 +8940,14 @@ static JSValue js_ExportAutomationEventList(JSContext * ctx, JSValue this_val, i
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     bool returnVal = ExportAutomationEventList(list, (const char *)fileName);
@@ -7981,15 +9264,15 @@ static JSValue js_GetGamepadAxisMovement(JSContext * ctx, JSValue this_val, int 
 
 static JSValue js_SetGamepadMappings(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * mappings;
+    bool freesrc_mappings = false;
     JSValue da_mappings;
     int64_t size_mappings;
     if(JS_IsString(argv[0]) == 1) {
         mappings = (char *)JS_ToCStringLen(ctx, &size_mappings, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_mappings = JS_DupValue(ctx,argv[0]);
         size_t size_mappings;
-        mappings = (char *)JS_GetArrayBuffer(ctx, &size_mappings, da_mappings);
+        mappings = (char *)JS_GetArrayBuffer(ctx, &size_mappings, argv[0]);
     }
     else {
         JSClassID classid_mappings = JS_GetClassID(argv[0]);
@@ -8002,8 +9285,14 @@ static JSValue js_SetGamepadMappings(JSContext * ctx, JSValue this_val, int argc
             size_mappings-=offset_mappings;
         }
         else {
+            if(freesrc_mappings) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_mappings) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int returnVal = SetGamepadMappings((const char *)mappings);
@@ -9584,8 +10873,15 @@ static JSValue js_DrawPolyLinesEx(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_DrawSplineLinear(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -9603,13 +10899,18 @@ static JSValue js_DrawSplineLinear(JSContext * ctx, JSValue this_val, int argc, 
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_points = JS_DupValue(ctx,argv[0]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
@@ -9661,8 +10962,15 @@ static JSValue js_DrawSplineLinear(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_DrawSplineBasis(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -9680,13 +10988,18 @@ static JSValue js_DrawSplineBasis(JSContext * ctx, JSValue this_val, int argc, J
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_points = JS_DupValue(ctx,argv[0]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
@@ -9738,8 +11051,15 @@ static JSValue js_DrawSplineBasis(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_DrawSplineCatmullRom(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -9757,13 +11077,18 @@ static JSValue js_DrawSplineCatmullRom(JSContext * ctx, JSValue this_val, int ar
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_points = JS_DupValue(ctx,argv[0]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
@@ -9815,8 +11140,15 @@ static JSValue js_DrawSplineCatmullRom(JSContext * ctx, JSValue this_val, int ar
 
 static JSValue js_DrawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -9834,13 +11166,18 @@ static JSValue js_DrawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, i
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_points = JS_DupValue(ctx,argv[0]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
@@ -9892,8 +11229,15 @@ static JSValue js_DrawSplineBezierQuadratic(JSContext * ctx, JSValue this_val, i
 
 static JSValue js_DrawSplineBezierCubic(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -9911,13 +11255,18 @@ static JSValue js_DrawSplineBezierCubic(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_points = JS_DupValue(ctx,argv[0]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
@@ -10574,15 +11923,15 @@ static JSValue js_GetCollisionRec(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_LoadImage(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -10595,8 +11944,14 @@ static JSValue js_LoadImage(JSContext * ctx, JSValue this_val, int argc, JSValue
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Image returnVal = LoadImage((const char *)fileName);
@@ -10624,15 +11979,15 @@ static JSValue js_LoadImage(JSContext * ctx, JSValue this_val, int argc, JSValue
 
 static JSValue js_LoadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -10645,8 +12000,14 @@ static JSValue js_LoadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_width;
@@ -10770,10 +12131,9 @@ static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileType = JS_DupValue(ctx,argv[0]);
         size_t size_fileType;
-        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileType);
     }
     else {
         JSClassID classid_fileType = JS_GetClassID(argv[0]);
@@ -10794,6 +12154,12 @@ static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
     }
     unsigned char * fileData;
     int64_t size_fileData;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_fileData = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileData = *(ArrayProxy_class *)opaque_fileData;
+        argv[1] = AP_fileData.values(ctx, AP_fileData.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
@@ -10814,10 +12180,9 @@ static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fileData = JS_DupValue(ctx,argv[1]);
         size_t size_fileData;
-        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, da_fileData);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileData);
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileData);
     }
     else {
         JSClassID classid_fileData = JS_GetClassID(argv[1]);
@@ -10846,6 +12211,12 @@ static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
     int dataSize = (int)long_dataSize;
     int * frames;
     int64_t size_frames;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_frames = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_frames = *(ArrayProxy_class *)opaque_frames;
+        argv[3] = AP_frames.values(ctx, AP_frames.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[3]);
+    }
     if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_frames)==-1) {
             memoryClear(ctx, memoryHead);
@@ -10866,10 +12237,9 @@ static JSValue js_LoadImageAnimFromMemory(JSContext * ctx, JSValue this_val, int
         }
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
-        JSValue da_frames = JS_DupValue(ctx,argv[3]);
         size_t size_frames;
-        frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, da_frames);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_frames);
+        frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, argv[3]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, frames);
     }
     else {
         JSClassID classid_frames = JS_GetClassID(argv[3]);
@@ -10917,10 +12287,9 @@ static JSValue js_LoadImageFromMemory(JSContext * ctx, JSValue this_val, int arg
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileType = JS_DupValue(ctx,argv[0]);
         size_t size_fileType;
-        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileType);
     }
     else {
         JSClassID classid_fileType = JS_GetClassID(argv[0]);
@@ -10941,6 +12310,12 @@ static JSValue js_LoadImageFromMemory(JSContext * ctx, JSValue this_val, int arg
     }
     unsigned char * fileData;
     int64_t size_fileData;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_fileData = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileData = *(ArrayProxy_class *)opaque_fileData;
+        argv[1] = AP_fileData.values(ctx, AP_fileData.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
@@ -10961,10 +12336,9 @@ static JSValue js_LoadImageFromMemory(JSContext * ctx, JSValue this_val, int arg
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fileData = JS_DupValue(ctx,argv[1]);
         size_t size_fileData;
-        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, da_fileData);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileData);
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileData);
     }
     else {
         JSClassID classid_fileData = JS_GetClassID(argv[1]);
@@ -11055,15 +12429,15 @@ static JSValue js_ExportImage(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     Image image = *ptr_image;
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[1]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[1]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[1]);
@@ -11076,8 +12450,14 @@ static JSValue js_ExportImage(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     bool returnVal = ExportImage(image, (const char *)fileName);
@@ -11108,15 +12488,15 @@ static JSValue js_ExportImageToMemory(JSContext * ctx, JSValue this_val, int arg
     }
     Image image = *ptr_image;
     char * fileType;
+    bool freesrc_fileType = false;
     JSValue da_fileType;
     int64_t size_fileType;
     if(JS_IsString(argv[1]) == 1) {
         fileType = (char *)JS_ToCStringLen(ctx, &size_fileType, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileType = JS_DupValue(ctx,argv[1]);
         size_t size_fileType;
-        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[1]);
     }
     else {
         JSClassID classid_fileType = JS_GetClassID(argv[1]);
@@ -11129,13 +12509,26 @@ static JSValue js_ExportImageToMemory(JSContext * ctx, JSValue this_val, int arg
             size_fileType-=offset_fileType;
         }
         else {
+            if(freesrc_fileType) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
         }
+        if(freesrc_fileType) {
+            JS_FreeValue(ctx, argv[1]);
+        }
     }
     int * fileSize;
+    bool freesrc_fileSize = false;
     JSValue da_fileSize;
     int64_t size_fileSize;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_fileSize = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileSize = *(ArrayProxy_class *)opaque_fileSize;
+        argv[2] = AP_fileSize.values(ctx, AP_fileSize.opaque, 0, false);
+        freesrc_fileSize = true;
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_fileSize)==-1) {
             if(JS_IsArray(argv[1]) == 1) {
@@ -11169,9 +12562,8 @@ static JSValue js_ExportImageToMemory(JSContext * ctx, JSValue this_val, int arg
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_fileSize = JS_DupValue(ctx,argv[2]);
         size_t size_fileSize;
-        fileSize = (int *)JS_GetArrayBuffer(ctx, &size_fileSize, da_fileSize);
+        fileSize = (int *)JS_GetArrayBuffer(ctx, &size_fileSize, argv[2]);
     }
     else {
         JSClassID classid_fileSize = JS_GetClassID(argv[2]);
@@ -11574,15 +12966,15 @@ static JSValue js_GenImageText(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     int height = (int)long_height;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[2]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[2]);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_text = JS_DupValue(ctx,argv[2]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[2]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[2]);
@@ -11595,8 +12987,14 @@ static JSValue js_GenImageText(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[2]);
+            }
             JS_ThrowTypeError(ctx, "argv[2] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[2]);
         }
     }
     Image returnVal = GenImageText(width, height, (const char *)text);
@@ -11682,15 +13080,15 @@ static JSValue js_ImageFromChannel(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_ImageText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -11703,8 +13101,14 @@ static JSValue js_ImageText(JSContext * ctx, JSValue this_val, int argc, JSValue
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_fontSize;
@@ -11781,15 +13185,15 @@ static JSValue js_ImageTextEx(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     Font font = *ptr_font;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[1]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -11802,8 +13206,14 @@ static JSValue js_ImageTextEx(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     double double_fontSize;
@@ -12033,8 +13443,15 @@ static JSValue js_ImageKernelConvolution(JSContext * ctx, JSValue this_val, int 
         return JS_EXCEPTION;
     }
     float * kernel;
+    bool freesrc_kernel = false;
     JSValue da_kernel;
     int64_t size_kernel;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_kernel = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_kernel = *(ArrayProxy_class *)opaque_kernel;
+        argv[1] = AP_kernel.values(ctx, AP_kernel.opaque, 0, false);
+        freesrc_kernel = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_kernel)==-1) {
             return JS_EXCEPTION;
@@ -12053,9 +13470,8 @@ static JSValue js_ImageKernelConvolution(JSContext * ctx, JSValue this_val, int 
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_kernel = JS_DupValue(ctx,argv[1]);
         size_t size_kernel;
-        kernel = (float *)JS_GetArrayBuffer(ctx, &size_kernel, da_kernel);
+        kernel = (float *)JS_GetArrayBuffer(ctx, &size_kernel, argv[1]);
     }
     else {
         JSClassID classid_kernel = JS_GetClassID(argv[1]);
@@ -12068,8 +13484,14 @@ static JSValue js_ImageKernelConvolution(JSContext * ctx, JSValue this_val, int 
             size_kernel-=offset_kernel;
         }
         else {
+            if(freesrc_kernel) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type float *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_kernel) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int32_t long_kernelSize;
@@ -13011,8 +14433,15 @@ static JSValue js_ImageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
         return JS_EXCEPTION;
     }
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[1] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -13030,13 +14459,18 @@ static JSValue js_ImageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_points = JS_DupValue(ctx,argv[1]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[1]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[2]);
@@ -13080,8 +14514,15 @@ static JSValue js_ImageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
         return JS_EXCEPTION;
     }
     Vector2 * points;
+    bool freesrc_points = false;
     JSValue da_points;
     int64_t size_points;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[1] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_points)==-1) {
             return JS_EXCEPTION;
@@ -13099,13 +14540,18 @@ static JSValue js_ImageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_points = JS_DupValue(ctx,argv[1]);
         size_t size_points;
-        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, da_points);
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[1]);
     }
     else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type Vector2 *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_pointCount;
     int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[2]);
@@ -13183,15 +14629,15 @@ static JSValue js_ImageDrawText(JSContext * ctx, JSValue this_val, int argc, JSV
         return JS_EXCEPTION;
     }
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[1]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -13204,8 +14650,14 @@ static JSValue js_ImageDrawText(JSContext * ctx, JSValue this_val, int argc, JSV
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int32_t long_posX;
@@ -13327,15 +14779,15 @@ static JSValue js_ImageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, J
     }
     Font font = *ptr_font;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[2]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[2]);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_text = JS_DupValue(ctx,argv[2]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[2]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[2]);
@@ -13348,8 +14800,14 @@ static JSValue js_ImageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, J
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[2]);
+            }
             JS_ThrowTypeError(ctx, "argv[2] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[2]);
         }
     }
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[3], js_Vector2_class_id);
@@ -13459,15 +14917,15 @@ static JSValue js_ImageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_LoadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -13480,8 +14938,14 @@ static JSValue js_LoadTexture(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Texture2D returnVal = LoadTexture((const char *)fileName);
@@ -13621,16 +15085,22 @@ static JSValue js_UpdateTexture(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Texture2D texture = *ptr_texture;
     void * pixels;
+    bool freesrc_pixels = false;
     JSValue da_pixels;
     int64_t size_pixels;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_pixels = JS_DupValue(ctx,argv[1]);
         size_t size_pixels;
-        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, da_pixels);
+        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, argv[1]);
     }
     else {
+        if(freesrc_pixels) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_pixels) {
+        JS_FreeValue(ctx, argv[1]);
     }
     UpdateTexture(texture, (const void *)pixels);
     if(JS_IsArrayBuffer(argv[1]) == 1) {
@@ -13653,16 +15123,22 @@ static JSValue js_UpdateTextureRec(JSContext * ctx, JSValue this_val, int argc, 
     }
     Rectangle rec = *ptr_rec;
     void * pixels;
+    bool freesrc_pixels = false;
     JSValue da_pixels;
     int64_t size_pixels;
     if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_pixels = JS_DupValue(ctx,argv[2]);
         size_t size_pixels;
-        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, da_pixels);
+        pixels = (void *)JS_GetArrayBuffer(ctx, &size_pixels, argv[2]);
     }
     else {
+        if(freesrc_pixels) {
+            JS_FreeValue(ctx, argv[2]);
+        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_pixels) {
+        JS_FreeValue(ctx, argv[2]);
     }
     UpdateTextureRec(texture, rec, (const void *)pixels);
     if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -14244,15 +15720,15 @@ static JSValue js_GetFontDefault(JSContext * ctx, JSValue this_val, int argc, JS
 
 static JSValue js_LoadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -14265,8 +15741,14 @@ static JSValue js_LoadFont(JSContext * ctx, JSValue this_val, int argc, JSValue 
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Font returnVal = LoadFont((const char *)fileName);
@@ -14302,10 +15784,9 @@ static JSValue js_LoadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -14337,6 +15818,12 @@ static JSValue js_LoadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     if(JS_IsNull(argv[2]) || JS_IsUndefined(argv[2])) {
         codepoints = NULL;
     }
+    else if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[2] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
     else if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_codepoints)==-1) {
             memoryClear(ctx, memoryHead);
@@ -14357,10 +15844,9 @@ static JSValue js_LoadFontEx(JSContext * ctx, JSValue this_val, int argc, JSValu
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_codepoints = JS_DupValue(ctx,argv[2]);
         size_t size_codepoints;
-        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepoints);
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepoints);
     }
     else {
         JSClassID classid_codepoints = JS_GetClassID(argv[2]);
@@ -14468,15 +15954,15 @@ static JSValue js_DrawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue *
 
 static JSValue js_DrawText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -14489,8 +15975,14 @@ static JSValue js_DrawText(JSContext * ctx, JSValue this_val, int argc, JSValue 
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_posX;
@@ -14607,15 +16099,15 @@ static JSValue js_DrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     Font font = *ptr_font;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[1]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -14628,8 +16120,14 @@ static JSValue js_DrawTextEx(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[2], js_Vector2_class_id);
@@ -14745,15 +16243,15 @@ static JSValue js_DrawTextPro(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     Font font = *ptr_font;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[1]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -14766,8 +16264,14 @@ static JSValue js_DrawTextPro(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[2], js_Vector2_class_id);
@@ -14969,15 +16473,15 @@ static JSValue js_SetTextLineSpacing(JSContext * ctx, JSValue this_val, int argc
 
 static JSValue js_MeasureText(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -14990,8 +16494,14 @@ static JSValue js_MeasureText(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_fontSize;
@@ -15044,15 +16554,15 @@ static JSValue js_MeasureTextEx(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Font font = *ptr_font;
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[1]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_text = JS_DupValue(ctx,argv[1]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[1]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[1]);
@@ -15065,8 +16575,14 @@ static JSValue js_MeasureTextEx(JSContext * ctx, JSValue this_val, int argc, JSV
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     double double_fontSize;
@@ -15187,10 +16703,9 @@ static JSValue js_TextCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, dst);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_dst = JS_DupValue(ctx,argv[0]);
         size_t size_dst;
-        dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, da_dst);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_dst);
+        dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, dst);
     }
     else {
         JSClassID classid_dst = JS_GetClassID(argv[0]);
@@ -15216,10 +16731,9 @@ static JSValue js_TextCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, src);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_src = JS_DupValue(ctx,argv[1]);
         size_t size_src;
-        src = (char *)JS_GetArrayBuffer(ctx, &size_src, da_src);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_src);
+        src = (char *)JS_GetArrayBuffer(ctx, &size_src, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, src);
     }
     else {
         JSClassID classid_src = JS_GetClassID(argv[1]);
@@ -15257,10 +16771,9 @@ static JSValue js_TextIsEqual(JSContext * ctx, JSValue this_val, int argc, JSVal
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text1);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_text1 = JS_DupValue(ctx,argv[0]);
         size_t size_text1;
-        text1 = (char *)JS_GetArrayBuffer(ctx, &size_text1, da_text1);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text1);
+        text1 = (char *)JS_GetArrayBuffer(ctx, &size_text1, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text1);
     }
     else {
         JSClassID classid_text1 = JS_GetClassID(argv[0]);
@@ -15286,10 +16799,9 @@ static JSValue js_TextIsEqual(JSContext * ctx, JSValue this_val, int argc, JSVal
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text2);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_text2 = JS_DupValue(ctx,argv[1]);
         size_t size_text2;
-        text2 = (char *)JS_GetArrayBuffer(ctx, &size_text2, da_text2);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text2);
+        text2 = (char *)JS_GetArrayBuffer(ctx, &size_text2, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text2);
     }
     else {
         JSClassID classid_text2 = JS_GetClassID(argv[1]);
@@ -15316,15 +16828,15 @@ static JSValue js_TextIsEqual(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_TextLength(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -15337,8 +16849,14 @@ static JSValue js_TextLength(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     unsigned int returnVal = TextLength((const char *)text);
@@ -15379,10 +16897,9 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, format);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_format = JS_DupValue(ctx,argv[0]);
         size_t size_format;
-        format = (char *)JS_GetArrayBuffer(ctx, &size_format, da_format);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_format);
+        format = (char *)JS_GetArrayBuffer(ctx, &size_format, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, format);
     }
     else {
         JSClassID classid_format = JS_GetClassID(argv[0]);
@@ -15617,10 +17134,9 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                             memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, a);
                         }
                         else if(JS_IsArrayBuffer(argv[c]) == 1) {
-                            JSValue da_a = JS_DupValue(ctx,argv[c]);
                             size_t size_a;
-                            a = (char *)JS_GetArrayBuffer(ctx, &size_a, da_a);
-                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                            a = (char *)JS_GetArrayBuffer(ctx, &size_a, argv[c]);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, a);
                         }
                         else {
                             JSClassID classid_a = JS_GetClassID(argv[c]);
@@ -15646,6 +17162,12 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                     else {
                         wchar_t * a;
                         int64_t size_a;
+                        if(JS_GetClassID(argv[c]) == js_ArrayProxy_class_id) {
+                            void * opaque_a = JS_GetOpaque(argv[c], js_ArrayProxy_class_id);
+                            ArrayProxy_class AP_a = *(ArrayProxy_class *)opaque_a;
+                            argv[c] = AP_a.values(ctx, AP_a.opaque, 0, false);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[c]);
+                        }
                         if(JS_IsArray(argv[c]) == 1) {
                             if(JS_GetLength(ctx,argv[c],&size_a)==-1) {
                                 memoryClear(ctx, memoryHead);
@@ -15668,10 +17190,9 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                             }
                         }
                         else if(JS_IsArrayBuffer(argv[c]) == 1) {
-                            JSValue da_a = JS_DupValue(ctx,argv[c]);
                             size_t size_a;
-                            a = (wchar_t *)JS_GetArrayBuffer(ctx, &size_a, da_a);
-                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_a);
+                            a = (wchar_t *)JS_GetArrayBuffer(ctx, &size_a, argv[c]);
+                            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, a);
                         }
                         else {
                             JSClassID classid_a = JS_GetClassID(argv[c]);
@@ -15732,15 +17253,15 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
 
 static JSValue js_TextSubtext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -15753,8 +17274,14 @@ static JSValue js_TextSubtext(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_position;
@@ -15832,10 +17359,9 @@ static JSValue js_TextReplace(JSContext * ctx, JSValue this_val, int argc, JSVal
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -15861,10 +17387,9 @@ static JSValue js_TextReplace(JSContext * ctx, JSValue this_val, int argc, JSVal
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, replace);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_replace = JS_DupValue(ctx,argv[1]);
         size_t size_replace;
-        replace = (char *)JS_GetArrayBuffer(ctx, &size_replace, da_replace);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_replace);
+        replace = (char *)JS_GetArrayBuffer(ctx, &size_replace, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, replace);
     }
     else {
         JSClassID classid_replace = JS_GetClassID(argv[1]);
@@ -15890,10 +17415,9 @@ static JSValue js_TextReplace(JSContext * ctx, JSValue this_val, int argc, JSVal
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, by);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_by = JS_DupValue(ctx,argv[2]);
         size_t size_by;
-        by = (char *)JS_GetArrayBuffer(ctx, &size_by, da_by);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_by);
+        by = (char *)JS_GetArrayBuffer(ctx, &size_by, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, by);
     }
     else {
         JSClassID classid_by = JS_GetClassID(argv[2]);
@@ -15929,10 +17453,9 @@ static JSValue js_TextInsert(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -15958,10 +17481,9 @@ static JSValue js_TextInsert(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, insert);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_insert = JS_DupValue(ctx,argv[1]);
         size_t size_insert;
-        insert = (char *)JS_GetArrayBuffer(ctx, &size_insert, da_insert);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_insert);
+        insert = (char *)JS_GetArrayBuffer(ctx, &size_insert, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, insert);
     }
     else {
         JSClassID classid_insert = JS_GetClassID(argv[1]);
@@ -16000,6 +17522,12 @@ static JSValue js_TextJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
     memoryNode * memoryCurrent = memoryHead;
     char * * textList;
     int64_t size_textList;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_textList = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_textList = *(ArrayProxy_class *)opaque_textList;
+        argv[0] = AP_textList.values(ctx, AP_textList.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_textList)==-1) {
             memoryClear(ctx, memoryHead);
@@ -16015,10 +17543,9 @@ static JSValue js_TextJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
                 memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, textList[i0]);
             }
             else if(JS_IsArrayBuffer(js_textList) == 1) {
-                JSValue da_textListi0 = JS_DupValue(ctx,js_textList);
                 size_t size_textListi0;
-                textList[i0] = (char *)JS_GetArrayBuffer(ctx, &size_textListi0, da_textListi0);
-                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_textListi0);
+                textList[i0] = (char *)JS_GetArrayBuffer(ctx, &size_textListi0, js_textList);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, textList[i0]);
             }
             else {
                 JSClassID classid_textListi0 = JS_GetClassID(js_textList);
@@ -16059,10 +17586,9 @@ static JSValue js_TextJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, delimiter);
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_delimiter = JS_DupValue(ctx,argv[2]);
         size_t size_delimiter;
-        delimiter = (char *)JS_GetArrayBuffer(ctx, &size_delimiter, da_delimiter);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_delimiter);
+        delimiter = (char *)JS_GetArrayBuffer(ctx, &size_delimiter, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, delimiter);
     }
     else {
         JSClassID classid_delimiter = JS_GetClassID(argv[2]);
@@ -16090,15 +17616,15 @@ static JSValue js_TextJoin(JSContext * ctx, JSValue this_val, int argc, JSValue 
 
 static JSValue js_TextSplit(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16111,16 +17637,29 @@ static JSValue js_TextSplit(JSContext * ctx, JSValue this_val, int argc, JSValue
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * js_delimiter = (char *)JS_ToCString(ctx, argv[1]);
     char delimiter = (char)js_delimiter[0];
     JS_FreeCString(ctx, js_delimiter);
     int * count;
+    bool freesrc_count = false;
     JSValue da_count;
     int64_t size_count;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_count = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_count = *(ArrayProxy_class *)opaque_count;
+        argv[2] = AP_count.values(ctx, AP_count.opaque, 0, false);
+        freesrc_count = true;
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_count)==-1) {
             if(JS_IsArray(argv[0]) == 1) {
@@ -16154,9 +17693,8 @@ static JSValue js_TextSplit(JSContext * ctx, JSValue this_val, int argc, JSValue
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_count = JS_DupValue(ctx,argv[2]);
         size_t size_count;
-        count = (int *)JS_GetArrayBuffer(ctx, &size_count, da_count);
+        count = (int *)JS_GetArrayBuffer(ctx, &size_count, argv[2]);
     }
     else {
         JSClassID classid_count = JS_GetClassID(argv[2]);
@@ -16247,10 +17785,9 @@ static JSValue js_TextAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16276,10 +17813,9 @@ static JSValue js_TextAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, append);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_append = JS_DupValue(ctx,argv[1]);
         size_t size_append;
-        append = (char *)JS_GetArrayBuffer(ctx, &size_append, da_append);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_append);
+        append = (char *)JS_GetArrayBuffer(ctx, &size_append, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, append);
     }
     else {
         JSClassID classid_append = JS_GetClassID(argv[1]);
@@ -16300,6 +17836,12 @@ static JSValue js_TextAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     int * position;
     int64_t size_position;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_position = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_position = *(ArrayProxy_class *)opaque_position;
+        argv[2] = AP_position.values(ctx, AP_position.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_position)==-1) {
             memoryClear(ctx, memoryHead);
@@ -16320,10 +17862,9 @@ static JSValue js_TextAppend(JSContext * ctx, JSValue this_val, int argc, JSValu
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_position = JS_DupValue(ctx,argv[2]);
         size_t size_position;
-        position = (int *)JS_GetArrayBuffer(ctx, &size_position, da_position);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_position);
+        position = (int *)JS_GetArrayBuffer(ctx, &size_position, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, position);
     }
     else {
         JSClassID classid_position = JS_GetClassID(argv[2]);
@@ -16367,10 +17908,9 @@ static JSValue js_TextFindIndex(JSContext * ctx, JSValue this_val, int argc, JSV
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16396,10 +17936,9 @@ static JSValue js_TextFindIndex(JSContext * ctx, JSValue this_val, int argc, JSV
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, find);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_find = JS_DupValue(ctx,argv[1]);
         size_t size_find;
-        find = (char *)JS_GetArrayBuffer(ctx, &size_find, da_find);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_find);
+        find = (char *)JS_GetArrayBuffer(ctx, &size_find, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, find);
     }
     else {
         JSClassID classid_find = JS_GetClassID(argv[1]);
@@ -16426,15 +17965,15 @@ static JSValue js_TextFindIndex(JSContext * ctx, JSValue this_val, int argc, JSV
 
 static JSValue js_TextToUpper(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16447,8 +17986,14 @@ static JSValue js_TextToUpper(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = TextToUpper((const char *)text);
@@ -16474,15 +18019,15 @@ static JSValue js_TextToUpper(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_TextToLower(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16495,8 +18040,14 @@ static JSValue js_TextToLower(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = TextToLower((const char *)text);
@@ -16522,15 +18073,15 @@ static JSValue js_TextToLower(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_TextToPascal(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16543,8 +18094,14 @@ static JSValue js_TextToPascal(JSContext * ctx, JSValue this_val, int argc, JSVa
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = TextToPascal((const char *)text);
@@ -16570,15 +18127,15 @@ static JSValue js_TextToPascal(JSContext * ctx, JSValue this_val, int argc, JSVa
 
 static JSValue js_TextToSnake(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16591,8 +18148,14 @@ static JSValue js_TextToSnake(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = TextToSnake((const char *)text);
@@ -16618,15 +18181,15 @@ static JSValue js_TextToSnake(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_TextToCamel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16639,8 +18202,14 @@ static JSValue js_TextToCamel(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     char * returnVal = TextToCamel((const char *)text);
@@ -16666,15 +18235,15 @@ static JSValue js_TextToCamel(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_TextToInteger(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16687,8 +18256,14 @@ static JSValue js_TextToInteger(JSContext * ctx, JSValue this_val, int argc, JSV
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int returnVal = TextToInteger((const char *)text);
@@ -16713,15 +18288,15 @@ static JSValue js_TextToInteger(JSContext * ctx, JSValue this_val, int argc, JSV
 
 static JSValue js_TextToFloat(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * text;
+    bool freesrc_text = false;
     JSValue da_text;
     int64_t size_text;
     if(JS_IsString(argv[0]) == 1) {
         text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_text = JS_DupValue(ctx,argv[0]);
         size_t size_text;
-        text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
     }
     else {
         JSClassID classid_text = JS_GetClassID(argv[0]);
@@ -16734,8 +18309,14 @@ static JSValue js_TextToFloat(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_text-=offset_text;
         }
         else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     float returnVal = TextToFloat((const char *)text);
@@ -17413,15 +18994,15 @@ static JSValue js_DrawGrid(JSContext * ctx, JSValue this_val, int argc, JSValue 
 
 static JSValue js_LoadModel(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -17434,8 +19015,14 @@ static JSValue js_LoadModel(JSContext * ctx, JSValue this_val, int argc, JSValue
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Model returnVal = LoadModel((const char *)fileName);
@@ -17915,16 +19502,22 @@ static JSValue js_UpdateMeshBuffer(JSContext * ctx, JSValue this_val, int argc, 
     }
     int index = (int)long_index;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_data = JS_DupValue(ctx,argv[2]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[2]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[2]);
+        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[2]);
     }
     int32_t long_dataSize;
     int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[3]);
@@ -18001,8 +19594,15 @@ static JSValue js_DrawMeshInstanced(JSContext * ctx, JSValue this_val, int argc,
     }
     Material material = *ptr_material;
     Matrix * transforms;
+    bool freesrc_transforms = false;
     JSValue da_transforms;
     int64_t size_transforms;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_transforms = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_transforms = *(ArrayProxy_class *)opaque_transforms;
+        argv[2] = AP_transforms.values(ctx, AP_transforms.opaque, 0, false);
+        freesrc_transforms = true;
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_transforms)==-1) {
             return JS_EXCEPTION;
@@ -18020,13 +19620,18 @@ static JSValue js_DrawMeshInstanced(JSContext * ctx, JSValue this_val, int argc,
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_transforms = JS_DupValue(ctx,argv[2]);
         size_t size_transforms;
-        transforms = (Matrix *)JS_GetArrayBuffer(ctx, &size_transforms, da_transforms);
+        transforms = (Matrix *)JS_GetArrayBuffer(ctx, &size_transforms, argv[2]);
     }
     else {
+        if(freesrc_transforms) {
+            JS_FreeValue(ctx, argv[2]);
+        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type Matrix *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_transforms) {
+        JS_FreeValue(ctx, argv[2]);
     }
     int32_t long_instances;
     int err_instances = JS_ToInt32(ctx, &long_instances, argv[3]);
@@ -18084,15 +19689,15 @@ static JSValue js_ExportMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     Mesh mesh = *ptr_mesh;
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[1]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[1]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[1]);
@@ -18105,8 +19710,14 @@ static JSValue js_ExportMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     bool returnVal = ExportMesh(mesh, (const char *)fileName);
@@ -18137,15 +19748,15 @@ static JSValue js_ExportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, 
     }
     Mesh mesh = *ptr_mesh;
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[1]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[1]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[1]);
@@ -18158,8 +19769,14 @@ static JSValue js_ExportMeshAsCode(JSContext * ctx, JSValue this_val, int argc, 
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     bool returnVal = ExportMeshAsCode(mesh, (const char *)fileName);
@@ -18870,15 +20487,15 @@ static JSValue js_GetMasterVolume(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_LoadWave(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -18891,8 +20508,14 @@ static JSValue js_LoadWave(JSContext * ctx, JSValue this_val, int argc, JSValue 
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Wave returnVal = LoadWave((const char *)fileName);
@@ -18928,10 +20551,9 @@ static JSValue js_LoadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileType = JS_DupValue(ctx,argv[0]);
         size_t size_fileType;
-        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileType);
     }
     else {
         JSClassID classid_fileType = JS_GetClassID(argv[0]);
@@ -18952,6 +20574,12 @@ static JSValue js_LoadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
     }
     unsigned char * fileData;
     int64_t size_fileData;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_fileData = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileData = *(ArrayProxy_class *)opaque_fileData;
+        argv[1] = AP_fileData.values(ctx, AP_fileData.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
             memoryClear(ctx, memoryHead);
@@ -18972,10 +20600,9 @@ static JSValue js_LoadWaveFromMemory(JSContext * ctx, JSValue this_val, int argc
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fileData = JS_DupValue(ctx,argv[1]);
         size_t size_fileData;
-        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, da_fileData);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileData);
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileData);
     }
     else {
         JSClassID classid_fileData = JS_GetClassID(argv[1]);
@@ -19025,15 +20652,15 @@ static JSValue js_IsWaveValid(JSContext * ctx, JSValue this_val, int argc, JSVal
 
 static JSValue js_LoadSound(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -19046,8 +20673,14 @@ static JSValue js_LoadSound(JSContext * ctx, JSValue this_val, int argc, JSValue
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Sound returnVal = LoadSound((const char *)fileName);
@@ -19123,16 +20756,22 @@ static JSValue js_UpdateSound(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     Sound sound = *ptr_sound;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_sampleCount;
     int err_sampleCount = JS_ToInt32(ctx, &long_sampleCount, argv[2]);
@@ -19192,15 +20831,15 @@ static JSValue js_ExportWave(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     Wave wave = *ptr_wave;
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[1]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[1]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[1]);
@@ -19213,8 +20852,14 @@ static JSValue js_ExportWave(JSContext * ctx, JSValue this_val, int argc, JSValu
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     bool returnVal = ExportWave(wave, (const char *)fileName);
@@ -19437,8 +21082,15 @@ static JSValue js_LoadWaveSamples(JSContext * ctx, JSValue this_val, int argc, J
 
 static JSValue js_UnloadWaveSamples(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float * samples;
+    bool freesrc_samples = false;
     JSValue da_samples;
     int64_t size_samples;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_samples = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_samples = *(ArrayProxy_class *)opaque_samples;
+        argv[0] = AP_samples.values(ctx, AP_samples.opaque, 0, false);
+        freesrc_samples = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_samples)==-1) {
             return JS_EXCEPTION;
@@ -19457,9 +21109,8 @@ static JSValue js_UnloadWaveSamples(JSContext * ctx, JSValue this_val, int argc,
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_samples = JS_DupValue(ctx,argv[0]);
         size_t size_samples;
-        samples = (float *)JS_GetArrayBuffer(ctx, &size_samples, da_samples);
+        samples = (float *)JS_GetArrayBuffer(ctx, &size_samples, argv[0]);
     }
     else {
         JSClassID classid_samples = JS_GetClassID(argv[0]);
@@ -19492,15 +21143,15 @@ static JSValue js_UnloadWaveSamples(JSContext * ctx, JSValue this_val, int argc,
 
 static JSValue js_LoadMusicStream(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
+    bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
     if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_fileName = JS_DupValue(ctx,argv[0]);
         size_t size_fileName;
-        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
     }
     else {
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
@@ -19513,8 +21164,14 @@ static JSValue js_LoadMusicStream(JSContext * ctx, JSValue this_val, int argc, J
             size_fileName-=offset_fileName;
         }
         else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     Music returnVal = LoadMusicStream((const char *)fileName);
@@ -19550,10 +21207,9 @@ static JSValue js_LoadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, i
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_fileType = JS_DupValue(ctx,argv[0]);
         size_t size_fileType;
-        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileType);
     }
     else {
         JSClassID classid_fileType = JS_GetClassID(argv[0]);
@@ -19574,6 +21230,12 @@ static JSValue js_LoadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, i
     }
     unsigned char * data;
     int64_t size_data;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[1] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_data)==-1) {
             memoryClear(ctx, memoryHead);
@@ -19594,10 +21256,9 @@ static JSValue js_LoadMusicStreamFromMemory(JSContext * ctx, JSValue this_val, i
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
     }
     else {
         JSClassID classid_data = JS_GetClassID(argv[1]);
@@ -19880,16 +21541,22 @@ static JSValue js_UpdateAudioStream(JSContext * ctx, JSValue this_val, int argc,
     }
     AudioStream stream = *ptr_stream;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_frameCount;
     int err_frameCount = JS_ToInt32(ctx, &long_frameCount, argv[2]);

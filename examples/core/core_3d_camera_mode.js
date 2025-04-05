@@ -1,7 +1,8 @@
 import * as rl from 'rayjs:raylib';
-for (const key in rl) { globalThis[key] = rl[key] };
+{
+    for (const key in rl) { globalThis[key] = rl[key] };
 
-// Initialization
+    // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 800;
     const screenHeight = 450;
@@ -26,7 +27,7 @@ for (const key in rl) { globalThis[key] = rl[key] };
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here
         //----------------------------------------------------------------------------------
-        
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -54,3 +55,4 @@ for (const key in rl) { globalThis[key] = rl[key] };
     //--------------------------------------------------------------------------------------
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+}

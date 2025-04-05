@@ -146,6 +146,12 @@ export class QuickJsGenerator extends CodeGenerator {
             let addBuffer= allowBufferType && !getsubtype(type).includes('*');
             let addTypedArray=allowTypedType && typedClassIds!==false;
             let topDefineJs=!flags.dynamicAlloc && (addBuffer||addTypedArray);
+
+            //remember to free src if from external sources
+            if(!flags.dynamicAlloc){
+                ctx.declare('bool',`freesrc_${tmpname}`,false,'false');
+            }
+
             if( topDefineJs ){
                 ctx.declare('JSValue',`da_${tmpname}`);//for de-allocation
             }
@@ -161,10 +167,25 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
+            //TODO: check if arrayProxy, if so, call AP.to_array, replace src to use addArray path
 
             //Check if Array
             let arr;
             if(addArray) {
+
+                //Is arrayProxy?
+                arr = ctx[ctxif](`JS_GetClassID(${src}) == js_ArrayProxy_class_id`);
+                //void * opaque = JS_GetOpaque(val, js_ArrayProxy_class_id);
+                    arr.call('JS_GetOpaque',[src, 'js_ArrayProxy_class_id'],{type:'void *',name:`opaque_${tmpname}`});
+                    //ArrayProxy_class AP = *(ArrayProxy_class *)opaque;
+                    arr.declare('ArrayProxy_class',`AP_${tmpname}`,false,`*(ArrayProxy_class *)opaque_${tmpname}`);
+                    //arr = AP.values(ctx,AP.opaque,JS_UNDEFINED,0,false);
+                    arr.call(`AP_${tmpname}.values`,['ctx',`AP_${tmpname}.opaque`,0,false],{name:src});
+                    if(!flags.dynamicAlloc){
+                        arr.declare('bool',`freesrc_${tmpname}`,false,'true',true);
+                    }else{
+                        arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &${src})`);
+                    }
                 //TODO: allow dynamic binding of array properties
                 arr = ctx[ctxif](`JS_IsArray(${src}) == 1`);
                 let srclen = sizeVars.pop();
@@ -173,7 +194,7 @@ export class QuickJsGenerator extends CodeGenerator {
                 if ( srclen == undefined || flags.supressAllocation  ) {
                     let fi = arr.if(`JS_GetLength(ctx,${src},&size_${tmpname})==-1`);
                     size=`size_${tmpname}`;
-                    errorCleanupFn(fi);//TODO: broken here!
+                    errorCleanupFn(fi);
                     fi.returnExp(flags.altReturn||"JS_EXCEPTION");
                 }
                 let subtype=getsubtype(type);
@@ -232,21 +253,20 @@ export class QuickJsGenerator extends CodeGenerator {
             //Check if Buffer
             if(addBuffer) {//check for arrayBuffer only if [] but not [][]
                 arr = ctx[ctxif](`JS_IsArrayBuffer(${src}) == 1`);
-                arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
                 arr.declare("size_t","size_" + tmpname);
 
                 if(flags.noContextAlloc){
-                    arr.declare(type,'js_'+name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`);
+                    arr.declare(type,'js_'+name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, ${src})`);
                     arr.declare(type,`${name}`,false,`(${type})${jsc.malloc}(ctx, size_${tmpname} * sizeof(${type}))`,true);
                     arr.call(`memcpy`,[name,`js_${name}`,"size_" + tmpname]);
-                    arr.call('JS_FreeValuePtr',['ctx',`&da_${tmpname}`]);
                     if(flags.dynamicAlloc){
                         arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)${jsc.free}, ${name})`);
                     }
                 }else{
-                    arr.declare(type,name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, da_${tmpname})`,true);
+                    //arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
+                    arr.declare(type,name, false, `(${type})JS_GetArrayBuffer(ctx, &size_${tmpname}, ${src})`,true);
                     if(flags.dynamicAlloc){
-                        arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_${tmpname})`);
+                        arr.statement(`memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, ${name})`);
                     }
                 }
                 ctxif='elsif';
@@ -289,6 +309,12 @@ export class QuickJsGenerator extends CodeGenerator {
                 return fi;
             }
             errorCleanupFn(fi);
+            if(!flags.dynamicAlloc){
+                arr = ctx.if(`freesrc_${tmpname}`);
+                arr.call('JS_FreeValue',['ctx',src]);
+                arr = fi.if(`freesrc_${tmpname}`);
+                arr.call('JS_FreeValue',['ctx',src]);
+            }
             fi.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${type}"`]);
             fi.returnExp(flags.altReturn||"JS_EXCEPTION");
             //return exception
@@ -630,7 +656,7 @@ export class QuickJsGenerator extends CodeGenerator {
         //This needs to work with any type, also returned by reference
         //This assumes no return int &
         function setArray(ctx,type,name,src,overrideElse=false){
-
+            console.log(type,src);
             const subtype=getsubtype(type);
             //Check if String
             if(getsubtype(type)==='char') {
@@ -898,18 +924,25 @@ export class QuickJsGenerator extends CodeGenerator {
         this.breakLine();
         return sub;
     }
-    jsFuncDef(jsName, numArgs, cName) {
-        this.line(`JS_CFUNC_DEF("${jsName}",${numArgs},${cName}),`);
-    }
     jsClassId(id) {
         this.declare("JSClassID", id, true);
         return id;
+    }
+    jsFuncDef(jsName, numArgs, cName, functype) {
+        if(functype==undefined){
+            this.line(`JS_CFUNC_DEF("${jsName}",${numArgs},${cName}),`);
+        }else{
+            this.line(`JS_CFUNC_MAGIC_DEF("${jsName}",${numArgs},${cName},${functype}),`);
+        }
     }
     jsPropStringDef(key, value) {
         this.line(`JS_PROP_STRING_DEF("${key}","${value}", JS_PROP_CONFIGURABLE),`);
     }
     jsGetSetDef(key, getFunc, setFunc) {
         this.line(`JS_CGETSET_DEF("${key}",${getFunc || "NULL"},${setFunc || "NULL"}),`);
+    }
+    jsAliasDef(key, aliasof) {
+        this.line(`JS_ALIAS_DEF("${key}",${aliasof || "NULL"},`);
     }
     jsStructFinalizer(classId, structName, onFinalize) {
         const args = [{ type: "JSRuntime *", name: "rt" }, { type: "JSValue", name: "val" }];
@@ -936,39 +969,72 @@ export class QuickJsGenerator extends CodeGenerator {
         body.statement("return 0");
         return body;
     }
-    jsStructGetter(structName, classId, field, type, element) {
+    jsStructGetter(structName, classId, field, type, element, nested) {
         const args = [{ type: "JSContext*", name: "ctx" }, { type: "JSValue", name: "this_val" }];
-        const fun = this.function(`js_${structName}_get_${field}`, "JSValue", args, true);
-        fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
-        if (element.overrideRead) {
-            element.overrideRead(fun);
-        } else {
-            if(type.endsWith(']')){
-                let type2=type.split('[');
-                let amount='['+type2[1];
-                type2=type2[0];
-                fun.declare(type2 + "*", field, false, "ptr->" + field);
-            }else{
-                fun.declare(type, field, false, "ptr->" + field);
-            }
+        let fun;
+        let thiz=this;
+        function declarefunction(){
+            fun = thiz.function(`js_${structName}_get_${field}`, "JSValue", args, true);
+            fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
+        }
+        function NewArrayProxy(){
+            let ArrayProxy_class = {};
+            ArrayProxy_class['anchor']='this_val';
+            ArrayProxy_class['opaque']='ptr';
+            ArrayProxy_class['values']=`js_${fnname}_values`;
+            ArrayProxy_class['keys']=`js_${fnname}_keys`;
+            ArrayProxy_class['get']=`js_${fnname}_get`;
+            ArrayProxy_class['set']=`js_${fnname}_set`;
+            ArrayProxy_class['has']=`js_${fnname}_has`;
+            ArrayProxy_class='(ArrayProxy_class){'+Object.entries(ArrayProxy_class).map(a=>'.'+a[0]+' = '+a[1]).join(',')+'}';
+            fun.call('js_NewArrayProxy',['ctx',ArrayProxy_class],{type:'JSValue',name:"ret"});
         }
         let sizeVars=element.sizeVars||[];
-        fun.cToJs(type, "ret", field,{allowNull:true},0,sizeVars);
+        let properties={};
+        let fnname=structName+'_'+element.name
+        if (element.overrideRead) {
+            element.overrideRead(fun);
+        } else if(type.endsWith(']')){
+            let type2=type.split('[');
+            let amount=type2[1].split(']')[0].trim();
+            type2=type2[0].trim();
+            properties[element.name]={sizeVars:amount};
+            this.root.addApiStruct_array({name:structName, fields:[{type:type2,name:element.name,child:undefined}], binding:{properties}});
+            declarefunction();
+            NewArrayProxy();
+        }else if(type.endsWith('*')){
+            let type2 = getsubtype(type);
+            properties[element.name]={sizeVars};
+            this.root.addApiStruct_array({name:structName, fields:[{type:type2,name:element.name,child:undefined}], binding:{properties}});
+            declarefunction();
+            NewArrayProxy();
+        }else{
+            declarefunction();
+            fun.declare(type, field, false, "ptr->" + field);
+            fun.cToJs(type, "ret", field,{allowNull:true},0,sizeVars);
+        }
+        //TODO: call addApiStruct here
         fun.returnExp("ret");
         return fun;
     }
-    jsStructSetter(structName, classId, field, type, overrideWrite) {
+    jsStructIterator(structName, classId, field, type, element, nested) {
+        //not yet known what to do here,
+        //We do need some function JS_CFunc_Def refers to
+
+        return fun;
+    }
+    jsStructSetter(structName, classId, field, type, element, nested) {
         //console.log('jsStructSetter',structName, classId, field, type, ids, overrideWrite);
         const args = [{ type: "JSContext*", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
         const fun = this.function(`js_${structName}_set_${field}`, "JSValue", args, true);
         fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
         fun.jsToC(type, "value", "v",{noContextAlloc:true});
-        if (overrideWrite) {
-            overrideWrite(fun);
+        if (element.overrideWrite) {
+            element.overrideWrite(fun);
         } else {
             if(type.endsWith('*')){
                 fun.if(`ptr->${field}!=NULL`)
-                .call('js_free',['ctx',"ptr->" + field]);
+                .call('jsc_free',['ctx',"ptr->" + field]);
             }
             if(type.endsWith(']')){
                 let type2=type.split('[');

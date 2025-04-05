@@ -197,8 +197,15 @@ static JSValue js_rlScalef(JSContext * ctx, JSValue this_val, int argc, JSValue 
 
 static JSValue js_rlMultMatrixf(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     float * matf;
+    bool freesrc_matf = false;
     JSValue da_matf;
     int64_t size_matf;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_matf = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_matf = *(ArrayProxy_class *)opaque_matf;
+        argv[0] = AP_matf.values(ctx, AP_matf.opaque, 0, false);
+        freesrc_matf = true;
+    }
     if(JS_IsArray(argv[0]) == 1) {
         if(JS_GetLength(ctx,argv[0],&size_matf)==-1) {
             return JS_EXCEPTION;
@@ -217,9 +224,8 @@ static JSValue js_rlMultMatrixf(JSContext * ctx, JSValue this_val, int argc, JSV
         }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_matf = JS_DupValue(ctx,argv[0]);
         size_t size_matf;
-        matf = (float *)JS_GetArrayBuffer(ctx, &size_matf, da_matf);
+        matf = (float *)JS_GetArrayBuffer(ctx, &size_matf, argv[0]);
     }
     else {
         JSClassID classid_matf = JS_GetClassID(argv[0]);
@@ -1422,16 +1428,22 @@ static JSValue js_rlLoadVertexArray(JSContext * ctx, JSValue this_val, int argc,
 
 static JSValue js_rlLoadVertexBuffer(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     void * buffer;
+    bool freesrc_buffer = false;
     JSValue da_buffer;
     int64_t size_buffer;
     if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_buffer = JS_DupValue(ctx,argv[0]);
         size_t size_buffer;
-        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, da_buffer);
+        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, argv[0]);
     }
     else {
+        if(freesrc_buffer) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_buffer) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_size;
     int err_size = JS_ToInt32(ctx, &long_size, argv[1]);
@@ -1462,16 +1474,22 @@ static JSValue js_rlLoadVertexBuffer(JSContext * ctx, JSValue this_val, int argc
 
 static JSValue js_rlLoadVertexBufferElement(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     void * buffer;
+    bool freesrc_buffer = false;
     JSValue da_buffer;
     int64_t size_buffer;
     if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_buffer = JS_DupValue(ctx,argv[0]);
         size_t size_buffer;
-        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, da_buffer);
+        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, argv[0]);
     }
     else {
+        if(freesrc_buffer) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_buffer) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_size;
     int err_size = JS_ToInt32(ctx, &long_size, argv[1]);
@@ -1509,16 +1527,22 @@ static JSValue js_rlUpdateVertexBuffer(JSContext * ctx, JSValue this_val, int ar
     }
     unsigned int bufferId = (unsigned int)long_bufferId;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_dataSize;
     int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[2]);
@@ -1556,16 +1580,22 @@ static JSValue js_rlUpdateVertexBufferElements(JSContext * ctx, JSValue this_val
     }
     unsigned int id = (unsigned int)long_id;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_dataSize;
     int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[2]);
@@ -1718,16 +1748,22 @@ static JSValue js_rlDrawVertexArrayElements(JSContext * ctx, JSValue this_val, i
     }
     int count = (int)long_count;
     void * buffer;
+    bool freesrc_buffer = false;
     JSValue da_buffer;
     int64_t size_buffer;
     if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_buffer = JS_DupValue(ctx,argv[2]);
         size_t size_buffer;
-        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, da_buffer);
+        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, argv[2]);
     }
     else {
+        if(freesrc_buffer) {
+            JS_FreeValue(ctx, argv[2]);
+        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_buffer) {
+        JS_FreeValue(ctx, argv[2]);
     }
     rlDrawVertexArrayElements(offset, count, (const void *)buffer);
     if(JS_IsArrayBuffer(argv[2]) == 1) {
@@ -1778,16 +1814,22 @@ static JSValue js_rlDrawVertexArrayElementsInstanced(JSContext * ctx, JSValue th
     }
     int count = (int)long_count;
     void * buffer;
+    bool freesrc_buffer = false;
     JSValue da_buffer;
     int64_t size_buffer;
     if(JS_IsArrayBuffer(argv[2]) == 1) {
-        da_buffer = JS_DupValue(ctx,argv[2]);
         size_t size_buffer;
-        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, da_buffer);
+        buffer = (void *)JS_GetArrayBuffer(ctx, &size_buffer, argv[2]);
     }
     else {
+        if(freesrc_buffer) {
+            JS_FreeValue(ctx, argv[2]);
+        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_buffer) {
+        JS_FreeValue(ctx, argv[2]);
     }
     int32_t long_instances;
     int err_instances = JS_ToInt32(ctx, &long_instances, argv[3]);
@@ -1808,16 +1850,22 @@ static JSValue js_rlDrawVertexArrayElementsInstanced(JSContext * ctx, JSValue th
 
 static JSValue js_rlLoadTexture(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_data = JS_DupValue(ctx,argv[0]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[1]);
@@ -1895,16 +1943,22 @@ static JSValue js_rlLoadTextureDepth(JSContext * ctx, JSValue this_val, int argc
 
 static JSValue js_rlLoadTextureCubemap(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_data = JS_DupValue(ctx,argv[0]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
+        }
         JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[0]);
     }
     int32_t long_size;
     int err_size = JS_ToInt32(ctx, &long_size, argv[1]);
@@ -1988,16 +2042,22 @@ static JSValue js_rlUpdateTexture(JSContext * ctx, JSValue this_val, int argc, J
     }
     int format = (int)long_format;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[6]) == 1) {
-        da_data = JS_DupValue(ctx,argv[6]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[6]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[6]);
+        }
         JS_ThrowTypeError(ctx, "argv[6] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[6]);
     }
     rlUpdateTexture(id, offsetX, offsetY, width, height, format, (const void *)data);
     if(JS_IsArrayBuffer(argv[6]) == 1) {
@@ -2018,6 +2078,12 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     int format = (int)long_format;
     unsigned int * glInternalFormat;
     int64_t size_glInternalFormat;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_glInternalFormat = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glInternalFormat = *(ArrayProxy_class *)opaque_glInternalFormat;
+        argv[1] = AP_glInternalFormat.values(ctx, AP_glInternalFormat.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_glInternalFormat)==-1) {
             memoryClear(ctx, memoryHead);
@@ -2038,10 +2104,9 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_glInternalFormat = JS_DupValue(ctx,argv[1]);
         size_t size_glInternalFormat;
-        glInternalFormat = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glInternalFormat, da_glInternalFormat);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_glInternalFormat);
+        glInternalFormat = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glInternalFormat, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, glInternalFormat);
     }
     else {
         JSClassID classid_glInternalFormat = JS_GetClassID(argv[1]);
@@ -2062,6 +2127,12 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glFormat;
     int64_t size_glFormat;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_glFormat = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glFormat = *(ArrayProxy_class *)opaque_glFormat;
+        argv[2] = AP_glFormat.values(ctx, AP_glFormat.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_glFormat)==-1) {
             memoryClear(ctx, memoryHead);
@@ -2082,10 +2153,9 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_glFormat = JS_DupValue(ctx,argv[2]);
         size_t size_glFormat;
-        glFormat = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glFormat, da_glFormat);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_glFormat);
+        glFormat = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glFormat, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, glFormat);
     }
     else {
         JSClassID classid_glFormat = JS_GetClassID(argv[2]);
@@ -2106,6 +2176,12 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
     }
     unsigned int * glType;
     int64_t size_glType;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_glType = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glType = *(ArrayProxy_class *)opaque_glType;
+        argv[3] = AP_glType.values(ctx, AP_glType.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[3]);
+    }
     if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_glType)==-1) {
             memoryClear(ctx, memoryHead);
@@ -2126,10 +2202,9 @@ static JSValue js_rlGetGlTextureFormats(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[3]) == 1) {
-        JSValue da_glType = JS_DupValue(ctx,argv[3]);
         size_t size_glType;
-        glType = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glType, da_glType);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_glType);
+        glType = (unsigned int *)JS_GetArrayBuffer(ctx, &size_glType, argv[3]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, glType);
     }
     else {
         JSClassID classid_glType = JS_GetClassID(argv[3]);
@@ -2209,8 +2284,15 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
     }
     int format = (int)long_format;
     int * mipmaps;
+    bool freesrc_mipmaps = false;
     JSValue da_mipmaps;
     int64_t size_mipmaps;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_mipmaps = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_mipmaps = *(ArrayProxy_class *)opaque_mipmaps;
+        argv[4] = AP_mipmaps.values(ctx, AP_mipmaps.opaque, 0, false);
+        freesrc_mipmaps = true;
+    }
     if(JS_IsArray(argv[4]) == 1) {
         if(JS_GetLength(ctx,argv[4],&size_mipmaps)==-1) {
             return JS_EXCEPTION;
@@ -2229,9 +2311,8 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
         }
     }
     else if(JS_IsArrayBuffer(argv[4]) == 1) {
-        da_mipmaps = JS_DupValue(ctx,argv[4]);
         size_t size_mipmaps;
-        mipmaps = (int *)JS_GetArrayBuffer(ctx, &size_mipmaps, da_mipmaps);
+        mipmaps = (int *)JS_GetArrayBuffer(ctx, &size_mipmaps, argv[4]);
     }
     else {
         JSClassID classid_mipmaps = JS_GetClassID(argv[4]);
@@ -2244,8 +2325,14 @@ static JSValue js_rlGenTextureMipmaps(JSContext * ctx, JSValue this_val, int arg
             size_mipmaps-=offset_mipmaps;
         }
         else {
+            if(freesrc_mipmaps) {
+                JS_FreeValue(ctx, argv[4]);
+            }
             JS_ThrowTypeError(ctx, "argv[4] does not match type int *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_mipmaps) {
+            JS_FreeValue(ctx, argv[4]);
         }
     }
     rlGenTextureMipmaps(id, width, height, format, mipmaps);
@@ -2370,10 +2457,9 @@ static JSValue js_rlLoadShaderCode(JSContext * ctx, JSValue this_val, int argc, 
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, vsCode);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        JSValue da_vsCode = JS_DupValue(ctx,argv[0]);
         size_t size_vsCode;
-        vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, da_vsCode);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_vsCode);
+        vsCode = (char *)JS_GetArrayBuffer(ctx, &size_vsCode, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, vsCode);
     }
     else {
         JSClassID classid_vsCode = JS_GetClassID(argv[0]);
@@ -2399,10 +2485,9 @@ static JSValue js_rlLoadShaderCode(JSContext * ctx, JSValue this_val, int argc, 
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fsCode);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_fsCode = JS_DupValue(ctx,argv[1]);
         size_t size_fsCode;
-        fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, da_fsCode);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fsCode);
+        fsCode = (char *)JS_GetArrayBuffer(ctx, &size_fsCode, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fsCode);
     }
     else {
         JSClassID classid_fsCode = JS_GetClassID(argv[1]);
@@ -2429,15 +2514,15 @@ static JSValue js_rlLoadShaderCode(JSContext * ctx, JSValue this_val, int argc, 
 
 static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * shaderCode;
+    bool freesrc_shaderCode = false;
     JSValue da_shaderCode;
     int64_t size_shaderCode;
     if(JS_IsString(argv[0]) == 1) {
         shaderCode = (char *)JS_ToCStringLen(ctx, &size_shaderCode, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        da_shaderCode = JS_DupValue(ctx,argv[0]);
         size_t size_shaderCode;
-        shaderCode = (char *)JS_GetArrayBuffer(ctx, &size_shaderCode, da_shaderCode);
+        shaderCode = (char *)JS_GetArrayBuffer(ctx, &size_shaderCode, argv[0]);
     }
     else {
         JSClassID classid_shaderCode = JS_GetClassID(argv[0]);
@@ -2450,8 +2535,14 @@ static JSValue js_rlCompileShader(JSContext * ctx, JSValue this_val, int argc, J
             size_shaderCode-=offset_shaderCode;
         }
         else {
+            if(freesrc_shaderCode) {
+                JS_FreeValue(ctx, argv[0]);
+            }
             JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_shaderCode) {
+            JS_FreeValue(ctx, argv[0]);
         }
     }
     int32_t long_type;
@@ -2537,15 +2628,15 @@ static JSValue js_rlGetLocationUniform(JSContext * ctx, JSValue this_val, int ar
     }
     unsigned int shaderId = (unsigned int)long_shaderId;
     char * uniformName;
+    bool freesrc_uniformName = false;
     JSValue da_uniformName;
     int64_t size_uniformName;
     if(JS_IsString(argv[1]) == 1) {
         uniformName = (char *)JS_ToCStringLen(ctx, &size_uniformName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_uniformName = JS_DupValue(ctx,argv[1]);
         size_t size_uniformName;
-        uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, da_uniformName);
+        uniformName = (char *)JS_GetArrayBuffer(ctx, &size_uniformName, argv[1]);
     }
     else {
         JSClassID classid_uniformName = JS_GetClassID(argv[1]);
@@ -2558,8 +2649,14 @@ static JSValue js_rlGetLocationUniform(JSContext * ctx, JSValue this_val, int ar
             size_uniformName-=offset_uniformName;
         }
         else {
+            if(freesrc_uniformName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_uniformName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int returnVal = rlGetLocationUniform(shaderId, (const char *)uniformName);
@@ -2591,15 +2688,15 @@ static JSValue js_rlGetLocationAttrib(JSContext * ctx, JSValue this_val, int arg
     }
     unsigned int shaderId = (unsigned int)long_shaderId;
     char * attribName;
+    bool freesrc_attribName = false;
     JSValue da_attribName;
     int64_t size_attribName;
     if(JS_IsString(argv[1]) == 1) {
         attribName = (char *)JS_ToCStringLen(ctx, &size_attribName, argv[1]);
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_attribName = JS_DupValue(ctx,argv[1]);
         size_t size_attribName;
-        attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, da_attribName);
+        attribName = (char *)JS_GetArrayBuffer(ctx, &size_attribName, argv[1]);
     }
     else {
         JSClassID classid_attribName = JS_GetClassID(argv[1]);
@@ -2612,8 +2709,14 @@ static JSValue js_rlGetLocationAttrib(JSContext * ctx, JSValue this_val, int arg
             size_attribName-=offset_attribName;
         }
         else {
+            if(freesrc_attribName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_attribName) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     int returnVal = rlGetLocationAttrib(shaderId, (const char *)attribName);
@@ -2663,8 +2766,15 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
     }
     int locIndex = (int)long_locIndex;
     Matrix * mat;
+    bool freesrc_mat = false;
     JSValue da_mat;
     int64_t size_mat;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_mat = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_mat = *(ArrayProxy_class *)opaque_mat;
+        argv[1] = AP_mat.values(ctx, AP_mat.opaque, 0, false);
+        freesrc_mat = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_mat)==-1) {
             return JS_EXCEPTION;
@@ -2682,13 +2792,18 @@ static JSValue js_rlSetUniformMatrices(JSContext * ctx, JSValue this_val, int ar
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_mat = JS_DupValue(ctx,argv[1]);
         size_t size_mat;
-        mat = (Matrix *)JS_GetArrayBuffer(ctx, &size_mat, da_mat);
+        mat = (Matrix *)JS_GetArrayBuffer(ctx, &size_mat, argv[1]);
     }
     else {
+        if(freesrc_mat) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type Matrix *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_mat) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_count;
     int err_count = JS_ToInt32(ctx, &long_count, argv[2]);
@@ -2741,8 +2856,15 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     unsigned int id = (unsigned int)long_id;
     int * locs;
+    bool freesrc_locs = false;
     JSValue da_locs;
     int64_t size_locs;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_locs = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_locs = *(ArrayProxy_class *)opaque_locs;
+        argv[1] = AP_locs.values(ctx, AP_locs.opaque, 0, false);
+        freesrc_locs = true;
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_locs)==-1) {
             return JS_EXCEPTION;
@@ -2761,9 +2883,8 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_locs = JS_DupValue(ctx,argv[1]);
         size_t size_locs;
-        locs = (int *)JS_GetArrayBuffer(ctx, &size_locs, da_locs);
+        locs = (int *)JS_GetArrayBuffer(ctx, &size_locs, argv[1]);
     }
     else {
         JSClassID classid_locs = JS_GetClassID(argv[1]);
@@ -2776,8 +2897,14 @@ static JSValue js_rlSetShader(JSContext * ctx, JSValue this_val, int argc, JSVal
             size_locs-=offset_locs;
         }
         else {
+            if(freesrc_locs) {
+                JS_FreeValue(ctx, argv[1]);
+            }
             JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
             return JS_EXCEPTION;
+        }
+        if(freesrc_locs) {
+            JS_FreeValue(ctx, argv[1]);
         }
     }
     rlSetShader(id, locs);
@@ -2844,16 +2971,22 @@ static JSValue js_rlLoadShaderBuffer(JSContext * ctx, JSValue this_val, int argc
     }
     unsigned int size = (unsigned int)long_size;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     int32_t long_usageHint;
     int err_usageHint = JS_ToInt32(ctx, &long_usageHint, argv[2]);
@@ -2894,16 +3027,22 @@ static JSValue js_rlUpdateShaderBuffer(JSContext * ctx, JSValue this_val, int ar
     }
     unsigned int id = (unsigned int)long_id;
     void * data;
+    bool freesrc_data = false;
     JSValue da_data;
     int64_t size_data;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_data = JS_DupValue(ctx,argv[1]);
         size_t size_data;
-        data = (void *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[1]);
     }
     else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[1]);
     }
     uint32_t long_dataSize;
     int err_dataSize = JS_ToUint32(ctx, &long_dataSize, argv[2]);
@@ -2960,16 +3099,22 @@ static JSValue js_rlReadShaderBuffer(JSContext * ctx, JSValue this_val, int argc
     }
     unsigned int id = (unsigned int)long_id;
     void * dest;
+    bool freesrc_dest = false;
     JSValue da_dest;
     int64_t size_dest;
     if(JS_IsArrayBuffer(argv[1]) == 1) {
-        da_dest = JS_DupValue(ctx,argv[1]);
         size_t size_dest;
-        dest = (void *)JS_GetArrayBuffer(ctx, &size_dest, da_dest);
+        dest = (void *)JS_GetArrayBuffer(ctx, &size_dest, argv[1]);
     }
     else {
+        if(freesrc_dest) {
+            JS_FreeValue(ctx, argv[1]);
+        }
         JS_ThrowTypeError(ctx, "argv[1] does not match type void *");
         return JS_EXCEPTION;
+    }
+    if(freesrc_dest) {
+        JS_FreeValue(ctx, argv[1]);
     }
     uint32_t long_count;
     int err_count = JS_ToUint32(ctx, &long_count, argv[2]);

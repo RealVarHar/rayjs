@@ -2882,6 +2882,12 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     Quaternion q = *ptr_q;
     Vector3 * outAxis;
     int64_t size_outAxis;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_outAxis = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_outAxis = *(ArrayProxy_class *)opaque_outAxis;
+        argv[1] = AP_outAxis.values(ctx, AP_outAxis.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
     if(JS_IsArray(argv[1]) == 1) {
         if(JS_GetLength(ctx,argv[1],&size_outAxis)==-1) {
             memoryClear(ctx, memoryHead);
@@ -2901,10 +2907,9 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JSValue da_outAxis = JS_DupValue(ctx,argv[1]);
         size_t size_outAxis;
-        outAxis = (Vector3 *)JS_GetArrayBuffer(ctx, &size_outAxis, da_outAxis);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outAxis);
+        outAxis = (Vector3 *)JS_GetArrayBuffer(ctx, &size_outAxis, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, outAxis);
     }
     else {
         memoryClear(ctx, memoryHead);
@@ -2913,6 +2918,12 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
     }
     float * outAngle;
     int64_t size_outAngle;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_outAngle = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_outAngle = *(ArrayProxy_class *)opaque_outAngle;
+        argv[2] = AP_outAngle.values(ctx, AP_outAngle.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_outAngle)==-1) {
             memoryClear(ctx, memoryHead);
@@ -2933,10 +2944,9 @@ static JSValue js_QuaternionToAxisAngle(JSContext * ctx, JSValue this_val, int a
         }
     }
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
-        JSValue da_outAngle = JS_DupValue(ctx,argv[2]);
         size_t size_outAngle;
-        outAngle = (float *)JS_GetArrayBuffer(ctx, &size_outAngle, da_outAngle);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outAngle);
+        outAngle = (float *)JS_GetArrayBuffer(ctx, &size_outAngle, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, outAngle);
     }
     else {
         JSClassID classid_outAngle = JS_GetClassID(argv[2]);

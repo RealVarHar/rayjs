@@ -864,7 +864,7 @@ function main() {
     //Generate Code
     for(let key in modules){
         const module=modules[key];
-        module.structs.forEach(x => module.gen.addApiStruct(x));
+        module.structs.forEach(x => module.gen.addApiStruct_object(x));
         module.functions.forEach(x => module.gen.addApiFunction(x));
         module.enums.forEach(x => module.gen.addEnum(x));
         module.defines.forEach(x => {

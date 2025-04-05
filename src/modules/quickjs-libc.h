@@ -56,6 +56,7 @@ static void js_std_promise_rejection_tracker(JSContext *ctx, JSValue promise,
                                       JSValue reason,
                                       bool is_handled, void *opaque);
 static void js_std_set_worker_new_context_func(JSContext *(*func)(JSRuntime *rt));
+static void js_std_set_worker_new_runtime_func(JSRuntime *(*func)());
 static JSValue js_postMessage(JSContext *ctx,JSValue worker,int argc, JSValue *argv);
 static JSValue js_copyWorker(JSContext *from, JSContext *to);
 

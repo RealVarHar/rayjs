@@ -353,52 +353,127 @@ export class RayJsHeader {
         }
     }
     registerApiStruct(struct){
-        const options = struct.binding || {};
-        if (options.ignore) return;
+        const binding = struct.binding || {};
+        if (binding.ignore) return;
         console.log("Registered struct " + struct.name);
         const classId = this.definitions.jsClassId(`js_${struct.name}_class_id`);
         this.structLookup[struct.name] = classId;
-        options.aliases?.forEach(x => {this.structLookup[x] = classId});
+        binding.aliases?.forEach(x => {this.structLookup[x] = classId});
     }
-    addApiStruct(struct) {
-        const options = struct.binding || {};
-        if (options.ignore) return;
+    //addApiStruct is called explicitly, this creates optional structs - ok
+    //addApiStruct needs to check if api struct already exists, we might need material* or material_proxy
+    addApiStruct_object(struct) {
+        const binding = struct.binding || {};
+        if (binding.ignore) return;
         console.log("Binding struct " + struct.name);
         const classId = this.definitions.jsClassId(`js_${struct.name}_class_id`);
-        const finalizer = this.structGen.jsStructFinalizer(classId, struct.name, (gen, ptr) => options.destructor && gen.call(options.destructor.name, ["*" + ptr]));
+        const finalizer = this.structGen.jsStructFinalizer(classId, struct.name, (gen, ptr) => binding.destructor && gen.call(binding.destructor.name, ["*" + ptr]));
         const propDeclarations = new this.structGen.constructor();
+        propDeclarations.jsPropStringDef("[Symbol.toStringTag]", struct.name);
         this.structArgs[struct.name]=struct.fields;
-        if (options && options.properties) {
-            for (const field of Object.keys(options.properties)) {
+        if (binding && binding.properties) {
+            for (const field of Object.keys(binding.properties)) {
                 const type = struct.fields.find(x => x.name === field)?.type;
                 if (!type){
                     console.log(struct.fields);
                     throw new Error(`Struct ${struct.name} does not contain field ${field}`);
                 }
-                const el = options.properties[field];
+                const el = binding.properties[field];
+                el.name=field;
                 let _get = undefined;
                 let _set = undefined;
                 if (el.get){
-                    _get = this.structGen.jsStructGetter(struct.name, classId, field, type, /*Be carefull when allocating memory in a getter*/ el);
+                    _get = this.structGen.jsStructGetter(struct.name, classId, field, type, el);
                 }
                 if (el.set){
-                    _set = this.structGen.jsStructSetter(struct.name, classId, field, type, el.overrideWrite);
+                    _set = this.structGen.jsStructSetter(struct.name, classId, field, type, el);
                 }
                 propDeclarations.jsGetSetDef(field, _get?.getTag("_name"), _set?.getTag("_name"));
             }
         }
         const classFuncList = this.structGen.jsFunctionList(`js_${struct.name}_proto_funcs`);
         classFuncList.child(propDeclarations);
-        classFuncList.jsPropStringDef("[Symbol.toStringTag]", struct.name);
+
         const classDecl = this.structGen.jsClassDeclaration(struct.name, classId, finalizer.getTag("_name"), classFuncList.getTag("_name"));
         this.moduleInit.call(classDecl.getTag("_name"), ["ctx", "m"]);
-        if (options?.createConstructor || options?.createEmptyConstructor) {
-            const body = this.functionGen.jsStructConstructor(struct.name, options?.createEmptyConstructor ? [] : struct.fields, classId);
+        if (binding?.createConstructor || binding?.createEmptyConstructor) {
+            const body = this.functionGen.jsStructConstructor(struct.name, binding?.createEmptyConstructor ? [] : struct.fields, classId);
             this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name}", ${struct.fields.length}, JS_CFUNC_constructor, 0)`);
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
         }
         this.typings.addStruct(struct);
+    }
+    addApiStruct_array(struct){
+        const binding = struct.binding || {};
+        if (binding.ignore) return;
+        console.log("Binding struct array" + struct.name);
+        const classId = "js_ArrayProxy_class_id";
+        this.structArgs[struct.name]=struct.fields;
+        //multiple typed array is possible by syntax but unimplemented
+
+        //provide ArrayProxy_function to_array, ArrayProxy_function get, ArrayProxy_function set, ArrayProxy_function free
+        const name=struct.fields[0].name;
+        const structName=struct.name+'_'+name;
+        const ptr=`((${struct.name} *)ptr)`;
+        const type=struct.fields[0].type;
+        let length=binding.properties[name].sizeVars[0];
+        length=String(length).replace('ptr->',`${ptr}->`);
+
+        const args = { ctx:{ type: "JSContext *", name: "ctx" },
+            ptr:{ type: "void *", name: "ptr" },
+            set_to:{ type: "JSValue", name: "set_to" },
+            property:{ type: "int", name: "property" },
+            as_string:{ type: "bool", name: "as_sting" },
+            keys: { type: "JSPropertyEnum **", name: "keys" }
+        };
+        const get_args = [args.ctx,args.ptr,args.property,args.as_string];
+        let _values = this.structGen.function(`js_${structName}_values`, "JSValue", get_args, true);
+        _values.cToJs(type+' *','ret',`${ptr}->${name}`,{},0,[length]);
+        let branch1 = _values.if(`as_sting==true`);
+            branch1.call('JS_JSONStringify',['ctx','ret','JS_UNDEFINED','JS_UNDEFINED'],{name:'ret'});
+        _values.returnExp('ret');
+
+        const keys_args = [args.ctx,args.ptr,args.keys];
+        let _keys = this.structGen.function(`js_${structName}_keys`, "int", keys_args, true);
+        _keys.declare('int','length',false,length);
+        _keys.call('js_malloc',['ctx','(length+1) * sizeof(JSPropertyEnum)'],{name:'*keys'});
+        branch1 = _keys.for(0,'length','i0');
+            branch1.declare('JSPropertyEnum *','(*keys)[i0]',false,'(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)}',true);
+        _keys.declare('JSPropertyEnum *','(*keys)[length]',false,'(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length}',true);
+        _keys.returnExp('true');
+
+        let _get = this.structGen.function(`js_${structName}_get`, "JSValue", get_args, true);
+        branch1 = _get.if(`as_sting==true`);
+            let branch2 = branch1.if(`property==JS_ATOM_length`);
+                branch2.cToJs('int','ret',length,{});
+                branch2.returnExp('ret');
+            branch1.else().returnExp('JS_UNDEFINED');
+        branch1 = _get.else();
+            branch2 = branch1.if(`property>=0 && property<${length}`);
+                branch2.declare(type, 'src', false, `${ptr}->${name}[property]`);
+                branch2.cToJs(type, "ret", 'src');
+                branch2.returnExp('ret');
+            branch1.else().returnExp('JS_UNDEFINED');
+
+        const set_args = [args.ctx,args.ptr,args.set_to,args.property,args.as_string];
+        let _set = this.structGen.function(`js_${structName}_set`, "int", set_args, true);
+        branch1 = _set.if(`as_sting==true`);
+            branch1.returnExp('false');
+        branch1 = _set.else();
+            branch1.jsToC(type,'ret','set_to',{altReturn:'-1'});
+            branch1.declare(type, `${ptr}->${name}[property]`, false, `ret`,true);
+        _set.returnExp('true');
+
+        let _has = this.structGen.function(`js_${structName}_has`, "int", get_args, true);
+        branch1 = _has.if(`as_sting==true`);
+            branch2 = branch1.if(`property==JS_ATOM_length`);
+                branch2.returnExp('true');
+            branch1.else().returnExp('false');
+        branch1 = _has.else();
+            branch2 = branch1.if(`property>=0 && property<${length}`);
+                branch2.returnExp('true');
+            branch1.else().returnExp('false');
     }
     exportGlobalStruct(structName, exportName, values, description) {
         this.moduleInit.declareStruct(structName, exportName + "_struct", values);

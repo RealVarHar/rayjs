@@ -1,5 +1,6 @@
 import * as rl from 'rayjs:raylib';
 import * as rm from 'rayjs:raymath';
+{
 for (const key in rl) { globalThis[key] = rl[key] };
 for (const key in rm) { globalThis[key] = rm[key] };
 
@@ -11210,3 +11211,4 @@ game.run(camera);
 
 /******/ })()
 ;
+}

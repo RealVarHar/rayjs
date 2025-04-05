@@ -1,6 +1,7 @@
 import * as rl from 'rayjs:raylib';
 import * as rlm from 'rayjs:rlightmapper';
 import * as rm from 'rayjs:raymath';
+{
 for (const key in rl) { globalThis[key] = rl[key]; }
 for (const key in rlm) { globalThis[key] = rlm[key]; }
 for (const key in rm) { globalThis[key] = rm[key]; }
@@ -123,3 +124,4 @@ while (!WindowShouldClose())
 UnloadModel(scene.raylib_model);
 UnloadTexture(scene.raylib_texture);
 CloseWindow();
+}

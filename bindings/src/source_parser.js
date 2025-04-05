@@ -378,13 +378,11 @@ export class source_parser {
             // typedef bool (*SaveFileTextCallback)(const char *fileName, char *text); // FileIO: Save text data
             if(capture[5]=='')return pos;
             ret=pos+'typedef '.length;
-            thiz.println(input,ret);
             ret=thiz.simpleregex(input,['os','static ','os','unsigned ','os','const ','r+',azZ0,'r*',' '],ret,capture=[]);//TODO: reallign capture
             if(ret===false)return pos;
             ret=thiz.simpleregex(input,['os','*','r*',' ','s','(','r*',' ','s','*','r*',' ','r+',azZ0,'r*',' ','s',')','r*',' ','s','(','r+',', \n*[]'+azZ0,'os','...','r*',' ','s',')','r*',' ','s',';'],ret,capture);
             if(ret===false)return pos;
             if(save){
-                console.log(capture[11]);
                 thiz.defineName(capture[11],'callbacks',{
                     returnType: thiz.normalizeType(capture[1]+capture[2]+capture[3]+capture[4]+capture[5]+capture[6]),
                     name: capture[11],
@@ -677,7 +675,6 @@ export class source_parser {
                 type:capture[2].substring(0,capture[2].length-1),//remove last )
                 values:str.split(',').map(a=>a.trim())
             }
-            console.log(capture);
         }else
         if(content.toLowerCase()=='true'){content=1;type='bool';}else
         if(content.toLowerCase()=='false'){content=0;type='bool';}else

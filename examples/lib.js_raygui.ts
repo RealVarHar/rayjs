@@ -734,15 +734,15 @@ declare var ICON_MAPS: number;
 /**  */
 declare var ICON_HOT: number;
 /**  */
-declare var ICON_229: number;
+declare var ICON_LABEL: number;
 /**  */
-declare var ICON_230: number;
+declare var ICON_NAME_ID: number;
 /**  */
-declare var ICON_231: number;
+declare var ICON_SLICING: number;
 /**  */
-declare var ICON_232: number;
+declare var ICON_MANUAL_CONTROL: number;
 /**  */
-declare var ICON_233: number;
+declare var ICON_COLLISION: number;
 /**  */
 declare var ICON_234: number;
 /**  */

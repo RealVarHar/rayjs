@@ -147,13 +147,13 @@ static JSValue js_Light_set_attenuation(JSContext* ctx, JSValue this_val, JSValu
 }
 
 static const JSCFunctionListEntry js_Light_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Light", JS_PROP_CONFIGURABLE),
     JS_CGETSET_DEF("type",js_Light_get_type,js_Light_set_type),
     JS_CGETSET_DEF("enabled",js_Light_get_enabled,js_Light_set_enabled),
     JS_CGETSET_DEF("position",js_Light_get_position,js_Light_set_position),
     JS_CGETSET_DEF("target",js_Light_get_target,js_Light_set_target),
     JS_CGETSET_DEF("color",js_Light_get_color,js_Light_set_color),
     JS_CGETSET_DEF("attenuation",js_Light_get_attenuation,js_Light_set_attenuation),
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]","Light", JS_PROP_CONFIGURABLE),
 };
 
 static int js_declare_Light(JSContext * ctx, JSModuleDef * m) {
