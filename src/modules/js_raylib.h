@@ -970,8 +970,115 @@ static void js_GlyphInfo_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_GlyphInfo_get_value(JSContext* ctx, JSValue this_val) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int value = ptr->value;
+    JSValue ret = JS_NewInt32(ctx, (long)value);
+    return ret;
+}
+
+static JSValue js_GlyphInfo_set_value(JSContext* ctx, JSValue this_val, JSValue v) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->value = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GlyphInfo_get_offsetX(JSContext* ctx, JSValue this_val) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int offsetX = ptr->offsetX;
+    JSValue ret = JS_NewInt32(ctx, (long)offsetX);
+    return ret;
+}
+
+static JSValue js_GlyphInfo_set_offsetX(JSContext* ctx, JSValue this_val, JSValue v) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->offsetX = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GlyphInfo_get_offsetY(JSContext* ctx, JSValue this_val) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int offsetY = ptr->offsetY;
+    JSValue ret = JS_NewInt32(ctx, (long)offsetY);
+    return ret;
+}
+
+static JSValue js_GlyphInfo_set_offsetY(JSContext* ctx, JSValue this_val, JSValue v) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->offsetY = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GlyphInfo_get_advanceX(JSContext* ctx, JSValue this_val) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int advanceX = ptr->advanceX;
+    JSValue ret = JS_NewInt32(ctx, (long)advanceX);
+    return ret;
+}
+
+static JSValue js_GlyphInfo_set_advanceX(JSContext* ctx, JSValue this_val, JSValue v) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->advanceX = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GlyphInfo_get_image(JSContext* ctx, JSValue this_val) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    Image image = ptr->image;
+    Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
+    *ptr_ret = image;
+    JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_GlyphInfo_set_image(JSContext* ctx, JSValue this_val, JSValue v) {
+    GlyphInfo* ptr = JS_GetOpaque2(ctx, this_val, js_GlyphInfo_class_id);
+    Image* ptr_value = (Image*)JS_GetOpaque(v, js_Image_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Image value = *ptr_value;
+    ptr->image = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_GlyphInfo_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","GlyphInfo", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("value",js_GlyphInfo_get_value,js_GlyphInfo_set_value),
+    JS_CGETSET_DEF("offsetX",js_GlyphInfo_get_offsetX,js_GlyphInfo_set_offsetX),
+    JS_CGETSET_DEF("offsetY",js_GlyphInfo_get_offsetY,js_GlyphInfo_set_offsetY),
+    JS_CGETSET_DEF("advanceX",js_GlyphInfo_get_advanceX,js_GlyphInfo_set_advanceX),
+    JS_CGETSET_DEF("image",js_GlyphInfo_get_image,js_GlyphInfo_set_image),
 };
 
 static int js_declare_GlyphInfo(JSContext * ctx, JSModuleDef * m) {
@@ -1847,6 +1954,93 @@ static JSValue js_Mesh_set_normals(JSContext* ctx, JSValue this_val, JSValue v) 
     return JS_UNDEFINED;
 }
 
+static JSValue js_Mesh_tangents_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*4; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->tangents[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_tangents_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_tangents_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            float src = ((Mesh *)ptr)->tangents[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_tangents_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->tangents[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_tangents_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_tangents(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_tangents_values,.keys = js_Mesh_tangents_keys,.get = js_Mesh_tangents_get,.set = js_Mesh_tangents_set,.has = js_Mesh_tangents_has});
+    return ret;
+}
+
 static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
@@ -1911,6 +2105,93 @@ static JSValue js_Mesh_set_tangents(JSContext* ctx, JSValue this_val, JSValue v)
     }
     ptr->tangents = value;
     return JS_UNDEFINED;
+}
+
+static JSValue js_Mesh_colors_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*4; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)((Mesh *)ptr)->colors[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_colors_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_colors_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            unsigned char src = ((Mesh *)ptr)->colors[property];
+            JSValue ret = JS_NewUint32(ctx, (unsigned long)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_colors_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        uint32_t long_ret;
+        int err_ret = JS_ToUint32(ctx, &long_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        unsigned char ret = (unsigned char)long_ret;
+        ((Mesh *)ptr)->colors[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_colors_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_colors(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_colors_values,.keys = js_Mesh_colors_keys,.get = js_Mesh_colors_get,.set = js_Mesh_colors_set,.has = js_Mesh_colors_has});
+    return ret;
 }
 
 static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
@@ -1979,6 +2260,93 @@ static JSValue js_Mesh_set_colors(JSContext* ctx, JSValue this_val, JSValue v) {
     return JS_UNDEFINED;
 }
 
+static JSValue js_Mesh_indices_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)((Mesh *)ptr)->indices[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_indices_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_indices_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount) {
+            unsigned short src = ((Mesh *)ptr)->indices[property];
+            JSValue ret = JS_NewUint32(ctx, (unsigned long)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_indices_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        uint32_t long_ret;
+        int err_ret = JS_ToUint32(ctx, &long_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        unsigned short ret = (unsigned short)long_ret;
+        ((Mesh *)ptr)->indices[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_indices_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_indices(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_indices_values,.keys = js_Mesh_indices_keys,.get = js_Mesh_indices_get,.set = js_Mesh_indices_set,.has = js_Mesh_indices_has});
+    return ret;
+}
+
 static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     unsigned short * value;
@@ -2043,6 +2411,93 @@ static JSValue js_Mesh_set_indices(JSContext* ctx, JSValue this_val, JSValue v) 
     }
     ptr->indices = value;
     return JS_UNDEFINED;
+}
+
+static JSValue js_Mesh_animVertices_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*3; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->animVertices[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_animVertices_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_animVertices_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            float src = ((Mesh *)ptr)->animVertices[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_animVertices_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->animVertices[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_animVertices_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_animVertices(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_animVertices_values,.keys = js_Mesh_animVertices_keys,.get = js_Mesh_animVertices_get,.set = js_Mesh_animVertices_set,.has = js_Mesh_animVertices_has});
+    return ret;
 }
 
 static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValue v) {
@@ -2111,6 +2566,93 @@ static JSValue js_Mesh_set_animVertices(JSContext* ctx, JSValue this_val, JSValu
     return JS_UNDEFINED;
 }
 
+static JSValue js_Mesh_animNormals_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*3; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->animNormals[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_animNormals_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_animNormals_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            float src = ((Mesh *)ptr)->animNormals[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_animNormals_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->animNormals[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_animNormals_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_animNormals(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_animNormals_values,.keys = js_Mesh_animNormals_keys,.get = js_Mesh_animNormals_get,.set = js_Mesh_animNormals_set,.has = js_Mesh_animNormals_has});
+    return ret;
+}
+
 static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     float * value;
@@ -2177,6 +2719,93 @@ static JSValue js_Mesh_set_animNormals(JSContext* ctx, JSValue this_val, JSValue
     return JS_UNDEFINED;
 }
 
+static JSValue js_Mesh_boneIds_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*4; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)((Mesh *)ptr)->boneIds[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_boneIds_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_boneIds_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            unsigned char src = ((Mesh *)ptr)->boneIds[property];
+            JSValue ret = JS_NewUint32(ctx, (unsigned long)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_boneIds_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        uint32_t long_ret;
+        int err_ret = JS_ToUint32(ctx, &long_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        unsigned char ret = (unsigned char)long_ret;
+        ((Mesh *)ptr)->boneIds[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_boneIds_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_boneIds(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_boneIds_values,.keys = js_Mesh_boneIds_keys,.get = js_Mesh_boneIds_get,.set = js_Mesh_boneIds_set,.has = js_Mesh_boneIds_has});
+    return ret;
+}
+
 static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) {
     Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
     unsigned char * value;
@@ -2241,6 +2870,93 @@ static JSValue js_Mesh_set_boneIds(JSContext* ctx, JSValue this_val, JSValue v) 
     }
     ptr->boneIds = value;
     return JS_UNDEFINED;
+}
+
+static JSValue js_Mesh_boneWeights_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < ((Mesh *)ptr)->vertexCount*4; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((Mesh *)ptr)->boneWeights[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_Mesh_boneWeights_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = ((Mesh *)ptr)->vertexCount*4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_Mesh_boneWeights_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)((Mesh *)ptr)->vertexCount*4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            float src = ((Mesh *)ptr)->boneWeights[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_Mesh_boneWeights_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((Mesh *)ptr)->boneWeights[property] = ret;
+    }
+    return true;
+}
+
+static int js_Mesh_boneWeights_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<((Mesh *)ptr)->vertexCount*4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_Mesh_get_boneWeights(JSContext* ctx, JSValue this_val) {
+    Mesh* ptr = JS_GetOpaque2(ctx, this_val, js_Mesh_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Mesh_boneWeights_values,.keys = js_Mesh_boneWeights_keys,.get = js_Mesh_boneWeights_get,.set = js_Mesh_boneWeights_set,.has = js_Mesh_boneWeights_has});
+    return ret;
 }
 
 static JSValue js_Mesh_set_boneWeights(JSContext* ctx, JSValue this_val, JSValue v) {
@@ -2317,13 +3033,13 @@ static const JSCFunctionListEntry js_Mesh_proto_funcs[] = {
     JS_CGETSET_DEF("texcoords",js_Mesh_get_texcoords,js_Mesh_set_texcoords),
     JS_CGETSET_DEF("texcoords2",NULL,js_Mesh_set_texcoords2),
     JS_CGETSET_DEF("normals",js_Mesh_get_normals,js_Mesh_set_normals),
-    JS_CGETSET_DEF("tangents",NULL,js_Mesh_set_tangents),
-    JS_CGETSET_DEF("colors",NULL,js_Mesh_set_colors),
-    JS_CGETSET_DEF("indices",NULL,js_Mesh_set_indices),
-    JS_CGETSET_DEF("animVertices",NULL,js_Mesh_set_animVertices),
-    JS_CGETSET_DEF("animNormals",NULL,js_Mesh_set_animNormals),
-    JS_CGETSET_DEF("boneIds",NULL,js_Mesh_set_boneIds),
-    JS_CGETSET_DEF("boneWeights",NULL,js_Mesh_set_boneWeights),
+    JS_CGETSET_DEF("tangents",js_Mesh_get_tangents,js_Mesh_set_tangents),
+    JS_CGETSET_DEF("colors",js_Mesh_get_colors,js_Mesh_set_colors),
+    JS_CGETSET_DEF("indices",js_Mesh_get_indices,js_Mesh_set_indices),
+    JS_CGETSET_DEF("animVertices",js_Mesh_get_animVertices,js_Mesh_set_animVertices),
+    JS_CGETSET_DEF("animNormals",js_Mesh_get_animNormals,js_Mesh_set_animNormals),
+    JS_CGETSET_DEF("boneIds",js_Mesh_get_boneIds,js_Mesh_set_boneIds),
+    JS_CGETSET_DEF("boneWeights",js_Mesh_get_boneWeights,js_Mesh_set_boneWeights),
 };
 
 static int js_declare_Mesh(JSContext * ctx, JSModuleDef * m) {
@@ -2591,8 +3307,77 @@ static void js_Transform_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_Transform_get_translation(JSContext* ctx, JSValue this_val) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Vector3 translation = ptr->translation;
+    Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
+    *ptr_ret = translation;
+    JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_Transform_set_translation(JSContext* ctx, JSValue this_val, JSValue v) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Vector3* ptr_value = (Vector3*)JS_GetOpaque(v, js_Vector3_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 value = *ptr_value;
+    ptr->translation = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_Transform_get_rotation(JSContext* ctx, JSValue this_val) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Quaternion rotation = ptr->rotation;
+    Quaternion* ptr_ret = (Quaternion*)js_malloc(ctx, sizeof(Quaternion));
+    *ptr_ret = rotation;
+    JSValue ret = JS_NewObjectClass(ctx, js_Vector4_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_Transform_set_rotation(JSContext* ctx, JSValue this_val, JSValue v) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Quaternion* ptr_value = (Quaternion*)JS_GetOpaque(v, js_Vector4_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Quaternion value = *ptr_value;
+    ptr->rotation = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_Transform_get_scale(JSContext* ctx, JSValue this_val) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Vector3 scale = ptr->scale;
+    Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
+    *ptr_ret = scale;
+    JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_Transform_set_scale(JSContext* ctx, JSValue this_val, JSValue v) {
+    Transform* ptr = JS_GetOpaque2(ctx, this_val, js_Transform_class_id);
+    Vector3* ptr_value = (Vector3*)JS_GetOpaque(v, js_Vector3_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 value = *ptr_value;
+    ptr->scale = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_Transform_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","Transform", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("translation",js_Transform_get_translation,js_Transform_set_translation),
+    JS_CGETSET_DEF("rotation",js_Transform_get_rotation,js_Transform_set_rotation),
+    JS_CGETSET_DEF("scale",js_Transform_get_scale,js_Transform_set_scale),
 };
 
 static int js_declare_Transform(JSContext * ctx, JSModuleDef * m) {
@@ -2613,8 +3398,155 @@ static void js_BoneInfo_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_BoneInfo_name_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewString(ctx, ((BoneInfo *)ptr)->name);
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_BoneInfo_name_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_BoneInfo_name_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            char src = ((BoneInfo *)ptr)->name[property];
+            JSValue js_ret = JS_NewStringLen(ctx, &src,1);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_BoneInfo_name_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        char * js_ret = (char *)JS_ToCString(ctx, set_to);
+        char ret = (char)js_ret[0];
+        JS_FreeCString(ctx, js_ret);
+        ((BoneInfo *)ptr)->name[property] = ret;
+    }
+    return true;
+}
+
+static int js_BoneInfo_name_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_BoneInfo_get_name(JSContext* ctx, JSValue this_val) {
+    BoneInfo* ptr = JS_GetOpaque2(ctx, this_val, js_BoneInfo_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_BoneInfo_name_values,.keys = js_BoneInfo_name_keys,.get = js_BoneInfo_name_get,.set = js_BoneInfo_name_set,.has = js_BoneInfo_name_has});
+    return ret;
+}
+
+static JSValue js_BoneInfo_set_name(JSContext* ctx, JSValue this_val, JSValue v) {
+    BoneInfo* ptr = JS_GetOpaque2(ctx, this_val, js_BoneInfo_class_id);
+    char * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_IsString(v) == 1) {
+        char * js_value = (char *)JS_ToCStringLen(ctx, &size_value, v);
+        value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+        memcpy(value, js_value, size_value);
+        JS_FreeCString(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        char * js_value = (char *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_INT8_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            char * js_value = (char *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->name, value, 32 * sizeof(char ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_BoneInfo_get_parent(JSContext* ctx, JSValue this_val) {
+    BoneInfo* ptr = JS_GetOpaque2(ctx, this_val, js_BoneInfo_class_id);
+    int parent = ptr->parent;
+    JSValue ret = JS_NewInt32(ctx, (long)parent);
+    return ret;
+}
+
+static JSValue js_BoneInfo_set_parent(JSContext* ctx, JSValue this_val, JSValue v) {
+    BoneInfo* ptr = JS_GetOpaque2(ctx, this_val, js_BoneInfo_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->parent = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_BoneInfo_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","BoneInfo", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("name",js_BoneInfo_get_name,js_BoneInfo_set_name),
+    JS_CGETSET_DEF("parent",js_BoneInfo_get_parent,js_BoneInfo_set_parent),
 };
 
 static int js_declare_BoneInfo(JSContext * ctx, JSModuleDef * m) {
@@ -3266,8 +4198,530 @@ static void js_ModelAnimation_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_ModelAnimation_get_boneCount(JSContext* ctx, JSValue this_val) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    int boneCount = ptr->boneCount;
+    JSValue ret = JS_NewInt32(ctx, (long)boneCount);
+    return ret;
+}
+
+static JSValue js_ModelAnimation_set_boneCount(JSContext* ctx, JSValue this_val, JSValue v) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->boneCount = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_ModelAnimation_get_frameCount(JSContext* ctx, JSValue this_val) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    int frameCount = ptr->frameCount;
+    JSValue ret = JS_NewInt32(ctx, (long)frameCount);
+    return ret;
+}
+
+static JSValue js_ModelAnimation_set_frameCount(JSContext* ctx, JSValue this_val, JSValue v) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->frameCount = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_ModelAnimation_bones_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        BoneInfo* ptr_js_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
+        *ptr_js_ret = ((ModelAnimation *)ptr)->bones[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_ModelAnimation_bones_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_ModelAnimation_bones_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            BoneInfo src = ((ModelAnimation *)ptr)->bones[property];
+            BoneInfo* ptr_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_ModelAnimation_bones_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        BoneInfo* ptr_ret = (BoneInfo*)JS_GetOpaque(set_to, js_BoneInfo_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        BoneInfo ret = *ptr_ret;
+        ((ModelAnimation *)ptr)->bones[property] = ret;
+    }
+    return true;
+}
+
+static int js_ModelAnimation_bones_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_ModelAnimation_get_bones(JSContext* ctx, JSValue this_val) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_ModelAnimation_bones_values,.keys = js_ModelAnimation_bones_keys,.get = js_ModelAnimation_bones_get,.set = js_ModelAnimation_bones_set,.has = js_ModelAnimation_bones_has});
+    return ret;
+}
+
+static JSValue js_ModelAnimation_set_bones(JSContext* ctx, JSValue this_val, JSValue v) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    BoneInfo * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (BoneInfo *)jsc_malloc(ctx, size_value * sizeof(BoneInfo));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            BoneInfo* ptr_valuei0 = (BoneInfo*)JS_GetOpaque(js_value, js_BoneInfo_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        BoneInfo * js_value = (BoneInfo *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (BoneInfo *)jsc_malloc(ctx, size_value * sizeof(BoneInfo *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type BoneInfo *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->bones!=NULL) {
+        jsc_free(ctx, ptr->bones);
+    }
+    ptr->bones = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_ModelAnimation_framePoses_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        JSValue js_ret;
+        js_ret = JS_NewArray(ctx);
+        size_t size_js_ret = sizeof(((ModelAnimation *)ptr)->framePoses[i0])/sizeof(Transform);
+        for(int i1=0; i1 < size_js_ret; i1++){
+            Transform* ptr_js_js_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
+            *ptr_js_js_ret = ((ModelAnimation *)ptr)->framePoses[i0][i1];
+            JSValue js_js_ret = JS_NewObjectClass(ctx, js_Transform_class_id);
+            JS_SetOpaque(js_js_ret, ptr_js_js_ret);
+            JS_DefinePropertyValueUint32(ctx,js_ret,i1,js_js_ret,JS_PROP_C_W_E);
+        }
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_ModelAnimation_framePoses_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_ModelAnimation_framePoses_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            Transform * src = ((ModelAnimation *)ptr)->framePoses[property];
+            JSValue ret;
+            ret = JS_NewArray(ctx);
+            size_t size_ret = sizeof(src)/sizeof(Transform);
+            for(int i0=0; i0 < size_ret; i0++){
+                Transform* ptr_js_ret = (Transform*)js_malloc(ctx, sizeof(Transform));
+                *ptr_js_ret = src[i0];
+                JSValue js_ret = JS_NewObjectClass(ctx, js_Transform_class_id);
+                JS_SetOpaque(js_ret, ptr_js_ret);
+                JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+            }
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_ModelAnimation_framePoses_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Transform * ret;
+        bool freesrc_ret = false;
+        JSValue da_ret;
+        int64_t size_ret;
+        if(JS_GetClassID(set_to) == js_ArrayProxy_class_id) {
+            void * opaque_ret = JS_GetOpaque(set_to, js_ArrayProxy_class_id);
+            ArrayProxy_class AP_ret = *(ArrayProxy_class *)opaque_ret;
+            set_to = AP_ret.values(ctx, AP_ret.opaque, 0, false);
+            freesrc_ret = true;
+        }
+        if(JS_IsArray(set_to) == 1) {
+            if(JS_GetLength(ctx,set_to,&size_ret)==-1) {
+                return -1;
+            }
+            ret = (Transform *)js_malloc(ctx, size_ret * sizeof(Transform));
+            for(int i0=0; i0 < size_ret; i0++){
+                JSValue js_ret = JS_GetPropertyUint32(ctx,set_to,i0);
+                Transform* ptr_reti0 = (Transform*)JS_GetOpaque(js_ret, js_Transform_class_id);
+                if(ptr_reti0 == NULL) {
+                    JS_ThrowTypeError(ctx, "js_ret does not allow null");
+                    return -1;
+                }
+                ret[i0] = *ptr_reti0;
+                JS_FreeValue(ctx, js_ret);
+            }
+        }
+        else if(JS_IsArrayBuffer(set_to) == 1) {
+            size_t size_ret;
+            ret = (Transform *)JS_GetArrayBuffer(ctx, &size_ret, set_to);
+        }
+        else {
+            if(freesrc_ret) {
+                JS_FreeValue(ctx, set_to);
+            }
+            JS_ThrowTypeError(ctx, "set_to does not match type Transform *");
+            return -1;
+        }
+        if(freesrc_ret) {
+            JS_FreeValue(ctx, set_to);
+        }
+        ((ModelAnimation *)ptr)->framePoses[property] = ret;
+    }
+    return true;
+}
+
+static int js_ModelAnimation_framePoses_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_ModelAnimation_get_framePoses(JSContext* ctx, JSValue this_val) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_ModelAnimation_framePoses_values,.keys = js_ModelAnimation_framePoses_keys,.get = js_ModelAnimation_framePoses_get,.set = js_ModelAnimation_framePoses_set,.has = js_ModelAnimation_framePoses_has});
+    return ret;
+}
+
+static JSValue js_ModelAnimation_set_framePoses(JSContext* ctx, JSValue this_val, JSValue v) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    Transform * * value;
+    bool freesrc_value = false;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (Transform * *)jsc_malloc(ctx, size_value * sizeof(Transform *));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            int64_t size_valuei0;
+            if(JS_GetClassID(js_value) == js_ArrayProxy_class_id) {
+                void * opaque_valuei0 = JS_GetOpaque(js_value, js_ArrayProxy_class_id);
+                ArrayProxy_class AP_valuei0 = *(ArrayProxy_class *)opaque_valuei0;
+                js_value = AP_valuei0.values(ctx, AP_valuei0.opaque, 0, false);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &js_value);
+            }
+            if(JS_IsArray(js_value) == 1) {
+                if(JS_GetLength(ctx,js_value,&size_valuei0)==-1) {
+                    return JS_EXCEPTION;
+                }
+                value[i0] = (Transform *)js_malloc(ctx, size_valuei0 * sizeof(Transform));
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, value[i0]);
+                for(int i1=0; i1 < size_valuei0; i1++){
+                    JSValue js_valuei0 = JS_GetPropertyUint32(ctx,js_value,i1);
+                    Transform* ptr_valuei0i1 = (Transform*)JS_GetOpaque(js_valuei0, js_Transform_class_id);
+                    if(ptr_valuei0i1 == NULL) {
+                        JS_ThrowTypeError(ctx, "js_valuei0 does not allow null");
+                        return JS_EXCEPTION;
+                    }
+                    value[i0][i1] = *ptr_valuei0i1;
+                    JS_FreeValue(ctx, js_valuei0);
+                }
+            }
+            else if(JS_IsArrayBuffer(js_value) == 1) {
+                size_t size_valuei0;
+                value[i0] = (Transform *)JS_GetArrayBuffer(ctx, &size_valuei0, js_value);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, value[i0]);
+            }
+            else {
+                JS_ThrowTypeError(ctx, "js_value does not match type Transform *");
+                return JS_EXCEPTION;
+            }
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type Transform * *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->framePoses!=NULL) {
+        jsc_free(ctx, ptr->framePoses);
+    }
+    ptr->framePoses = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_ModelAnimation_name_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewString(ctx, ((ModelAnimation *)ptr)->name);
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_ModelAnimation_name_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_ModelAnimation_name_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            char src = ((ModelAnimation *)ptr)->name[property];
+            JSValue js_ret = JS_NewStringLen(ctx, &src,1);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_ModelAnimation_name_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        char * js_ret = (char *)JS_ToCString(ctx, set_to);
+        char ret = (char)js_ret[0];
+        JS_FreeCString(ctx, js_ret);
+        ((ModelAnimation *)ptr)->name[property] = ret;
+    }
+    return true;
+}
+
+static int js_ModelAnimation_name_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_ModelAnimation_get_name(JSContext* ctx, JSValue this_val) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_ModelAnimation_name_values,.keys = js_ModelAnimation_name_keys,.get = js_ModelAnimation_name_get,.set = js_ModelAnimation_name_set,.has = js_ModelAnimation_name_has});
+    return ret;
+}
+
+static JSValue js_ModelAnimation_set_name(JSContext* ctx, JSValue this_val, JSValue v) {
+    ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    char * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_IsString(v) == 1) {
+        char * js_value = (char *)JS_ToCStringLen(ctx, &size_value, v);
+        value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+        memcpy(value, js_value, size_value);
+        JS_FreeCString(ctx, value);
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        char * js_value = (char *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_INT8_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            char * js_value = (char *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (char *)jsc_malloc(ctx, size_value * sizeof(char *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->name, value, 32 * sizeof(char ));
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_ModelAnimation_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","ModelAnimation", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("boneCount",js_ModelAnimation_get_boneCount,js_ModelAnimation_set_boneCount),
+    JS_CGETSET_DEF("frameCount",js_ModelAnimation_get_frameCount,js_ModelAnimation_set_frameCount),
+    JS_CGETSET_DEF("bones",js_ModelAnimation_get_bones,js_ModelAnimation_set_bones),
+    JS_CGETSET_DEF("framePoses",js_ModelAnimation_get_framePoses,js_ModelAnimation_set_framePoses),
+    JS_CGETSET_DEF("name",js_ModelAnimation_get_name,js_ModelAnimation_set_name),
 };
 
 static int js_declare_ModelAnimation(JSContext * ctx, JSModuleDef * m) {
@@ -3343,11 +4797,36 @@ static JSValue js_RayCollision_get_hit(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_RayCollision_set_hit(JSContext* ctx, JSValue this_val, JSValue v) {
+    RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
+    int js_value = JS_ToBool(ctx, v);
+    if(js_value<0) {
+        JS_ThrowTypeError(ctx, "v is not a bool");
+        return JS_EXCEPTION;
+    }
+    bool value = js_value;
+    ptr->hit = value;
+    return JS_UNDEFINED;
+}
+
 static JSValue js_RayCollision_get_distance(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     float distance = ptr->distance;
     JSValue ret = JS_NewFloat64(ctx, (double)distance);
     return ret;
+}
+
+static JSValue js_RayCollision_set_distance(JSContext* ctx, JSValue this_val, JSValue v) {
+    RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
+    double double_value;
+    int err_value = JS_ToFloat64(ctx, &double_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    float value = (float)double_value;
+    ptr->distance = value;
+    return JS_UNDEFINED;
 }
 
 static JSValue js_RayCollision_get_point(JSContext* ctx, JSValue this_val) {
@@ -3360,6 +4839,18 @@ static JSValue js_RayCollision_get_point(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_RayCollision_set_point(JSContext* ctx, JSValue this_val, JSValue v) {
+    RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
+    Vector3* ptr_value = (Vector3*)JS_GetOpaque(v, js_Vector3_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 value = *ptr_value;
+    ptr->point = value;
+    return JS_UNDEFINED;
+}
+
 static JSValue js_RayCollision_get_normal(JSContext* ctx, JSValue this_val) {
     RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
     Vector3 normal = ptr->normal;
@@ -3370,12 +4861,24 @@ static JSValue js_RayCollision_get_normal(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_RayCollision_set_normal(JSContext* ctx, JSValue this_val, JSValue v) {
+    RayCollision* ptr = JS_GetOpaque2(ctx, this_val, js_RayCollision_class_id);
+    Vector3* ptr_value = (Vector3*)JS_GetOpaque(v, js_Vector3_class_id);
+    if(ptr_value == NULL) {
+        JS_ThrowTypeError(ctx, "v does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 value = *ptr_value;
+    ptr->normal = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_RayCollision_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","RayCollision", JS_PROP_CONFIGURABLE),
-    JS_CGETSET_DEF("hit",js_RayCollision_get_hit,NULL),
-    JS_CGETSET_DEF("distance",js_RayCollision_get_distance,NULL),
-    JS_CGETSET_DEF("point",js_RayCollision_get_point,NULL),
-    JS_CGETSET_DEF("normal",js_RayCollision_get_normal,NULL),
+    JS_CGETSET_DEF("hit",js_RayCollision_get_hit,js_RayCollision_set_hit),
+    JS_CGETSET_DEF("distance",js_RayCollision_get_distance,js_RayCollision_set_distance),
+    JS_CGETSET_DEF("point",js_RayCollision_get_point,js_RayCollision_set_point),
+    JS_CGETSET_DEF("normal",js_RayCollision_get_normal,js_RayCollision_set_normal),
 };
 
 static int js_declare_RayCollision(JSContext * ctx, JSModuleDef * m) {
@@ -3562,8 +5065,359 @@ static void js_AudioStream_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_AudioStream_buffer_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        rAudioBuffer* ptr_js_ret = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
+        *ptr_js_ret = ((AudioStream *)ptr)->buffer[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_AudioStream_buffer_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_AudioStream_buffer_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            rAudioBuffer src = ((AudioStream *)ptr)->buffer[property];
+            rAudioBuffer* ptr_ret = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_AudioStream_buffer_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        rAudioBuffer* ptr_ret = (rAudioBuffer*)JS_GetOpaque(set_to, js_rAudioBuffer_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        rAudioBuffer ret = *ptr_ret;
+        ((AudioStream *)ptr)->buffer[property] = ret;
+    }
+    return true;
+}
+
+static int js_AudioStream_buffer_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_AudioStream_get_buffer(JSContext* ctx, JSValue this_val) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AudioStream_buffer_values,.keys = js_AudioStream_buffer_keys,.get = js_AudioStream_buffer_get,.set = js_AudioStream_buffer_set,.has = js_AudioStream_buffer_has});
+    return ret;
+}
+
+static JSValue js_AudioStream_set_buffer(JSContext* ctx, JSValue this_val, JSValue v) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    rAudioBuffer * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (rAudioBuffer *)jsc_malloc(ctx, size_value * sizeof(rAudioBuffer));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            rAudioBuffer* ptr_valuei0 = (rAudioBuffer*)JS_GetOpaque(js_value, js_rAudioBuffer_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        rAudioBuffer * js_value = (rAudioBuffer *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (rAudioBuffer *)jsc_malloc(ctx, size_value * sizeof(rAudioBuffer *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type rAudioBuffer *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->buffer!=NULL) {
+        jsc_free(ctx, ptr->buffer);
+    }
+    ptr->buffer = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AudioStream_processor_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        rAudioProcessor* ptr_js_ret = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
+        *ptr_js_ret = ((AudioStream *)ptr)->processor[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_AudioStream_processor_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_AudioStream_processor_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            rAudioProcessor src = ((AudioStream *)ptr)->processor[property];
+            rAudioProcessor* ptr_ret = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_AudioStream_processor_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        rAudioProcessor* ptr_ret = (rAudioProcessor*)JS_GetOpaque(set_to, js_rAudioProcessor_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        rAudioProcessor ret = *ptr_ret;
+        ((AudioStream *)ptr)->processor[property] = ret;
+    }
+    return true;
+}
+
+static int js_AudioStream_processor_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_AudioStream_get_processor(JSContext* ctx, JSValue this_val) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AudioStream_processor_values,.keys = js_AudioStream_processor_keys,.get = js_AudioStream_processor_get,.set = js_AudioStream_processor_set,.has = js_AudioStream_processor_has});
+    return ret;
+}
+
+static JSValue js_AudioStream_set_processor(JSContext* ctx, JSValue this_val, JSValue v) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    rAudioProcessor * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (rAudioProcessor *)jsc_malloc(ctx, size_value * sizeof(rAudioProcessor));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            rAudioProcessor* ptr_valuei0 = (rAudioProcessor*)JS_GetOpaque(js_value, js_rAudioProcessor_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        rAudioProcessor * js_value = (rAudioProcessor *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (rAudioProcessor *)jsc_malloc(ctx, size_value * sizeof(rAudioProcessor *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type rAudioProcessor *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->processor!=NULL) {
+        jsc_free(ctx, ptr->processor);
+    }
+    ptr->processor = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AudioStream_get_sampleRate(JSContext* ctx, JSValue this_val) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    unsigned int sampleRate = ptr->sampleRate;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)sampleRate);
+    return ret;
+}
+
+static JSValue js_AudioStream_set_sampleRate(JSContext* ctx, JSValue this_val, JSValue v) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->sampleRate = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AudioStream_get_sampleSize(JSContext* ctx, JSValue this_val) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    unsigned int sampleSize = ptr->sampleSize;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)sampleSize);
+    return ret;
+}
+
+static JSValue js_AudioStream_set_sampleSize(JSContext* ctx, JSValue this_val, JSValue v) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->sampleSize = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AudioStream_get_channels(JSContext* ctx, JSValue this_val) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    unsigned int channels = ptr->channels;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)channels);
+    return ret;
+}
+
+static JSValue js_AudioStream_set_channels(JSContext* ctx, JSValue this_val, JSValue v) {
+    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->channels = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_AudioStream_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","AudioStream", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("buffer",js_AudioStream_get_buffer,js_AudioStream_set_buffer),
+    JS_CGETSET_DEF("processor",js_AudioStream_get_processor,js_AudioStream_set_processor),
+    JS_CGETSET_DEF("sampleRate",js_AudioStream_get_sampleRate,js_AudioStream_set_sampleRate),
+    JS_CGETSET_DEF("sampleSize",js_AudioStream_get_sampleSize,js_AudioStream_set_sampleSize),
+    JS_CGETSET_DEF("channels",js_AudioStream_get_channels,js_AudioStream_set_channels),
 };
 
 static int js_declare_AudioStream(JSContext * ctx, JSModuleDef * m) {
@@ -3614,6 +5468,16 @@ static void js_Music_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_Music_get_stream(JSContext* ctx, JSValue this_val) {
+    Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
+    AudioStream stream = ptr->stream;
+    AudioStream* ptr_ret = (AudioStream*)js_malloc(ctx, sizeof(AudioStream));
+    *ptr_ret = stream;
+    JSValue ret = JS_NewObjectClass(ctx, js_AudioStream_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
 static JSValue js_Music_get_frameCount(JSContext* ctx, JSValue this_val) {
     Music* ptr = JS_GetOpaque2(ctx, this_val, js_Music_class_id);
     unsigned int frameCount = ptr->frameCount;
@@ -3649,6 +5513,7 @@ static JSValue js_Music_get_ctxType(JSContext* ctx, JSValue this_val) {
 
 static const JSCFunctionListEntry js_Music_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","Music", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("stream",js_Music_get_stream,NULL),
     JS_CGETSET_DEF("frameCount",js_Music_get_frameCount,NULL),
     JS_CGETSET_DEF("looping",js_Music_get_looping,js_Music_set_looping),
     JS_CGETSET_DEF("ctxType",js_Music_get_ctxType,NULL),
@@ -4137,8 +6002,1172 @@ static void js_VrStereoConfig_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_VrStereoConfig_projection_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        Matrix* ptr_js_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
+        *ptr_js_ret = ((VrStereoConfig *)ptr)->projection[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_Matrix_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_projection_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_projection_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            Matrix src = ((VrStereoConfig *)ptr)->projection[property];
+            Matrix* ptr_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_Matrix_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_projection_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Matrix* ptr_ret = (Matrix*)JS_GetOpaque(set_to, js_Matrix_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        Matrix ret = *ptr_ret;
+        ((VrStereoConfig *)ptr)->projection[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_projection_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_projection(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_projection_values,.keys = js_VrStereoConfig_projection_keys,.get = js_VrStereoConfig_projection_get,.set = js_VrStereoConfig_projection_set,.has = js_VrStereoConfig_projection_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_projection(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    Matrix * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (Matrix *)jsc_malloc(ctx, 2 * sizeof(Matrix));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            Matrix* ptr_valuei0 = (Matrix*)JS_GetOpaque(js_value, js_Matrix_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        Matrix * js_value = (Matrix *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (Matrix *)jsc_malloc(ctx, size_value * sizeof(Matrix *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type Matrix *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    memcpy(ptr->projection, value, 2 * sizeof(Matrix ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_viewOffset_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        Matrix* ptr_js_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
+        *ptr_js_ret = ((VrStereoConfig *)ptr)->viewOffset[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_Matrix_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_viewOffset_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_viewOffset_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            Matrix src = ((VrStereoConfig *)ptr)->viewOffset[property];
+            Matrix* ptr_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_Matrix_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_viewOffset_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        Matrix* ptr_ret = (Matrix*)JS_GetOpaque(set_to, js_Matrix_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        Matrix ret = *ptr_ret;
+        ((VrStereoConfig *)ptr)->viewOffset[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_viewOffset_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_viewOffset(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_viewOffset_values,.keys = js_VrStereoConfig_viewOffset_keys,.get = js_VrStereoConfig_viewOffset_get,.set = js_VrStereoConfig_viewOffset_set,.has = js_VrStereoConfig_viewOffset_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_viewOffset(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    Matrix * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (Matrix *)jsc_malloc(ctx, 2 * sizeof(Matrix));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            Matrix* ptr_valuei0 = (Matrix*)JS_GetOpaque(js_value, js_Matrix_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        Matrix * js_value = (Matrix *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (Matrix *)jsc_malloc(ctx, size_value * sizeof(Matrix *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type Matrix *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    memcpy(ptr->viewOffset, value, 2 * sizeof(Matrix ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_leftLensCenter_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->leftLensCenter[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_leftLensCenter_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_leftLensCenter_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->leftLensCenter[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_leftLensCenter_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->leftLensCenter[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_leftLensCenter_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_leftLensCenter(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_leftLensCenter_values,.keys = js_VrStereoConfig_leftLensCenter_keys,.get = js_VrStereoConfig_leftLensCenter_get,.set = js_VrStereoConfig_leftLensCenter_set,.has = js_VrStereoConfig_leftLensCenter_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_leftLensCenter(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->leftLensCenter, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_rightLensCenter_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->rightLensCenter[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_rightLensCenter_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_rightLensCenter_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->rightLensCenter[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_rightLensCenter_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->rightLensCenter[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_rightLensCenter_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_rightLensCenter(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_rightLensCenter_values,.keys = js_VrStereoConfig_rightLensCenter_keys,.get = js_VrStereoConfig_rightLensCenter_get,.set = js_VrStereoConfig_rightLensCenter_set,.has = js_VrStereoConfig_rightLensCenter_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_rightLensCenter(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->rightLensCenter, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_leftScreenCenter_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->leftScreenCenter[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_leftScreenCenter_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_leftScreenCenter_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->leftScreenCenter[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_leftScreenCenter_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->leftScreenCenter[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_leftScreenCenter_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_leftScreenCenter(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_leftScreenCenter_values,.keys = js_VrStereoConfig_leftScreenCenter_keys,.get = js_VrStereoConfig_leftScreenCenter_get,.set = js_VrStereoConfig_leftScreenCenter_set,.has = js_VrStereoConfig_leftScreenCenter_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_leftScreenCenter(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->leftScreenCenter, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_rightScreenCenter_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->rightScreenCenter[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_rightScreenCenter_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_rightScreenCenter_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->rightScreenCenter[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_rightScreenCenter_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->rightScreenCenter[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_rightScreenCenter_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_rightScreenCenter(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_rightScreenCenter_values,.keys = js_VrStereoConfig_rightScreenCenter_keys,.get = js_VrStereoConfig_rightScreenCenter_get,.set = js_VrStereoConfig_rightScreenCenter_set,.has = js_VrStereoConfig_rightScreenCenter_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_rightScreenCenter(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->rightScreenCenter, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_scale_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->scale[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_scale_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_scale_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->scale[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_scale_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->scale[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_scale_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_scale(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_scale_values,.keys = js_VrStereoConfig_scale_keys,.get = js_VrStereoConfig_scale_get,.set = js_VrStereoConfig_scale_set,.has = js_VrStereoConfig_scale_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_scale(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->scale, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
+static JSValue js_VrStereoConfig_scaleIn_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 2; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((VrStereoConfig *)ptr)->scaleIn[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_VrStereoConfig_scaleIn_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 2;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_VrStereoConfig_scaleIn_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)2);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            float src = ((VrStereoConfig *)ptr)->scaleIn[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_VrStereoConfig_scaleIn_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((VrStereoConfig *)ptr)->scaleIn[property] = ret;
+    }
+    return true;
+}
+
+static int js_VrStereoConfig_scaleIn_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_VrStereoConfig_get_scaleIn(JSContext* ctx, JSValue this_val) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_VrStereoConfig_scaleIn_values,.keys = js_VrStereoConfig_scaleIn_keys,.get = js_VrStereoConfig_scaleIn_get,.set = js_VrStereoConfig_scaleIn_set,.has = js_VrStereoConfig_scaleIn_has});
+    return ret;
+}
+
+static JSValue js_VrStereoConfig_set_scaleIn(JSContext* ctx, JSValue this_val, JSValue v) {
+    VrStereoConfig* ptr = JS_GetOpaque2(ctx, this_val, js_VrStereoConfig_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->scaleIn, value, 2 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_VrStereoConfig_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","VrStereoConfig", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("projection",js_VrStereoConfig_get_projection,js_VrStereoConfig_set_projection),
+    JS_CGETSET_DEF("viewOffset",js_VrStereoConfig_get_viewOffset,js_VrStereoConfig_set_viewOffset),
+    JS_CGETSET_DEF("leftLensCenter",js_VrStereoConfig_get_leftLensCenter,js_VrStereoConfig_set_leftLensCenter),
+    JS_CGETSET_DEF("rightLensCenter",js_VrStereoConfig_get_rightLensCenter,js_VrStereoConfig_set_rightLensCenter),
+    JS_CGETSET_DEF("leftScreenCenter",js_VrStereoConfig_get_leftScreenCenter,js_VrStereoConfig_set_leftScreenCenter),
+    JS_CGETSET_DEF("rightScreenCenter",js_VrStereoConfig_get_rightScreenCenter,js_VrStereoConfig_set_rightScreenCenter),
+    JS_CGETSET_DEF("scale",js_VrStereoConfig_get_scale,js_VrStereoConfig_set_scale),
+    JS_CGETSET_DEF("scaleIn",js_VrStereoConfig_get_scaleIn,js_VrStereoConfig_set_scaleIn),
 };
 
 static int js_declare_VrStereoConfig(JSContext * ctx, JSModuleDef * m) {
@@ -4159,8 +7188,229 @@ static void js_FilePathList_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_FilePathList_get_capacity(JSContext* ctx, JSValue this_val) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    unsigned int capacity = ptr->capacity;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)capacity);
+    return ret;
+}
+
+static JSValue js_FilePathList_set_capacity(JSContext* ctx, JSValue this_val, JSValue v) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->capacity = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_FilePathList_get_count(JSContext* ctx, JSValue this_val) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    unsigned int count = ptr->count;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)count);
+    return ret;
+}
+
+static JSValue js_FilePathList_set_count(JSContext* ctx, JSValue this_val, JSValue v) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->count = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_FilePathList_paths_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        JSValue js_ret;
+        js_ret = JS_NewString(ctx, ((FilePathList *)ptr)->paths[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_FilePathList_paths_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_FilePathList_paths_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            char * src = ((FilePathList *)ptr)->paths[property];
+            JSValue ret;
+            ret = JS_NewString(ctx, src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_FilePathList_paths_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        char * ret;
+        bool freesrc_ret = false;
+        JSValue da_ret;
+        int64_t size_ret;
+        if(JS_IsString(set_to) == 1) {
+            ret = (char *)JS_ToCStringLen(ctx, &size_ret, set_to);
+        }
+        else if(JS_IsArrayBuffer(set_to) == 1) {
+            size_t size_ret;
+            ret = (char *)JS_GetArrayBuffer(ctx, &size_ret, set_to);
+        }
+        else {
+            JSClassID classid_ret = JS_GetClassID(set_to);
+            if(classid_ret==JS_CLASS_INT8_ARRAY) {
+                size_t offset_ret;
+                size_t size_ret;
+                da_ret = JS_GetTypedArrayBuffer(ctx,set_to,&offset_ret,&size_ret,NULL);
+                ret = (char *)JS_GetArrayBuffer(ctx, &size_ret, da_ret);
+                ret+=offset_ret;
+                size_ret-=offset_ret;
+            }
+            else {
+                if(freesrc_ret) {
+                    JS_FreeValue(ctx, set_to);
+                }
+                JS_ThrowTypeError(ctx, "set_to does not match type char *");
+                return -1;
+            }
+            if(freesrc_ret) {
+                JS_FreeValue(ctx, set_to);
+            }
+        }
+        ((FilePathList *)ptr)->paths[property] = ret;
+    }
+    return true;
+}
+
+static int js_FilePathList_paths_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_FilePathList_get_paths(JSContext* ctx, JSValue this_val) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_FilePathList_paths_values,.keys = js_FilePathList_paths_keys,.get = js_FilePathList_paths_get,.set = js_FilePathList_paths_set,.has = js_FilePathList_paths_has});
+    return ret;
+}
+
+static JSValue js_FilePathList_set_paths(JSContext* ctx, JSValue this_val, JSValue v) {
+    FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    char * * value;
+    bool freesrc_value = false;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (char * *)jsc_malloc(ctx, size_value * sizeof(char *));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            int64_t size_valuei0;
+            if(JS_IsString(js_value) == 1) {
+                value[i0] = (char *)JS_ToCStringLen(ctx, &size_valuei0, js_value);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, value[i0]);
+            }
+            else if(JS_IsArrayBuffer(js_value) == 1) {
+                size_t size_valuei0;
+                value[i0] = (char *)JS_GetArrayBuffer(ctx, &size_valuei0, js_value);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, value[i0]);
+            }
+            else {
+                JSClassID classid_valuei0 = JS_GetClassID(js_value);
+                if(classid_valuei0==JS_CLASS_INT8_ARRAY) {
+                    size_t offset_valuei0;
+                    size_t size_valuei0;
+                    JSValue da_valuei0 = JS_GetTypedArrayBuffer(ctx,js_value,&offset_valuei0,&size_valuei0,NULL);
+                    value[i0] = (char *)JS_GetArrayBuffer(ctx, &size_valuei0, da_valuei0);
+                    value[i0]+=offset_valuei0;
+                    size_valuei0-=offset_valuei0;
+                    memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_valuei0);
+                }
+                else {
+                    JS_ThrowTypeError(ctx, "js_value does not match type char *");
+                    return JS_EXCEPTION;
+                }
+            }
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type char * *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->paths!=NULL) {
+        jsc_free(ctx, ptr->paths);
+    }
+    ptr->paths = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_FilePathList_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","FilePathList", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("capacity",js_FilePathList_get_capacity,js_FilePathList_set_capacity),
+    JS_CGETSET_DEF("count",js_FilePathList_get_count,js_FilePathList_set_count),
+    JS_CGETSET_DEF("paths",js_FilePathList_get_paths,js_FilePathList_set_paths),
 };
 
 static int js_declare_FilePathList(JSContext * ctx, JSModuleDef * m) {
@@ -4181,8 +7431,198 @@ static void js_AutomationEvent_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_AutomationEvent_get_frame(JSContext* ctx, JSValue this_val) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    unsigned int frame = ptr->frame;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)frame);
+    return ret;
+}
+
+static JSValue js_AutomationEvent_set_frame(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->frame = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AutomationEvent_get_type(JSContext* ctx, JSValue this_val) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    unsigned int type = ptr->type;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)type);
+    return ret;
+}
+
+static JSValue js_AutomationEvent_set_type(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->type = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AutomationEvent_params_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 4; i0++){
+        JSValue js_ret = JS_NewInt32(ctx, (long)((AutomationEvent *)ptr)->params[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_AutomationEvent_params_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 4;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_AutomationEvent_params_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)4);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            int src = ((AutomationEvent *)ptr)->params[property];
+            JSValue ret = JS_NewInt32(ctx, (long)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_AutomationEvent_params_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        int32_t long_ret;
+        int err_ret = JS_ToInt32(ctx, &long_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        int ret = (int)long_ret;
+        ((AutomationEvent *)ptr)->params[property] = ret;
+    }
+    return true;
+}
+
+static int js_AutomationEvent_params_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<4) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_AutomationEvent_get_params(JSContext* ctx, JSValue this_val) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AutomationEvent_params_values,.keys = js_AutomationEvent_params_keys,.get = js_AutomationEvent_params_get,.set = js_AutomationEvent_params_set,.has = js_AutomationEvent_params_has});
+    return ret;
+}
+
+static JSValue js_AutomationEvent_set_params(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEvent* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEvent_class_id);
+    int * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (int *)jsc_malloc(ctx, 4 * sizeof(int));
+        for(int i0=0; i0 < 4; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            int32_t long_valuei0;
+            int err_valuei0 = JS_ToInt32(ctx, &long_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (int)long_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        int * js_value = (int *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (int *)jsc_malloc(ctx, size_value * sizeof(int *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_INT16_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            int * js_value = (int *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (int *)jsc_malloc(ctx, size_value * sizeof(int *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->params, value, 4 * sizeof(int ));
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_AutomationEvent_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","AutomationEvent", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("frame",js_AutomationEvent_get_frame,js_AutomationEvent_set_frame),
+    JS_CGETSET_DEF("type",js_AutomationEvent_get_type,js_AutomationEvent_set_type),
+    JS_CGETSET_DEF("params",js_AutomationEvent_get_params,js_AutomationEvent_set_params),
 };
 
 static int js_declare_AutomationEvent(JSContext * ctx, JSModuleDef * m) {
@@ -4203,8 +7643,194 @@ static void js_AutomationEventList_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_AutomationEventList_get_capacity(JSContext* ctx, JSValue this_val) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    unsigned int capacity = ptr->capacity;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)capacity);
+    return ret;
+}
+
+static JSValue js_AutomationEventList_set_capacity(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->capacity = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AutomationEventList_get_count(JSContext* ctx, JSValue this_val) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    unsigned int count = ptr->count;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)count);
+    return ret;
+}
+
+static JSValue js_AutomationEventList_set_count(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int value = (unsigned int)long_value;
+    ptr->count = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_AutomationEventList_events_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < undefined; i0++){
+        AutomationEvent* ptr_js_ret = (AutomationEvent*)js_malloc(ctx, sizeof(AutomationEvent));
+        *ptr_js_ret = ((AutomationEventList *)ptr)->events[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_AutomationEvent_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_AutomationEventList_events_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = undefined;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_AutomationEventList_events_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            AutomationEvent src = ((AutomationEventList *)ptr)->events[property];
+            AutomationEvent* ptr_ret = (AutomationEvent*)js_malloc(ctx, sizeof(AutomationEvent));
+            *ptr_ret = src;
+            JSValue ret = JS_NewObjectClass(ctx, js_AutomationEvent_class_id);
+            JS_SetOpaque(ret, ptr_ret);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_AutomationEventList_events_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        AutomationEvent* ptr_ret = (AutomationEvent*)JS_GetOpaque(set_to, js_AutomationEvent_class_id);
+        if(ptr_ret == NULL) {
+            JS_ThrowTypeError(ctx, "set_to does not allow null");
+            return -1;
+        }
+        AutomationEvent ret = *ptr_ret;
+        ((AutomationEventList *)ptr)->events[property] = ret;
+    }
+    return true;
+}
+
+static int js_AutomationEventList_events_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<undefined) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_AutomationEventList_get_events(JSContext* ctx, JSValue this_val) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AutomationEventList_events_values,.keys = js_AutomationEventList_events_keys,.get = js_AutomationEventList_events_get,.set = js_AutomationEventList_events_set,.has = js_AutomationEventList_events_has});
+    return ret;
+}
+
+static JSValue js_AutomationEventList_set_events(JSContext* ctx, JSValue this_val, JSValue v) {
+    AutomationEventList* ptr = JS_GetOpaque2(ctx, this_val, js_AutomationEventList_class_id);
+    AutomationEvent * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (AutomationEvent *)jsc_malloc(ctx, size_value * sizeof(AutomationEvent));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            AutomationEvent* ptr_valuei0 = (AutomationEvent*)JS_GetOpaque(js_value, js_AutomationEvent_class_id);
+            if(ptr_valuei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_value does not allow null");
+                return JS_EXCEPTION;
+            }
+            value[i0] = *ptr_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        AutomationEvent * js_value = (AutomationEvent *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (AutomationEvent *)jsc_malloc(ctx, size_value * sizeof(AutomationEvent *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+        JS_ThrowTypeError(ctx, "v does not match type AutomationEvent *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_value) {
+        JS_FreeValue(ctx, v);
+    }
+    if(ptr->events!=NULL) {
+        jsc_free(ctx, ptr->events);
+    }
+    ptr->events = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_AutomationEventList_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","AutomationEventList", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("capacity",js_AutomationEventList_get_capacity,js_AutomationEventList_set_capacity),
+    JS_CGETSET_DEF("count",js_AutomationEventList_get_count,js_AutomationEventList_set_count),
+    JS_CGETSET_DEF("events",js_AutomationEventList_get_events,js_AutomationEventList_set_events),
 };
 
 static int js_declare_AutomationEventList(JSContext * ctx, JSModuleDef * m) {
@@ -4714,10 +8340,140 @@ static JSValue js_Image_constructor(JSContext * ctx, JSValue this_val, int argc,
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
-    Image _struct = {  };
+    void * data;
+    bool freesrc_data = false;
+    JSValue da_data;
+    int64_t size_data;
+    if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+    }
+    else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_width;
+    int err_width = JS_ToInt32(ctx, &long_width, argv[1]);
+    if(err_width<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int width = (int)long_width;
+    int32_t long_height;
+    int err_height = JS_ToInt32(ctx, &long_height, argv[2]);
+    if(err_height<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int height = (int)long_height;
+    int32_t long_mipmaps;
+    int err_mipmaps = JS_ToInt32(ctx, &long_mipmaps, argv[3]);
+    if(err_mipmaps<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int mipmaps = (int)long_mipmaps;
+    int32_t long_format;
+    int err_format = JS_ToInt32(ctx, &long_format, argv[4]);
+    if(err_format<0) {
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int format = (int)long_format;
+    Image _struct = { data, width, height, mipmaps, format };
     Image* ptr__return = (Image*)js_malloc(ctx, sizeof(Image));
     *ptr__return = _struct;
     JSValue _return = JS_NewObjectClass(ctx, js_Image_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Texture_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Texture* ptr__return = (Texture*)js_calloc(ctx, 1, sizeof(Texture));
+        JSValue _return = JS_NewObjectClass(ctx, js_Texture_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_id;
+    int err_id = JS_ToUint32(ctx, &long_id, argv[0]);
+    if(err_id<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int id = (unsigned int)long_id;
+    int32_t long_width;
+    int err_width = JS_ToInt32(ctx, &long_width, argv[1]);
+    if(err_width<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int width = (int)long_width;
+    int32_t long_height;
+    int err_height = JS_ToInt32(ctx, &long_height, argv[2]);
+    if(err_height<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int height = (int)long_height;
+    int32_t long_mipmaps;
+    int err_mipmaps = JS_ToInt32(ctx, &long_mipmaps, argv[3]);
+    if(err_mipmaps<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int mipmaps = (int)long_mipmaps;
+    int32_t long_format;
+    int err_format = JS_ToInt32(ctx, &long_format, argv[4]);
+    if(err_format<0) {
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int format = (int)long_format;
+    Texture _struct = { id, width, height, mipmaps, format };
+    Texture* ptr__return = (Texture*)js_malloc(ctx, sizeof(Texture));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Texture_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_RenderTexture_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        RenderTexture* ptr__return = (RenderTexture*)js_calloc(ctx, 1, sizeof(RenderTexture));
+        JSValue _return = JS_NewObjectClass(ctx, js_RenderTexture_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_id;
+    int err_id = JS_ToUint32(ctx, &long_id, argv[0]);
+    if(err_id<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int id = (unsigned int)long_id;
+    Texture* ptr_texture = (Texture*)JS_GetOpaque(argv[1], js_Texture_class_id);
+    if(ptr_texture == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Texture texture = *ptr_texture;
+    Texture* ptr_depth = (Texture*)JS_GetOpaque(argv[2], js_Texture_class_id);
+    if(ptr_depth == NULL) {
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Texture depth = *ptr_depth;
+    RenderTexture _struct = { id, texture, depth };
+    RenderTexture* ptr__return = (RenderTexture*)js_malloc(ctx, sizeof(RenderTexture));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_RenderTexture_class_id);
     JS_SetOpaque(_return, ptr__return);
     return _return;
 }
@@ -4774,6 +8530,177 @@ static JSValue js_NPatchInfo_constructor(JSContext * ctx, JSValue this_val, int 
     NPatchInfo* ptr__return = (NPatchInfo*)js_malloc(ctx, sizeof(NPatchInfo));
     *ptr__return = _struct;
     JSValue _return = JS_NewObjectClass(ctx, js_NPatchInfo_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_GlyphInfo_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        GlyphInfo* ptr__return = (GlyphInfo*)js_calloc(ctx, 1, sizeof(GlyphInfo));
+        JSValue _return = JS_NewObjectClass(ctx, js_GlyphInfo_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, argv[0]);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    int32_t long_offsetX;
+    int err_offsetX = JS_ToInt32(ctx, &long_offsetX, argv[1]);
+    if(err_offsetX<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int offsetX = (int)long_offsetX;
+    int32_t long_offsetY;
+    int err_offsetY = JS_ToInt32(ctx, &long_offsetY, argv[2]);
+    if(err_offsetY<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int offsetY = (int)long_offsetY;
+    int32_t long_advanceX;
+    int err_advanceX = JS_ToInt32(ctx, &long_advanceX, argv[3]);
+    if(err_advanceX<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int advanceX = (int)long_advanceX;
+    Image* ptr_image = (Image*)JS_GetOpaque(argv[4], js_Image_class_id);
+    if(ptr_image == NULL) {
+        JS_ThrowTypeError(ctx, "argv[4] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Image image = *ptr_image;
+    GlyphInfo _struct = { value, offsetX, offsetY, advanceX, image };
+    GlyphInfo* ptr__return = (GlyphInfo*)js_malloc(ctx, sizeof(GlyphInfo));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_GlyphInfo_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Font_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Font* ptr__return = (Font*)js_calloc(ctx, 1, sizeof(Font));
+        JSValue _return = JS_NewObjectClass(ctx, js_Font_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    int32_t long_baseSize;
+    int err_baseSize = JS_ToInt32(ctx, &long_baseSize, argv[0]);
+    if(err_baseSize<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int baseSize = (int)long_baseSize;
+    int32_t long_glyphCount;
+    int err_glyphCount = JS_ToInt32(ctx, &long_glyphCount, argv[1]);
+    if(err_glyphCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int glyphCount = (int)long_glyphCount;
+    int32_t long_glyphPadding;
+    int err_glyphPadding = JS_ToInt32(ctx, &long_glyphPadding, argv[2]);
+    if(err_glyphPadding<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int glyphPadding = (int)long_glyphPadding;
+    Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[3], js_Texture_class_id);
+    if(ptr_texture == NULL) {
+        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Texture2D texture = *ptr_texture;
+    Rectangle * recs;
+    bool freesrc_recs = false;
+    JSValue da_recs;
+    int64_t size_recs;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_recs = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_recs = *(ArrayProxy_class *)opaque_recs;
+        argv[4] = AP_recs.values(ctx, AP_recs.opaque, 0, false);
+        freesrc_recs = true;
+    }
+    if(JS_IsArray(argv[4]) == 1) {
+        if(JS_GetLength(ctx,argv[4],&size_recs)==-1) {
+            return JS_EXCEPTION;
+        }
+        recs = (Rectangle *)js_malloc(ctx, size_recs * sizeof(Rectangle));
+        for(int i0=0; i0 < size_recs; i0++){
+            JSValue js_recs = JS_GetPropertyUint32(ctx,argv[4],i0);
+            Rectangle* ptr_recsi0 = (Rectangle*)JS_GetOpaque(js_recs, js_Rectangle_class_id);
+            if(ptr_recsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_recs does not allow null");
+                return JS_EXCEPTION;
+            }
+            recs[i0] = *ptr_recsi0;
+            JS_FreeValue(ctx, js_recs);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_recs;
+        recs = (Rectangle *)JS_GetArrayBuffer(ctx, &size_recs, argv[4]);
+    }
+    else {
+        if(freesrc_recs) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+        JS_ThrowTypeError(ctx, "argv[4] does not match type Rectangle *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_recs) {
+        JS_FreeValue(ctx, argv[4]);
+    }
+    GlyphInfo * glyphs;
+    bool freesrc_glyphs = false;
+    JSValue da_glyphs;
+    int64_t size_glyphs;
+    if(JS_GetClassID(argv[5]) == js_ArrayProxy_class_id) {
+        void * opaque_glyphs = JS_GetOpaque(argv[5], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glyphs = *(ArrayProxy_class *)opaque_glyphs;
+        argv[5] = AP_glyphs.values(ctx, AP_glyphs.opaque, 0, false);
+        freesrc_glyphs = true;
+    }
+    if(JS_IsArray(argv[5]) == 1) {
+        if(JS_GetLength(ctx,argv[5],&size_glyphs)==-1) {
+            return JS_EXCEPTION;
+        }
+        glyphs = (GlyphInfo *)js_malloc(ctx, size_glyphs * sizeof(GlyphInfo));
+        for(int i0=0; i0 < size_glyphs; i0++){
+            JSValue js_glyphs = JS_GetPropertyUint32(ctx,argv[5],i0);
+            GlyphInfo* ptr_glyphsi0 = (GlyphInfo*)JS_GetOpaque(js_glyphs, js_GlyphInfo_class_id);
+            if(ptr_glyphsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_glyphs does not allow null");
+                return JS_EXCEPTION;
+            }
+            glyphs[i0] = *ptr_glyphsi0;
+            JS_FreeValue(ctx, js_glyphs);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[5]) == 1) {
+        size_t size_glyphs;
+        glyphs = (GlyphInfo *)JS_GetArrayBuffer(ctx, &size_glyphs, argv[5]);
+    }
+    else {
+        if(freesrc_glyphs) {
+            JS_FreeValue(ctx, argv[5]);
+        }
+        JS_ThrowTypeError(ctx, "argv[5] does not match type GlyphInfo *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_glyphs) {
+        JS_FreeValue(ctx, argv[5]);
+    }
+    Font _struct = { baseSize, glyphCount, glyphPadding, texture, recs, glyphs };
+    Font* ptr__return = (Font*)js_malloc(ctx, sizeof(Font));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Font_class_id);
     JS_SetOpaque(_return, ptr__return);
     return _return;
 }
@@ -4873,10 +8800,1424 @@ static JSValue js_Mesh_constructor(JSContext * ctx, JSValue this_val, int argc, 
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
-    Mesh _struct = {  };
+    int32_t long_vertexCount;
+    int err_vertexCount = JS_ToInt32(ctx, &long_vertexCount, argv[0]);
+    if(err_vertexCount<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int vertexCount = (int)long_vertexCount;
+    int32_t long_triangleCount;
+    int err_triangleCount = JS_ToInt32(ctx, &long_triangleCount, argv[1]);
+    if(err_triangleCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int triangleCount = (int)long_triangleCount;
+    float * vertices;
+    bool freesrc_vertices = false;
+    JSValue da_vertices;
+    int64_t size_vertices;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_vertices = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_vertices = *(ArrayProxy_class *)opaque_vertices;
+        argv[2] = AP_vertices.values(ctx, AP_vertices.opaque, 0, false);
+        freesrc_vertices = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_vertices)==-1) {
+            return JS_EXCEPTION;
+        }
+        vertices = (float *)js_malloc(ctx, size_vertices * sizeof(float));
+        for(int i0=0; i0 < size_vertices; i0++){
+            JSValue js_vertices = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_verticesi0;
+            int err_verticesi0 = JS_ToFloat64(ctx, &double_verticesi0, js_vertices);
+            if(err_verticesi0<0) {
+                JS_ThrowTypeError(ctx, "js_vertices is not numeric");
+                return JS_EXCEPTION;
+            }
+            vertices[i0] = (float)double_verticesi0;
+            JS_FreeValue(ctx, js_vertices);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_vertices;
+        vertices = (float *)JS_GetArrayBuffer(ctx, &size_vertices, argv[2]);
+    }
+    else {
+        JSClassID classid_vertices = JS_GetClassID(argv[2]);
+        if(classid_vertices==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_vertices;
+            size_t size_vertices;
+            da_vertices = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_vertices,&size_vertices,NULL);
+            vertices = (float *)JS_GetArrayBuffer(ctx, &size_vertices, da_vertices);
+            vertices+=offset_vertices;
+            size_vertices-=offset_vertices;
+        }
+        else {
+            if(freesrc_vertices) {
+                JS_FreeValue(ctx, argv[2]);
+            }
+            JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_vertices) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+    }
+    float * texcoords;
+    bool freesrc_texcoords = false;
+    JSValue da_texcoords;
+    int64_t size_texcoords;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_texcoords = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_texcoords = *(ArrayProxy_class *)opaque_texcoords;
+        argv[3] = AP_texcoords.values(ctx, AP_texcoords.opaque, 0, false);
+        freesrc_texcoords = true;
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        if(JS_GetLength(ctx,argv[3],&size_texcoords)==-1) {
+            return JS_EXCEPTION;
+        }
+        texcoords = (float *)js_malloc(ctx, size_texcoords * sizeof(float));
+        for(int i0=0; i0 < size_texcoords; i0++){
+            JSValue js_texcoords = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_texcoordsi0;
+            int err_texcoordsi0 = JS_ToFloat64(ctx, &double_texcoordsi0, js_texcoords);
+            if(err_texcoordsi0<0) {
+                JS_ThrowTypeError(ctx, "js_texcoords is not numeric");
+                return JS_EXCEPTION;
+            }
+            texcoords[i0] = (float)double_texcoordsi0;
+            JS_FreeValue(ctx, js_texcoords);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        size_t size_texcoords;
+        texcoords = (float *)JS_GetArrayBuffer(ctx, &size_texcoords, argv[3]);
+    }
+    else {
+        JSClassID classid_texcoords = JS_GetClassID(argv[3]);
+        if(classid_texcoords==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_texcoords;
+            size_t size_texcoords;
+            da_texcoords = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_texcoords,&size_texcoords,NULL);
+            texcoords = (float *)JS_GetArrayBuffer(ctx, &size_texcoords, da_texcoords);
+            texcoords+=offset_texcoords;
+            size_texcoords-=offset_texcoords;
+        }
+        else {
+            if(freesrc_texcoords) {
+                JS_FreeValue(ctx, argv[3]);
+            }
+            JS_ThrowTypeError(ctx, "argv[3] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_texcoords) {
+            JS_FreeValue(ctx, argv[3]);
+        }
+    }
+    float * texcoords2;
+    bool freesrc_texcoords2 = false;
+    JSValue da_texcoords2;
+    int64_t size_texcoords2;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_texcoords2 = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_texcoords2 = *(ArrayProxy_class *)opaque_texcoords2;
+        argv[4] = AP_texcoords2.values(ctx, AP_texcoords2.opaque, 0, false);
+        freesrc_texcoords2 = true;
+    }
+    if(JS_IsArray(argv[4]) == 1) {
+        if(JS_GetLength(ctx,argv[4],&size_texcoords2)==-1) {
+            return JS_EXCEPTION;
+        }
+        texcoords2 = (float *)js_malloc(ctx, size_texcoords2 * sizeof(float));
+        for(int i0=0; i0 < size_texcoords2; i0++){
+            JSValue js_texcoords2 = JS_GetPropertyUint32(ctx,argv[4],i0);
+            double double_texcoords2i0;
+            int err_texcoords2i0 = JS_ToFloat64(ctx, &double_texcoords2i0, js_texcoords2);
+            if(err_texcoords2i0<0) {
+                JS_ThrowTypeError(ctx, "js_texcoords2 is not numeric");
+                return JS_EXCEPTION;
+            }
+            texcoords2[i0] = (float)double_texcoords2i0;
+            JS_FreeValue(ctx, js_texcoords2);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_texcoords2;
+        texcoords2 = (float *)JS_GetArrayBuffer(ctx, &size_texcoords2, argv[4]);
+    }
+    else {
+        JSClassID classid_texcoords2 = JS_GetClassID(argv[4]);
+        if(classid_texcoords2==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_texcoords2;
+            size_t size_texcoords2;
+            da_texcoords2 = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_texcoords2,&size_texcoords2,NULL);
+            texcoords2 = (float *)JS_GetArrayBuffer(ctx, &size_texcoords2, da_texcoords2);
+            texcoords2+=offset_texcoords2;
+            size_texcoords2-=offset_texcoords2;
+        }
+        else {
+            if(freesrc_texcoords2) {
+                JS_FreeValue(ctx, argv[4]);
+            }
+            JS_ThrowTypeError(ctx, "argv[4] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_texcoords2) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+    }
+    float * normals;
+    bool freesrc_normals = false;
+    JSValue da_normals;
+    int64_t size_normals;
+    if(JS_GetClassID(argv[5]) == js_ArrayProxy_class_id) {
+        void * opaque_normals = JS_GetOpaque(argv[5], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_normals = *(ArrayProxy_class *)opaque_normals;
+        argv[5] = AP_normals.values(ctx, AP_normals.opaque, 0, false);
+        freesrc_normals = true;
+    }
+    if(JS_IsArray(argv[5]) == 1) {
+        if(JS_GetLength(ctx,argv[5],&size_normals)==-1) {
+            return JS_EXCEPTION;
+        }
+        normals = (float *)js_malloc(ctx, size_normals * sizeof(float));
+        for(int i0=0; i0 < size_normals; i0++){
+            JSValue js_normals = JS_GetPropertyUint32(ctx,argv[5],i0);
+            double double_normalsi0;
+            int err_normalsi0 = JS_ToFloat64(ctx, &double_normalsi0, js_normals);
+            if(err_normalsi0<0) {
+                JS_ThrowTypeError(ctx, "js_normals is not numeric");
+                return JS_EXCEPTION;
+            }
+            normals[i0] = (float)double_normalsi0;
+            JS_FreeValue(ctx, js_normals);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[5]) == 1) {
+        size_t size_normals;
+        normals = (float *)JS_GetArrayBuffer(ctx, &size_normals, argv[5]);
+    }
+    else {
+        JSClassID classid_normals = JS_GetClassID(argv[5]);
+        if(classid_normals==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_normals;
+            size_t size_normals;
+            da_normals = JS_GetTypedArrayBuffer(ctx,argv[5],&offset_normals,&size_normals,NULL);
+            normals = (float *)JS_GetArrayBuffer(ctx, &size_normals, da_normals);
+            normals+=offset_normals;
+            size_normals-=offset_normals;
+        }
+        else {
+            if(freesrc_normals) {
+                JS_FreeValue(ctx, argv[5]);
+            }
+            JS_ThrowTypeError(ctx, "argv[5] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_normals) {
+            JS_FreeValue(ctx, argv[5]);
+        }
+    }
+    float * tangents;
+    bool freesrc_tangents = false;
+    JSValue da_tangents;
+    int64_t size_tangents;
+    if(JS_GetClassID(argv[6]) == js_ArrayProxy_class_id) {
+        void * opaque_tangents = JS_GetOpaque(argv[6], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_tangents = *(ArrayProxy_class *)opaque_tangents;
+        argv[6] = AP_tangents.values(ctx, AP_tangents.opaque, 0, false);
+        freesrc_tangents = true;
+    }
+    if(JS_IsArray(argv[6]) == 1) {
+        if(JS_GetLength(ctx,argv[6],&size_tangents)==-1) {
+            return JS_EXCEPTION;
+        }
+        tangents = (float *)js_malloc(ctx, size_tangents * sizeof(float));
+        for(int i0=0; i0 < size_tangents; i0++){
+            JSValue js_tangents = JS_GetPropertyUint32(ctx,argv[6],i0);
+            double double_tangentsi0;
+            int err_tangentsi0 = JS_ToFloat64(ctx, &double_tangentsi0, js_tangents);
+            if(err_tangentsi0<0) {
+                JS_ThrowTypeError(ctx, "js_tangents is not numeric");
+                return JS_EXCEPTION;
+            }
+            tangents[i0] = (float)double_tangentsi0;
+            JS_FreeValue(ctx, js_tangents);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[6]) == 1) {
+        size_t size_tangents;
+        tangents = (float *)JS_GetArrayBuffer(ctx, &size_tangents, argv[6]);
+    }
+    else {
+        JSClassID classid_tangents = JS_GetClassID(argv[6]);
+        if(classid_tangents==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_tangents;
+            size_t size_tangents;
+            da_tangents = JS_GetTypedArrayBuffer(ctx,argv[6],&offset_tangents,&size_tangents,NULL);
+            tangents = (float *)JS_GetArrayBuffer(ctx, &size_tangents, da_tangents);
+            tangents+=offset_tangents;
+            size_tangents-=offset_tangents;
+        }
+        else {
+            if(freesrc_tangents) {
+                JS_FreeValue(ctx, argv[6]);
+            }
+            JS_ThrowTypeError(ctx, "argv[6] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_tangents) {
+            JS_FreeValue(ctx, argv[6]);
+        }
+    }
+    unsigned char * colors;
+    bool freesrc_colors = false;
+    JSValue da_colors;
+    int64_t size_colors;
+    if(JS_GetClassID(argv[7]) == js_ArrayProxy_class_id) {
+        void * opaque_colors = JS_GetOpaque(argv[7], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_colors = *(ArrayProxy_class *)opaque_colors;
+        argv[7] = AP_colors.values(ctx, AP_colors.opaque, 0, false);
+        freesrc_colors = true;
+    }
+    if(JS_IsArray(argv[7]) == 1) {
+        if(JS_GetLength(ctx,argv[7],&size_colors)==-1) {
+            return JS_EXCEPTION;
+        }
+        colors = (unsigned char *)js_malloc(ctx, size_colors * sizeof(unsigned char));
+        for(int i0=0; i0 < size_colors; i0++){
+            JSValue js_colors = JS_GetPropertyUint32(ctx,argv[7],i0);
+            uint32_t long_colorsi0;
+            int err_colorsi0 = JS_ToUint32(ctx, &long_colorsi0, js_colors);
+            if(err_colorsi0<0) {
+                JS_ThrowTypeError(ctx, "js_colors is not numeric");
+                return JS_EXCEPTION;
+            }
+            colors[i0] = (unsigned char)long_colorsi0;
+            JS_FreeValue(ctx, js_colors);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[7]) == 1) {
+        size_t size_colors;
+        colors = (unsigned char *)JS_GetArrayBuffer(ctx, &size_colors, argv[7]);
+    }
+    else {
+        JSClassID classid_colors = JS_GetClassID(argv[7]);
+        if(classid_colors==JS_CLASS_UINT8_ARRAY || classid_colors==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_colors;
+            size_t size_colors;
+            da_colors = JS_GetTypedArrayBuffer(ctx,argv[7],&offset_colors,&size_colors,NULL);
+            colors = (unsigned char *)JS_GetArrayBuffer(ctx, &size_colors, da_colors);
+            colors+=offset_colors;
+            size_colors-=offset_colors;
+        }
+        else {
+            if(freesrc_colors) {
+                JS_FreeValue(ctx, argv[7]);
+            }
+            JS_ThrowTypeError(ctx, "argv[7] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_colors) {
+            JS_FreeValue(ctx, argv[7]);
+        }
+    }
+    unsigned short * indices;
+    bool freesrc_indices = false;
+    JSValue da_indices;
+    int64_t size_indices;
+    if(JS_GetClassID(argv[8]) == js_ArrayProxy_class_id) {
+        void * opaque_indices = JS_GetOpaque(argv[8], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_indices = *(ArrayProxy_class *)opaque_indices;
+        argv[8] = AP_indices.values(ctx, AP_indices.opaque, 0, false);
+        freesrc_indices = true;
+    }
+    if(JS_IsArray(argv[8]) == 1) {
+        if(JS_GetLength(ctx,argv[8],&size_indices)==-1) {
+            return JS_EXCEPTION;
+        }
+        indices = (unsigned short *)js_malloc(ctx, size_indices * sizeof(unsigned short));
+        for(int i0=0; i0 < size_indices; i0++){
+            JSValue js_indices = JS_GetPropertyUint32(ctx,argv[8],i0);
+            uint32_t long_indicesi0;
+            int err_indicesi0 = JS_ToUint32(ctx, &long_indicesi0, js_indices);
+            if(err_indicesi0<0) {
+                JS_ThrowTypeError(ctx, "js_indices is not numeric");
+                return JS_EXCEPTION;
+            }
+            indices[i0] = (unsigned short)long_indicesi0;
+            JS_FreeValue(ctx, js_indices);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[8]) == 1) {
+        size_t size_indices;
+        indices = (unsigned short *)JS_GetArrayBuffer(ctx, &size_indices, argv[8]);
+    }
+    else {
+        JSClassID classid_indices = JS_GetClassID(argv[8]);
+        if(classid_indices==JS_CLASS_UINT16_ARRAY) {
+            size_t offset_indices;
+            size_t size_indices;
+            da_indices = JS_GetTypedArrayBuffer(ctx,argv[8],&offset_indices,&size_indices,NULL);
+            indices = (unsigned short *)JS_GetArrayBuffer(ctx, &size_indices, da_indices);
+            indices+=offset_indices;
+            size_indices-=offset_indices;
+        }
+        else {
+            if(freesrc_indices) {
+                JS_FreeValue(ctx, argv[8]);
+            }
+            JS_ThrowTypeError(ctx, "argv[8] does not match type unsigned short *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_indices) {
+            JS_FreeValue(ctx, argv[8]);
+        }
+    }
+    float * animVertices;
+    bool freesrc_animVertices = false;
+    JSValue da_animVertices;
+    int64_t size_animVertices;
+    if(JS_GetClassID(argv[9]) == js_ArrayProxy_class_id) {
+        void * opaque_animVertices = JS_GetOpaque(argv[9], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_animVertices = *(ArrayProxy_class *)opaque_animVertices;
+        argv[9] = AP_animVertices.values(ctx, AP_animVertices.opaque, 0, false);
+        freesrc_animVertices = true;
+    }
+    if(JS_IsArray(argv[9]) == 1) {
+        if(JS_GetLength(ctx,argv[9],&size_animVertices)==-1) {
+            return JS_EXCEPTION;
+        }
+        animVertices = (float *)js_malloc(ctx, size_animVertices * sizeof(float));
+        for(int i0=0; i0 < size_animVertices; i0++){
+            JSValue js_animVertices = JS_GetPropertyUint32(ctx,argv[9],i0);
+            double double_animVerticesi0;
+            int err_animVerticesi0 = JS_ToFloat64(ctx, &double_animVerticesi0, js_animVertices);
+            if(err_animVerticesi0<0) {
+                JS_ThrowTypeError(ctx, "js_animVertices is not numeric");
+                return JS_EXCEPTION;
+            }
+            animVertices[i0] = (float)double_animVerticesi0;
+            JS_FreeValue(ctx, js_animVertices);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[9]) == 1) {
+        size_t size_animVertices;
+        animVertices = (float *)JS_GetArrayBuffer(ctx, &size_animVertices, argv[9]);
+    }
+    else {
+        JSClassID classid_animVertices = JS_GetClassID(argv[9]);
+        if(classid_animVertices==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_animVertices;
+            size_t size_animVertices;
+            da_animVertices = JS_GetTypedArrayBuffer(ctx,argv[9],&offset_animVertices,&size_animVertices,NULL);
+            animVertices = (float *)JS_GetArrayBuffer(ctx, &size_animVertices, da_animVertices);
+            animVertices+=offset_animVertices;
+            size_animVertices-=offset_animVertices;
+        }
+        else {
+            if(freesrc_animVertices) {
+                JS_FreeValue(ctx, argv[9]);
+            }
+            JS_ThrowTypeError(ctx, "argv[9] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_animVertices) {
+            JS_FreeValue(ctx, argv[9]);
+        }
+    }
+    float * animNormals;
+    bool freesrc_animNormals = false;
+    JSValue da_animNormals;
+    int64_t size_animNormals;
+    if(JS_GetClassID(argv[10]) == js_ArrayProxy_class_id) {
+        void * opaque_animNormals = JS_GetOpaque(argv[10], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_animNormals = *(ArrayProxy_class *)opaque_animNormals;
+        argv[10] = AP_animNormals.values(ctx, AP_animNormals.opaque, 0, false);
+        freesrc_animNormals = true;
+    }
+    if(JS_IsArray(argv[10]) == 1) {
+        if(JS_GetLength(ctx,argv[10],&size_animNormals)==-1) {
+            return JS_EXCEPTION;
+        }
+        animNormals = (float *)js_malloc(ctx, size_animNormals * sizeof(float));
+        for(int i0=0; i0 < size_animNormals; i0++){
+            JSValue js_animNormals = JS_GetPropertyUint32(ctx,argv[10],i0);
+            double double_animNormalsi0;
+            int err_animNormalsi0 = JS_ToFloat64(ctx, &double_animNormalsi0, js_animNormals);
+            if(err_animNormalsi0<0) {
+                JS_ThrowTypeError(ctx, "js_animNormals is not numeric");
+                return JS_EXCEPTION;
+            }
+            animNormals[i0] = (float)double_animNormalsi0;
+            JS_FreeValue(ctx, js_animNormals);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[10]) == 1) {
+        size_t size_animNormals;
+        animNormals = (float *)JS_GetArrayBuffer(ctx, &size_animNormals, argv[10]);
+    }
+    else {
+        JSClassID classid_animNormals = JS_GetClassID(argv[10]);
+        if(classid_animNormals==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_animNormals;
+            size_t size_animNormals;
+            da_animNormals = JS_GetTypedArrayBuffer(ctx,argv[10],&offset_animNormals,&size_animNormals,NULL);
+            animNormals = (float *)JS_GetArrayBuffer(ctx, &size_animNormals, da_animNormals);
+            animNormals+=offset_animNormals;
+            size_animNormals-=offset_animNormals;
+        }
+        else {
+            if(freesrc_animNormals) {
+                JS_FreeValue(ctx, argv[10]);
+            }
+            JS_ThrowTypeError(ctx, "argv[10] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_animNormals) {
+            JS_FreeValue(ctx, argv[10]);
+        }
+    }
+    unsigned char * boneIds;
+    bool freesrc_boneIds = false;
+    JSValue da_boneIds;
+    int64_t size_boneIds;
+    if(JS_GetClassID(argv[11]) == js_ArrayProxy_class_id) {
+        void * opaque_boneIds = JS_GetOpaque(argv[11], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_boneIds = *(ArrayProxy_class *)opaque_boneIds;
+        argv[11] = AP_boneIds.values(ctx, AP_boneIds.opaque, 0, false);
+        freesrc_boneIds = true;
+    }
+    if(JS_IsArray(argv[11]) == 1) {
+        if(JS_GetLength(ctx,argv[11],&size_boneIds)==-1) {
+            return JS_EXCEPTION;
+        }
+        boneIds = (unsigned char *)js_malloc(ctx, size_boneIds * sizeof(unsigned char));
+        for(int i0=0; i0 < size_boneIds; i0++){
+            JSValue js_boneIds = JS_GetPropertyUint32(ctx,argv[11],i0);
+            uint32_t long_boneIdsi0;
+            int err_boneIdsi0 = JS_ToUint32(ctx, &long_boneIdsi0, js_boneIds);
+            if(err_boneIdsi0<0) {
+                JS_ThrowTypeError(ctx, "js_boneIds is not numeric");
+                return JS_EXCEPTION;
+            }
+            boneIds[i0] = (unsigned char)long_boneIdsi0;
+            JS_FreeValue(ctx, js_boneIds);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[11]) == 1) {
+        size_t size_boneIds;
+        boneIds = (unsigned char *)JS_GetArrayBuffer(ctx, &size_boneIds, argv[11]);
+    }
+    else {
+        JSClassID classid_boneIds = JS_GetClassID(argv[11]);
+        if(classid_boneIds==JS_CLASS_UINT8_ARRAY || classid_boneIds==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_boneIds;
+            size_t size_boneIds;
+            da_boneIds = JS_GetTypedArrayBuffer(ctx,argv[11],&offset_boneIds,&size_boneIds,NULL);
+            boneIds = (unsigned char *)JS_GetArrayBuffer(ctx, &size_boneIds, da_boneIds);
+            boneIds+=offset_boneIds;
+            size_boneIds-=offset_boneIds;
+        }
+        else {
+            if(freesrc_boneIds) {
+                JS_FreeValue(ctx, argv[11]);
+            }
+            JS_ThrowTypeError(ctx, "argv[11] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_boneIds) {
+            JS_FreeValue(ctx, argv[11]);
+        }
+    }
+    float * boneWeights;
+    bool freesrc_boneWeights = false;
+    JSValue da_boneWeights;
+    int64_t size_boneWeights;
+    if(JS_GetClassID(argv[12]) == js_ArrayProxy_class_id) {
+        void * opaque_boneWeights = JS_GetOpaque(argv[12], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_boneWeights = *(ArrayProxy_class *)opaque_boneWeights;
+        argv[12] = AP_boneWeights.values(ctx, AP_boneWeights.opaque, 0, false);
+        freesrc_boneWeights = true;
+    }
+    if(JS_IsArray(argv[12]) == 1) {
+        if(JS_GetLength(ctx,argv[12],&size_boneWeights)==-1) {
+            return JS_EXCEPTION;
+        }
+        boneWeights = (float *)js_malloc(ctx, size_boneWeights * sizeof(float));
+        for(int i0=0; i0 < size_boneWeights; i0++){
+            JSValue js_boneWeights = JS_GetPropertyUint32(ctx,argv[12],i0);
+            double double_boneWeightsi0;
+            int err_boneWeightsi0 = JS_ToFloat64(ctx, &double_boneWeightsi0, js_boneWeights);
+            if(err_boneWeightsi0<0) {
+                JS_ThrowTypeError(ctx, "js_boneWeights is not numeric");
+                return JS_EXCEPTION;
+            }
+            boneWeights[i0] = (float)double_boneWeightsi0;
+            JS_FreeValue(ctx, js_boneWeights);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[12]) == 1) {
+        size_t size_boneWeights;
+        boneWeights = (float *)JS_GetArrayBuffer(ctx, &size_boneWeights, argv[12]);
+    }
+    else {
+        JSClassID classid_boneWeights = JS_GetClassID(argv[12]);
+        if(classid_boneWeights==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_boneWeights;
+            size_t size_boneWeights;
+            da_boneWeights = JS_GetTypedArrayBuffer(ctx,argv[12],&offset_boneWeights,&size_boneWeights,NULL);
+            boneWeights = (float *)JS_GetArrayBuffer(ctx, &size_boneWeights, da_boneWeights);
+            boneWeights+=offset_boneWeights;
+            size_boneWeights-=offset_boneWeights;
+        }
+        else {
+            if(freesrc_boneWeights) {
+                JS_FreeValue(ctx, argv[12]);
+            }
+            JS_ThrowTypeError(ctx, "argv[12] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_boneWeights) {
+            JS_FreeValue(ctx, argv[12]);
+        }
+    }
+    Matrix * boneMatrices;
+    bool freesrc_boneMatrices = false;
+    JSValue da_boneMatrices;
+    int64_t size_boneMatrices;
+    if(JS_GetClassID(argv[13]) == js_ArrayProxy_class_id) {
+        void * opaque_boneMatrices = JS_GetOpaque(argv[13], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_boneMatrices = *(ArrayProxy_class *)opaque_boneMatrices;
+        argv[13] = AP_boneMatrices.values(ctx, AP_boneMatrices.opaque, 0, false);
+        freesrc_boneMatrices = true;
+    }
+    if(JS_IsArray(argv[13]) == 1) {
+        if(JS_GetLength(ctx,argv[13],&size_boneMatrices)==-1) {
+            return JS_EXCEPTION;
+        }
+        boneMatrices = (Matrix *)js_malloc(ctx, size_boneMatrices * sizeof(Matrix));
+        for(int i0=0; i0 < size_boneMatrices; i0++){
+            JSValue js_boneMatrices = JS_GetPropertyUint32(ctx,argv[13],i0);
+            Matrix* ptr_boneMatricesi0 = (Matrix*)JS_GetOpaque(js_boneMatrices, js_Matrix_class_id);
+            if(ptr_boneMatricesi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_boneMatrices does not allow null");
+                return JS_EXCEPTION;
+            }
+            boneMatrices[i0] = *ptr_boneMatricesi0;
+            JS_FreeValue(ctx, js_boneMatrices);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[13]) == 1) {
+        size_t size_boneMatrices;
+        boneMatrices = (Matrix *)JS_GetArrayBuffer(ctx, &size_boneMatrices, argv[13]);
+    }
+    else {
+        if(freesrc_boneMatrices) {
+            JS_FreeValue(ctx, argv[13]);
+        }
+        JS_ThrowTypeError(ctx, "argv[13] does not match type Matrix *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_boneMatrices) {
+        JS_FreeValue(ctx, argv[13]);
+    }
+    int32_t long_boneCount;
+    int err_boneCount = JS_ToInt32(ctx, &long_boneCount, argv[14]);
+    if(err_boneCount<0) {
+        JS_ThrowTypeError(ctx, "argv[14] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int boneCount = (int)long_boneCount;
+    uint32_t long_vaoId;
+    int err_vaoId = JS_ToUint32(ctx, &long_vaoId, argv[15]);
+    if(err_vaoId<0) {
+        JS_ThrowTypeError(ctx, "argv[15] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int vaoId = (unsigned int)long_vaoId;
+    unsigned int * vboId;
+    bool freesrc_vboId = false;
+    JSValue da_vboId;
+    int64_t size_vboId;
+    if(JS_GetClassID(argv[16]) == js_ArrayProxy_class_id) {
+        void * opaque_vboId = JS_GetOpaque(argv[16], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_vboId = *(ArrayProxy_class *)opaque_vboId;
+        argv[16] = AP_vboId.values(ctx, AP_vboId.opaque, 0, false);
+        freesrc_vboId = true;
+    }
+    if(JS_IsArray(argv[16]) == 1) {
+        if(JS_GetLength(ctx,argv[16],&size_vboId)==-1) {
+            return JS_EXCEPTION;
+        }
+        vboId = (unsigned int *)js_malloc(ctx, size_vboId * sizeof(unsigned int));
+        for(int i0=0; i0 < size_vboId; i0++){
+            JSValue js_vboId = JS_GetPropertyUint32(ctx,argv[16],i0);
+            uint32_t long_vboIdi0;
+            int err_vboIdi0 = JS_ToUint32(ctx, &long_vboIdi0, js_vboId);
+            if(err_vboIdi0<0) {
+                JS_ThrowTypeError(ctx, "js_vboId is not numeric");
+                return JS_EXCEPTION;
+            }
+            vboId[i0] = (unsigned int)long_vboIdi0;
+            JS_FreeValue(ctx, js_vboId);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[16]) == 1) {
+        size_t size_vboId;
+        vboId = (unsigned int *)JS_GetArrayBuffer(ctx, &size_vboId, argv[16]);
+    }
+    else {
+        JSClassID classid_vboId = JS_GetClassID(argv[16]);
+        if(classid_vboId==JS_CLASS_UINT16_ARRAY) {
+            size_t offset_vboId;
+            size_t size_vboId;
+            da_vboId = JS_GetTypedArrayBuffer(ctx,argv[16],&offset_vboId,&size_vboId,NULL);
+            vboId = (unsigned int *)JS_GetArrayBuffer(ctx, &size_vboId, da_vboId);
+            vboId+=offset_vboId;
+            size_vboId-=offset_vboId;
+        }
+        else {
+            if(freesrc_vboId) {
+                JS_FreeValue(ctx, argv[16]);
+            }
+            JS_ThrowTypeError(ctx, "argv[16] does not match type unsigned int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_vboId) {
+            JS_FreeValue(ctx, argv[16]);
+        }
+    }
+    Mesh _struct = { vertexCount, triangleCount, vertices, texcoords, texcoords2, normals, tangents, colors, indices, animVertices, animNormals, boneIds, boneWeights, boneMatrices, boneCount, vaoId, vboId };
     Mesh* ptr__return = (Mesh*)js_malloc(ctx, sizeof(Mesh));
     *ptr__return = _struct;
     JSValue _return = JS_NewObjectClass(ctx, js_Mesh_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Shader_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Shader* ptr__return = (Shader*)js_calloc(ctx, 1, sizeof(Shader));
+        JSValue _return = JS_NewObjectClass(ctx, js_Shader_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_id;
+    int err_id = JS_ToUint32(ctx, &long_id, argv[0]);
+    if(err_id<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int id = (unsigned int)long_id;
+    int * locs;
+    bool freesrc_locs = false;
+    JSValue da_locs;
+    int64_t size_locs;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_locs = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_locs = *(ArrayProxy_class *)opaque_locs;
+        argv[1] = AP_locs.values(ctx, AP_locs.opaque, 0, false);
+        freesrc_locs = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_locs)==-1) {
+            return JS_EXCEPTION;
+        }
+        locs = (int *)js_malloc(ctx, size_locs * sizeof(int));
+        for(int i0=0; i0 < size_locs; i0++){
+            JSValue js_locs = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_locsi0;
+            int err_locsi0 = JS_ToInt32(ctx, &long_locsi0, js_locs);
+            if(err_locsi0<0) {
+                JS_ThrowTypeError(ctx, "js_locs is not numeric");
+                return JS_EXCEPTION;
+            }
+            locs[i0] = (int)long_locsi0;
+            JS_FreeValue(ctx, js_locs);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_locs;
+        locs = (int *)JS_GetArrayBuffer(ctx, &size_locs, argv[1]);
+    }
+    else {
+        JSClassID classid_locs = JS_GetClassID(argv[1]);
+        if(classid_locs==JS_CLASS_INT16_ARRAY) {
+            size_t offset_locs;
+            size_t size_locs;
+            da_locs = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_locs,&size_locs,NULL);
+            locs = (int *)JS_GetArrayBuffer(ctx, &size_locs, da_locs);
+            locs+=offset_locs;
+            size_locs-=offset_locs;
+        }
+        else {
+            if(freesrc_locs) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_locs) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    Shader _struct = { id, locs };
+    Shader* ptr__return = (Shader*)js_malloc(ctx, sizeof(Shader));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Shader_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_MaterialMap_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        MaterialMap* ptr__return = (MaterialMap*)js_calloc(ctx, 1, sizeof(MaterialMap));
+        JSValue _return = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    Texture2D* ptr_texture = (Texture2D*)JS_GetOpaque(argv[0], js_Texture_class_id);
+    if(ptr_texture == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Texture2D texture = *ptr_texture;
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[1], js_Color_class_id);
+    if(ptr_color == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    double double_value;
+    int err_value = JS_ToFloat64(ctx, &double_value, argv[2]);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float value = (float)double_value;
+    MaterialMap _struct = { texture, color, value };
+    MaterialMap* ptr__return = (MaterialMap*)js_malloc(ctx, sizeof(MaterialMap));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_MaterialMap_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Material_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Material* ptr__return = (Material*)js_calloc(ctx, 1, sizeof(Material));
+        JSValue _return = JS_NewObjectClass(ctx, js_Material_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    Shader* ptr_shader = (Shader*)JS_GetOpaque(argv[0], js_Shader_class_id);
+    if(ptr_shader == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Shader shader = *ptr_shader;
+    MaterialMap * maps;
+    bool freesrc_maps = false;
+    JSValue da_maps;
+    int64_t size_maps;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_maps = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_maps = *(ArrayProxy_class *)opaque_maps;
+        argv[1] = AP_maps.values(ctx, AP_maps.opaque, 0, false);
+        freesrc_maps = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_maps)==-1) {
+            return JS_EXCEPTION;
+        }
+        maps = (MaterialMap *)js_malloc(ctx, size_maps * sizeof(MaterialMap));
+        for(int i0=0; i0 < size_maps; i0++){
+            JSValue js_maps = JS_GetPropertyUint32(ctx,argv[1],i0);
+            MaterialMap* ptr_mapsi0 = (MaterialMap*)JS_GetOpaque(js_maps, js_MaterialMap_class_id);
+            if(ptr_mapsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_maps does not allow null");
+                return JS_EXCEPTION;
+            }
+            maps[i0] = *ptr_mapsi0;
+            JS_FreeValue(ctx, js_maps);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_maps;
+        maps = (MaterialMap *)JS_GetArrayBuffer(ctx, &size_maps, argv[1]);
+    }
+    else {
+        if(freesrc_maps) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] does not match type MaterialMap *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_maps) {
+        JS_FreeValue(ctx, argv[1]);
+    }
+    float * params;
+    bool freesrc_params = false;
+    JSValue da_params;
+    int64_t size_params;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_params = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_params = *(ArrayProxy_class *)opaque_params;
+        argv[2] = AP_params.values(ctx, AP_params.opaque, 0, false);
+        freesrc_params = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        params = (float *)js_malloc(ctx, 4 * sizeof(float));
+        for(int i0=0; i0 < 4; i0++){
+            JSValue js_params = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_paramsi0;
+            int err_paramsi0 = JS_ToFloat64(ctx, &double_paramsi0, js_params);
+            if(err_paramsi0<0) {
+                JS_ThrowTypeError(ctx, "js_params is not numeric");
+                return JS_EXCEPTION;
+            }
+            params[i0] = (float)double_paramsi0;
+            JS_FreeValue(ctx, js_params);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_params;
+        params = (float *)JS_GetArrayBuffer(ctx, &size_params, argv[2]);
+    }
+    else {
+        JSClassID classid_params = JS_GetClassID(argv[2]);
+        if(classid_params==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_params;
+            size_t size_params;
+            da_params = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_params,&size_params,NULL);
+            params = (float *)JS_GetArrayBuffer(ctx, &size_params, da_params);
+            params+=offset_params;
+            size_params-=offset_params;
+        }
+        else {
+            if(freesrc_params) {
+                JS_FreeValue(ctx, argv[2]);
+            }
+            JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_params) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+    }
+    Material _struct = { shader, maps, {params[0],params[1],params[2],params[3]} };
+    Material* ptr__return = (Material*)js_malloc(ctx, sizeof(Material));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Material_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Transform_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Transform* ptr__return = (Transform*)js_calloc(ctx, 1, sizeof(Transform));
+        JSValue _return = JS_NewObjectClass(ctx, js_Transform_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    Vector3* ptr_translation = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
+    if(ptr_translation == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 translation = *ptr_translation;
+    Quaternion* ptr_rotation = (Quaternion*)JS_GetOpaque(argv[1], js_Vector4_class_id);
+    if(ptr_rotation == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Quaternion rotation = *ptr_rotation;
+    Vector3* ptr_scale = (Vector3*)JS_GetOpaque(argv[2], js_Vector3_class_id);
+    if(ptr_scale == NULL) {
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 scale = *ptr_scale;
+    Transform _struct = { translation, rotation, scale };
+    Transform* ptr__return = (Transform*)js_malloc(ctx, sizeof(Transform));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Transform_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_BoneInfo_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        BoneInfo* ptr__return = (BoneInfo*)js_calloc(ctx, 1, sizeof(BoneInfo));
+        JSValue _return = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    char * name;
+    bool freesrc_name = false;
+    JSValue da_name;
+    int64_t size_name;
+    if(JS_IsString(argv[0]) == 1) {
+        name = (char *)JS_ToCStringLen(ctx, &size_name, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_name;
+        name = (char *)JS_GetArrayBuffer(ctx, &size_name, argv[0]);
+    }
+    else {
+        JSClassID classid_name = JS_GetClassID(argv[0]);
+        if(classid_name==JS_CLASS_INT8_ARRAY) {
+            size_t offset_name;
+            size_t size_name;
+            da_name = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_name,&size_name,NULL);
+            name = (char *)JS_GetArrayBuffer(ctx, &size_name, da_name);
+            name+=offset_name;
+            size_name-=offset_name;
+        }
+        else {
+            if(freesrc_name) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_name) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int32_t long_parent;
+    int err_parent = JS_ToInt32(ctx, &long_parent, argv[1]);
+    if(err_parent<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int parent = (int)long_parent;
+    BoneInfo _struct = { {name[0],name[1],name[2],name[3],name[4],name[5],name[6],name[7],name[8],name[9],name[10],name[11],name[12],name[13],name[14],name[15],name[16],name[17],name[18],name[19],name[20],name[21],name[22],name[23],name[24],name[25],name[26],name[27],name[28],name[29],name[30],name[31]}, parent };
+    BoneInfo* ptr__return = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Model_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Model* ptr__return = (Model*)js_calloc(ctx, 1, sizeof(Model));
+        JSValue _return = JS_NewObjectClass(ctx, js_Model_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    Matrix* ptr_transform = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
+    if(ptr_transform == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Matrix transform = *ptr_transform;
+    int32_t long_meshCount;
+    int err_meshCount = JS_ToInt32(ctx, &long_meshCount, argv[1]);
+    if(err_meshCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int meshCount = (int)long_meshCount;
+    int32_t long_materialCount;
+    int err_materialCount = JS_ToInt32(ctx, &long_materialCount, argv[2]);
+    if(err_materialCount<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int materialCount = (int)long_materialCount;
+    Mesh * meshes;
+    bool freesrc_meshes = false;
+    JSValue da_meshes;
+    int64_t size_meshes;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_meshes = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_meshes = *(ArrayProxy_class *)opaque_meshes;
+        argv[3] = AP_meshes.values(ctx, AP_meshes.opaque, 0, false);
+        freesrc_meshes = true;
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        if(JS_GetLength(ctx,argv[3],&size_meshes)==-1) {
+            return JS_EXCEPTION;
+        }
+        meshes = (Mesh *)js_malloc(ctx, size_meshes * sizeof(Mesh));
+        for(int i0=0; i0 < size_meshes; i0++){
+            JSValue js_meshes = JS_GetPropertyUint32(ctx,argv[3],i0);
+            Mesh* ptr_meshesi0 = (Mesh*)JS_GetOpaque(js_meshes, js_Mesh_class_id);
+            if(ptr_meshesi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_meshes does not allow null");
+                return JS_EXCEPTION;
+            }
+            meshes[i0] = *ptr_meshesi0;
+            JS_FreeValue(ctx, js_meshes);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        size_t size_meshes;
+        meshes = (Mesh *)JS_GetArrayBuffer(ctx, &size_meshes, argv[3]);
+    }
+    else {
+        if(freesrc_meshes) {
+            JS_FreeValue(ctx, argv[3]);
+        }
+        JS_ThrowTypeError(ctx, "argv[3] does not match type Mesh *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_meshes) {
+        JS_FreeValue(ctx, argv[3]);
+    }
+    Material * materials;
+    bool freesrc_materials = false;
+    JSValue da_materials;
+    int64_t size_materials;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_materials = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_materials = *(ArrayProxy_class *)opaque_materials;
+        argv[4] = AP_materials.values(ctx, AP_materials.opaque, 0, false);
+        freesrc_materials = true;
+    }
+    if(JS_IsArray(argv[4]) == 1) {
+        if(JS_GetLength(ctx,argv[4],&size_materials)==-1) {
+            return JS_EXCEPTION;
+        }
+        materials = (Material *)js_malloc(ctx, size_materials * sizeof(Material));
+        for(int i0=0; i0 < size_materials; i0++){
+            JSValue js_materials = JS_GetPropertyUint32(ctx,argv[4],i0);
+            Material* ptr_materialsi0 = (Material*)JS_GetOpaque(js_materials, js_Material_class_id);
+            if(ptr_materialsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_materials does not allow null");
+                return JS_EXCEPTION;
+            }
+            materials[i0] = *ptr_materialsi0;
+            JS_FreeValue(ctx, js_materials);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_materials;
+        materials = (Material *)JS_GetArrayBuffer(ctx, &size_materials, argv[4]);
+    }
+    else {
+        if(freesrc_materials) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+        JS_ThrowTypeError(ctx, "argv[4] does not match type Material *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_materials) {
+        JS_FreeValue(ctx, argv[4]);
+    }
+    int * meshMaterial;
+    bool freesrc_meshMaterial = false;
+    JSValue da_meshMaterial;
+    int64_t size_meshMaterial;
+    if(JS_GetClassID(argv[5]) == js_ArrayProxy_class_id) {
+        void * opaque_meshMaterial = JS_GetOpaque(argv[5], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_meshMaterial = *(ArrayProxy_class *)opaque_meshMaterial;
+        argv[5] = AP_meshMaterial.values(ctx, AP_meshMaterial.opaque, 0, false);
+        freesrc_meshMaterial = true;
+    }
+    if(JS_IsArray(argv[5]) == 1) {
+        if(JS_GetLength(ctx,argv[5],&size_meshMaterial)==-1) {
+            return JS_EXCEPTION;
+        }
+        meshMaterial = (int *)js_malloc(ctx, size_meshMaterial * sizeof(int));
+        for(int i0=0; i0 < size_meshMaterial; i0++){
+            JSValue js_meshMaterial = JS_GetPropertyUint32(ctx,argv[5],i0);
+            int32_t long_meshMateriali0;
+            int err_meshMateriali0 = JS_ToInt32(ctx, &long_meshMateriali0, js_meshMaterial);
+            if(err_meshMateriali0<0) {
+                JS_ThrowTypeError(ctx, "js_meshMaterial is not numeric");
+                return JS_EXCEPTION;
+            }
+            meshMaterial[i0] = (int)long_meshMateriali0;
+            JS_FreeValue(ctx, js_meshMaterial);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[5]) == 1) {
+        size_t size_meshMaterial;
+        meshMaterial = (int *)JS_GetArrayBuffer(ctx, &size_meshMaterial, argv[5]);
+    }
+    else {
+        JSClassID classid_meshMaterial = JS_GetClassID(argv[5]);
+        if(classid_meshMaterial==JS_CLASS_INT16_ARRAY) {
+            size_t offset_meshMaterial;
+            size_t size_meshMaterial;
+            da_meshMaterial = JS_GetTypedArrayBuffer(ctx,argv[5],&offset_meshMaterial,&size_meshMaterial,NULL);
+            meshMaterial = (int *)JS_GetArrayBuffer(ctx, &size_meshMaterial, da_meshMaterial);
+            meshMaterial+=offset_meshMaterial;
+            size_meshMaterial-=offset_meshMaterial;
+        }
+        else {
+            if(freesrc_meshMaterial) {
+                JS_FreeValue(ctx, argv[5]);
+            }
+            JS_ThrowTypeError(ctx, "argv[5] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_meshMaterial) {
+            JS_FreeValue(ctx, argv[5]);
+        }
+    }
+    int32_t long_boneCount;
+    int err_boneCount = JS_ToInt32(ctx, &long_boneCount, argv[6]);
+    if(err_boneCount<0) {
+        JS_ThrowTypeError(ctx, "argv[6] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int boneCount = (int)long_boneCount;
+    BoneInfo * bones;
+    bool freesrc_bones = false;
+    JSValue da_bones;
+    int64_t size_bones;
+    if(JS_GetClassID(argv[7]) == js_ArrayProxy_class_id) {
+        void * opaque_bones = JS_GetOpaque(argv[7], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_bones = *(ArrayProxy_class *)opaque_bones;
+        argv[7] = AP_bones.values(ctx, AP_bones.opaque, 0, false);
+        freesrc_bones = true;
+    }
+    if(JS_IsArray(argv[7]) == 1) {
+        if(JS_GetLength(ctx,argv[7],&size_bones)==-1) {
+            return JS_EXCEPTION;
+        }
+        bones = (BoneInfo *)js_malloc(ctx, size_bones * sizeof(BoneInfo));
+        for(int i0=0; i0 < size_bones; i0++){
+            JSValue js_bones = JS_GetPropertyUint32(ctx,argv[7],i0);
+            BoneInfo* ptr_bonesi0 = (BoneInfo*)JS_GetOpaque(js_bones, js_BoneInfo_class_id);
+            if(ptr_bonesi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_bones does not allow null");
+                return JS_EXCEPTION;
+            }
+            bones[i0] = *ptr_bonesi0;
+            JS_FreeValue(ctx, js_bones);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[7]) == 1) {
+        size_t size_bones;
+        bones = (BoneInfo *)JS_GetArrayBuffer(ctx, &size_bones, argv[7]);
+    }
+    else {
+        if(freesrc_bones) {
+            JS_FreeValue(ctx, argv[7]);
+        }
+        JS_ThrowTypeError(ctx, "argv[7] does not match type BoneInfo *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_bones) {
+        JS_FreeValue(ctx, argv[7]);
+    }
+    Transform * bindPose;
+    bool freesrc_bindPose = false;
+    JSValue da_bindPose;
+    int64_t size_bindPose;
+    if(JS_GetClassID(argv[8]) == js_ArrayProxy_class_id) {
+        void * opaque_bindPose = JS_GetOpaque(argv[8], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_bindPose = *(ArrayProxy_class *)opaque_bindPose;
+        argv[8] = AP_bindPose.values(ctx, AP_bindPose.opaque, 0, false);
+        freesrc_bindPose = true;
+    }
+    if(JS_IsArray(argv[8]) == 1) {
+        if(JS_GetLength(ctx,argv[8],&size_bindPose)==-1) {
+            return JS_EXCEPTION;
+        }
+        bindPose = (Transform *)js_malloc(ctx, size_bindPose * sizeof(Transform));
+        for(int i0=0; i0 < size_bindPose; i0++){
+            JSValue js_bindPose = JS_GetPropertyUint32(ctx,argv[8],i0);
+            Transform* ptr_bindPosei0 = (Transform*)JS_GetOpaque(js_bindPose, js_Transform_class_id);
+            if(ptr_bindPosei0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_bindPose does not allow null");
+                return JS_EXCEPTION;
+            }
+            bindPose[i0] = *ptr_bindPosei0;
+            JS_FreeValue(ctx, js_bindPose);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[8]) == 1) {
+        size_t size_bindPose;
+        bindPose = (Transform *)JS_GetArrayBuffer(ctx, &size_bindPose, argv[8]);
+    }
+    else {
+        if(freesrc_bindPose) {
+            JS_FreeValue(ctx, argv[8]);
+        }
+        JS_ThrowTypeError(ctx, "argv[8] does not match type Transform *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_bindPose) {
+        JS_FreeValue(ctx, argv[8]);
+    }
+    Model _struct = { transform, meshCount, materialCount, meshes, materials, meshMaterial, boneCount, bones, bindPose };
+    Model* ptr__return = (Model*)js_malloc(ctx, sizeof(Model));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Model_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_ModelAnimation_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        ModelAnimation* ptr__return = (ModelAnimation*)js_calloc(ctx, 1, sizeof(ModelAnimation));
+        JSValue _return = JS_NewObjectClass(ctx, js_ModelAnimation_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    int32_t long_boneCount;
+    int err_boneCount = JS_ToInt32(ctx, &long_boneCount, argv[0]);
+    if(err_boneCount<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int boneCount = (int)long_boneCount;
+    int32_t long_frameCount;
+    int err_frameCount = JS_ToInt32(ctx, &long_frameCount, argv[1]);
+    if(err_frameCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int frameCount = (int)long_frameCount;
+    BoneInfo * bones;
+    bool freesrc_bones = false;
+    JSValue da_bones;
+    int64_t size_bones;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_bones = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_bones = *(ArrayProxy_class *)opaque_bones;
+        argv[2] = AP_bones.values(ctx, AP_bones.opaque, 0, false);
+        freesrc_bones = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_bones)==-1) {
+            return JS_EXCEPTION;
+        }
+        bones = (BoneInfo *)js_malloc(ctx, size_bones * sizeof(BoneInfo));
+        for(int i0=0; i0 < size_bones; i0++){
+            JSValue js_bones = JS_GetPropertyUint32(ctx,argv[2],i0);
+            BoneInfo* ptr_bonesi0 = (BoneInfo*)JS_GetOpaque(js_bones, js_BoneInfo_class_id);
+            if(ptr_bonesi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_bones does not allow null");
+                return JS_EXCEPTION;
+            }
+            bones[i0] = *ptr_bonesi0;
+            JS_FreeValue(ctx, js_bones);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_bones;
+        bones = (BoneInfo *)JS_GetArrayBuffer(ctx, &size_bones, argv[2]);
+    }
+    else {
+        if(freesrc_bones) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not match type BoneInfo *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_bones) {
+        JS_FreeValue(ctx, argv[2]);
+    }
+    Transform * * framePoses;
+    bool freesrc_framePoses = false;
+    int64_t size_framePoses;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_framePoses = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_framePoses = *(ArrayProxy_class *)opaque_framePoses;
+        argv[3] = AP_framePoses.values(ctx, AP_framePoses.opaque, 0, false);
+        freesrc_framePoses = true;
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        if(JS_GetLength(ctx,argv[3],&size_framePoses)==-1) {
+            return JS_EXCEPTION;
+        }
+        framePoses = (Transform * *)js_malloc(ctx, size_framePoses * sizeof(Transform *));
+        for(int i0=0; i0 < size_framePoses; i0++){
+            JSValue js_framePoses = JS_GetPropertyUint32(ctx,argv[3],i0);
+            int64_t size_framePosesi0;
+            if(JS_GetClassID(js_framePoses) == js_ArrayProxy_class_id) {
+                void * opaque_framePosesi0 = JS_GetOpaque(js_framePoses, js_ArrayProxy_class_id);
+                ArrayProxy_class AP_framePosesi0 = *(ArrayProxy_class *)opaque_framePosesi0;
+                js_framePoses = AP_framePosesi0.values(ctx, AP_framePosesi0.opaque, 0, false);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &js_framePoses);
+            }
+            if(JS_IsArray(js_framePoses) == 1) {
+                if(JS_GetLength(ctx,js_framePoses,&size_framePosesi0)==-1) {
+                    return JS_EXCEPTION;
+                }
+                framePoses[i0] = (Transform *)js_malloc(ctx, size_framePosesi0 * sizeof(Transform));
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, framePoses[i0]);
+                for(int i1=0; i1 < size_framePosesi0; i1++){
+                    JSValue js_framePosesi0 = JS_GetPropertyUint32(ctx,js_framePoses,i1);
+                    Transform* ptr_framePosesi0i1 = (Transform*)JS_GetOpaque(js_framePosesi0, js_Transform_class_id);
+                    if(ptr_framePosesi0i1 == NULL) {
+                        JS_ThrowTypeError(ctx, "js_framePosesi0 does not allow null");
+                        return JS_EXCEPTION;
+                    }
+                    framePoses[i0][i1] = *ptr_framePosesi0i1;
+                    JS_FreeValue(ctx, js_framePosesi0);
+                }
+            }
+            else if(JS_IsArrayBuffer(js_framePoses) == 1) {
+                size_t size_framePosesi0;
+                framePoses[i0] = (Transform *)JS_GetArrayBuffer(ctx, &size_framePosesi0, js_framePoses);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, framePoses[i0]);
+            }
+            else {
+                JS_ThrowTypeError(ctx, "js_framePoses does not match type Transform *");
+                return JS_EXCEPTION;
+            }
+            JS_FreeValue(ctx, js_framePoses);
+        }
+    }
+    else {
+        if(freesrc_framePoses) {
+            JS_FreeValue(ctx, argv[3]);
+        }
+        JS_ThrowTypeError(ctx, "argv[3] does not match type Transform * *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_framePoses) {
+        JS_FreeValue(ctx, argv[3]);
+    }
+    char * name;
+    bool freesrc_name = false;
+    JSValue da_name;
+    int64_t size_name;
+    if(JS_IsString(argv[4]) == 1) {
+        name = (char *)JS_ToCStringLen(ctx, &size_name, argv[4]);
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_name;
+        name = (char *)JS_GetArrayBuffer(ctx, &size_name, argv[4]);
+    }
+    else {
+        JSClassID classid_name = JS_GetClassID(argv[4]);
+        if(classid_name==JS_CLASS_INT8_ARRAY) {
+            size_t offset_name;
+            size_t size_name;
+            da_name = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_name,&size_name,NULL);
+            name = (char *)JS_GetArrayBuffer(ctx, &size_name, da_name);
+            name+=offset_name;
+            size_name-=offset_name;
+        }
+        else {
+            if(freesrc_name) {
+                JS_FreeValue(ctx, argv[4]);
+            }
+            JS_ThrowTypeError(ctx, "argv[4] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_name) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+    }
+    ModelAnimation _struct = { boneCount, frameCount, bones, framePoses, {name[0],name[1],name[2],name[3],name[4],name[5],name[6],name[7],name[8],name[9],name[10],name[11],name[12],name[13],name[14],name[15],name[16],name[17],name[18],name[19],name[20],name[21],name[22],name[23],name[24],name[25],name[26],name[27],name[28],name[29],name[30],name[31]} };
+    ModelAnimation* ptr__return = (ModelAnimation*)js_malloc(ctx, sizeof(ModelAnimation));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_ModelAnimation_class_id);
     JS_SetOpaque(_return, ptr__return);
     return _return;
 }
@@ -4908,6 +10249,46 @@ static JSValue js_Ray_constructor(JSContext * ctx, JSValue this_val, int argc, J
     return _return;
 }
 
+static JSValue js_RayCollision_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        RayCollision* ptr__return = (RayCollision*)js_calloc(ctx, 1, sizeof(RayCollision));
+        JSValue _return = JS_NewObjectClass(ctx, js_RayCollision_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    int js_hit = JS_ToBool(ctx, argv[0]);
+    if(js_hit<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not a bool");
+        return JS_EXCEPTION;
+    }
+    bool hit = js_hit;
+    double double_distance;
+    int err_distance = JS_ToFloat64(ctx, &double_distance, argv[1]);
+    if(err_distance<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float distance = (float)double_distance;
+    Vector3* ptr_point = (Vector3*)JS_GetOpaque(argv[2], js_Vector3_class_id);
+    if(ptr_point == NULL) {
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 point = *ptr_point;
+    Vector3* ptr_normal = (Vector3*)JS_GetOpaque(argv[3], js_Vector3_class_id);
+    if(ptr_normal == NULL) {
+        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 normal = *ptr_normal;
+    RayCollision _struct = { hit, distance, point, normal };
+    RayCollision* ptr__return = (RayCollision*)js_malloc(ctx, sizeof(RayCollision));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_RayCollision_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
 static JSValue js_BoundingBox_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     if(argc==0) {
         BoundingBox* ptr__return = (BoundingBox*)js_calloc(ctx, 1, sizeof(BoundingBox));
@@ -4935,6 +10316,300 @@ static JSValue js_BoundingBox_constructor(JSContext * ctx, JSValue this_val, int
     return _return;
 }
 
+static JSValue js_Wave_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Wave* ptr__return = (Wave*)js_calloc(ctx, 1, sizeof(Wave));
+        JSValue _return = JS_NewObjectClass(ctx, js_Wave_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_frameCount;
+    int err_frameCount = JS_ToUint32(ctx, &long_frameCount, argv[0]);
+    if(err_frameCount<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int frameCount = (unsigned int)long_frameCount;
+    uint32_t long_sampleRate;
+    int err_sampleRate = JS_ToUint32(ctx, &long_sampleRate, argv[1]);
+    if(err_sampleRate<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleRate = (unsigned int)long_sampleRate;
+    uint32_t long_sampleSize;
+    int err_sampleSize = JS_ToUint32(ctx, &long_sampleSize, argv[2]);
+    if(err_sampleSize<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleSize = (unsigned int)long_sampleSize;
+    uint32_t long_channels;
+    int err_channels = JS_ToUint32(ctx, &long_channels, argv[3]);
+    if(err_channels<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int channels = (unsigned int)long_channels;
+    void * data;
+    bool freesrc_data = false;
+    JSValue da_data;
+    int64_t size_data;
+    if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_data;
+        data = (void *)JS_GetArrayBuffer(ctx, &size_data, argv[4]);
+    }
+    else {
+        if(freesrc_data) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+        JS_ThrowTypeError(ctx, "argv[4] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_data) {
+        JS_FreeValue(ctx, argv[4]);
+    }
+    Wave _struct = { frameCount, sampleRate, sampleSize, channels, data };
+    Wave* ptr__return = (Wave*)js_malloc(ctx, sizeof(Wave));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Wave_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_rAudioBuffer_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        rAudioBuffer* ptr__return = (rAudioBuffer*)js_calloc(ctx, 1, sizeof(rAudioBuffer));
+        JSValue _return = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    rAudioBuffer _struct = {  };
+    rAudioBuffer* ptr__return = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_rAudioProcessor_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        rAudioProcessor* ptr__return = (rAudioProcessor*)js_calloc(ctx, 1, sizeof(rAudioProcessor));
+        JSValue _return = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    rAudioProcessor _struct = {  };
+    rAudioProcessor* ptr__return = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_AudioStream_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        AudioStream* ptr__return = (AudioStream*)js_calloc(ctx, 1, sizeof(AudioStream));
+        JSValue _return = JS_NewObjectClass(ctx, js_AudioStream_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    rAudioBuffer * buffer;
+    bool freesrc_buffer = false;
+    JSValue da_buffer;
+    int64_t size_buffer;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_buffer = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_buffer = *(ArrayProxy_class *)opaque_buffer;
+        argv[0] = AP_buffer.values(ctx, AP_buffer.opaque, 0, false);
+        freesrc_buffer = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_buffer)==-1) {
+            return JS_EXCEPTION;
+        }
+        buffer = (rAudioBuffer *)js_malloc(ctx, size_buffer * sizeof(rAudioBuffer));
+        for(int i0=0; i0 < size_buffer; i0++){
+            JSValue js_buffer = JS_GetPropertyUint32(ctx,argv[0],i0);
+            rAudioBuffer* ptr_bufferi0 = (rAudioBuffer*)JS_GetOpaque(js_buffer, js_rAudioBuffer_class_id);
+            if(ptr_bufferi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_buffer does not allow null");
+                return JS_EXCEPTION;
+            }
+            buffer[i0] = *ptr_bufferi0;
+            JS_FreeValue(ctx, js_buffer);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_buffer;
+        buffer = (rAudioBuffer *)JS_GetArrayBuffer(ctx, &size_buffer, argv[0]);
+    }
+    else {
+        if(freesrc_buffer) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type rAudioBuffer *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_buffer) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    rAudioProcessor * processor;
+    bool freesrc_processor = false;
+    JSValue da_processor;
+    int64_t size_processor;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_processor = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_processor = *(ArrayProxy_class *)opaque_processor;
+        argv[1] = AP_processor.values(ctx, AP_processor.opaque, 0, false);
+        freesrc_processor = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_processor)==-1) {
+            return JS_EXCEPTION;
+        }
+        processor = (rAudioProcessor *)js_malloc(ctx, size_processor * sizeof(rAudioProcessor));
+        for(int i0=0; i0 < size_processor; i0++){
+            JSValue js_processor = JS_GetPropertyUint32(ctx,argv[1],i0);
+            rAudioProcessor* ptr_processori0 = (rAudioProcessor*)JS_GetOpaque(js_processor, js_rAudioProcessor_class_id);
+            if(ptr_processori0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_processor does not allow null");
+                return JS_EXCEPTION;
+            }
+            processor[i0] = *ptr_processori0;
+            JS_FreeValue(ctx, js_processor);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_processor;
+        processor = (rAudioProcessor *)JS_GetArrayBuffer(ctx, &size_processor, argv[1]);
+    }
+    else {
+        if(freesrc_processor) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] does not match type rAudioProcessor *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_processor) {
+        JS_FreeValue(ctx, argv[1]);
+    }
+    uint32_t long_sampleRate;
+    int err_sampleRate = JS_ToUint32(ctx, &long_sampleRate, argv[2]);
+    if(err_sampleRate<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleRate = (unsigned int)long_sampleRate;
+    uint32_t long_sampleSize;
+    int err_sampleSize = JS_ToUint32(ctx, &long_sampleSize, argv[3]);
+    if(err_sampleSize<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int sampleSize = (unsigned int)long_sampleSize;
+    uint32_t long_channels;
+    int err_channels = JS_ToUint32(ctx, &long_channels, argv[4]);
+    if(err_channels<0) {
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int channels = (unsigned int)long_channels;
+    AudioStream _struct = { buffer, processor, sampleRate, sampleSize, channels };
+    AudioStream* ptr__return = (AudioStream*)js_malloc(ctx, sizeof(AudioStream));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_AudioStream_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Sound_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Sound* ptr__return = (Sound*)js_calloc(ctx, 1, sizeof(Sound));
+        JSValue _return = JS_NewObjectClass(ctx, js_Sound_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    uint32_t long_frameCount;
+    int err_frameCount = JS_ToUint32(ctx, &long_frameCount, argv[1]);
+    if(err_frameCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int frameCount = (unsigned int)long_frameCount;
+    Sound _struct = { stream, frameCount };
+    Sound* ptr__return = (Sound*)js_malloc(ctx, sizeof(Sound));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Sound_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_Music_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        Music* ptr__return = (Music*)js_calloc(ctx, 1, sizeof(Music));
+        JSValue _return = JS_NewObjectClass(ctx, js_Music_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    AudioStream* ptr_stream = (AudioStream*)JS_GetOpaque(argv[0], js_AudioStream_class_id);
+    if(ptr_stream == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    AudioStream stream = *ptr_stream;
+    uint32_t long_frameCount;
+    int err_frameCount = JS_ToUint32(ctx, &long_frameCount, argv[1]);
+    if(err_frameCount<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int frameCount = (unsigned int)long_frameCount;
+    int js_looping = JS_ToBool(ctx, argv[2]);
+    if(js_looping<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not a bool");
+        return JS_EXCEPTION;
+    }
+    bool looping = js_looping;
+    int32_t long_ctxType;
+    int err_ctxType = JS_ToInt32(ctx, &long_ctxType, argv[3]);
+    if(err_ctxType<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int ctxType = (int)long_ctxType;
+    void * ctxData;
+    bool freesrc_ctxData = false;
+    JSValue da_ctxData;
+    int64_t size_ctxData;
+    if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_ctxData;
+        ctxData = (void *)JS_GetArrayBuffer(ctx, &size_ctxData, argv[4]);
+    }
+    else {
+        if(freesrc_ctxData) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+        JS_ThrowTypeError(ctx, "argv[4] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_ctxData) {
+        JS_FreeValue(ctx, argv[4]);
+    }
+    Music _struct = { stream, frameCount, looping, ctxType, ctxData };
+    Music* ptr__return = (Music*)js_malloc(ctx, sizeof(Music));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_Music_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
 static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     if(argc==0) {
         VrDeviceInfo* ptr__return = (VrDeviceInfo*)js_calloc(ctx, 1, sizeof(VrDeviceInfo));
@@ -4942,10 +10617,771 @@ static JSValue js_VrDeviceInfo_constructor(JSContext * ctx, JSValue this_val, in
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
-    VrDeviceInfo _struct = {  };
+    int32_t long_hResolution;
+    int err_hResolution = JS_ToInt32(ctx, &long_hResolution, argv[0]);
+    if(err_hResolution<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int hResolution = (int)long_hResolution;
+    int32_t long_vResolution;
+    int err_vResolution = JS_ToInt32(ctx, &long_vResolution, argv[1]);
+    if(err_vResolution<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int vResolution = (int)long_vResolution;
+    double double_hScreenSize;
+    int err_hScreenSize = JS_ToFloat64(ctx, &double_hScreenSize, argv[2]);
+    if(err_hScreenSize<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float hScreenSize = (float)double_hScreenSize;
+    double double_vScreenSize;
+    int err_vScreenSize = JS_ToFloat64(ctx, &double_vScreenSize, argv[3]);
+    if(err_vScreenSize<0) {
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float vScreenSize = (float)double_vScreenSize;
+    double double_eyeToScreenDistance;
+    int err_eyeToScreenDistance = JS_ToFloat64(ctx, &double_eyeToScreenDistance, argv[4]);
+    if(err_eyeToScreenDistance<0) {
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float eyeToScreenDistance = (float)double_eyeToScreenDistance;
+    double double_lensSeparationDistance;
+    int err_lensSeparationDistance = JS_ToFloat64(ctx, &double_lensSeparationDistance, argv[5]);
+    if(err_lensSeparationDistance<0) {
+        JS_ThrowTypeError(ctx, "argv[5] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float lensSeparationDistance = (float)double_lensSeparationDistance;
+    double double_interpupillaryDistance;
+    int err_interpupillaryDistance = JS_ToFloat64(ctx, &double_interpupillaryDistance, argv[6]);
+    if(err_interpupillaryDistance<0) {
+        JS_ThrowTypeError(ctx, "argv[6] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float interpupillaryDistance = (float)double_interpupillaryDistance;
+    float * lensDistortionValues;
+    bool freesrc_lensDistortionValues = false;
+    JSValue da_lensDistortionValues;
+    int64_t size_lensDistortionValues;
+    if(JS_GetClassID(argv[7]) == js_ArrayProxy_class_id) {
+        void * opaque_lensDistortionValues = JS_GetOpaque(argv[7], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_lensDistortionValues = *(ArrayProxy_class *)opaque_lensDistortionValues;
+        argv[7] = AP_lensDistortionValues.values(ctx, AP_lensDistortionValues.opaque, 0, false);
+        freesrc_lensDistortionValues = true;
+    }
+    if(JS_IsArray(argv[7]) == 1) {
+        lensDistortionValues = (float *)js_malloc(ctx, 4 * sizeof(float));
+        for(int i0=0; i0 < 4; i0++){
+            JSValue js_lensDistortionValues = JS_GetPropertyUint32(ctx,argv[7],i0);
+            double double_lensDistortionValuesi0;
+            int err_lensDistortionValuesi0 = JS_ToFloat64(ctx, &double_lensDistortionValuesi0, js_lensDistortionValues);
+            if(err_lensDistortionValuesi0<0) {
+                JS_ThrowTypeError(ctx, "js_lensDistortionValues is not numeric");
+                return JS_EXCEPTION;
+            }
+            lensDistortionValues[i0] = (float)double_lensDistortionValuesi0;
+            JS_FreeValue(ctx, js_lensDistortionValues);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[7]) == 1) {
+        size_t size_lensDistortionValues;
+        lensDistortionValues = (float *)JS_GetArrayBuffer(ctx, &size_lensDistortionValues, argv[7]);
+    }
+    else {
+        JSClassID classid_lensDistortionValues = JS_GetClassID(argv[7]);
+        if(classid_lensDistortionValues==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_lensDistortionValues;
+            size_t size_lensDistortionValues;
+            da_lensDistortionValues = JS_GetTypedArrayBuffer(ctx,argv[7],&offset_lensDistortionValues,&size_lensDistortionValues,NULL);
+            lensDistortionValues = (float *)JS_GetArrayBuffer(ctx, &size_lensDistortionValues, da_lensDistortionValues);
+            lensDistortionValues+=offset_lensDistortionValues;
+            size_lensDistortionValues-=offset_lensDistortionValues;
+        }
+        else {
+            if(freesrc_lensDistortionValues) {
+                JS_FreeValue(ctx, argv[7]);
+            }
+            JS_ThrowTypeError(ctx, "argv[7] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_lensDistortionValues) {
+            JS_FreeValue(ctx, argv[7]);
+        }
+    }
+    float * chromaAbCorrection;
+    bool freesrc_chromaAbCorrection = false;
+    JSValue da_chromaAbCorrection;
+    int64_t size_chromaAbCorrection;
+    if(JS_GetClassID(argv[8]) == js_ArrayProxy_class_id) {
+        void * opaque_chromaAbCorrection = JS_GetOpaque(argv[8], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_chromaAbCorrection = *(ArrayProxy_class *)opaque_chromaAbCorrection;
+        argv[8] = AP_chromaAbCorrection.values(ctx, AP_chromaAbCorrection.opaque, 0, false);
+        freesrc_chromaAbCorrection = true;
+    }
+    if(JS_IsArray(argv[8]) == 1) {
+        chromaAbCorrection = (float *)js_malloc(ctx, 4 * sizeof(float));
+        for(int i0=0; i0 < 4; i0++){
+            JSValue js_chromaAbCorrection = JS_GetPropertyUint32(ctx,argv[8],i0);
+            double double_chromaAbCorrectioni0;
+            int err_chromaAbCorrectioni0 = JS_ToFloat64(ctx, &double_chromaAbCorrectioni0, js_chromaAbCorrection);
+            if(err_chromaAbCorrectioni0<0) {
+                JS_ThrowTypeError(ctx, "js_chromaAbCorrection is not numeric");
+                return JS_EXCEPTION;
+            }
+            chromaAbCorrection[i0] = (float)double_chromaAbCorrectioni0;
+            JS_FreeValue(ctx, js_chromaAbCorrection);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[8]) == 1) {
+        size_t size_chromaAbCorrection;
+        chromaAbCorrection = (float *)JS_GetArrayBuffer(ctx, &size_chromaAbCorrection, argv[8]);
+    }
+    else {
+        JSClassID classid_chromaAbCorrection = JS_GetClassID(argv[8]);
+        if(classid_chromaAbCorrection==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_chromaAbCorrection;
+            size_t size_chromaAbCorrection;
+            da_chromaAbCorrection = JS_GetTypedArrayBuffer(ctx,argv[8],&offset_chromaAbCorrection,&size_chromaAbCorrection,NULL);
+            chromaAbCorrection = (float *)JS_GetArrayBuffer(ctx, &size_chromaAbCorrection, da_chromaAbCorrection);
+            chromaAbCorrection+=offset_chromaAbCorrection;
+            size_chromaAbCorrection-=offset_chromaAbCorrection;
+        }
+        else {
+            if(freesrc_chromaAbCorrection) {
+                JS_FreeValue(ctx, argv[8]);
+            }
+            JS_ThrowTypeError(ctx, "argv[8] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_chromaAbCorrection) {
+            JS_FreeValue(ctx, argv[8]);
+        }
+    }
+    VrDeviceInfo _struct = { hResolution, vResolution, hScreenSize, vScreenSize, eyeToScreenDistance, lensSeparationDistance, interpupillaryDistance, {lensDistortionValues[0],lensDistortionValues[1],lensDistortionValues[2],lensDistortionValues[3]}, {chromaAbCorrection[0],chromaAbCorrection[1],chromaAbCorrection[2],chromaAbCorrection[3]} };
     VrDeviceInfo* ptr__return = (VrDeviceInfo*)js_malloc(ctx, sizeof(VrDeviceInfo));
     *ptr__return = _struct;
     JSValue _return = JS_NewObjectClass(ctx, js_VrDeviceInfo_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_VrStereoConfig_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        VrStereoConfig* ptr__return = (VrStereoConfig*)js_calloc(ctx, 1, sizeof(VrStereoConfig));
+        JSValue _return = JS_NewObjectClass(ctx, js_VrStereoConfig_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    Matrix * projection;
+    bool freesrc_projection = false;
+    JSValue da_projection;
+    int64_t size_projection;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_projection = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_projection = *(ArrayProxy_class *)opaque_projection;
+        argv[0] = AP_projection.values(ctx, AP_projection.opaque, 0, false);
+        freesrc_projection = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        projection = (Matrix *)js_malloc(ctx, 2 * sizeof(Matrix));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_projection = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Matrix* ptr_projectioni0 = (Matrix*)JS_GetOpaque(js_projection, js_Matrix_class_id);
+            if(ptr_projectioni0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_projection does not allow null");
+                return JS_EXCEPTION;
+            }
+            projection[i0] = *ptr_projectioni0;
+            JS_FreeValue(ctx, js_projection);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_projection;
+        projection = (Matrix *)JS_GetArrayBuffer(ctx, &size_projection, argv[0]);
+    }
+    else {
+        if(freesrc_projection) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Matrix *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_projection) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    Matrix * viewOffset;
+    bool freesrc_viewOffset = false;
+    JSValue da_viewOffset;
+    int64_t size_viewOffset;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_viewOffset = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_viewOffset = *(ArrayProxy_class *)opaque_viewOffset;
+        argv[1] = AP_viewOffset.values(ctx, AP_viewOffset.opaque, 0, false);
+        freesrc_viewOffset = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        viewOffset = (Matrix *)js_malloc(ctx, 2 * sizeof(Matrix));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_viewOffset = JS_GetPropertyUint32(ctx,argv[1],i0);
+            Matrix* ptr_viewOffseti0 = (Matrix*)JS_GetOpaque(js_viewOffset, js_Matrix_class_id);
+            if(ptr_viewOffseti0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_viewOffset does not allow null");
+                return JS_EXCEPTION;
+            }
+            viewOffset[i0] = *ptr_viewOffseti0;
+            JS_FreeValue(ctx, js_viewOffset);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_viewOffset;
+        viewOffset = (Matrix *)JS_GetArrayBuffer(ctx, &size_viewOffset, argv[1]);
+    }
+    else {
+        if(freesrc_viewOffset) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] does not match type Matrix *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_viewOffset) {
+        JS_FreeValue(ctx, argv[1]);
+    }
+    float * leftLensCenter;
+    bool freesrc_leftLensCenter = false;
+    JSValue da_leftLensCenter;
+    int64_t size_leftLensCenter;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_leftLensCenter = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_leftLensCenter = *(ArrayProxy_class *)opaque_leftLensCenter;
+        argv[2] = AP_leftLensCenter.values(ctx, AP_leftLensCenter.opaque, 0, false);
+        freesrc_leftLensCenter = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        leftLensCenter = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_leftLensCenter = JS_GetPropertyUint32(ctx,argv[2],i0);
+            double double_leftLensCenteri0;
+            int err_leftLensCenteri0 = JS_ToFloat64(ctx, &double_leftLensCenteri0, js_leftLensCenter);
+            if(err_leftLensCenteri0<0) {
+                JS_ThrowTypeError(ctx, "js_leftLensCenter is not numeric");
+                return JS_EXCEPTION;
+            }
+            leftLensCenter[i0] = (float)double_leftLensCenteri0;
+            JS_FreeValue(ctx, js_leftLensCenter);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_leftLensCenter;
+        leftLensCenter = (float *)JS_GetArrayBuffer(ctx, &size_leftLensCenter, argv[2]);
+    }
+    else {
+        JSClassID classid_leftLensCenter = JS_GetClassID(argv[2]);
+        if(classid_leftLensCenter==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_leftLensCenter;
+            size_t size_leftLensCenter;
+            da_leftLensCenter = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_leftLensCenter,&size_leftLensCenter,NULL);
+            leftLensCenter = (float *)JS_GetArrayBuffer(ctx, &size_leftLensCenter, da_leftLensCenter);
+            leftLensCenter+=offset_leftLensCenter;
+            size_leftLensCenter-=offset_leftLensCenter;
+        }
+        else {
+            if(freesrc_leftLensCenter) {
+                JS_FreeValue(ctx, argv[2]);
+            }
+            JS_ThrowTypeError(ctx, "argv[2] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_leftLensCenter) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+    }
+    float * rightLensCenter;
+    bool freesrc_rightLensCenter = false;
+    JSValue da_rightLensCenter;
+    int64_t size_rightLensCenter;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_rightLensCenter = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_rightLensCenter = *(ArrayProxy_class *)opaque_rightLensCenter;
+        argv[3] = AP_rightLensCenter.values(ctx, AP_rightLensCenter.opaque, 0, false);
+        freesrc_rightLensCenter = true;
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        rightLensCenter = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_rightLensCenter = JS_GetPropertyUint32(ctx,argv[3],i0);
+            double double_rightLensCenteri0;
+            int err_rightLensCenteri0 = JS_ToFloat64(ctx, &double_rightLensCenteri0, js_rightLensCenter);
+            if(err_rightLensCenteri0<0) {
+                JS_ThrowTypeError(ctx, "js_rightLensCenter is not numeric");
+                return JS_EXCEPTION;
+            }
+            rightLensCenter[i0] = (float)double_rightLensCenteri0;
+            JS_FreeValue(ctx, js_rightLensCenter);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        size_t size_rightLensCenter;
+        rightLensCenter = (float *)JS_GetArrayBuffer(ctx, &size_rightLensCenter, argv[3]);
+    }
+    else {
+        JSClassID classid_rightLensCenter = JS_GetClassID(argv[3]);
+        if(classid_rightLensCenter==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_rightLensCenter;
+            size_t size_rightLensCenter;
+            da_rightLensCenter = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_rightLensCenter,&size_rightLensCenter,NULL);
+            rightLensCenter = (float *)JS_GetArrayBuffer(ctx, &size_rightLensCenter, da_rightLensCenter);
+            rightLensCenter+=offset_rightLensCenter;
+            size_rightLensCenter-=offset_rightLensCenter;
+        }
+        else {
+            if(freesrc_rightLensCenter) {
+                JS_FreeValue(ctx, argv[3]);
+            }
+            JS_ThrowTypeError(ctx, "argv[3] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_rightLensCenter) {
+            JS_FreeValue(ctx, argv[3]);
+        }
+    }
+    float * leftScreenCenter;
+    bool freesrc_leftScreenCenter = false;
+    JSValue da_leftScreenCenter;
+    int64_t size_leftScreenCenter;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_leftScreenCenter = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_leftScreenCenter = *(ArrayProxy_class *)opaque_leftScreenCenter;
+        argv[4] = AP_leftScreenCenter.values(ctx, AP_leftScreenCenter.opaque, 0, false);
+        freesrc_leftScreenCenter = true;
+    }
+    if(JS_IsArray(argv[4]) == 1) {
+        leftScreenCenter = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_leftScreenCenter = JS_GetPropertyUint32(ctx,argv[4],i0);
+            double double_leftScreenCenteri0;
+            int err_leftScreenCenteri0 = JS_ToFloat64(ctx, &double_leftScreenCenteri0, js_leftScreenCenter);
+            if(err_leftScreenCenteri0<0) {
+                JS_ThrowTypeError(ctx, "js_leftScreenCenter is not numeric");
+                return JS_EXCEPTION;
+            }
+            leftScreenCenter[i0] = (float)double_leftScreenCenteri0;
+            JS_FreeValue(ctx, js_leftScreenCenter);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_leftScreenCenter;
+        leftScreenCenter = (float *)JS_GetArrayBuffer(ctx, &size_leftScreenCenter, argv[4]);
+    }
+    else {
+        JSClassID classid_leftScreenCenter = JS_GetClassID(argv[4]);
+        if(classid_leftScreenCenter==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_leftScreenCenter;
+            size_t size_leftScreenCenter;
+            da_leftScreenCenter = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_leftScreenCenter,&size_leftScreenCenter,NULL);
+            leftScreenCenter = (float *)JS_GetArrayBuffer(ctx, &size_leftScreenCenter, da_leftScreenCenter);
+            leftScreenCenter+=offset_leftScreenCenter;
+            size_leftScreenCenter-=offset_leftScreenCenter;
+        }
+        else {
+            if(freesrc_leftScreenCenter) {
+                JS_FreeValue(ctx, argv[4]);
+            }
+            JS_ThrowTypeError(ctx, "argv[4] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_leftScreenCenter) {
+            JS_FreeValue(ctx, argv[4]);
+        }
+    }
+    float * rightScreenCenter;
+    bool freesrc_rightScreenCenter = false;
+    JSValue da_rightScreenCenter;
+    int64_t size_rightScreenCenter;
+    if(JS_GetClassID(argv[5]) == js_ArrayProxy_class_id) {
+        void * opaque_rightScreenCenter = JS_GetOpaque(argv[5], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_rightScreenCenter = *(ArrayProxy_class *)opaque_rightScreenCenter;
+        argv[5] = AP_rightScreenCenter.values(ctx, AP_rightScreenCenter.opaque, 0, false);
+        freesrc_rightScreenCenter = true;
+    }
+    if(JS_IsArray(argv[5]) == 1) {
+        rightScreenCenter = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_rightScreenCenter = JS_GetPropertyUint32(ctx,argv[5],i0);
+            double double_rightScreenCenteri0;
+            int err_rightScreenCenteri0 = JS_ToFloat64(ctx, &double_rightScreenCenteri0, js_rightScreenCenter);
+            if(err_rightScreenCenteri0<0) {
+                JS_ThrowTypeError(ctx, "js_rightScreenCenter is not numeric");
+                return JS_EXCEPTION;
+            }
+            rightScreenCenter[i0] = (float)double_rightScreenCenteri0;
+            JS_FreeValue(ctx, js_rightScreenCenter);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[5]) == 1) {
+        size_t size_rightScreenCenter;
+        rightScreenCenter = (float *)JS_GetArrayBuffer(ctx, &size_rightScreenCenter, argv[5]);
+    }
+    else {
+        JSClassID classid_rightScreenCenter = JS_GetClassID(argv[5]);
+        if(classid_rightScreenCenter==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_rightScreenCenter;
+            size_t size_rightScreenCenter;
+            da_rightScreenCenter = JS_GetTypedArrayBuffer(ctx,argv[5],&offset_rightScreenCenter,&size_rightScreenCenter,NULL);
+            rightScreenCenter = (float *)JS_GetArrayBuffer(ctx, &size_rightScreenCenter, da_rightScreenCenter);
+            rightScreenCenter+=offset_rightScreenCenter;
+            size_rightScreenCenter-=offset_rightScreenCenter;
+        }
+        else {
+            if(freesrc_rightScreenCenter) {
+                JS_FreeValue(ctx, argv[5]);
+            }
+            JS_ThrowTypeError(ctx, "argv[5] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_rightScreenCenter) {
+            JS_FreeValue(ctx, argv[5]);
+        }
+    }
+    float * scale;
+    bool freesrc_scale = false;
+    JSValue da_scale;
+    int64_t size_scale;
+    if(JS_GetClassID(argv[6]) == js_ArrayProxy_class_id) {
+        void * opaque_scale = JS_GetOpaque(argv[6], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_scale = *(ArrayProxy_class *)opaque_scale;
+        argv[6] = AP_scale.values(ctx, AP_scale.opaque, 0, false);
+        freesrc_scale = true;
+    }
+    if(JS_IsArray(argv[6]) == 1) {
+        scale = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_scale = JS_GetPropertyUint32(ctx,argv[6],i0);
+            double double_scalei0;
+            int err_scalei0 = JS_ToFloat64(ctx, &double_scalei0, js_scale);
+            if(err_scalei0<0) {
+                JS_ThrowTypeError(ctx, "js_scale is not numeric");
+                return JS_EXCEPTION;
+            }
+            scale[i0] = (float)double_scalei0;
+            JS_FreeValue(ctx, js_scale);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[6]) == 1) {
+        size_t size_scale;
+        scale = (float *)JS_GetArrayBuffer(ctx, &size_scale, argv[6]);
+    }
+    else {
+        JSClassID classid_scale = JS_GetClassID(argv[6]);
+        if(classid_scale==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_scale;
+            size_t size_scale;
+            da_scale = JS_GetTypedArrayBuffer(ctx,argv[6],&offset_scale,&size_scale,NULL);
+            scale = (float *)JS_GetArrayBuffer(ctx, &size_scale, da_scale);
+            scale+=offset_scale;
+            size_scale-=offset_scale;
+        }
+        else {
+            if(freesrc_scale) {
+                JS_FreeValue(ctx, argv[6]);
+            }
+            JS_ThrowTypeError(ctx, "argv[6] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_scale) {
+            JS_FreeValue(ctx, argv[6]);
+        }
+    }
+    float * scaleIn;
+    bool freesrc_scaleIn = false;
+    JSValue da_scaleIn;
+    int64_t size_scaleIn;
+    if(JS_GetClassID(argv[7]) == js_ArrayProxy_class_id) {
+        void * opaque_scaleIn = JS_GetOpaque(argv[7], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_scaleIn = *(ArrayProxy_class *)opaque_scaleIn;
+        argv[7] = AP_scaleIn.values(ctx, AP_scaleIn.opaque, 0, false);
+        freesrc_scaleIn = true;
+    }
+    if(JS_IsArray(argv[7]) == 1) {
+        scaleIn = (float *)js_malloc(ctx, 2 * sizeof(float));
+        for(int i0=0; i0 < 2; i0++){
+            JSValue js_scaleIn = JS_GetPropertyUint32(ctx,argv[7],i0);
+            double double_scaleIni0;
+            int err_scaleIni0 = JS_ToFloat64(ctx, &double_scaleIni0, js_scaleIn);
+            if(err_scaleIni0<0) {
+                JS_ThrowTypeError(ctx, "js_scaleIn is not numeric");
+                return JS_EXCEPTION;
+            }
+            scaleIn[i0] = (float)double_scaleIni0;
+            JS_FreeValue(ctx, js_scaleIn);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[7]) == 1) {
+        size_t size_scaleIn;
+        scaleIn = (float *)JS_GetArrayBuffer(ctx, &size_scaleIn, argv[7]);
+    }
+    else {
+        JSClassID classid_scaleIn = JS_GetClassID(argv[7]);
+        if(classid_scaleIn==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_scaleIn;
+            size_t size_scaleIn;
+            da_scaleIn = JS_GetTypedArrayBuffer(ctx,argv[7],&offset_scaleIn,&size_scaleIn,NULL);
+            scaleIn = (float *)JS_GetArrayBuffer(ctx, &size_scaleIn, da_scaleIn);
+            scaleIn+=offset_scaleIn;
+            size_scaleIn-=offset_scaleIn;
+        }
+        else {
+            if(freesrc_scaleIn) {
+                JS_FreeValue(ctx, argv[7]);
+            }
+            JS_ThrowTypeError(ctx, "argv[7] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_scaleIn) {
+            JS_FreeValue(ctx, argv[7]);
+        }
+    }
+    VrStereoConfig _struct = { {projection[0],projection[1]}, {viewOffset[0],viewOffset[1]}, {leftLensCenter[0],leftLensCenter[1]}, {rightLensCenter[0],rightLensCenter[1]}, {leftScreenCenter[0],leftScreenCenter[1]}, {rightScreenCenter[0],rightScreenCenter[1]}, {scale[0],scale[1]}, {scaleIn[0],scaleIn[1]} };
+    VrStereoConfig* ptr__return = (VrStereoConfig*)js_malloc(ctx, sizeof(VrStereoConfig));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_VrStereoConfig_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_FilePathList_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        FilePathList* ptr__return = (FilePathList*)js_calloc(ctx, 1, sizeof(FilePathList));
+        JSValue _return = JS_NewObjectClass(ctx, js_FilePathList_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_capacity;
+    int err_capacity = JS_ToUint32(ctx, &long_capacity, argv[0]);
+    if(err_capacity<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int capacity = (unsigned int)long_capacity;
+    uint32_t long_count;
+    int err_count = JS_ToUint32(ctx, &long_count, argv[1]);
+    if(err_count<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int count = (unsigned int)long_count;
+    char * * paths;
+    bool freesrc_paths = false;
+    int64_t size_paths;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_paths = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_paths = *(ArrayProxy_class *)opaque_paths;
+        argv[2] = AP_paths.values(ctx, AP_paths.opaque, 0, false);
+        freesrc_paths = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_paths)==-1) {
+            return JS_EXCEPTION;
+        }
+        paths = (char * *)js_malloc(ctx, size_paths * sizeof(char *));
+        for(int i0=0; i0 < size_paths; i0++){
+            JSValue js_paths = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int64_t size_pathsi0;
+            if(JS_IsString(js_paths) == 1) {
+                paths[i0] = (char *)JS_ToCStringLen(ctx, &size_pathsi0, js_paths);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, paths[i0]);
+            }
+            else if(JS_IsArrayBuffer(js_paths) == 1) {
+                size_t size_pathsi0;
+                paths[i0] = (char *)JS_GetArrayBuffer(ctx, &size_pathsi0, js_paths);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, paths[i0]);
+            }
+            else {
+                JSClassID classid_pathsi0 = JS_GetClassID(js_paths);
+                if(classid_pathsi0==JS_CLASS_INT8_ARRAY) {
+                    size_t offset_pathsi0;
+                    size_t size_pathsi0;
+                    JSValue da_pathsi0 = JS_GetTypedArrayBuffer(ctx,js_paths,&offset_pathsi0,&size_pathsi0,NULL);
+                    paths[i0] = (char *)JS_GetArrayBuffer(ctx, &size_pathsi0, da_pathsi0);
+                    paths[i0]+=offset_pathsi0;
+                    size_pathsi0-=offset_pathsi0;
+                    memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_pathsi0);
+                }
+                else {
+                    JS_ThrowTypeError(ctx, "js_paths does not match type char *");
+                    return JS_EXCEPTION;
+                }
+            }
+            JS_FreeValue(ctx, js_paths);
+        }
+    }
+    else {
+        if(freesrc_paths) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not match type char * *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_paths) {
+        JS_FreeValue(ctx, argv[2]);
+    }
+    FilePathList _struct = { capacity, count, paths };
+    FilePathList* ptr__return = (FilePathList*)js_malloc(ctx, sizeof(FilePathList));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_FilePathList_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_AutomationEvent_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        AutomationEvent* ptr__return = (AutomationEvent*)js_calloc(ctx, 1, sizeof(AutomationEvent));
+        JSValue _return = JS_NewObjectClass(ctx, js_AutomationEvent_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_frame;
+    int err_frame = JS_ToUint32(ctx, &long_frame, argv[0]);
+    if(err_frame<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int frame = (unsigned int)long_frame;
+    uint32_t long_type;
+    int err_type = JS_ToUint32(ctx, &long_type, argv[1]);
+    if(err_type<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int type = (unsigned int)long_type;
+    int * params;
+    bool freesrc_params = false;
+    JSValue da_params;
+    int64_t size_params;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_params = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_params = *(ArrayProxy_class *)opaque_params;
+        argv[2] = AP_params.values(ctx, AP_params.opaque, 0, false);
+        freesrc_params = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        params = (int *)js_malloc(ctx, 4 * sizeof(int));
+        for(int i0=0; i0 < 4; i0++){
+            JSValue js_params = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int32_t long_paramsi0;
+            int err_paramsi0 = JS_ToInt32(ctx, &long_paramsi0, js_params);
+            if(err_paramsi0<0) {
+                JS_ThrowTypeError(ctx, "js_params is not numeric");
+                return JS_EXCEPTION;
+            }
+            params[i0] = (int)long_paramsi0;
+            JS_FreeValue(ctx, js_params);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_params;
+        params = (int *)JS_GetArrayBuffer(ctx, &size_params, argv[2]);
+    }
+    else {
+        JSClassID classid_params = JS_GetClassID(argv[2]);
+        if(classid_params==JS_CLASS_INT16_ARRAY) {
+            size_t offset_params;
+            size_t size_params;
+            da_params = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_params,&size_params,NULL);
+            params = (int *)JS_GetArrayBuffer(ctx, &size_params, da_params);
+            params+=offset_params;
+            size_params-=offset_params;
+        }
+        else {
+            if(freesrc_params) {
+                JS_FreeValue(ctx, argv[2]);
+            }
+            JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_params) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+    }
+    AutomationEvent _struct = { frame, type, {params[0],params[1],params[2],params[3]} };
+    AutomationEvent* ptr__return = (AutomationEvent*)js_malloc(ctx, sizeof(AutomationEvent));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_AutomationEvent_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_AutomationEventList_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        AutomationEventList* ptr__return = (AutomationEventList*)js_calloc(ctx, 1, sizeof(AutomationEventList));
+        JSValue _return = JS_NewObjectClass(ctx, js_AutomationEventList_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_capacity;
+    int err_capacity = JS_ToUint32(ctx, &long_capacity, argv[0]);
+    if(err_capacity<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int capacity = (unsigned int)long_capacity;
+    uint32_t long_count;
+    int err_count = JS_ToUint32(ctx, &long_count, argv[1]);
+    if(err_count<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned int count = (unsigned int)long_count;
+    AutomationEvent * events;
+    bool freesrc_events = false;
+    JSValue da_events;
+    int64_t size_events;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_events = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_events = *(ArrayProxy_class *)opaque_events;
+        argv[2] = AP_events.values(ctx, AP_events.opaque, 0, false);
+        freesrc_events = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_events)==-1) {
+            return JS_EXCEPTION;
+        }
+        events = (AutomationEvent *)js_malloc(ctx, size_events * sizeof(AutomationEvent));
+        for(int i0=0; i0 < size_events; i0++){
+            JSValue js_events = JS_GetPropertyUint32(ctx,argv[2],i0);
+            AutomationEvent* ptr_eventsi0 = (AutomationEvent*)JS_GetOpaque(js_events, js_AutomationEvent_class_id);
+            if(ptr_eventsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_events does not allow null");
+                return JS_EXCEPTION;
+            }
+            events[i0] = *ptr_eventsi0;
+            JS_FreeValue(ctx, js_events);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_events;
+        events = (AutomationEvent *)JS_GetArrayBuffer(ctx, &size_events, argv[2]);
+    }
+    else {
+        if(freesrc_events) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not match type AutomationEvent *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_events) {
+        JS_FreeValue(ctx, argv[2]);
+    }
+    AutomationEventList _struct = { capacity, count, events };
+    AutomationEventList* ptr__return = (AutomationEventList*)js_malloc(ctx, sizeof(AutomationEventList));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_AutomationEventList_class_id);
     JS_SetOpaque(_return, ptr__return);
     return _return;
 }
@@ -5139,6 +11575,70 @@ static JSValue js_SetWindowIcon(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Image image = *ptr_image;
     SetWindowIcon(image);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_SetWindowIcons(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Image * images;
+    bool freesrc_images = false;
+    JSValue da_images;
+    int64_t size_images;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_images = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_images = *(ArrayProxy_class *)opaque_images;
+        argv[0] = AP_images.values(ctx, AP_images.opaque, 0, false);
+        freesrc_images = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_images)==-1) {
+            return JS_EXCEPTION;
+        }
+        images = (Image *)js_malloc(ctx, size_images * sizeof(Image));
+        for(int i0=0; i0 < size_images; i0++){
+            JSValue js_images = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Image* ptr_imagesi0 = (Image*)JS_GetOpaque(js_images, js_Image_class_id);
+            if(ptr_imagesi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_images does not allow null");
+                return JS_EXCEPTION;
+            }
+            images[i0] = *ptr_imagesi0;
+            JS_FreeValue(ctx, js_images);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_images;
+        images = (Image *)JS_GetArrayBuffer(ctx, &size_images, argv[0]);
+    }
+    else {
+        if(freesrc_images) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Image *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_images) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_count;
+    int err_count = JS_ToInt32(ctx, &long_count, argv[1]);
+    if(err_count<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, images);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_images);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int count = (int)long_count;
+    SetWindowIcons(images, count);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, images);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_images);
+    }
     return JS_UNDEFINED;
 }
 
@@ -6989,6 +13489,67 @@ static JSValue js_LoadRandomSequence(JSContext * ctx, JSValue this_val, int argc
     return ret;
 }
 
+static JSValue js_UnloadRandomSequence(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int * sequence;
+    bool freesrc_sequence = false;
+    JSValue da_sequence;
+    int64_t size_sequence;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_sequence = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_sequence = *(ArrayProxy_class *)opaque_sequence;
+        argv[0] = AP_sequence.values(ctx, AP_sequence.opaque, 0, false);
+        freesrc_sequence = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_sequence)==-1) {
+            return JS_EXCEPTION;
+        }
+        sequence = (int *)js_malloc(ctx, size_sequence * sizeof(int));
+        for(int i0=0; i0 < size_sequence; i0++){
+            JSValue js_sequence = JS_GetPropertyUint32(ctx,argv[0],i0);
+            int32_t long_sequencei0;
+            int err_sequencei0 = JS_ToInt32(ctx, &long_sequencei0, js_sequence);
+            if(err_sequencei0<0) {
+                JS_ThrowTypeError(ctx, "js_sequence is not numeric");
+                return JS_EXCEPTION;
+            }
+            sequence[i0] = (int)long_sequencei0;
+            JS_FreeValue(ctx, js_sequence);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_sequence;
+        sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, argv[0]);
+    }
+    else {
+        JSClassID classid_sequence = JS_GetClassID(argv[0]);
+        if(classid_sequence==JS_CLASS_INT16_ARRAY) {
+            size_t offset_sequence;
+            size_t size_sequence;
+            da_sequence = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_sequence,&size_sequence,NULL);
+            sequence = (int *)JS_GetArrayBuffer(ctx, &size_sequence, da_sequence);
+            sequence+=offset_sequence;
+            size_sequence-=offset_sequence;
+        }
+        else {
+            int32_t long_js_sequence;
+            int err_js_sequence = JS_ToInt32(ctx, &long_js_sequence, argv[0]);
+            if(err_js_sequence<0) {
+                JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_sequence = (int)long_js_sequence;
+            sequence = &js_sequence;
+        }
+    }
+    UnloadRandomSequence(sequence);
+    if(JS_IsArray(argv[0]) == 1) {
+        JSValue js_argv0 = JS_NewInt32(ctx, (long)sequence[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[0],0,js_argv0,JS_PROP_C_W_E);
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_TakeScreenshot(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     char * fileName;
     bool freesrc_fileName = false;
@@ -7424,7 +13985,7 @@ static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
             dataSize = &js_dataSize;
         }
     }
-    unsigned char * returnVal = LoadFileData((const char *)fileName, dataSize);
+    void * returnVal = LoadFileData((const char *)fileName, dataSize);
     if(JS_IsArray(argv[1]) == 1) {
         JSValue js_argv1 = JS_NewInt32(ctx, (long)dataSize[0]);
         JS_DefinePropertyValueUint32(ctx,argv[1],0,js_argv1,JS_PROP_C_W_E);
@@ -7457,11 +14018,7 @@ static JSValue js_LoadFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
         }
     }
     JSValue ret;
-    ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < dataSize[0]; i0++){
-        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
+    ret = JS_NewArrayBufferCopy(ctx, returnVal, dataSize[0]);
     UnloadFileData(returnVal);
     return ret;
 }
@@ -7518,6 +14075,100 @@ static JSValue js_SaveFileData(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     int dataSize = (int)long_dataSize;
     bool returnVal = SaveFileData((const char *)fileName, data, dataSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_ExportDataAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    unsigned char * data;
+    int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+            data+=offset_data;
+            size_data-=offset_data;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    char * fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[2]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[2]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            JSValue da_fileName = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[2] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    bool returnVal = ExportDataAsCode((const unsigned char *)data, dataSize, (const char *)fileName);
     memoryClear(ctx, memoryHead);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
@@ -8557,6 +15208,543 @@ static JSValue js_GetFileModTime(JSContext * ctx, JSValue this_val, int argc, JS
     return ret;
 }
 
+static JSValue js_CompressData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    unsigned char * data;
+    int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+            data+=offset_data;
+            size_data-=offset_data;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    int * compDataSize;
+    int64_t size_compDataSize;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_compDataSize = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_compDataSize = *(ArrayProxy_class *)opaque_compDataSize;
+        argv[2] = AP_compDataSize.values(ctx, AP_compDataSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_compDataSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        compDataSize = (int *)js_malloc(ctx, size_compDataSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, compDataSize);
+        for(int i0=0; i0 < size_compDataSize; i0++){
+            JSValue js_compDataSize = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int32_t long_compDataSizei0;
+            int err_compDataSizei0 = JS_ToInt32(ctx, &long_compDataSizei0, js_compDataSize);
+            if(err_compDataSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_compDataSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            compDataSize[i0] = (int)long_compDataSizei0;
+            JS_FreeValue(ctx, js_compDataSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_compDataSize;
+        compDataSize = (int *)JS_GetArrayBuffer(ctx, &size_compDataSize, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, compDataSize);
+    }
+    else {
+        JSClassID classid_compDataSize = JS_GetClassID(argv[2]);
+        if(classid_compDataSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_compDataSize;
+            size_t size_compDataSize;
+            JSValue da_compDataSize = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_compDataSize,&size_compDataSize,NULL);
+            compDataSize = (int *)JS_GetArrayBuffer(ctx, &size_compDataSize, da_compDataSize);
+            compDataSize+=offset_compDataSize;
+            size_compDataSize-=offset_compDataSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_compDataSize);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * returnVal = CompressData((const unsigned char *)data, dataSize, compDataSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned char);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_DecompressData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    unsigned char * compData;
+    bool freesrc_compData = false;
+    JSValue da_compData;
+    int64_t size_compData;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_compData = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_compData = *(ArrayProxy_class *)opaque_compData;
+        argv[0] = AP_compData.values(ctx, AP_compData.opaque, 0, false);
+        freesrc_compData = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_compData)==-1) {
+            return JS_EXCEPTION;
+        }
+        compData = (unsigned char *)js_malloc(ctx, size_compData * sizeof(unsigned char));
+        for(int i0=0; i0 < size_compData; i0++){
+            JSValue js_compData = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_compDatai0;
+            int err_compDatai0 = JS_ToUint32(ctx, &long_compDatai0, js_compData);
+            if(err_compDatai0<0) {
+                JS_ThrowTypeError(ctx, "js_compData is not numeric");
+                return JS_EXCEPTION;
+            }
+            compData[i0] = (unsigned char)long_compDatai0;
+            JS_FreeValue(ctx, js_compData);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_compData;
+        compData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_compData, argv[0]);
+    }
+    else {
+        JSClassID classid_compData = JS_GetClassID(argv[0]);
+        if(classid_compData==JS_CLASS_UINT8_ARRAY || classid_compData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_compData;
+            size_t size_compData;
+            da_compData = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_compData,&size_compData,NULL);
+            compData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_compData, da_compData);
+            compData+=offset_compData;
+            size_compData-=offset_compData;
+        }
+        else {
+            if(freesrc_compData) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_compData) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int32_t long_compDataSize;
+    int err_compDataSize = JS_ToInt32(ctx, &long_compDataSize, argv[1]);
+    if(err_compDataSize<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, compData);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_compData);
+        }
+        else {
+            JSClassID classid_compData = JS_GetClassID(argv[0]);
+            if(classid_compData==JS_CLASS_UINT8_ARRAY && classid_compData==JS_CLASS_UINT8C_ARRAY) {
+                js_free(ctx, &da_compData);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int compDataSize = (int)long_compDataSize;
+    int * dataSize;
+    bool freesrc_dataSize = false;
+    JSValue da_dataSize;
+    int64_t size_dataSize;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_dataSize = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_dataSize = *(ArrayProxy_class *)opaque_dataSize;
+        argv[2] = AP_dataSize.values(ctx, AP_dataSize.opaque, 0, false);
+        freesrc_dataSize = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_dataSize)==-1) {
+            if(JS_IsArray(argv[0]) == 1) {
+                js_free(ctx, compData);
+            }
+            else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                JS_FreeValue(ctx, da_compData);
+            }
+            else {
+                JSClassID classid_compData = JS_GetClassID(argv[0]);
+                if(classid_compData==JS_CLASS_UINT8_ARRAY && classid_compData==JS_CLASS_UINT8C_ARRAY) {
+                    js_free(ctx, &da_compData);
+                }
+            }
+            return JS_EXCEPTION;
+        }
+        dataSize = (int *)js_malloc(ctx, size_dataSize * sizeof(int));
+        for(int i0=0; i0 < size_dataSize; i0++){
+            JSValue js_dataSize = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int32_t long_dataSizei0;
+            int err_dataSizei0 = JS_ToInt32(ctx, &long_dataSizei0, js_dataSize);
+            if(err_dataSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_dataSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            dataSize[i0] = (int)long_dataSizei0;
+            JS_FreeValue(ctx, js_dataSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_dataSize;
+        dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, argv[2]);
+    }
+    else {
+        JSClassID classid_dataSize = JS_GetClassID(argv[2]);
+        if(classid_dataSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_dataSize;
+            size_t size_dataSize;
+            da_dataSize = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_dataSize,&size_dataSize,NULL);
+            dataSize = (int *)JS_GetArrayBuffer(ctx, &size_dataSize, da_dataSize);
+            dataSize+=offset_dataSize;
+            size_dataSize-=offset_dataSize;
+        }
+        else {
+            int32_t long_js_dataSize;
+            int err_js_dataSize = JS_ToInt32(ctx, &long_js_dataSize, argv[2]);
+            if(err_js_dataSize<0) {
+                if(JS_IsArray(argv[0]) == 1) {
+                    js_free(ctx, compData);
+                }
+                else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                    JS_FreeValue(ctx, da_compData);
+                }
+                else {
+                    JSClassID classid_compData = JS_GetClassID(argv[0]);
+                    if(classid_compData==JS_CLASS_UINT8_ARRAY && classid_compData==JS_CLASS_UINT8C_ARRAY) {
+                        js_free(ctx, &da_compData);
+                    }
+                }
+                JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_dataSize = (int)long_js_dataSize;
+            dataSize = &js_dataSize;
+        }
+    }
+    unsigned char * returnVal = DecompressData((const unsigned char *)compData, compDataSize, dataSize);
+    if(JS_IsArray(argv[2]) == 1) {
+        JSValue js_argv2 = JS_NewInt32(ctx, (long)dataSize[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[2],0,js_argv2,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, compData);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_compData);
+    }
+    else {
+        JSClassID classid_compData = JS_GetClassID(argv[0]);
+        if(classid_compData==JS_CLASS_UINT8_ARRAY && classid_compData==JS_CLASS_UINT8C_ARRAY) {
+            js_free(ctx, &da_compData);
+        }
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        js_free(ctx, dataSize);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        JS_FreeValue(ctx, da_dataSize);
+    }
+    else {
+        JSClassID classid_dataSize = JS_GetClassID(argv[2]);
+        if(classid_dataSize==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_dataSize);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned char);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_EncodeDataBase64(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    unsigned char * data;
+    int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+            data+=offset_data;
+            size_data-=offset_data;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    int * outputSize;
+    int64_t size_outputSize;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_outputSize = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_outputSize = *(ArrayProxy_class *)opaque_outputSize;
+        argv[2] = AP_outputSize.values(ctx, AP_outputSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_outputSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        outputSize = (int *)js_malloc(ctx, size_outputSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, outputSize);
+        for(int i0=0; i0 < size_outputSize; i0++){
+            JSValue js_outputSize = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int32_t long_outputSizei0;
+            int err_outputSizei0 = JS_ToInt32(ctx, &long_outputSizei0, js_outputSize);
+            if(err_outputSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_outputSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            outputSize[i0] = (int)long_outputSizei0;
+            JS_FreeValue(ctx, js_outputSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_outputSize;
+        outputSize = (int *)JS_GetArrayBuffer(ctx, &size_outputSize, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, outputSize);
+    }
+    else {
+        JSClassID classid_outputSize = JS_GetClassID(argv[2]);
+        if(classid_outputSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_outputSize;
+            size_t size_outputSize;
+            JSValue da_outputSize = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_outputSize,&size_outputSize,NULL);
+            outputSize = (int *)JS_GetArrayBuffer(ctx, &size_outputSize, da_outputSize);
+            outputSize+=offset_outputSize;
+            size_outputSize-=offset_outputSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outputSize);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    char * returnVal = EncodeDataBase64((const unsigned char *)data, dataSize, outputSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_DecodeDataBase64(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    unsigned char * data;
+    int64_t size_data;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
+        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
+        for(int i0=0; i0 < size_data; i0++){
+            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_datai0;
+            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
+            if(err_datai0<0) {
+                JS_ThrowTypeError(ctx, "js_data is not numeric");
+                return JS_EXCEPTION;
+            }
+            data[i0] = (unsigned char)long_datai0;
+            JS_FreeValue(ctx, js_data);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_data;
+        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
+    }
+    else {
+        JSClassID classid_data = JS_GetClassID(argv[0]);
+        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_data;
+            size_t size_data;
+            JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
+            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+            data+=offset_data;
+            size_data-=offset_data;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int * outputSize;
+    int64_t size_outputSize;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_outputSize = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_outputSize = *(ArrayProxy_class *)opaque_outputSize;
+        argv[1] = AP_outputSize.values(ctx, AP_outputSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_outputSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        outputSize = (int *)js_malloc(ctx, size_outputSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, outputSize);
+        for(int i0=0; i0 < size_outputSize; i0++){
+            JSValue js_outputSize = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_outputSizei0;
+            int err_outputSizei0 = JS_ToInt32(ctx, &long_outputSizei0, js_outputSize);
+            if(err_outputSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_outputSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            outputSize[i0] = (int)long_outputSizei0;
+            JS_FreeValue(ctx, js_outputSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_outputSize;
+        outputSize = (int *)JS_GetArrayBuffer(ctx, &size_outputSize, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, outputSize);
+    }
+    else {
+        JSClassID classid_outputSize = JS_GetClassID(argv[1]);
+        if(classid_outputSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_outputSize;
+            size_t size_outputSize;
+            JSValue da_outputSize = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_outputSize,&size_outputSize,NULL);
+            outputSize = (int *)JS_GetArrayBuffer(ctx, &size_outputSize, da_outputSize);
+            outputSize+=offset_outputSize;
+            size_outputSize-=offset_outputSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_outputSize);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * returnVal = DecodeDataBase64((const unsigned char *)data, outputSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned char);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
 static JSValue js_ComputeCRC32(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     unsigned char * data;
     bool freesrc_data = false;
@@ -8849,7 +16037,10 @@ static JSValue js_LoadAutomationEventList(JSContext * ctx, JSValue this_val, int
     bool freesrc_fileName = false;
     JSValue da_fileName;
     int64_t size_fileName;
-    if(JS_IsString(argv[0]) == 1) {
+    if(JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) {
+        fileName = NULL;
+    }
+    else if(JS_IsString(argv[0]) == 1) {
         fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
@@ -8878,7 +16069,9 @@ static JSValue js_LoadAutomationEventList(JSContext * ctx, JSValue this_val, int
         }
     }
     AutomationEventList returnVal = LoadAutomationEventList((const char *)fileName);
-    if(JS_IsArray(argv[0]) == 1) {
+    if(JS_IsNull(argv[0]) || JS_IsUndefined(argv[0])) {
+    }
+    else if(JS_IsArray(argv[0]) == 1) {
         js_free(ctx, fileName);
     }
     else if(JS_IsString(argv[0]) == 1) {
@@ -9843,6 +17036,82 @@ static JSValue js_DrawLineEx(JSContext * ctx, JSValue this_val, int argc, JSValu
     return JS_UNDEFINED;
 }
 
+static JSValue js_DrawLineStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2 * points;
+    bool freesrc_points = false;
+    JSValue da_points;
+    int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
+            return JS_EXCEPTION;
+        }
+        points = (Vector2 *)js_malloc(ctx, size_points * sizeof(Vector2));
+        for(int i0=0; i0 < size_points; i0++){
+            JSValue js_points = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Vector2* ptr_pointsi0 = (Vector2*)JS_GetOpaque(js_points, js_Vector2_class_id);
+            if(ptr_pointsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_points does not allow null");
+                return JS_EXCEPTION;
+            }
+            points[i0] = *ptr_pointsi0;
+            JS_FreeValue(ctx, js_points);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_points;
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
+    }
+    else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_pointCount;
+    int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
+    if(err_pointCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int pointCount = (int)long_pointCount;
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[2], js_Color_class_id);
+    if(ptr_color == NULL) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    DrawLineStrip((const Vector2 *)points, pointCount, color);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, points);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_points);
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_DrawLineBezier(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector2* ptr_startPos = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
     if(ptr_startPos == NULL) {
@@ -10747,6 +18016,158 @@ static JSValue js_DrawTriangleLines(JSContext * ctx, JSValue this_val, int argc,
     }
     Color color = *ptr_color;
     DrawTriangleLines(v1, v2, v3, color);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_DrawTriangleFan(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2 * points;
+    bool freesrc_points = false;
+    JSValue da_points;
+    int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
+            return JS_EXCEPTION;
+        }
+        points = (Vector2 *)js_malloc(ctx, size_points * sizeof(Vector2));
+        for(int i0=0; i0 < size_points; i0++){
+            JSValue js_points = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Vector2* ptr_pointsi0 = (Vector2*)JS_GetOpaque(js_points, js_Vector2_class_id);
+            if(ptr_pointsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_points does not allow null");
+                return JS_EXCEPTION;
+            }
+            points[i0] = *ptr_pointsi0;
+            JS_FreeValue(ctx, js_points);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_points;
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
+    }
+    else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_pointCount;
+    int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
+    if(err_pointCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int pointCount = (int)long_pointCount;
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[2], js_Color_class_id);
+    if(ptr_color == NULL) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    DrawTriangleFan((const Vector2 *)points, pointCount, color);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, points);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_points);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_DrawTriangleStrip(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2 * points;
+    bool freesrc_points = false;
+    JSValue da_points;
+    int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
+            return JS_EXCEPTION;
+        }
+        points = (Vector2 *)js_malloc(ctx, size_points * sizeof(Vector2));
+        for(int i0=0; i0 < size_points; i0++){
+            JSValue js_points = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Vector2* ptr_pointsi0 = (Vector2*)JS_GetOpaque(js_points, js_Vector2_class_id);
+            if(ptr_pointsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_points does not allow null");
+                return JS_EXCEPTION;
+            }
+            points[i0] = *ptr_pointsi0;
+            JS_FreeValue(ctx, js_points);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_points;
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
+    }
+    else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Vector2 *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_pointCount;
+    int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
+    if(err_pointCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int pointCount = (int)long_pointCount;
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[2], js_Color_class_id);
+    if(ptr_color == NULL) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    DrawTriangleStrip((const Vector2 *)points, pointCount, color);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, points);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_points);
+    }
     return JS_UNDEFINED;
 }
 
@@ -11900,6 +19321,112 @@ static JSValue js_CheckCollisionPointLine(JSContext * ctx, JSValue this_val, int
     return ret;
 }
 
+static JSValue js_CheckCollisionPointPoly(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* ptr_point = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
+    if(ptr_point == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 point = *ptr_point;
+    Vector2 * points;
+    bool freesrc_points = false;
+    JSValue da_points;
+    int64_t size_points;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[1] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_points)==-1) {
+            return JS_EXCEPTION;
+        }
+        points = (Vector2 *)js_malloc(ctx, size_points * sizeof(Vector2));
+        for(int i0=0; i0 < size_points; i0++){
+            JSValue js_points = JS_GetPropertyUint32(ctx,argv[1],i0);
+            Vector2* ptr_pointsi0 = (Vector2*)JS_GetOpaque(js_points, js_Vector2_class_id);
+            if(ptr_pointsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_points does not allow null");
+                return JS_EXCEPTION;
+            }
+            points[i0] = *ptr_pointsi0;
+            JS_FreeValue(ctx, js_points);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_points;
+        points = (Vector2 *)JS_GetArrayBuffer(ctx, &size_points, argv[1]);
+    }
+    else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] does not match type Vector2 *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[1]);
+    }
+    int32_t long_pointCount;
+    int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[2]);
+    if(err_pointCount<0) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int pointCount = (int)long_pointCount;
+    bool returnVal = CheckCollisionPointPoly(point, (const Vector2 *)points, pointCount);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, points);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_points);
+    }
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_CheckCollisionLines(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector2* ptr_startPos1 = (Vector2*)JS_GetOpaque(argv[0], js_Vector2_class_id);
+    if(ptr_startPos1 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 startPos1 = *ptr_startPos1;
+    Vector2* ptr_endPos1 = (Vector2*)JS_GetOpaque(argv[1], js_Vector2_class_id);
+    if(ptr_endPos1 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 endPos1 = *ptr_endPos1;
+    Vector2* ptr_startPos2 = (Vector2*)JS_GetOpaque(argv[2], js_Vector2_class_id);
+    if(ptr_startPos2 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 startPos2 = *ptr_startPos2;
+    Vector2* ptr_endPos2 = (Vector2*)JS_GetOpaque(argv[3], js_Vector2_class_id);
+    if(ptr_endPos2 == NULL) {
+        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 endPos2 = *ptr_endPos2;
+    Vector2 * collisionPoint = (Vector2 *)JS_GetOpaque(argv[4], js_Vector2_class_id);
+    if(collisionPoint == NULL) {
+        JS_ThrowTypeError(ctx, "argv[4] does not match type Vector2");
+        return JS_EXCEPTION;
+    }
+    bool returnVal = CheckCollisionLines(startPos1, endPos1, startPos2, endPos2, collisionPoint);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
 static JSValue js_GetCollisionRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Rectangle* ptr_rec1 = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
     if(ptr_rec1 == NULL) {
@@ -12112,6 +19639,160 @@ static JSValue js_LoadImageRaw(JSContext * ctx, JSValue this_val, int argc, JSVa
         JSClassID classid_fileName = JS_GetClassID(argv[0]);
         if(classid_fileName==JS_CLASS_INT8_ARRAY) {
             js_free(ctx, &da_fileName);
+        }
+    }
+    Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_LoadImageAnim(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    bool freesrc_fileName = false;
+    JSValue da_fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            da_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+        }
+        else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int * frames;
+    bool freesrc_frames = false;
+    JSValue da_frames;
+    int64_t size_frames;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_frames = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_frames = *(ArrayProxy_class *)opaque_frames;
+        argv[1] = AP_frames.values(ctx, AP_frames.opaque, 0, false);
+        freesrc_frames = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_frames)==-1) {
+            if(JS_IsArray(argv[0]) == 1) {
+                js_free(ctx, fileName);
+            }
+            else if(JS_IsString(argv[0]) == 1) {
+                JS_FreeCString(ctx, fileName);
+            }
+            else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                JS_FreeValue(ctx, da_fileName);
+            }
+            else {
+                JSClassID classid_fileName = JS_GetClassID(argv[0]);
+                if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+                    js_free(ctx, &da_fileName);
+                }
+            }
+            return JS_EXCEPTION;
+        }
+        frames = (int *)js_malloc(ctx, size_frames * sizeof(int));
+        for(int i0=0; i0 < size_frames; i0++){
+            JSValue js_frames = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_framesi0;
+            int err_framesi0 = JS_ToInt32(ctx, &long_framesi0, js_frames);
+            if(err_framesi0<0) {
+                JS_ThrowTypeError(ctx, "js_frames is not numeric");
+                return JS_EXCEPTION;
+            }
+            frames[i0] = (int)long_framesi0;
+            JS_FreeValue(ctx, js_frames);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_frames;
+        frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, argv[1]);
+    }
+    else {
+        JSClassID classid_frames = JS_GetClassID(argv[1]);
+        if(classid_frames==JS_CLASS_INT16_ARRAY) {
+            size_t offset_frames;
+            size_t size_frames;
+            da_frames = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_frames,&size_frames,NULL);
+            frames = (int *)JS_GetArrayBuffer(ctx, &size_frames, da_frames);
+            frames+=offset_frames;
+            size_frames-=offset_frames;
+        }
+        else {
+            int32_t long_js_frames;
+            int err_js_frames = JS_ToInt32(ctx, &long_js_frames, argv[1]);
+            if(err_js_frames<0) {
+                if(JS_IsArray(argv[0]) == 1) {
+                    js_free(ctx, fileName);
+                }
+                else if(JS_IsString(argv[0]) == 1) {
+                    JS_FreeCString(ctx, fileName);
+                }
+                else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                    JS_FreeValue(ctx, da_fileName);
+                }
+                else {
+                    JSClassID classid_fileName = JS_GetClassID(argv[0]);
+                    if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+                        js_free(ctx, &da_fileName);
+                    }
+                }
+                JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_frames = (int)long_js_frames;
+            frames = &js_frames;
+        }
+    }
+    Image returnVal = LoadImageAnim((const char *)fileName, frames);
+    if(JS_IsArray(argv[1]) == 1) {
+        JSValue js_argv1 = JS_NewInt32(ctx, (long)frames[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[1],0,js_argv1,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, frames);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_frames);
+    }
+    else {
+        JSClassID classid_frames = JS_GetClassID(argv[1]);
+        if(classid_frames==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_frames);
         }
     }
     Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
@@ -12639,6 +20320,65 @@ static JSValue js_ExportImageToMemory(JSContext * ctx, JSValue this_val, int arg
         JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
+    return ret;
+}
+
+static JSValue js_ExportImageAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
+    if(ptr_image == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Image image = *ptr_image;
+    char * fileName;
+    bool freesrc_fileName = false;
+    JSValue da_fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            da_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+        }
+        else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    bool returnVal = ExportImageAsCode(image, (const char *)fileName);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
 
@@ -13829,6 +21569,118 @@ static JSValue js_LoadImageColors(JSContext * ctx, JSValue this_val, int argc, J
     JSValue retVal = JS_NewArrayBufferCopy(ctx, (const uint8_t*)colors, image.width*image.height*sizeof(Color));
     UnloadImageColors(colors);
     return retVal;
+}
+
+static JSValue js_LoadImagePalette(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Image* ptr_image = (Image*)JS_GetOpaque(argv[0], js_Image_class_id);
+    if(ptr_image == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Image image = *ptr_image;
+    int32_t long_maxPaletteSize;
+    int err_maxPaletteSize = JS_ToInt32(ctx, &long_maxPaletteSize, argv[1]);
+    if(err_maxPaletteSize<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int maxPaletteSize = (int)long_maxPaletteSize;
+    int * colorCount;
+    bool freesrc_colorCount = false;
+    JSValue da_colorCount;
+    int64_t size_colorCount;
+    if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
+        void * opaque_colorCount = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_colorCount = *(ArrayProxy_class *)opaque_colorCount;
+        argv[2] = AP_colorCount.values(ctx, AP_colorCount.opaque, 0, false);
+        freesrc_colorCount = true;
+    }
+    if(JS_IsArray(argv[2]) == 1) {
+        if(JS_GetLength(ctx,argv[2],&size_colorCount)==-1) {
+            return JS_EXCEPTION;
+        }
+        colorCount = (int *)js_malloc(ctx, size_colorCount * sizeof(int));
+        for(int i0=0; i0 < size_colorCount; i0++){
+            JSValue js_colorCount = JS_GetPropertyUint32(ctx,argv[2],i0);
+            int32_t long_colorCounti0;
+            int err_colorCounti0 = JS_ToInt32(ctx, &long_colorCounti0, js_colorCount);
+            if(err_colorCounti0<0) {
+                JS_ThrowTypeError(ctx, "js_colorCount is not numeric");
+                return JS_EXCEPTION;
+            }
+            colorCount[i0] = (int)long_colorCounti0;
+            JS_FreeValue(ctx, js_colorCount);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        size_t size_colorCount;
+        colorCount = (int *)JS_GetArrayBuffer(ctx, &size_colorCount, argv[2]);
+    }
+    else {
+        JSClassID classid_colorCount = JS_GetClassID(argv[2]);
+        if(classid_colorCount==JS_CLASS_INT16_ARRAY) {
+            size_t offset_colorCount;
+            size_t size_colorCount;
+            da_colorCount = JS_GetTypedArrayBuffer(ctx,argv[2],&offset_colorCount,&size_colorCount,NULL);
+            colorCount = (int *)JS_GetArrayBuffer(ctx, &size_colorCount, da_colorCount);
+            colorCount+=offset_colorCount;
+            size_colorCount-=offset_colorCount;
+        }
+        else {
+            if(freesrc_colorCount) {
+                JS_FreeValue(ctx, argv[2]);
+            }
+            JS_ThrowTypeError(ctx, "argv[2] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_colorCount) {
+            JS_FreeValue(ctx, argv[2]);
+        }
+    }
+    Color * returnVal = LoadImagePalette(image, maxPaletteSize, colorCount);
+    if(JS_IsArray(argv[2]) == 1) {
+        js_free(ctx, colorCount);
+    }
+    else if(JS_IsArrayBuffer(argv[2]) == 1) {
+        JS_FreeValue(ctx, da_colorCount);
+    }
+    else {
+        JSClassID classid_colorCount = JS_GetClassID(argv[2]);
+        if(classid_colorCount==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_colorCount);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(Color);
+    for(int i0=0; i0 < size_ret; i0++){
+        Color* ptr_js_ret = (Color*)js_malloc(ctx, sizeof(Color));
+        *ptr_js_ret = returnVal[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_Color_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_UnloadImageColors(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Color * colors = (Color *)JS_GetOpaque(argv[0], js_Color_class_id);
+    if(colors == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Color");
+        return JS_EXCEPTION;
+    }
+    UnloadImageColors(colors);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_UnloadImagePalette(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Color * colors = (Color *)JS_GetOpaque(argv[0], js_Color_class_id);
+    if(colors == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Color");
+        return JS_EXCEPTION;
+    }
+    UnloadImagePalette(colors);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_GetImageAlphaBorder(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -15682,6 +23534,91 @@ static JSValue js_GetColor(JSContext * ctx, JSValue this_val, int argc, JSValue 
     return ret;
 }
 
+static JSValue js_GetPixelColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    void * srcPtr;
+    bool freesrc_srcPtr = false;
+    JSValue da_srcPtr;
+    int64_t size_srcPtr;
+    if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_srcPtr;
+        srcPtr = (void *)JS_GetArrayBuffer(ctx, &size_srcPtr, argv[0]);
+    }
+    else {
+        if(freesrc_srcPtr) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_srcPtr) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_format;
+    int err_format = JS_ToInt32(ctx, &long_format, argv[1]);
+    if(err_format<0) {
+        if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_srcPtr);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int format = (int)long_format;
+    Color returnVal = GetPixelColor(srcPtr, format);
+    if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_srcPtr);
+    }
+    Color* ptr_ret = (Color*)js_malloc(ctx, sizeof(Color));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_Color_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_SetPixelColor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    void * dstPtr;
+    bool freesrc_dstPtr = false;
+    JSValue da_dstPtr;
+    int64_t size_dstPtr;
+    if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_dstPtr;
+        dstPtr = (void *)JS_GetArrayBuffer(ctx, &size_dstPtr, argv[0]);
+    }
+    else {
+        if(freesrc_dstPtr) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type void *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_dstPtr) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[1], js_Color_class_id);
+    if(ptr_color == NULL) {
+        if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_dstPtr);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    int32_t long_format;
+    int err_format = JS_ToInt32(ctx, &long_format, argv[2]);
+    if(err_format<0) {
+        if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_dstPtr);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int format = (int)long_format;
+    SetPixelColor(dstPtr, color, format);
+    if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_dstPtr);
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_GetPixelDataSize(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_width;
     int err_width = JS_ToInt32(ctx, &long_width, argv[0]);
@@ -15910,6 +23847,168 @@ static JSValue js_LoadFontFromImage(JSContext * ctx, JSValue this_val, int argc,
     return ret;
 }
 
+static JSValue js_LoadFontFromMemory(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * fileType;
+    int64_t size_fileType;
+    if(JS_IsString(argv[0]) == 1) {
+        fileType = (char *)JS_ToCStringLen(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileType);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileType;
+        fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileType);
+    }
+    else {
+        JSClassID classid_fileType = JS_GetClassID(argv[0]);
+        if(classid_fileType==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileType;
+            size_t size_fileType;
+            JSValue da_fileType = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileType,&size_fileType,NULL);
+            fileType = (char *)JS_GetArrayBuffer(ctx, &size_fileType, da_fileType);
+            fileType+=offset_fileType;
+            size_fileType-=offset_fileType;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileType);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    unsigned char * fileData;
+    int64_t size_fileData;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_fileData = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileData = *(ArrayProxy_class *)opaque_fileData;
+        argv[1] = AP_fileData.values(ctx, AP_fileData.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_fileData)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        fileData = (unsigned char *)js_malloc(ctx, size_fileData * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, fileData);
+        for(int i0=0; i0 < size_fileData; i0++){
+            JSValue js_fileData = JS_GetPropertyUint32(ctx,argv[1],i0);
+            uint32_t long_fileDatai0;
+            int err_fileDatai0 = JS_ToUint32(ctx, &long_fileDatai0, js_fileData);
+            if(err_fileDatai0<0) {
+                JS_ThrowTypeError(ctx, "js_fileData is not numeric");
+                return JS_EXCEPTION;
+            }
+            fileData[i0] = (unsigned char)long_fileDatai0;
+            JS_FreeValue(ctx, js_fileData);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_fileData;
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[1]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY || classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_fileData;
+            size_t size_fileData;
+            JSValue da_fileData = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileData,&size_fileData,NULL);
+            fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, da_fileData);
+            fileData+=offset_fileData;
+            size_fileData-=offset_fileData;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileData);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[2]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    int32_t long_fontSize;
+    int err_fontSize = JS_ToInt32(ctx, &long_fontSize, argv[3]);
+    if(err_fontSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int fontSize = (int)long_fontSize;
+    int * codepoints;
+    int64_t size_codepoints;
+    if(JS_GetClassID(argv[4]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[4], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[4] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[4]);
+    }
+    if(JS_IsArray(argv[4]) == 1) {
+        if(JS_GetLength(ctx,argv[4],&size_codepoints)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        codepoints = (int *)js_malloc(ctx, size_codepoints * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, codepoints);
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[4],i0);
+            int32_t long_codepointsi0;
+            int err_codepointsi0 = JS_ToInt32(ctx, &long_codepointsi0, js_codepoints);
+            if(err_codepointsi0<0) {
+                JS_ThrowTypeError(ctx, "js_codepoints is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepoints[i0] = (int)long_codepointsi0;
+            JS_FreeValue(ctx, js_codepoints);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[4]) == 1) {
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[4]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[4]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            JSValue da_codepoints = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
+            codepoints+=offset_codepoints;
+            size_codepoints-=offset_codepoints;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepoints);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[4] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_codepointCount;
+    int err_codepointCount = JS_ToInt32(ctx, &long_codepointCount, argv[5]);
+    if(err_codepointCount<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[5] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int codepointCount = (int)long_codepointCount;
+    Font returnVal = LoadFontFromMemory((const char *)fileType, (const unsigned char *)fileData, dataSize, fontSize, codepoints, codepointCount);
+    memoryClear(ctx, memoryHead);
+    Font* ptr_ret = (Font*)js_malloc(ctx, sizeof(Font));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_Font_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
 static JSValue js_IsFontValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
@@ -15922,6 +24021,356 @@ static JSValue js_IsFontValid(JSContext * ctx, JSValue this_val, int argc, JSVal
     return ret;
 }
 
+static JSValue js_LoadFontData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    unsigned char * fileData;
+    int64_t size_fileData;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_fileData = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_fileData = *(ArrayProxy_class *)opaque_fileData;
+        argv[0] = AP_fileData.values(ctx, AP_fileData.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_fileData)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        fileData = (unsigned char *)js_malloc(ctx, size_fileData * sizeof(unsigned char));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, fileData);
+        for(int i0=0; i0 < size_fileData; i0++){
+            JSValue js_fileData = JS_GetPropertyUint32(ctx,argv[0],i0);
+            uint32_t long_fileDatai0;
+            int err_fileDatai0 = JS_ToUint32(ctx, &long_fileDatai0, js_fileData);
+            if(err_fileDatai0<0) {
+                JS_ThrowTypeError(ctx, "js_fileData is not numeric");
+                return JS_EXCEPTION;
+            }
+            fileData[i0] = (unsigned char)long_fileDatai0;
+            JS_FreeValue(ctx, js_fileData);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileData;
+        fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileData);
+    }
+    else {
+        JSClassID classid_fileData = JS_GetClassID(argv[0]);
+        if(classid_fileData==JS_CLASS_UINT8_ARRAY || classid_fileData==JS_CLASS_UINT8C_ARRAY) {
+            size_t offset_fileData;
+            size_t size_fileData;
+            JSValue da_fileData = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileData,&size_fileData,NULL);
+            fileData = (unsigned char *)JS_GetArrayBuffer(ctx, &size_fileData, da_fileData);
+            fileData+=offset_fileData;
+            size_fileData-=offset_fileData;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileData);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_dataSize;
+    int err_dataSize = JS_ToInt32(ctx, &long_dataSize, argv[1]);
+    if(err_dataSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int dataSize = (int)long_dataSize;
+    int32_t long_fontSize;
+    int err_fontSize = JS_ToInt32(ctx, &long_fontSize, argv[2]);
+    if(err_fontSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int fontSize = (int)long_fontSize;
+    int * codepoints;
+    int64_t size_codepoints;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[3] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[3]);
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        if(JS_GetLength(ctx,argv[3],&size_codepoints)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        codepoints = (int *)js_malloc(ctx, size_codepoints * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, codepoints);
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[3],i0);
+            int32_t long_codepointsi0;
+            int err_codepointsi0 = JS_ToInt32(ctx, &long_codepointsi0, js_codepoints);
+            if(err_codepointsi0<0) {
+                JS_ThrowTypeError(ctx, "js_codepoints is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepoints[i0] = (int)long_codepointsi0;
+            JS_FreeValue(ctx, js_codepoints);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[3]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[3]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            JSValue da_codepoints = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
+            codepoints+=offset_codepoints;
+            size_codepoints-=offset_codepoints;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepoints);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[3] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    int32_t long_codepointCount;
+    int err_codepointCount = JS_ToInt32(ctx, &long_codepointCount, argv[4]);
+    if(err_codepointCount<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int codepointCount = (int)long_codepointCount;
+    int32_t long_type;
+    int err_type = JS_ToInt32(ctx, &long_type, argv[5]);
+    if(err_type<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[5] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int type = (int)long_type;
+    GlyphInfo * returnVal = LoadFontData((const unsigned char *)fileData, dataSize, fontSize, codepoints, codepointCount, type);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(GlyphInfo);
+    for(int i0=0; i0 < size_ret; i0++){
+        GlyphInfo* ptr_js_ret = (GlyphInfo*)js_malloc(ctx, sizeof(GlyphInfo));
+        *ptr_js_ret = returnVal[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_GlyphInfo_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_GenImageFontAtlas(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    GlyphInfo * glyphs;
+    int64_t size_glyphs;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_glyphs = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glyphs = *(ArrayProxy_class *)opaque_glyphs;
+        argv[0] = AP_glyphs.values(ctx, AP_glyphs.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_glyphs)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        glyphs = (GlyphInfo *)js_malloc(ctx, size_glyphs * sizeof(GlyphInfo));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, glyphs);
+        for(int i0=0; i0 < size_glyphs; i0++){
+            JSValue js_glyphs = JS_GetPropertyUint32(ctx,argv[0],i0);
+            GlyphInfo* ptr_glyphsi0 = (GlyphInfo*)JS_GetOpaque(js_glyphs, js_GlyphInfo_class_id);
+            if(ptr_glyphsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_glyphs does not allow null");
+                return JS_EXCEPTION;
+            }
+            glyphs[i0] = *ptr_glyphsi0;
+            JS_FreeValue(ctx, js_glyphs);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_glyphs;
+        glyphs = (GlyphInfo *)JS_GetArrayBuffer(ctx, &size_glyphs, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, glyphs);
+    }
+    else {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[0] does not match type GlyphInfo *");
+        return JS_EXCEPTION;
+    }
+    Rectangle * * glyphRecs;
+    int64_t size_glyphRecs;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_glyphRecs = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glyphRecs = *(ArrayProxy_class *)opaque_glyphRecs;
+        argv[1] = AP_glyphRecs.values(ctx, AP_glyphRecs.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_glyphRecs)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        glyphRecs = (Rectangle * *)js_malloc(ctx, size_glyphRecs * sizeof(Rectangle *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, glyphRecs);
+        for(int i0=0; i0 < size_glyphRecs; i0++){
+            JSValue js_glyphRecs = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int64_t size_glyphRecsi0;
+            if(JS_GetClassID(js_glyphRecs) == js_ArrayProxy_class_id) {
+                void * opaque_glyphRecsi0 = JS_GetOpaque(js_glyphRecs, js_ArrayProxy_class_id);
+                ArrayProxy_class AP_glyphRecsi0 = *(ArrayProxy_class *)opaque_glyphRecsi0;
+                js_glyphRecs = AP_glyphRecsi0.values(ctx, AP_glyphRecsi0.opaque, 0, false);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &js_glyphRecs);
+            }
+            if(JS_IsArray(js_glyphRecs) == 1) {
+                if(JS_GetLength(ctx,js_glyphRecs,&size_glyphRecsi0)==-1) {
+                    return JS_EXCEPTION;
+                }
+                glyphRecs[i0] = (Rectangle *)js_malloc(ctx, size_glyphRecsi0 * sizeof(Rectangle));
+                memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, glyphRecs[i0]);
+                for(int i1=0; i1 < size_glyphRecsi0; i1++){
+                    JSValue js_glyphRecsi0 = JS_GetPropertyUint32(ctx,js_glyphRecs,i1);
+                    Rectangle* ptr_glyphRecsi0i1 = (Rectangle*)JS_GetOpaque(js_glyphRecsi0, js_Rectangle_class_id);
+                    if(ptr_glyphRecsi0i1 == NULL) {
+                        JS_ThrowTypeError(ctx, "js_glyphRecsi0 does not allow null");
+                        return JS_EXCEPTION;
+                    }
+                    glyphRecs[i0][i1] = *ptr_glyphRecsi0i1;
+                    JS_FreeValue(ctx, js_glyphRecsi0);
+                }
+            }
+            else if(JS_IsArrayBuffer(js_glyphRecs) == 1) {
+                size_t size_glyphRecsi0;
+                glyphRecs[i0] = (Rectangle *)JS_GetArrayBuffer(ctx, &size_glyphRecsi0, js_glyphRecs);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, glyphRecs[i0]);
+            }
+            else {
+                JS_ThrowTypeError(ctx, "js_glyphRecs does not match type Rectangle *");
+                return JS_EXCEPTION;
+            }
+            JS_FreeValue(ctx, js_glyphRecs);
+        }
+    }
+    else {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] does not match type Rectangle * *");
+        return JS_EXCEPTION;
+    }
+    int32_t long_glyphCount;
+    int err_glyphCount = JS_ToInt32(ctx, &long_glyphCount, argv[2]);
+    if(err_glyphCount<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int glyphCount = (int)long_glyphCount;
+    int32_t long_fontSize;
+    int err_fontSize = JS_ToInt32(ctx, &long_fontSize, argv[3]);
+    if(err_fontSize<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int fontSize = (int)long_fontSize;
+    int32_t long_padding;
+    int err_padding = JS_ToInt32(ctx, &long_padding, argv[4]);
+    if(err_padding<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int padding = (int)long_padding;
+    int32_t long_packMethod;
+    int err_packMethod = JS_ToInt32(ctx, &long_packMethod, argv[5]);
+    if(err_packMethod<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[5] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int packMethod = (int)long_packMethod;
+    Image returnVal = GenImageFontAtlas((const GlyphInfo *)glyphs, glyphRecs, glyphCount, fontSize, padding, packMethod);
+    memoryClear(ctx, memoryHead);
+    Image* ptr_ret = (Image*)js_malloc(ctx, sizeof(Image));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_Image_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
+static JSValue js_UnloadFontData(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    GlyphInfo * glyphs;
+    bool freesrc_glyphs = false;
+    JSValue da_glyphs;
+    int64_t size_glyphs;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_glyphs = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_glyphs = *(ArrayProxy_class *)opaque_glyphs;
+        argv[0] = AP_glyphs.values(ctx, AP_glyphs.opaque, 0, false);
+        freesrc_glyphs = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_glyphs)==-1) {
+            return JS_EXCEPTION;
+        }
+        glyphs = (GlyphInfo *)js_malloc(ctx, size_glyphs * sizeof(GlyphInfo));
+        for(int i0=0; i0 < size_glyphs; i0++){
+            JSValue js_glyphs = JS_GetPropertyUint32(ctx,argv[0],i0);
+            GlyphInfo* ptr_glyphsi0 = (GlyphInfo*)JS_GetOpaque(js_glyphs, js_GlyphInfo_class_id);
+            if(ptr_glyphsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_glyphs does not allow null");
+                return JS_EXCEPTION;
+            }
+            glyphs[i0] = *ptr_glyphsi0;
+            JS_FreeValue(ctx, js_glyphs);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_glyphs;
+        glyphs = (GlyphInfo *)JS_GetArrayBuffer(ctx, &size_glyphs, argv[0]);
+    }
+    else {
+        if(freesrc_glyphs) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type GlyphInfo *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_glyphs) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_glyphCount;
+    int err_glyphCount = JS_ToInt32(ctx, &long_glyphCount, argv[1]);
+    if(err_glyphCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, glyphs);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_glyphs);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int glyphCount = (int)long_glyphCount;
+    UnloadFontData(glyphs, glyphCount);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, glyphs);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_glyphs);
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_UnloadFont(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
@@ -15931,6 +24380,65 @@ static JSValue js_UnloadFont(JSContext * ctx, JSValue this_val, int argc, JSValu
     Font font = *ptr_font;
     UnloadFont(font);
     return JS_UNDEFINED;
+}
+
+static JSValue js_ExportFontAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
+    if(ptr_font == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Font font = *ptr_font;
+    char * fileName;
+    bool freesrc_fileName = false;
+    JSValue da_fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            da_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+        }
+        else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    bool returnVal = ExportFontAsCode(font, (const char *)fileName);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
 }
 
 static JSValue js_DrawFPS(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -16459,6 +24967,174 @@ static JSValue js_DrawTextCodepoint(JSContext * ctx, JSValue this_val, int argc,
     return JS_UNDEFINED;
 }
 
+static JSValue js_DrawTextCodepoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
+    if(ptr_font == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Font font = *ptr_font;
+    int * codepoints;
+    bool freesrc_codepoints = false;
+    JSValue da_codepoints;
+    int64_t size_codepoints;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[1] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        freesrc_codepoints = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_codepoints)==-1) {
+            return JS_EXCEPTION;
+        }
+        codepoints = (int *)js_malloc(ctx, size_codepoints * sizeof(int));
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_codepointsi0;
+            int err_codepointsi0 = JS_ToInt32(ctx, &long_codepointsi0, js_codepoints);
+            if(err_codepointsi0<0) {
+                JS_ThrowTypeError(ctx, "js_codepoints is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepoints[i0] = (int)long_codepointsi0;
+            JS_FreeValue(ctx, js_codepoints);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[1]);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            da_codepoints = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
+            codepoints+=offset_codepoints;
+            size_codepoints-=offset_codepoints;
+        }
+        else {
+            if(freesrc_codepoints) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_codepoints) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    int32_t long_codepointCount;
+    int err_codepointCount = JS_ToInt32(ctx, &long_codepointCount, argv[2]);
+    if(err_codepointCount<0) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int codepointCount = (int)long_codepointCount;
+    Vector2* ptr_position = (Vector2*)JS_GetOpaque(argv[3], js_Vector2_class_id);
+    if(ptr_position == NULL) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[3] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector2 position = *ptr_position;
+    double double_fontSize;
+    int err_fontSize = JS_ToFloat64(ctx, &double_fontSize, argv[4]);
+    if(err_fontSize<0) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[4] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float fontSize = (float)double_fontSize;
+    double double_spacing;
+    int err_spacing = JS_ToFloat64(ctx, &double_spacing, argv[5]);
+    if(err_spacing<0) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[5] is not numeric");
+        return JS_EXCEPTION;
+    }
+    float spacing = (float)double_spacing;
+    Color* ptr_tint = (Color*)JS_GetOpaque(argv[6], js_Color_class_id);
+    if(ptr_tint == NULL) {
+        if(JS_IsArray(argv[1]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[1]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[6] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color tint = *ptr_tint;
+    DrawTextCodepoints(font, (const int *)codepoints, codepointCount, position, fontSize, spacing, tint);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, codepoints);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[1]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_codepoints);
+        }
+    }
+    return JS_UNDEFINED;
+}
+
 static JSValue js_SetTextLineSpacing(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_spacing;
     int err_spacing = JS_ToInt32(ctx, &long_spacing, argv[0]);
@@ -16671,6 +25347,28 @@ static JSValue js_GetGlyphIndex(JSContext * ctx, JSValue this_val, int argc, JSV
     return ret;
 }
 
+static JSValue js_GetGlyphInfo(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
+    if(ptr_font == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Font font = *ptr_font;
+    int32_t long_codepoint;
+    int err_codepoint = JS_ToInt32(ctx, &long_codepoint, argv[1]);
+    if(err_codepoint<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int codepoint = (int)long_codepoint;
+    GlyphInfo returnVal = GetGlyphInfo(font, codepoint);
+    GlyphInfo* ptr_ret = (GlyphInfo*)js_malloc(ctx, sizeof(GlyphInfo));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_GlyphInfo_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
 static JSValue js_GetGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Font* ptr_font = (Font*)JS_GetOpaque(argv[0], js_Font_class_id);
     if(ptr_font == NULL) {
@@ -16693,30 +25391,443 @@ static JSValue js_GetGlyphAtlasRec(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static JSValue js_TextCopy(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
-    memoryNode * memoryCurrent = memoryHead;
-    char * dst;
-    int64_t size_dst;
-    if(JS_IsString(argv[0]) == 1) {
-        dst = (char *)JS_ToCStringLen(ctx, &size_dst, argv[0]);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, dst);
+static JSValue js_LoadUTF8(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int * codepoints;
+    bool freesrc_codepoints = false;
+    JSValue da_codepoints;
+    int64_t size_codepoints;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[0] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        freesrc_codepoints = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_codepoints)==-1) {
+            return JS_EXCEPTION;
+        }
+        codepoints = (int *)js_malloc(ctx, size_codepoints * sizeof(int));
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[0],i0);
+            int32_t long_codepointsi0;
+            int err_codepointsi0 = JS_ToInt32(ctx, &long_codepointsi0, js_codepoints);
+            if(err_codepointsi0<0) {
+                JS_ThrowTypeError(ctx, "js_codepoints is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepoints[i0] = (int)long_codepointsi0;
+            JS_FreeValue(ctx, js_codepoints);
+        }
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        size_t size_dst;
-        dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, argv[0]);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, dst);
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[0]);
     }
     else {
-        JSClassID classid_dst = JS_GetClassID(argv[0]);
-        if(classid_dst==JS_CLASS_INT8_ARRAY) {
-            size_t offset_dst;
-            size_t size_dst;
-            JSValue da_dst = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_dst,&size_dst,NULL);
-            dst = (char *)JS_GetArrayBuffer(ctx, &size_dst, da_dst);
-            dst+=offset_dst;
-            size_dst-=offset_dst;
-            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_dst);
+        JSClassID classid_codepoints = JS_GetClassID(argv[0]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            da_codepoints = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
+            codepoints+=offset_codepoints;
+            size_codepoints-=offset_codepoints;
+        }
+        else {
+            if(freesrc_codepoints) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_codepoints) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int32_t long_length;
+    int err_length = JS_ToInt32(ctx, &long_length, argv[1]);
+    if(err_length<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, codepoints);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_codepoints);
+        }
+        else {
+            JSClassID classid_codepoints = JS_GetClassID(argv[0]);
+            if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+                js_free(ctx, &da_codepoints);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int length = (int)long_length;
+    char * returnVal = LoadUTF8((const int *)codepoints, length);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, codepoints);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_codepoints);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[0]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_codepoints);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewString(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_UnloadUTF8(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    bool freesrc_text = false;
+    JSValue da_text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+        }
+        else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    UnloadUTF8(text);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_text);
+        }
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_LoadCodepoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    bool freesrc_text = false;
+    JSValue da_text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+        }
+        else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int * count;
+    bool freesrc_count = false;
+    JSValue da_count;
+    int64_t size_count;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_count = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_count = *(ArrayProxy_class *)opaque_count;
+        argv[1] = AP_count.values(ctx, AP_count.opaque, 0, false);
+        freesrc_count = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_count)==-1) {
+            if(JS_IsArray(argv[0]) == 1) {
+                js_free(ctx, text);
+            }
+            else if(JS_IsString(argv[0]) == 1) {
+                JS_FreeCString(ctx, text);
+            }
+            else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                JS_FreeValue(ctx, da_text);
+            }
+            else {
+                JSClassID classid_text = JS_GetClassID(argv[0]);
+                if(classid_text==JS_CLASS_INT8_ARRAY) {
+                    js_free(ctx, &da_text);
+                }
+            }
+            return JS_EXCEPTION;
+        }
+        count = (int *)js_malloc(ctx, size_count * sizeof(int));
+        for(int i0=0; i0 < size_count; i0++){
+            JSValue js_count = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_counti0;
+            int err_counti0 = JS_ToInt32(ctx, &long_counti0, js_count);
+            if(err_counti0<0) {
+                JS_ThrowTypeError(ctx, "js_count is not numeric");
+                return JS_EXCEPTION;
+            }
+            count[i0] = (int)long_counti0;
+            JS_FreeValue(ctx, js_count);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_count;
+        count = (int *)JS_GetArrayBuffer(ctx, &size_count, argv[1]);
+    }
+    else {
+        JSClassID classid_count = JS_GetClassID(argv[1]);
+        if(classid_count==JS_CLASS_INT16_ARRAY) {
+            size_t offset_count;
+            size_t size_count;
+            da_count = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_count,&size_count,NULL);
+            count = (int *)JS_GetArrayBuffer(ctx, &size_count, da_count);
+            count+=offset_count;
+            size_count-=offset_count;
+        }
+        else {
+            int32_t long_js_count;
+            int err_js_count = JS_ToInt32(ctx, &long_js_count, argv[1]);
+            if(err_js_count<0) {
+                if(JS_IsArray(argv[0]) == 1) {
+                    js_free(ctx, text);
+                }
+                else if(JS_IsString(argv[0]) == 1) {
+                    JS_FreeCString(ctx, text);
+                }
+                else if(JS_IsArrayBuffer(argv[0]) == 1) {
+                    JS_FreeValue(ctx, da_text);
+                }
+                else {
+                    JSClassID classid_text = JS_GetClassID(argv[0]);
+                    if(classid_text==JS_CLASS_INT8_ARRAY) {
+                        js_free(ctx, &da_text);
+                    }
+                }
+                JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_count = (int)long_js_count;
+            count = &js_count;
+        }
+    }
+    int * returnVal = LoadCodepoints((const char *)text, count);
+    if(JS_IsArray(argv[1]) == 1) {
+        JSValue js_argv1 = JS_NewInt32(ctx, (long)count[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[1],0,js_argv1,JS_PROP_C_W_E);
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_text);
+        }
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, count);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_count);
+    }
+    else {
+        JSClassID classid_count = JS_GetClassID(argv[1]);
+        if(classid_count==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_count);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(int);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewInt32(ctx, (long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_UnloadCodepoints(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int * codepoints;
+    bool freesrc_codepoints = false;
+    JSValue da_codepoints;
+    int64_t size_codepoints;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_codepoints = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepoints = *(ArrayProxy_class *)opaque_codepoints;
+        argv[0] = AP_codepoints.values(ctx, AP_codepoints.opaque, 0, false);
+        freesrc_codepoints = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_codepoints)==-1) {
+            return JS_EXCEPTION;
+        }
+        codepoints = (int *)js_malloc(ctx, size_codepoints * sizeof(int));
+        for(int i0=0; i0 < size_codepoints; i0++){
+            JSValue js_codepoints = JS_GetPropertyUint32(ctx,argv[0],i0);
+            int32_t long_codepointsi0;
+            int err_codepointsi0 = JS_ToInt32(ctx, &long_codepointsi0, js_codepoints);
+            if(err_codepointsi0<0) {
+                JS_ThrowTypeError(ctx, "js_codepoints is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepoints[i0] = (int)long_codepointsi0;
+            JS_FreeValue(ctx, js_codepoints);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_codepoints;
+        codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, argv[0]);
+    }
+    else {
+        JSClassID classid_codepoints = JS_GetClassID(argv[0]);
+        if(classid_codepoints==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepoints;
+            size_t size_codepoints;
+            da_codepoints = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_codepoints,&size_codepoints,NULL);
+            codepoints = (int *)JS_GetArrayBuffer(ctx, &size_codepoints, da_codepoints);
+            codepoints+=offset_codepoints;
+            size_codepoints-=offset_codepoints;
+        }
+        else {
+            int32_t long_js_codepoints;
+            int err_js_codepoints = JS_ToInt32(ctx, &long_js_codepoints, argv[0]);
+            if(err_js_codepoints<0) {
+                JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_codepoints = (int)long_js_codepoints;
+            codepoints = &js_codepoints;
+        }
+    }
+    UnloadCodepoints(codepoints);
+    if(JS_IsArray(argv[0]) == 1) {
+        JSValue js_argv0 = JS_NewInt32(ctx, (long)codepoints[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[0],0,js_argv0,JS_PROP_C_W_E);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GetCodepointCount(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * text;
+    bool freesrc_text = false;
+    JSValue da_text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+        }
+        else {
+            if(freesrc_text) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_text) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int returnVal = GetCodepointCount((const char *)text);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, text);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_text);
+        }
+    }
+    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
+static JSValue js_GetCodepoint(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            JSValue da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
         }
         else {
             memoryClear(ctx, memoryHead);
@@ -16724,40 +25835,308 @@ static JSValue js_TextCopy(JSContext * ctx, JSValue this_val, int argc, JSValue 
             return JS_EXCEPTION;
         }
     }
-    char * src;
-    int64_t size_src;
-    if(JS_IsString(argv[1]) == 1) {
-        src = (char *)JS_ToCStringLen(ctx, &size_src, argv[1]);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, src);
+    int * codepointSize;
+    int64_t size_codepointSize;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_codepointSize = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepointSize = *(ArrayProxy_class *)opaque_codepointSize;
+        argv[1] = AP_codepointSize.values(ctx, AP_codepointSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_codepointSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        codepointSize = (int *)js_malloc(ctx, size_codepointSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, codepointSize);
+        for(int i0=0; i0 < size_codepointSize; i0++){
+            JSValue js_codepointSize = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_codepointSizei0;
+            int err_codepointSizei0 = JS_ToInt32(ctx, &long_codepointSizei0, js_codepointSize);
+            if(err_codepointSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_codepointSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepointSize[i0] = (int)long_codepointSizei0;
+            JS_FreeValue(ctx, js_codepointSize);
+        }
     }
     else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        size_t size_src;
-        src = (char *)JS_GetArrayBuffer(ctx, &size_src, argv[1]);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, src);
+        size_t size_codepointSize;
+        codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepointSize);
     }
     else {
-        JSClassID classid_src = JS_GetClassID(argv[1]);
-        if(classid_src==JS_CLASS_INT8_ARRAY) {
-            size_t offset_src;
-            size_t size_src;
-            JSValue da_src = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_src,&size_src,NULL);
-            src = (char *)JS_GetArrayBuffer(ctx, &size_src, da_src);
-            src+=offset_src;
-            size_src-=offset_src;
-            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_src);
+        JSClassID classid_codepointSize = JS_GetClassID(argv[1]);
+        if(classid_codepointSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepointSize;
+            size_t size_codepointSize;
+            JSValue da_codepointSize = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_codepointSize,&size_codepointSize,NULL);
+            codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, da_codepointSize);
+            codepointSize+=offset_codepointSize;
+            size_codepointSize-=offset_codepointSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepointSize);
         }
         else {
             memoryClear(ctx, memoryHead);
-            JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
             return JS_EXCEPTION;
         }
     }
-    int returnVal = TextCopy(dst, (const char *)src);
-    if(JS_IsArray(argv[0]) == 1) {
-        argv[0] = JS_NewString(ctx, dst);
-    }
+    int returnVal = GetCodepoint((const char *)text, codepointSize);
     memoryClear(ctx, memoryHead);
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
+static JSValue js_GetCodepointNext(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            JSValue da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int * codepointSize;
+    int64_t size_codepointSize;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_codepointSize = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepointSize = *(ArrayProxy_class *)opaque_codepointSize;
+        argv[1] = AP_codepointSize.values(ctx, AP_codepointSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_codepointSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        codepointSize = (int *)js_malloc(ctx, size_codepointSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, codepointSize);
+        for(int i0=0; i0 < size_codepointSize; i0++){
+            JSValue js_codepointSize = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_codepointSizei0;
+            int err_codepointSizei0 = JS_ToInt32(ctx, &long_codepointSizei0, js_codepointSize);
+            if(err_codepointSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_codepointSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepointSize[i0] = (int)long_codepointSizei0;
+            JS_FreeValue(ctx, js_codepointSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_codepointSize;
+        codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepointSize);
+    }
+    else {
+        JSClassID classid_codepointSize = JS_GetClassID(argv[1]);
+        if(classid_codepointSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepointSize;
+            size_t size_codepointSize;
+            JSValue da_codepointSize = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_codepointSize,&size_codepointSize,NULL);
+            codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, da_codepointSize);
+            codepointSize+=offset_codepointSize;
+            size_codepointSize-=offset_codepointSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepointSize);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GetCodepointNext((const char *)text, codepointSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
+static JSValue js_GetCodepointPrevious(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * text;
+    int64_t size_text;
+    if(JS_IsString(argv[0]) == 1) {
+        text = (char *)JS_ToCStringLen(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_text;
+        text = (char *)JS_GetArrayBuffer(ctx, &size_text, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text);
+    }
+    else {
+        JSClassID classid_text = JS_GetClassID(argv[0]);
+        if(classid_text==JS_CLASS_INT8_ARRAY) {
+            size_t offset_text;
+            size_t size_text;
+            JSValue da_text = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,&size_text,NULL);
+            text = (char *)JS_GetArrayBuffer(ctx, &size_text, da_text);
+            text+=offset_text;
+            size_text-=offset_text;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_text);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int * codepointSize;
+    int64_t size_codepointSize;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_codepointSize = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_codepointSize = *(ArrayProxy_class *)opaque_codepointSize;
+        argv[1] = AP_codepointSize.values(ctx, AP_codepointSize.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_codepointSize)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        codepointSize = (int *)js_malloc(ctx, size_codepointSize * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, codepointSize);
+        for(int i0=0; i0 < size_codepointSize; i0++){
+            JSValue js_codepointSize = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_codepointSizei0;
+            int err_codepointSizei0 = JS_ToInt32(ctx, &long_codepointSizei0, js_codepointSize);
+            if(err_codepointSizei0<0) {
+                JS_ThrowTypeError(ctx, "js_codepointSize is not numeric");
+                return JS_EXCEPTION;
+            }
+            codepointSize[i0] = (int)long_codepointSizei0;
+            JS_FreeValue(ctx, js_codepointSize);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_codepointSize;
+        codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, codepointSize);
+    }
+    else {
+        JSClassID classid_codepointSize = JS_GetClassID(argv[1]);
+        if(classid_codepointSize==JS_CLASS_INT16_ARRAY) {
+            size_t offset_codepointSize;
+            size_t size_codepointSize;
+            JSValue da_codepointSize = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_codepointSize,&size_codepointSize,NULL);
+            codepointSize = (int *)JS_GetArrayBuffer(ctx, &size_codepointSize, da_codepointSize);
+            codepointSize+=offset_codepointSize;
+            size_codepointSize-=offset_codepointSize;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_codepointSize);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    int returnVal = GetCodepointPrevious((const char *)text, codepointSize);
+    memoryClear(ctx, memoryHead);
+    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
+static JSValue js_CodepointToUTF8(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    int32_t long_codepoint;
+    int err_codepoint = JS_ToInt32(ctx, &long_codepoint, argv[0]);
+    if(err_codepoint<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int codepoint = (int)long_codepoint;
+    int * utf8Size;
+    bool freesrc_utf8Size = false;
+    JSValue da_utf8Size;
+    int64_t size_utf8Size;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_utf8Size = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_utf8Size = *(ArrayProxy_class *)opaque_utf8Size;
+        argv[1] = AP_utf8Size.values(ctx, AP_utf8Size.opaque, 0, false);
+        freesrc_utf8Size = true;
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_utf8Size)==-1) {
+            return JS_EXCEPTION;
+        }
+        utf8Size = (int *)js_malloc(ctx, size_utf8Size * sizeof(int));
+        for(int i0=0; i0 < size_utf8Size; i0++){
+            JSValue js_utf8Size = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_utf8Sizei0;
+            int err_utf8Sizei0 = JS_ToInt32(ctx, &long_utf8Sizei0, js_utf8Size);
+            if(err_utf8Sizei0<0) {
+                JS_ThrowTypeError(ctx, "js_utf8Size is not numeric");
+                return JS_EXCEPTION;
+            }
+            utf8Size[i0] = (int)long_utf8Sizei0;
+            JS_FreeValue(ctx, js_utf8Size);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_utf8Size;
+        utf8Size = (int *)JS_GetArrayBuffer(ctx, &size_utf8Size, argv[1]);
+    }
+    else {
+        JSClassID classid_utf8Size = JS_GetClassID(argv[1]);
+        if(classid_utf8Size==JS_CLASS_INT16_ARRAY) {
+            size_t offset_utf8Size;
+            size_t size_utf8Size;
+            da_utf8Size = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_utf8Size,&size_utf8Size,NULL);
+            utf8Size = (int *)JS_GetArrayBuffer(ctx, &size_utf8Size, da_utf8Size);
+            utf8Size+=offset_utf8Size;
+            size_utf8Size-=offset_utf8Size;
+        }
+        else {
+            if(freesrc_utf8Size) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_utf8Size) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    const char * returnVal = CodepointToUTF8(codepoint, utf8Size);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, utf8Size);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_utf8Size);
+    }
+    else {
+        JSClassID classid_utf8Size = JS_GetClassID(argv[1]);
+        if(classid_utf8Size==JS_CLASS_INT16_ARRAY) {
+            js_free(ctx, &da_utf8Size);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewString(ctx, returnVal);
     return ret;
 }
 
@@ -16926,6 +26305,9 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     int c = 1;
     int ilen = 0;
     for(int i=0; i < formatlen; i++){
+        int n = 2;
+        int w = 0;
+        int p = 0;
         if(format[i]!='%') {
             buffer[l]=format[i];
             l++;
@@ -16956,6 +26338,23 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
             int lasth = firsth;
             har=format[lasth];
             while(strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL){
+                if(har=='*') {
+                    if(n==1) {
+                        w = p;
+                    }
+                    int32_t long_p;
+                    int err_p = JS_ToInt32(ctx, &long_p, argv[c]);
+                    if(err_p<0) {
+                        memoryClear(ctx, memoryHead);
+                        js_free(ctx, char_ptr);
+                        js_free(ctx, buffer);
+                        JS_ThrowTypeError(ctx, "argv[c] is not numeric");
+                        return JS_EXCEPTION;
+                    }
+                    int p = (int)long_p;
+                    c++;
+                    n--;
+                }
                 lasth++;
                 har = format[lasth];
                 if(har==0) {
@@ -16991,38 +26390,38 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                         return JS_EXCEPTION;
                     }
                     if(firsth==lasth) {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (int)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (int)a);
                     }
                     else {
                         switch(format[lasth-1]) {
                             case 'h':{
                                 if(subformat[lasth-i-2]=='h') {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (signed char)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (signed char)a);
                                 }
                                 else {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (short int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (short int)a);
                                 }
                                 break;
                             }
                             case 'l':{
                                 if(subformat[lasth-i-2]=='l') {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long long int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (long long int)a);
                                 }
                                 else {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (long int)a);
                                 }
                                 break;
                             }
                             case 'j':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (intmax_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (intmax_t)a);
                                 break;
                             }
                             case 'z':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (size_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (size_t)a);
                                 break;
                             }
                             case 't':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (ptrdiff_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (ptrdiff_t)a);
                                 break;
                             }
                         }
@@ -17043,38 +26442,38 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                         return JS_EXCEPTION;
                     }
                     if(firsth==lasth) {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned int)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (unsigned int)a);
                     }
                     else {
                         switch(subformat[lasth-i-1]) {
                             case 'h':{
                                 if(subformat[lasth-i-2]=='h') {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned char)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (unsigned char)a);
                                 }
                                 else {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned short int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (unsigned short int)a);
                                 }
                                 break;
                             }
                             case 'l':{
                                 if(subformat[lasth-i-2]=='l') {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned long long int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (unsigned long long int)a);
                                 }
                                 else {
-                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (unsigned long int)a);
+                                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (unsigned long int)a);
                                 }
                                 break;
                             }
                             case 'j':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (uintmax_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (uintmax_t)a);
                                 break;
                             }
                             case 'z':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (size_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (size_t)a);
                                 break;
                             }
                             case 't':{
-                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (ptrdiff_t)a);
+                                char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (ptrdiff_t)a);
                                 break;
                             }
                         }
@@ -17099,10 +26498,10 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                         return JS_EXCEPTION;
                     }
                     if(firsth==lasth) {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (double)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (double)a);
                     }
                     else {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (long double)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (long double)a);
                     }
                     break;
                 }
@@ -17118,10 +26517,10 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                     }
                     int a = (int)long_a;
                     if(firsth==lasth) {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (int)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (int)a);
                     }
                     else {
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (wint_t)a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (wint_t)a);
                     }
                     break;
                 }
@@ -17157,7 +26556,7 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                                 return JS_EXCEPTION;
                             }
                         }
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, a);
                     }
                     else {
                         wchar_t * a;
@@ -17213,12 +26612,12 @@ static JSValue js_TextFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
                                 return JS_EXCEPTION;
                             }
                         }
-                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, a);
+                        char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, a);
                     }
                     break;
                 }
                 case 'p':{
-                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, (void *)&argv[c]);
+                    char_ptr = asnprintf(ctx, char_ptr, &char_ptrlen, subformat, n, w, p, (void *)&argv[c]);
                     break;
                 }
                 case 'n':{
@@ -18442,6 +27841,82 @@ static JSValue js_DrawTriangle3D(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Color color = *ptr_color;
     DrawTriangle3D(v1, v2, v3, color);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_DrawTriangleStrip3D(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector3 * points;
+    bool freesrc_points = false;
+    JSValue da_points;
+    int64_t size_points;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_points = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_points = *(ArrayProxy_class *)opaque_points;
+        argv[0] = AP_points.values(ctx, AP_points.opaque, 0, false);
+        freesrc_points = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_points)==-1) {
+            return JS_EXCEPTION;
+        }
+        points = (Vector3 *)js_malloc(ctx, size_points * sizeof(Vector3));
+        for(int i0=0; i0 < size_points; i0++){
+            JSValue js_points = JS_GetPropertyUint32(ctx,argv[0],i0);
+            Vector3* ptr_pointsi0 = (Vector3*)JS_GetOpaque(js_points, js_Vector3_class_id);
+            if(ptr_pointsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_points does not allow null");
+                return JS_EXCEPTION;
+            }
+            points[i0] = *ptr_pointsi0;
+            JS_FreeValue(ctx, js_points);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_points;
+        points = (Vector3 *)JS_GetArrayBuffer(ctx, &size_points, argv[0]);
+    }
+    else {
+        if(freesrc_points) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type Vector3 *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_points) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_pointCount;
+    int err_pointCount = JS_ToInt32(ctx, &long_pointCount, argv[1]);
+    if(err_pointCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int pointCount = (int)long_pointCount;
+    Color* ptr_color = (Color*)JS_GetOpaque(argv[2], js_Color_class_id);
+    if(ptr_color == NULL) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, points);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_points);
+        }
+        JS_ThrowTypeError(ctx, "argv[2] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Color color = *ptr_color;
+    DrawTriangleStrip3D((const Vector3 *)points, pointCount, color);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, points);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_points);
+    }
     return JS_UNDEFINED;
 }
 
@@ -20125,6 +29600,101 @@ static JSValue js_GenMeshCubicmap(JSContext * ctx, JSValue this_val, int argc, J
     return ret;
 }
 
+static JSValue js_LoadMaterials(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            JSValue da_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int * materialCount;
+    int64_t size_materialCount;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_materialCount = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_materialCount = *(ArrayProxy_class *)opaque_materialCount;
+        argv[1] = AP_materialCount.values(ctx, AP_materialCount.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_materialCount)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        materialCount = (int *)js_malloc(ctx, size_materialCount * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, materialCount);
+        for(int i0=0; i0 < size_materialCount; i0++){
+            JSValue js_materialCount = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_materialCounti0;
+            int err_materialCounti0 = JS_ToInt32(ctx, &long_materialCounti0, js_materialCount);
+            if(err_materialCounti0<0) {
+                JS_ThrowTypeError(ctx, "js_materialCount is not numeric");
+                return JS_EXCEPTION;
+            }
+            materialCount[i0] = (int)long_materialCounti0;
+            JS_FreeValue(ctx, js_materialCount);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_materialCount;
+        materialCount = (int *)JS_GetArrayBuffer(ctx, &size_materialCount, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, materialCount);
+    }
+    else {
+        JSClassID classid_materialCount = JS_GetClassID(argv[1]);
+        if(classid_materialCount==JS_CLASS_INT16_ARRAY) {
+            size_t offset_materialCount;
+            size_t size_materialCount;
+            JSValue da_materialCount = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_materialCount,&size_materialCount,NULL);
+            materialCount = (int *)JS_GetArrayBuffer(ctx, &size_materialCount, da_materialCount);
+            materialCount+=offset_materialCount;
+            size_materialCount-=offset_materialCount;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_materialCount);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    Material * returnVal = LoadMaterials((const char *)fileName, materialCount);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(Material);
+    for(int i0=0; i0 < size_ret; i0++){
+        Material* ptr_js_ret = (Material*)js_malloc(ctx, sizeof(Material));
+        *ptr_js_ret = returnVal[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_Material_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
 static JSValue js_LoadMaterialDefault(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Material returnVal = LoadMaterialDefault();
     Material* ptr_ret = (Material*)js_malloc(ctx, sizeof(Material));
@@ -20204,6 +29774,125 @@ static JSValue js_SetModelMeshMaterial(JSContext * ctx, JSValue this_val, int ar
     return JS_UNDEFINED;
 }
 
+static JSValue js_LoadModelAnimations(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    char * fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            JSValue da_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_fileName);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+    }
+    int * animCount;
+    int64_t size_animCount;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_animCount = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_animCount = *(ArrayProxy_class *)opaque_animCount;
+        argv[1] = AP_animCount.values(ctx, AP_animCount.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_animCount)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        animCount = (int *)js_malloc(ctx, size_animCount * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, animCount);
+        for(int i0=0; i0 < size_animCount; i0++){
+            JSValue js_animCount = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int32_t long_animCounti0;
+            int err_animCounti0 = JS_ToInt32(ctx, &long_animCounti0, js_animCount);
+            if(err_animCounti0<0) {
+                JS_ThrowTypeError(ctx, "js_animCount is not numeric");
+                return JS_EXCEPTION;
+            }
+            animCount[i0] = (int)long_animCounti0;
+            JS_FreeValue(ctx, js_animCount);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_animCount;
+        animCount = (int *)JS_GetArrayBuffer(ctx, &size_animCount, argv[1]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, animCount);
+    }
+    else {
+        JSClassID classid_animCount = JS_GetClassID(argv[1]);
+        if(classid_animCount==JS_CLASS_INT16_ARRAY) {
+            size_t offset_animCount;
+            size_t size_animCount;
+            JSValue da_animCount = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_animCount,&size_animCount,NULL);
+            animCount = (int *)JS_GetArrayBuffer(ctx, &size_animCount, da_animCount);
+            animCount+=offset_animCount;
+            size_animCount-=offset_animCount;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_animCount);
+        }
+        else {
+            memoryClear(ctx, memoryHead);
+            JS_ThrowTypeError(ctx, "argv[1] does not match type int *");
+            return JS_EXCEPTION;
+        }
+    }
+    ModelAnimation * returnVal = LoadModelAnimations((const char *)fileName, animCount);
+    memoryClear(ctx, memoryHead);
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(ModelAnimation);
+    for(int i0=0; i0 < size_ret; i0++){
+        ModelAnimation* ptr_js_ret = (ModelAnimation*)js_malloc(ctx, sizeof(ModelAnimation));
+        *ptr_js_ret = returnVal[i0];
+        JSValue js_ret = JS_NewObjectClass(ctx, js_ModelAnimation_class_id);
+        JS_SetOpaque(js_ret, ptr_js_ret);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_UpdateModelAnimation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
+    if(ptr_model == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Model model = *ptr_model;
+    ModelAnimation* ptr_anim = (ModelAnimation*)JS_GetOpaque(argv[1], js_ModelAnimation_class_id);
+    if(ptr_anim == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    ModelAnimation anim = *ptr_anim;
+    int32_t long_frame;
+    int err_frame = JS_ToInt32(ctx, &long_frame, argv[2]);
+    if(err_frame<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int frame = (int)long_frame;
+    UpdateModelAnimation(model, anim, frame);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_UpdateModelAnimationBones(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
     if(ptr_model == NULL) {
@@ -20226,6 +29915,99 @@ static JSValue js_UpdateModelAnimationBones(JSContext * ctx, JSValue this_val, i
     int frame = (int)long_frame;
     UpdateModelAnimationBones(model, anim, frame);
     return JS_UNDEFINED;
+}
+
+static JSValue js_UnloadModelAnimation(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    ModelAnimation* ptr_anim = (ModelAnimation*)JS_GetOpaque(argv[0], js_ModelAnimation_class_id);
+    if(ptr_anim == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    ModelAnimation anim = *ptr_anim;
+    UnloadModelAnimation(anim);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_UnloadModelAnimations(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    ModelAnimation * animations;
+    bool freesrc_animations = false;
+    JSValue da_animations;
+    int64_t size_animations;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_animations = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_animations = *(ArrayProxy_class *)opaque_animations;
+        argv[0] = AP_animations.values(ctx, AP_animations.opaque, 0, false);
+        freesrc_animations = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        if(JS_GetLength(ctx,argv[0],&size_animations)==-1) {
+            return JS_EXCEPTION;
+        }
+        animations = (ModelAnimation *)js_malloc(ctx, size_animations * sizeof(ModelAnimation));
+        for(int i0=0; i0 < size_animations; i0++){
+            JSValue js_animations = JS_GetPropertyUint32(ctx,argv[0],i0);
+            ModelAnimation* ptr_animationsi0 = (ModelAnimation*)JS_GetOpaque(js_animations, js_ModelAnimation_class_id);
+            if(ptr_animationsi0 == NULL) {
+                JS_ThrowTypeError(ctx, "js_animations does not allow null");
+                return JS_EXCEPTION;
+            }
+            animations[i0] = *ptr_animationsi0;
+            JS_FreeValue(ctx, js_animations);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_animations;
+        animations = (ModelAnimation *)JS_GetArrayBuffer(ctx, &size_animations, argv[0]);
+    }
+    else {
+        if(freesrc_animations) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+        JS_ThrowTypeError(ctx, "argv[0] does not match type ModelAnimation *");
+        return JS_EXCEPTION;
+    }
+    if(freesrc_animations) {
+        JS_FreeValue(ctx, argv[0]);
+    }
+    int32_t long_animCount;
+    int err_animCount = JS_ToInt32(ctx, &long_animCount, argv[1]);
+    if(err_animCount<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, animations);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_animations);
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int animCount = (int)long_animCount;
+    UnloadModelAnimations(animations, animCount);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, animations);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_animations);
+    }
+    return JS_UNDEFINED;
+}
+
+static JSValue js_IsModelAnimationValid(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Model* ptr_model = (Model*)JS_GetOpaque(argv[0], js_Model_class_id);
+    if(ptr_model == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Model model = *ptr_model;
+    ModelAnimation* ptr_anim = (ModelAnimation*)JS_GetOpaque(argv[1], js_ModelAnimation_class_id);
+    if(ptr_anim == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not allow null");
+        return JS_EXCEPTION;
+    }
+    ModelAnimation anim = *ptr_anim;
+    bool returnVal = IsModelAnimationValid(model, anim);
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
 }
 
 static JSValue js_CheckCollisionSpheres(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -20863,6 +30645,65 @@ static JSValue js_ExportWave(JSContext * ctx, JSValue this_val, int argc, JSValu
         }
     }
     bool returnVal = ExportWave(wave, (const char *)fileName);
+    if(JS_IsArray(argv[1]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[1]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    JSValue ret = JS_NewBool(ctx, returnVal);
+    return ret;
+}
+
+static JSValue js_ExportWaveAsCode(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Wave* ptr_wave = (Wave*)JS_GetOpaque(argv[0], js_Wave_class_id);
+    if(ptr_wave == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Wave wave = *ptr_wave;
+    char * fileName;
+    bool freesrc_fileName = false;
+    JSValue da_fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[1]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[1]);
+    }
+    else if(JS_IsArrayBuffer(argv[1]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[1]);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[1]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            da_fileName = JS_GetTypedArrayBuffer(ctx,argv[1],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+        }
+        else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[1]);
+            }
+            JS_ThrowTypeError(ctx, "argv[1] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[1]);
+        }
+    }
+    bool returnVal = ExportWaveAsCode(wave, (const char *)fileName);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, fileName);
     }
@@ -21746,9 +31587,8 @@ static JSValue js_AttachAudioMixedProcessor(JSContext * ctx, JSValue this_val, i
 static JSValue js_DetachAudioMixedProcessor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int processor_pos;
     void * processor = AudioMixedProcessor_processor_c;
-    void * processor_ptr = argv[0].u.ptr;
     for(int i0=0; i0 < AudioMixedProcessor_processor_size; i0++){
-        if(AudioMixedProcessor_processor_arr[i0].func_obj.u.ptr == processor_ptr) {
+        if(JS_IsEqual(AudioMixedProcessor_processor_arr[i0].ctx, AudioMixedProcessor_processor_arr[i0].func_obj, argv[0])) {
             JS_FreeValue(ctx, AudioMixedProcessor_processor_arr[i0].func_obj);
             JS_FreeValue(AudioMixedProcessor_processor_arr[i0].ctx, AudioMixedProcessor_processor_arr[i0].func_obj);
             JS_FreeValue(AudioMixedProcessor_processor_arr[i0].ctx, AudioMixedProcessor_processor_arr[i0].thread_id);
@@ -21773,7 +31613,7 @@ static JSValue js_DetachAudioMixedProcessor(JSContext * ctx, JSValue this_val, i
     return JS_UNDEFINED;
 }
 
-static const JSCFunctionListEntry js_js_raylib_funcs[] = {
+static const JSCFunctionListEntry js_raylib_funcs[] = {
     JS_CFUNC_DEF("InitWindow",3,js_InitWindow),
     JS_CFUNC_DEF("CloseWindow",0,js_CloseWindow),
     JS_CFUNC_DEF("WindowShouldClose",0,js_WindowShouldClose),
@@ -21793,6 +31633,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("MinimizeWindow",0,js_MinimizeWindow),
     JS_CFUNC_DEF("RestoreWindow",0,js_RestoreWindow),
     JS_CFUNC_DEF("SetWindowIcon",1,js_SetWindowIcon),
+    JS_CFUNC_DEF("SetWindowIcons",2,js_SetWindowIcons),
     JS_CFUNC_DEF("SetWindowTitle",1,js_SetWindowTitle),
     JS_CFUNC_DEF("SetWindowPosition",2,js_SetWindowPosition),
     JS_CFUNC_DEF("SetWindowMonitor",1,js_SetWindowMonitor),
@@ -21871,10 +31712,11 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("SetRandomSeed",1,js_SetRandomSeed),
     JS_CFUNC_DEF("GetRandomValue",2,js_GetRandomValue),
     JS_CFUNC_DEF("LoadRandomSequence",3,js_LoadRandomSequence),
+    JS_CFUNC_DEF("UnloadRandomSequence",1,js_UnloadRandomSequence),
     JS_CFUNC_DEF("TakeScreenshot",1,js_TakeScreenshot),
     JS_CFUNC_DEF("SetConfigFlags",1,js_SetConfigFlags),
     JS_CFUNC_DEF("OpenURL",1,js_OpenURL),
-    JS_CFUNC_DEF("TraceLog",1,js_TraceLog),
+    JS_CFUNC_DEF("TraceLog",2,js_TraceLog),
     JS_CFUNC_DEF("SetTraceLogLevel",1,js_SetTraceLogLevel),
     JS_CFUNC_DEF("SetLoadFileDataCallback",1,js_SetLoadFileDataCallback),
     JS_CFUNC_DEF("SetSaveFileDataCallback",1,js_SetSaveFileDataCallback),
@@ -21882,6 +31724,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("SetSaveFileTextCallback",1,js_SetSaveFileTextCallback),
     JS_CFUNC_DEF("LoadFileData",2,js_LoadFileData),
     JS_CFUNC_DEF("SaveFileData",3,js_SaveFileData),
+    JS_CFUNC_DEF("ExportDataAsCode",3,js_ExportDataAsCode),
     JS_CFUNC_DEF("LoadFileText",1,js_LoadFileText),
     JS_CFUNC_DEF("SaveFileText",2,js_SaveFileText),
     JS_CFUNC_DEF("FileExists",1,js_FileExists),
@@ -21904,6 +31747,10 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("IsFileDropped",0,js_IsFileDropped),
     JS_CFUNC_DEF("LoadDroppedFiles",0,js_LoadDroppedFiles),
     JS_CFUNC_DEF("GetFileModTime",1,js_GetFileModTime),
+    JS_CFUNC_DEF("CompressData",3,js_CompressData),
+    JS_CFUNC_DEF("DecompressData",3,js_DecompressData),
+    JS_CFUNC_DEF("EncodeDataBase64",3,js_EncodeDataBase64),
+    JS_CFUNC_DEF("DecodeDataBase64",2,js_DecodeDataBase64),
     JS_CFUNC_DEF("ComputeCRC32",2,js_ComputeCRC32),
     JS_CFUNC_DEF("ComputeMD5",2,js_ComputeMD5),
     JS_CFUNC_DEF("ComputeSHA1",2,js_ComputeSHA1),
@@ -21972,6 +31819,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("DrawLine",5,js_DrawLine),
     JS_CFUNC_DEF("DrawLineV",3,js_DrawLineV),
     JS_CFUNC_DEF("DrawLineEx",4,js_DrawLineEx),
+    JS_CFUNC_DEF("DrawLineStrip",3,js_DrawLineStrip),
     JS_CFUNC_DEF("DrawLineBezier",4,js_DrawLineBezier),
     JS_CFUNC_DEF("DrawCircle",4,js_DrawCircle),
     JS_CFUNC_DEF("DrawCircleSector",6,js_DrawCircleSector),
@@ -21998,6 +31846,8 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("DrawRectangleRoundedLinesEx",5,js_DrawRectangleRoundedLinesEx),
     JS_CFUNC_DEF("DrawTriangle",4,js_DrawTriangle),
     JS_CFUNC_DEF("DrawTriangleLines",4,js_DrawTriangleLines),
+    JS_CFUNC_DEF("DrawTriangleFan",3,js_DrawTriangleFan),
+    JS_CFUNC_DEF("DrawTriangleStrip",3,js_DrawTriangleStrip),
     JS_CFUNC_DEF("DrawPoly",5,js_DrawPoly),
     JS_CFUNC_DEF("DrawPolyLines",5,js_DrawPolyLines),
     JS_CFUNC_DEF("DrawPolyLinesEx",6,js_DrawPolyLinesEx),
@@ -22024,9 +31874,12 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("CheckCollisionPointCircle",3,js_CheckCollisionPointCircle),
     JS_CFUNC_DEF("CheckCollisionPointTriangle",4,js_CheckCollisionPointTriangle),
     JS_CFUNC_DEF("CheckCollisionPointLine",4,js_CheckCollisionPointLine),
+    JS_CFUNC_DEF("CheckCollisionPointPoly",3,js_CheckCollisionPointPoly),
+    JS_CFUNC_DEF("CheckCollisionLines",5,js_CheckCollisionLines),
     JS_CFUNC_DEF("GetCollisionRec",2,js_GetCollisionRec),
     JS_CFUNC_DEF("LoadImage",1,js_LoadImage),
     JS_CFUNC_DEF("LoadImageRaw",5,js_LoadImageRaw),
+    JS_CFUNC_DEF("LoadImageAnim",2,js_LoadImageAnim),
     JS_CFUNC_DEF("LoadImageAnimFromMemory",4,js_LoadImageAnimFromMemory),
     JS_CFUNC_DEF("LoadImageFromMemory",3,js_LoadImageFromMemory),
     JS_CFUNC_DEF("LoadImageFromTexture",1,js_LoadImageFromTexture),
@@ -22035,6 +31888,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("UnloadImage",1,js_UnloadImage),
     JS_CFUNC_DEF("ExportImage",2,js_ExportImage),
     JS_CFUNC_DEF("ExportImageToMemory",3,js_ExportImageToMemory),
+    JS_CFUNC_DEF("ExportImageAsCode",2,js_ExportImageAsCode),
     JS_CFUNC_DEF("GenImageColor",3,js_GenImageColor),
     JS_CFUNC_DEF("GenImageGradientLinear",5,js_GenImageGradientLinear),
     JS_CFUNC_DEF("GenImageGradientRadial",5,js_GenImageGradientRadial),
@@ -22075,6 +31929,9 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("ImageColorBrightness",2,js_ImageColorBrightness),
     JS_CFUNC_DEF("ImageColorReplace",3,js_ImageColorReplace),
     JS_CFUNC_DEF("LoadImageColors",1,js_LoadImageColors),
+    JS_CFUNC_DEF("LoadImagePalette",3,js_LoadImagePalette),
+    JS_CFUNC_DEF("UnloadImageColors",1,js_UnloadImageColors),
+    JS_CFUNC_DEF("UnloadImagePalette",1,js_UnloadImagePalette),
     JS_CFUNC_DEF("GetImageAlphaBorder",2,js_GetImageAlphaBorder),
     JS_CFUNC_DEF("GetImageColor",3,js_GetImageColor),
     JS_CFUNC_DEF("ImageClearBackground",2,js_ImageClearBackground),
@@ -22132,24 +31989,41 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("ColorAlphaBlend",3,js_ColorAlphaBlend),
     JS_CFUNC_DEF("ColorLerp",3,js_ColorLerp),
     JS_CFUNC_DEF("GetColor",1,js_GetColor),
+    JS_CFUNC_DEF("GetPixelColor",2,js_GetPixelColor),
+    JS_CFUNC_DEF("SetPixelColor",3,js_SetPixelColor),
     JS_CFUNC_DEF("GetPixelDataSize",3,js_GetPixelDataSize),
     JS_CFUNC_DEF("GetFontDefault",0,js_GetFontDefault),
     JS_CFUNC_DEF("LoadFont",1,js_LoadFont),
     JS_CFUNC_DEF("LoadFontEx",4,js_LoadFontEx),
     JS_CFUNC_DEF("LoadFontFromImage",3,js_LoadFontFromImage),
+    JS_CFUNC_DEF("LoadFontFromMemory",6,js_LoadFontFromMemory),
     JS_CFUNC_DEF("IsFontValid",1,js_IsFontValid),
+    JS_CFUNC_DEF("LoadFontData",6,js_LoadFontData),
+    JS_CFUNC_DEF("GenImageFontAtlas",6,js_GenImageFontAtlas),
+    JS_CFUNC_DEF("UnloadFontData",2,js_UnloadFontData),
     JS_CFUNC_DEF("UnloadFont",1,js_UnloadFont),
+    JS_CFUNC_DEF("ExportFontAsCode",2,js_ExportFontAsCode),
     JS_CFUNC_DEF("DrawFPS",2,js_DrawFPS),
     JS_CFUNC_DEF("DrawText",5,js_DrawText),
     JS_CFUNC_DEF("DrawTextEx",6,js_DrawTextEx),
     JS_CFUNC_DEF("DrawTextPro",8,js_DrawTextPro),
     JS_CFUNC_DEF("DrawTextCodepoint",5,js_DrawTextCodepoint),
+    JS_CFUNC_DEF("DrawTextCodepoints",7,js_DrawTextCodepoints),
     JS_CFUNC_DEF("SetTextLineSpacing",1,js_SetTextLineSpacing),
     JS_CFUNC_DEF("MeasureText",2,js_MeasureText),
     JS_CFUNC_DEF("MeasureTextEx",4,js_MeasureTextEx),
     JS_CFUNC_DEF("GetGlyphIndex",2,js_GetGlyphIndex),
+    JS_CFUNC_DEF("GetGlyphInfo",2,js_GetGlyphInfo),
     JS_CFUNC_DEF("GetGlyphAtlasRec",2,js_GetGlyphAtlasRec),
-    JS_CFUNC_DEF("TextCopy",2,js_TextCopy),
+    JS_CFUNC_DEF("LoadUTF8",2,js_LoadUTF8),
+    JS_CFUNC_DEF("UnloadUTF8",1,js_UnloadUTF8),
+    JS_CFUNC_DEF("LoadCodepoints",2,js_LoadCodepoints),
+    JS_CFUNC_DEF("UnloadCodepoints",1,js_UnloadCodepoints),
+    JS_CFUNC_DEF("GetCodepointCount",1,js_GetCodepointCount),
+    JS_CFUNC_DEF("GetCodepoint",2,js_GetCodepoint),
+    JS_CFUNC_DEF("GetCodepointNext",2,js_GetCodepointNext),
+    JS_CFUNC_DEF("GetCodepointPrevious",2,js_GetCodepointPrevious),
+    JS_CFUNC_DEF("CodepointToUTF8",2,js_CodepointToUTF8),
     JS_CFUNC_DEF("TextIsEqual",2,js_TextIsEqual),
     JS_CFUNC_DEF("TextLength",1,js_TextLength),
     JS_CFUNC_DEF("TextFormat",2,js_TextFormat),
@@ -22171,6 +32045,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("DrawPoint3D",2,js_DrawPoint3D),
     JS_CFUNC_DEF("DrawCircle3D",5,js_DrawCircle3D),
     JS_CFUNC_DEF("DrawTriangle3D",4,js_DrawTriangle3D),
+    JS_CFUNC_DEF("DrawTriangleStrip3D",3,js_DrawTriangleStrip3D),
     JS_CFUNC_DEF("DrawCube",5,js_DrawCube),
     JS_CFUNC_DEF("DrawCubeV",3,js_DrawCubeV),
     JS_CFUNC_DEF("DrawCubeWires",5,js_DrawCubeWires),
@@ -22222,12 +32097,18 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("GenMeshKnot",4,js_GenMeshKnot),
     JS_CFUNC_DEF("GenMeshHeightmap",2,js_GenMeshHeightmap),
     JS_CFUNC_DEF("GenMeshCubicmap",2,js_GenMeshCubicmap),
+    JS_CFUNC_DEF("LoadMaterials",2,js_LoadMaterials),
     JS_CFUNC_DEF("LoadMaterialDefault",0,js_LoadMaterialDefault),
     JS_CFUNC_DEF("IsMaterialValid",1,js_IsMaterialValid),
     JS_CFUNC_DEF("UnloadMaterial",1,js_UnloadMaterial),
     JS_CFUNC_DEF("SetMaterialTexture",3,js_SetMaterialTexture),
     JS_CFUNC_DEF("SetModelMeshMaterial",3,js_SetModelMeshMaterial),
+    JS_CFUNC_DEF("LoadModelAnimations",2,js_LoadModelAnimations),
+    JS_CFUNC_DEF("UpdateModelAnimation",3,js_UpdateModelAnimation),
     JS_CFUNC_DEF("UpdateModelAnimationBones",3,js_UpdateModelAnimationBones),
+    JS_CFUNC_DEF("UnloadModelAnimation",1,js_UnloadModelAnimation),
+    JS_CFUNC_DEF("UnloadModelAnimations",2,js_UnloadModelAnimations),
+    JS_CFUNC_DEF("IsModelAnimationValid",2,js_IsModelAnimationValid),
     JS_CFUNC_DEF("CheckCollisionSpheres",4,js_CheckCollisionSpheres),
     JS_CFUNC_DEF("CheckCollisionBoxes",2,js_CheckCollisionBoxes),
     JS_CFUNC_DEF("CheckCollisionBoxSphere",3,js_CheckCollisionBoxSphere),
@@ -22253,6 +32134,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
     JS_CFUNC_DEF("UnloadSound",1,js_UnloadSound),
     JS_CFUNC_DEF("UnloadSoundAlias",1,js_UnloadSoundAlias),
     JS_CFUNC_DEF("ExportWave",2,js_ExportWave),
+    JS_CFUNC_DEF("ExportWaveAsCode",2,js_ExportWaveAsCode),
     JS_CFUNC_DEF("PlaySound",1,js_PlaySound),
     JS_CFUNC_DEF("StopSound",1,js_StopSound),
     JS_CFUNC_DEF("PauseSound",1,js_PauseSound),
@@ -22301,7 +32183,7 @@ static const JSCFunctionListEntry js_js_raylib_funcs[] = {
 };
 
 static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
-    JS_SetModuleExportList(ctx, m,js_js_raylib_funcs,countof(js_js_raylib_funcs));
+    JS_SetModuleExportList(ctx, m,js_raylib_funcs,countof(js_raylib_funcs));
     js_declare_Vector2(ctx, m);
     JSValue Vector2_constr = JS_NewCFunction2(ctx, js_Vector2_constructor,"Vector2", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Vector2", Vector2_constr);
@@ -22322,12 +32204,20 @@ static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     JSValue Image_constr = JS_NewCFunction2(ctx, js_Image_constructor,"Image", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Image", Image_constr);
     js_declare_Texture(ctx, m);
+    JSValue Texture_constr = JS_NewCFunction2(ctx, js_Texture_constructor,"Texture", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Texture", Texture_constr);
     js_declare_RenderTexture(ctx, m);
+    JSValue RenderTexture_constr = JS_NewCFunction2(ctx, js_RenderTexture_constructor,"RenderTexture", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "RenderTexture", RenderTexture_constr);
     js_declare_NPatchInfo(ctx, m);
     JSValue NPatchInfo_constr = JS_NewCFunction2(ctx, js_NPatchInfo_constructor,"NPatchInfo", 6, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "NPatchInfo", NPatchInfo_constr);
     js_declare_GlyphInfo(ctx, m);
+    JSValue GlyphInfo_constr = JS_NewCFunction2(ctx, js_GlyphInfo_constructor,"GlyphInfo", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "GlyphInfo", GlyphInfo_constr);
     js_declare_Font(ctx, m);
+    JSValue Font_constr = JS_NewCFunction2(ctx, js_Font_constructor,"Font", 6, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Font", Font_constr);
     js_declare_Camera3D(ctx, m);
     JSValue Camera3D_constr = JS_NewCFunction2(ctx, js_Camera3D_constructor,"Camera3D", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Camera3D", Camera3D_constr);
@@ -22338,34 +32228,68 @@ static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     JSValue Mesh_constr = JS_NewCFunction2(ctx, js_Mesh_constructor,"Mesh", 17, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Mesh", Mesh_constr);
     js_declare_Shader(ctx, m);
+    JSValue Shader_constr = JS_NewCFunction2(ctx, js_Shader_constructor,"Shader", 2, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Shader", Shader_constr);
     js_declare_MaterialMap(ctx, m);
+    JSValue MaterialMap_constr = JS_NewCFunction2(ctx, js_MaterialMap_constructor,"MaterialMap", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "MaterialMap", MaterialMap_constr);
     js_declare_Material(ctx, m);
+    JSValue Material_constr = JS_NewCFunction2(ctx, js_Material_constructor,"Material", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Material", Material_constr);
     js_declare_Transform(ctx, m);
+    JSValue Transform_constr = JS_NewCFunction2(ctx, js_Transform_constructor,"Transform", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Transform", Transform_constr);
     js_declare_BoneInfo(ctx, m);
+    JSValue BoneInfo_constr = JS_NewCFunction2(ctx, js_BoneInfo_constructor,"BoneInfo", 2, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "BoneInfo", BoneInfo_constr);
     js_declare_Model(ctx, m);
+    JSValue Model_constr = JS_NewCFunction2(ctx, js_Model_constructor,"Model", 9, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Model", Model_constr);
     js_declare_ModelAnimation(ctx, m);
+    JSValue ModelAnimation_constr = JS_NewCFunction2(ctx, js_ModelAnimation_constructor,"ModelAnimation", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "ModelAnimation", ModelAnimation_constr);
     js_declare_Ray(ctx, m);
     JSValue Ray_constr = JS_NewCFunction2(ctx, js_Ray_constructor,"Ray", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Ray", Ray_constr);
     js_declare_RayCollision(ctx, m);
+    JSValue RayCollision_constr = JS_NewCFunction2(ctx, js_RayCollision_constructor,"RayCollision", 4, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "RayCollision", RayCollision_constr);
     js_declare_BoundingBox(ctx, m);
     JSValue BoundingBox_constr = JS_NewCFunction2(ctx, js_BoundingBox_constructor,"BoundingBox", 2, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "BoundingBox", BoundingBox_constr);
     js_declare_Wave(ctx, m);
+    JSValue Wave_constr = JS_NewCFunction2(ctx, js_Wave_constructor,"Wave", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Wave", Wave_constr);
     js_declare_rAudioBuffer(ctx, m);
+    JSValue rAudioBuffer_constr = JS_NewCFunction2(ctx, js_rAudioBuffer_constructor,"rAudioBuffer", 0, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "rAudioBuffer", rAudioBuffer_constr);
     js_declare_rAudioProcessor(ctx, m);
+    JSValue rAudioProcessor_constr = JS_NewCFunction2(ctx, js_rAudioProcessor_constructor,"rAudioProcessor", 0, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "rAudioProcessor", rAudioProcessor_constr);
     js_declare_AudioStream(ctx, m);
+    JSValue AudioStream_constr = JS_NewCFunction2(ctx, js_AudioStream_constructor,"AudioStream", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "AudioStream", AudioStream_constr);
     js_declare_Sound(ctx, m);
+    JSValue Sound_constr = JS_NewCFunction2(ctx, js_Sound_constructor,"Sound", 2, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Sound", Sound_constr);
     js_declare_Music(ctx, m);
+    JSValue Music_constr = JS_NewCFunction2(ctx, js_Music_constructor,"Music", 5, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "Music", Music_constr);
     js_declare_VrDeviceInfo(ctx, m);
     JSValue VrDeviceInfo_constr = JS_NewCFunction2(ctx, js_VrDeviceInfo_constructor,"VrDeviceInfo", 9, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "VrDeviceInfo", VrDeviceInfo_constr);
     js_declare_VrStereoConfig(ctx, m);
+    JSValue VrStereoConfig_constr = JS_NewCFunction2(ctx, js_VrStereoConfig_constructor,"VrStereoConfig", 8, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "VrStereoConfig", VrStereoConfig_constr);
     js_declare_FilePathList(ctx, m);
+    JSValue FilePathList_constr = JS_NewCFunction2(ctx, js_FilePathList_constructor,"FilePathList", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "FilePathList", FilePathList_constr);
     js_declare_AutomationEvent(ctx, m);
+    JSValue AutomationEvent_constr = JS_NewCFunction2(ctx, js_AutomationEvent_constructor,"AutomationEvent", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "AutomationEvent", AutomationEvent_constr);
     js_declare_AutomationEventList(ctx, m);
-    JS_SetModuleExport(ctx, m, "false", JS_NewInt32(ctx, false));
-    JS_SetModuleExport(ctx, m, "true", JS_NewInt32(ctx, true));
+    JSValue AutomationEventList_constr = JS_NewCFunction2(ctx, js_AutomationEventList_constructor,"AutomationEventList", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "AutomationEventList", AutomationEventList_constr);
     JS_SetModuleExport(ctx, m, "FLAG_VSYNC_HINT", JS_NewInt32(ctx, FLAG_VSYNC_HINT));
     JS_SetModuleExport(ctx, m, "FLAG_FULLSCREEN_MODE", JS_NewInt32(ctx, FLAG_FULLSCREEN_MODE));
     JS_SetModuleExport(ctx, m, "FLAG_WINDOW_RESIZABLE", JS_NewInt32(ctx, FLAG_WINDOW_RESIZABLE));
@@ -22845,22 +32769,42 @@ JSModuleDef * js_init_module_js_raylib(JSContext * ctx, const char * module_name
     JSModuleDef *m;
     m = JS_NewCModule(ctx, module_name, js_js_raylib_init);
     if(!m) return NULL;
-    JS_AddModuleExportList(ctx, m, js_js_raylib_funcs, countof(js_js_raylib_funcs));
+    JS_AddModuleExportList(ctx, m, js_raylib_funcs, countof(js_raylib_funcs));
     JS_AddModuleExport(ctx, m, "Vector2");
     JS_AddModuleExport(ctx, m, "Vector3");
     JS_AddModuleExport(ctx, m, "Vector4");
     JS_AddModuleExport(ctx, m, "Color");
     JS_AddModuleExport(ctx, m, "Rectangle");
     JS_AddModuleExport(ctx, m, "Image");
+    JS_AddModuleExport(ctx, m, "Texture");
+    JS_AddModuleExport(ctx, m, "RenderTexture");
     JS_AddModuleExport(ctx, m, "NPatchInfo");
+    JS_AddModuleExport(ctx, m, "GlyphInfo");
+    JS_AddModuleExport(ctx, m, "Font");
     JS_AddModuleExport(ctx, m, "Camera3D");
     JS_AddModuleExport(ctx, m, "Camera2D");
     JS_AddModuleExport(ctx, m, "Mesh");
+    JS_AddModuleExport(ctx, m, "Shader");
+    JS_AddModuleExport(ctx, m, "MaterialMap");
+    JS_AddModuleExport(ctx, m, "Material");
+    JS_AddModuleExport(ctx, m, "Transform");
+    JS_AddModuleExport(ctx, m, "BoneInfo");
+    JS_AddModuleExport(ctx, m, "Model");
+    JS_AddModuleExport(ctx, m, "ModelAnimation");
     JS_AddModuleExport(ctx, m, "Ray");
+    JS_AddModuleExport(ctx, m, "RayCollision");
     JS_AddModuleExport(ctx, m, "BoundingBox");
+    JS_AddModuleExport(ctx, m, "Wave");
+    JS_AddModuleExport(ctx, m, "rAudioBuffer");
+    JS_AddModuleExport(ctx, m, "rAudioProcessor");
+    JS_AddModuleExport(ctx, m, "AudioStream");
+    JS_AddModuleExport(ctx, m, "Sound");
+    JS_AddModuleExport(ctx, m, "Music");
     JS_AddModuleExport(ctx, m, "VrDeviceInfo");
-    JS_AddModuleExport(ctx, m, "false");
-    JS_AddModuleExport(ctx, m, "true");
+    JS_AddModuleExport(ctx, m, "VrStereoConfig");
+    JS_AddModuleExport(ctx, m, "FilePathList");
+    JS_AddModuleExport(ctx, m, "AutomationEvent");
+    JS_AddModuleExport(ctx, m, "AutomationEventList");
     JS_AddModuleExport(ctx, m, "FLAG_VSYNC_HINT");
     JS_AddModuleExport(ctx, m, "FLAG_FULLSCREEN_MODE");
     JS_AddModuleExport(ctx, m, "FLAG_WINDOW_RESIZABLE");

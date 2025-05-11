@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BEIGE, ClearBackground, CloseWindow, DARKBLUE, DARKGRAY, DrawCircleV, DrawText, EndDrawing, GetMousePosition, InitWindow, IsMouseButtonPressed, LIME, MAROON, MOUSE_BUTTON_BACK, MOUSE_BUTTON_EXTRA, MOUSE_BUTTON_FORWARD, MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_SIDE, ORANGE, PURPLE, RAYWHITE, SetTargetFPS, Vector2, WindowShouldClose, YELLOW
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     // Initialization
     //--------------------------------------------------------------------------------------

@@ -3,11 +3,11 @@ globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','
 const rayjs_header = (await import("./raylib-header.js")).RayJsHeader;
 const source_parser = (await import("./source_parser.js")).source_parser;
 
+// @ts-ignore
 String.prototype.replaceAt = function(index, replacement) {
     return this.substr(0, index) + replacement + this.substr(index+1);
 };
 if(globalThis.structuredClone==undefined){
-    globalThis.structuredClone=undefined;
     globalThis.structuredClone=(obj)=>{
         if(typeof(obj)=='object'){
             let obj2;
@@ -30,10 +30,12 @@ function attachGetters(api){
     api.getFunction=(name)=> api.functions.find(x => x.name === name);
     api.getStruct=(name)=> api.structs.find(x => x.name === name);
     api.getCallback=(name)=> api.callbacks.find(x => x.name === name);
+    api.getEnum=(name)=> api.enums.find(x => x.name === name);
     api.ignore=(name)=>{
         let obj=api.getFunction(name);
         if(!obj)obj=api.getStruct(name);
         if(!obj)obj=api.getCallback(name);
+        if(!obj)obj=api.getEnum(name);
         if(obj){
             obj.binding = { ignore: true };
             ignored++;
@@ -53,8 +55,8 @@ function removeDuplicates(module,key,names){
     }
     if(j<module[key].length)module[key]=module[key].slice(0,j);
 }
-const includeDictionary={lookup:{},contents:[]};
-function addModuleToDictionary(module,include){
+const includeDictionary={lookup:{},contents:[],moduleNames:[]};
+function addModuleToDictionary(module,name,include){
     let id=includeDictionary.contents.length;
     let contents={include};
     contents.structLookup={};
@@ -62,10 +64,12 @@ function addModuleToDictionary(module,include){
     contents.enumLookup={};
     contents.functionLookup={};
     includeDictionary.contents[id]=contents;
+    includeDictionary.moduleNames[id]='rayjs:'+name;
     return id;
 }
 function main() {
-    let att,cb,did;
+    new source_parser(fs.readFileSync("thirdparty/raylib/src/config.h", "utf8"));//only parse to add #defined
+    let att,cb;
     // load quickjs.c since it has the enum we need
     let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"));
     let classEnum=quickjsSource.enums.find(a=>a.name===''&&a.values.some(b=>b.name==='JS_CLASS_OBJECT'));
@@ -78,58 +82,80 @@ function main() {
     // Load the pre-generated raylib api
     let once={};
     modules['core'] = new source_parser(fs.readFileSync("thirdparty/raylib/src/raylib.h", "utf8"));
-    did=addModuleToDictionary(modules['core'],(gen)=>{
+    addModuleToDictionary(modules['core'],"raylib",(gen)=>{
         gen.includeGen.include("raylib.h");
     });
-    modules['core'].gen = new rayjs_header("js_raylib",includeDictionary,did);
+    modules['core'].gen = new rayjs_header("raylib",includeDictionary);
     modules['raymath']=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"));
-    did=addModuleToDictionary(modules['raymath'],(gen)=>{
+    addModuleToDictionary(modules['raymath'],"raymath",(gen)=>{
         gen.includeGen.include("raymath.h");
     });
-    modules['raymath'].gen = new rayjs_header("js_raymath",includeDictionary,did);
+    modules['raymath'].gen = new rayjs_header("raymath",includeDictionary);
     modules['rcamera']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"));
-    did=addModuleToDictionary(modules['rcamera'],(gen)=>{
+    addModuleToDictionary(modules['rcamera'],"rcamera",(gen)=>{
         gen.includeGen.include("rcamera.h");
     });
-    modules['rcamera'].gen = new rayjs_header("js_rcamera",includeDictionary,did);
+    modules['rcamera'].gen = new rayjs_header("rcamera",includeDictionary);
     modules['raygui']=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"));
-    did=addModuleToDictionary(modules['raygui'],(gen)=>{
+    addModuleToDictionary(modules['raygui'],"raygui",(gen)=>{
         if(!once['raygui']){
             once['raygui']=true;
             gen.includeGen.line("#define RAYGUI_IMPLEMENTATION");
         }
         gen.includeGen.include("raygui.h");
     });
-    modules['raygui'].gen = new rayjs_header("js_raygui",includeDictionary,did);
+    modules['raygui'].gen = new rayjs_header("raygui",includeDictionary);
     modules['rlights']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"));
-    did=addModuleToDictionary(modules['rlights'],(gen)=>{
+    addModuleToDictionary(modules['rlights'],"rlights", (gen)=>{
         if(!once['rlights']){
             once['rlights']=true;
             gen.includeGen.line("#define RLIGHTS_IMPLEMENTATION");
         }
         gen.includeGen.include("rlights.h");
     });
-    modules['rlights'].gen = new rayjs_header("js_rlights",includeDictionary,did);
+    modules['rlights'].gen = new rayjs_header("rlights",includeDictionary);
     modules['reasings']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"));
-    did=addModuleToDictionary(modules['reasings'],(gen)=>{
+    addModuleToDictionary(modules['reasings'],"reasings", (gen)=>{
         gen.includeGen.include("reasings.h");
     });
-    modules['reasings'].gen = new rayjs_header("js_reasings",includeDictionary,did);
+    modules['reasings'].gen = new rayjs_header("reasings",includeDictionary);
     modules['rlgl']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"));
-    did=addModuleToDictionary(modules['rlgl'],(gen)=>{
+    addModuleToDictionary(modules['rlgl'],"rlgl", (gen)=>{
         gen.includeGen.include("rlgl.h");
     });
-    modules['rlgl'].gen = new rayjs_header("js_rlgl",includeDictionary,did);
+    modules['rlgl'].gen = new rayjs_header("rlgl",includeDictionary);
     modules['rlightmapper']=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"));
-    did=addModuleToDictionary(modules['rlightmapper'],(gen)=>{
+    addModuleToDictionary(modules['rlightmapper'],'rlightmapper',(gen)=>{
         if(!once['rlightmapper']){
             once['rlightmapper']=true;
             gen.includeGen.line("#define RLIGHTMAPPER_IMPLEMENTATION");
         }
         gen.includeGen.include("rlightmapper.h");
     });
-    modules['rlightmapper'].gen = new rayjs_header("js_rlightmapper",includeDictionary,did);
+    modules['rlightmapper'].gen = new rayjs_header("rlightmapper",includeDictionary);
     for(let key in modules)attachGetters(modules[key]);
+
+    // Remove duplicate structs and functions from modules
+    let dedup=new Set();
+    for(let i=0;i<modules['core'].functions.length;i++){dedup.add(modules['core'].functions[i].name);}
+    for(let i=0;i<modules['core'].structs.length;i++){dedup.add(modules['core'].structs[i].name);}
+    for(let i=0;i<modules['core'].enums.length;i++){dedup.add(modules['core'].enums[i].name);}
+    for(let i=0;i<modules['core'].aliases.length;i++){dedup.add(modules['core'].aliases[i].name);}
+    for(let name in modules){
+        //set access all fields by default
+        for(let struct of modules[name].structs){
+            struct.binding={createConstructor: true,properties:{}};
+            const binding=struct.binding;
+            for(let field of struct.fields){
+                binding.properties[field.name]={get: true, set: true};
+            }
+        }
+        if(name=='core')continue;
+        removeDuplicates(modules[name],'functions',dedup);
+        removeDuplicates(modules[name],'structs',dedup);
+        removeDuplicates(modules[name],'enums',dedup);
+        removeDuplicates(modules[name],'aliases',dedup);
+    }
     modules['rlights'].getStruct('Light').binding = {
         properties: {
             type: { get: true, set: true },
@@ -139,13 +165,16 @@ function main() {
             color: { get: true, set: true },
             attenuation: { get: true, set: true },
         },
+        createConstructor: true
     };
     modules['rlightmapper'].getStruct('Lightmapper').binding = {
         properties: {
+            data: {get: true },
             w: { get: true },
             h: { get: true },
             progress: { get: true }
-        }
+        },
+        createConstructor: true
     };
     modules['rlightmapper'].getStruct('LightmapperConfig').binding = {
         properties: {
@@ -156,23 +185,10 @@ function main() {
             interpolationPasses: { get: true, set: true },
             interpolationThreshold: { get: true, set: true },
             cameraToSurfaceDistanceModifier: { get: true, set: true },
-        }
+        },
+        createConstructor: true
     };
 
-    // Remove duplicate structs and functions from modules
-    let dedup=new Set();
-    for(let i=0;i<modules['core'].functions.length;i++){dedup.add(modules['core'].functions[i].name);}
-    for(let i=0;i<modules['core'].structs.length;i++){dedup.add(modules['core'].structs[i].name);}
-    for(let i=0;i<modules['core'].enums.length;i++){dedup.add(modules['core'].enums[i].name);}
-    for(let i=0;i<modules['core'].aliases.length;i++){dedup.add(modules['core'].aliases[i].name);}
-    for(let name in modules){
-        if(name=='core')continue;
-        removeDuplicates(modules[name],'functions',dedup);
-        removeDuplicates(modules[name],'structs',dedup);
-        removeDuplicates(modules[name],'enums',dedup);
-        removeDuplicates(modules[name],'aliases',dedup);
-    }
-    new source_parser(fs.readFileSync("thirdparty/raylib/src/config.h", "utf8"));//only parse to add #defined
     modules['core'].getStruct("Color").binding = {
         properties: {
             r: { get: true, set: true },
@@ -221,15 +237,6 @@ function main() {
             direction: { get: false, set: true },
         },
         createConstructor: true
-    };
-    modules['core'].getStruct("RayCollision").binding = {
-        properties: {
-            hit: { get: true, set: false },
-            distance: { get: true, set: false },
-            point: { get: true, set: false },
-            normal: { get: true, set: false },
-        },
-        createConstructor: false
     };
     modules['core'].getStruct("Camera2D").binding = {
         properties: {
@@ -280,7 +287,7 @@ function main() {
             mipmaps: { get: true, set: true },
             format: { get: true, set: true }
         },
-        createEmptyConstructor: true
+        createConstructor: true
         //destructor: "UnloadImage"
     };
     modules['core'].getStruct("Wave").binding = {
@@ -290,20 +297,24 @@ function main() {
             sampleSize: { get: true },
             channels: { get: true }
         },
+        createConstructor: true
         //destructor: "UnloadWave"
     };
     modules['core'].getStruct("Sound").binding = {
         properties: {
             frameCount: { get: true }
         },
+        createConstructor: true
         //destructor: "UnloadSound"
     };
     modules['core'].getStruct("Music").binding = {
         properties: {
+            stream: { get: true },
             frameCount: { get: true },
             looping: { get: true, set: true },
             ctxType: { get: true },
         },
+        createConstructor: true
         //destructor: "UnloadMusicStream"
     };
     modules['core'].getStruct("Model").binding = {
@@ -315,35 +326,36 @@ function main() {
             materials: { get: true, set: true, sizeVars:['ptr->materialCount'] },
             meshMaterial: { get: true, sizeVars:['ptr->meshCount'] },
             boneCount: { get: true },
-            bones: { get: true, sizeVars:['ptr->boneCount'] },
+            bones: { get: true, sizeVars:['ptr->boneCount'] },//TODO: check if there is a valid reason why we are disallowing set bones
             bindPose: { get: true, sizeVars:['ptr->boneCount'] }
         },
+        createConstructor: true
         //destructor: "UnloadModel"
     };
     modules['core'].getStruct("Mesh").binding = {
         properties: {
             vertexCount: { get: true, set: true },
             triangleCount: { get: true, set: true },
-            // TODO: Free previous pointers before overwriting
             vertices: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
             texcoords: { get:true, set: true, sizeVars:['ptr->vertexCount*2'] },
             texcoords2: { set: true, sizeVars:['ptr->vertexCount*2'] },
             normals: { get:true, set: true, sizeVars:['ptr->vertexCount*3'] },
-            tangents: { set: true, sizeVars:['ptr->vertexCount*4'] },
-            colors: { set: true, sizeVars:['ptr->vertexCount*4'] },
-            indices: { set: true, sizeVars:['ptr->vertexCount'] },
-            animVertices: { set: true, sizeVars:['ptr->vertexCount*3'] },
-            animNormals: { set: true, sizeVars:['ptr->vertexCount*3'] },
-            boneIds: { set: true, sizeVars:['ptr->vertexCount*4'] },
-            boneWeights: { set: true, sizeVars:['ptr->vertexCount*4'] },
+            tangents: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
+            colors: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
+            indices: { get: true, set: true, sizeVars:['ptr->vertexCount'] },
+            animVertices: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
+            animNormals: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
+            boneIds: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
+            boneWeights: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
         },
-        createEmptyConstructor: true
+        createConstructor: true
         //destructor: "UnloadMesh"
     };
     modules['core'].getStruct("Shader").binding = {
         properties: {
             id: { get: true }
         },
+        createConstructor: true
         //destructor: "UnloadShader"
     };
     modules['core'].getStruct("Texture").binding = {
@@ -352,7 +364,8 @@ function main() {
             height: { get: true },
             mipmaps: { get: true },
             format: { get: true },
-        }
+        },
+        createConstructor: true
         //destructor: "UnloadTexture"
     };
     modules['core'].getStruct("Font").binding = {
@@ -362,6 +375,7 @@ function main() {
             glyphPadding: { get: true },
 			texture: { get: true },
         },
+        createConstructor: true
         //destructor: "UnloadFont"
     };
     modules['core'].getStruct("RenderTexture").binding = {
@@ -369,7 +383,8 @@ function main() {
             id: { get: true },
             texture: { get: true },
             depth: { get: true },
-        }
+        },
+        createConstructor: true
         //destructor: "UnloadRenderTexture"
     };
     modules['core'].getStruct("MaterialMap").binding = {
@@ -378,6 +393,7 @@ function main() {
             color: { set: true, get: true },
             value: { get: true, set: true }
         },
+        createConstructor: true
         //destructor: "UnloadMaterialMap"
     };
     modules['core'].getStruct("Material").binding = {
@@ -385,11 +401,11 @@ function main() {
             shader: { get: true, set: true },
             maps: { get: true, sizeVars:[config.defined['MAX_MATERIAL_MAPS']] }
         },
+        createConstructor: true
         //destructor: "UnloadMaterial"
     };
     const structDI = modules['core'].getStruct("VrDeviceInfo");
     structDI.binding = {
-        createEmptyConstructor: true,
         properties: {
             hResolution: { set: true, get: true },
             vResolution: { set: true, get: true },
@@ -400,16 +416,14 @@ function main() {
             interpupillaryDistance: { set: true, get: true },
             lensDistortionValues: { set: true, get: true },
 			chromaAbCorrection : { set: true, get: true }
-        }
+        },
+        createConstructor: true
     };
     modules['core'].getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
-    modules['core'].ignore("SetWindowIcons");
-    modules['core'].ignore("GetWindowHandle");
     // Custom frame control functions
     // NOT SUPPORTED BECAUSE NEEDS COMPILER FLAG
     modules['core'].ignore("SwapScreenBuffer");
     modules['core'].ignore("PollInputEvents");
-    modules['core'].ignore("WaitTime");
     modules['core'].getFunction("SetShaderValue").binding = { body: (gen) => {
         gen.jsToC("Shader", "shader", "argv[0]");
         gen.jsToC("int", "locIndex", "argv[1]");
@@ -481,11 +495,21 @@ function main() {
             gen.returnExp("JS_UNDEFINED");
         } };
     modules['core'].getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
+
+
+    /*******OPINION*********/
+    //Opinion sections exist due to developer opinion and shall be accessable behind a config flag (TODO)
     // JS User has no need to raw allocate memory
     modules['core'].ignore("MemAlloc");
     modules['core'].ignore("MemRealloc");
     modules['core'].ignore("MemFree");
-    // SetTraceLogCallback uses va_list and as such needs custom
+    // JS User should never freeze process using sleep (no async will fire)
+    modules['core'].ignore("WaitTime");
+    // Right now, it is not usefull to users to get native window handler address
+    modules['core'].ignore("GetWindowHandle");
+    /*******OPINION*********/
+
+    // SetTraceLogCallback uses va_list and as such needs custom any[] implementation
     modules['core'].getFunction("ComputeMD5").returnSizeVars = [4];
     modules['core'].getFunction("ComputeSHA1").returnSizeVars = [5];
     modules['core'].ignore("TraceLogCallback");
@@ -494,13 +518,13 @@ function main() {
     att = modules['core'].getFunction("LoadFileData");
     //att.params.find(a=>a.name=='dataSize').type='int &';
     att.returnSizeVars = ['dataSize[0]'];
+    att.returnType = "void *";//casting to void* is an estetic choice to use buffer like SaveFileData
     att.binding.after = gen => gen.call("UnloadFileData", ["returnVal"]);
     modules['core'].ignore("UnloadFileData");
     att = modules['core'].getFunction("ExportImageToMemory");
     att.returnSizeVars = ['fileSize[0]'];
     // TODO: SaveFileData works but unnecessary makes copy of memory
     modules['core'].getFunction("SaveFileData").binding = {};
-    modules['core'].ignore("ExportDataAsCode");
     modules['core'].getFunction("LoadFileText").binding.after = gen => gen.call("UnloadFileText", ["returnVal"]);
     modules['core'].ignore("UnloadFileText");
     const createFileList = (gen, loadName, unloadName, args) => {
@@ -540,18 +564,6 @@ function main() {
         }
     };
     modules['core'].ignore("UnloadDroppedFiles");
-    // Compression/encoding functionality
-    modules['core'].ignore("CompressData");
-    modules['core'].ignore("DecompressData");
-    modules['core'].ignore("EncodeDataBase64");
-    modules['core'].ignore("DecodeDataBase64");
-    modules['core'].ignore("DrawLineStrip");
-    modules['core'].ignore("DrawTriangleFan");
-    modules['core'].ignore("DrawTriangleStrip");
-    modules['core'].ignore("CheckCollisionPointPoly");
-    modules['core'].ignore("CheckCollisionLines");
-    modules['core'].ignore("LoadImageAnim");
-    modules['core'].ignore("ExportImageAsCode");
     modules['core'].getFunction("LoadImageColors").binding = {
         jsReturns: "ArrayBuffer",
         body: gen => {
@@ -562,11 +574,6 @@ function main() {
             gen.returnExp("retVal");
         }
     };
-    modules['core'].ignore("LoadImagePalette");
-    modules['core'].ignore("UnloadImageColors");
-    modules['core'].ignore("UnloadImagePalette");
-    modules['core'].ignore("GetPixelColor");
-    modules['core'].ignore("SetPixelColor");
     let applyffix=false;
     const lfx = modules['core'].getFunction("LoadFontEx");
     if(applyffix){
@@ -576,27 +583,15 @@ function main() {
     }else{
         lfx.params[2].binding = { allowNull: true };
     }
-    modules['core'].ignore("LoadFontFromMemory");
-    modules['core'].ignore("LoadFontData");
-    modules['core'].ignore("GenImageFontAtlas");
-    modules['core'].ignore("UnloadFontData");
-    modules['core'].ignore("ExportFontAsCode");
-    modules['core'].ignore("DrawTextCodepoints");
-    modules['core'].ignore("GetGlyphInfo");
-    modules['core'].ignore("LoadUTF8");
-    modules['core'].ignore("UnloadUTF8");
-    modules['core'].ignore("LoadCodepoints");
-    modules['core'].ignore("UnloadCodepoints");
-    modules['core'].ignore("GetCodepointCount");
-    modules['core'].ignore("GetCodepoint");
-    modules['core'].ignore("GetCodepointNext");
-    modules['core'].ignore("GetCodepointPrevious");
-    modules['core'].ignore("CodepointToUTF8");
     if(!config.bindText){
         //Text functions are enabled for compatibility
-        api.functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['core'].ignore(x.name));
+        modules['core'].functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['core'].ignore(x.name));
     }else{
-        modules['core'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+        /*******OPINION*********/
+        //Using textCopy is more cumbersome than doing it natively, due to not supporting C string offsets
+        modules['core'].ignore("TextCopy");
+        /*******OPINION*********/
+        //modules['core'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
         modules['core'].getFunction("TextFormat").binding.body=(gen)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
@@ -627,6 +622,9 @@ function main() {
             gen.declare('int','ilen',false,0);
             let t0,t1,t2,t3,t4,t5,t6;
             t0=gen.for(0, 'formatlen');
+                t0.declare('int','n',false,2);
+                t0.declare('int','w',false,0);
+                t0.declare('int','p',false,0);
                 t1=t0.if("format[i]!='%'");
                     t1.statement('buffer[l]=format[i]');
                     t1.statement('l++');
@@ -647,6 +645,12 @@ function main() {
                     t1.declare('int','lasth',false,'firsth');
                     t1.statement('har=format[lasth]');
                     t2=t1.while('strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL');
+                        t3=t2.if("har=='*'");
+                            t4=t3.if("n==1");
+                                t4.declare('int','w',false,'p',true);
+                            t3.jsToC('int','p','argv[c]',flags,0,errorCleanupFn);
+                            t3.statement('c++');
+                            t3.statement('n--');
                         t2.statement('lasth++');
                         t2.declare('char','har',false,'format[lasth]',true);
                         t3=t2.if('har==0');
@@ -668,24 +672,24 @@ function main() {
                         t3=t2.caseBreak("'i'");
                             t3.jsToC('int64_t','a','argv[c]',flags,0,errorCleanupFn);
                             t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(int)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(int)a'],{name:'char_ptr'});
                             t4=t3.else().switch('format[lasth-1]');
                                 t5=t4.caseBreak("'h'");
                                     t6=t5.if("subformat[lasth-i-2]=='h'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(signed char)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(signed char)a'],{name:'char_ptr'});
                                     t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(short int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(short int)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'l'");
                                     t6=t5.if("subformat[lasth-i-2]=='l'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long long int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long long int)a'],{name:'char_ptr'});
                                     t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long int)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'j'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(intmax_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(intmax_t)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'z'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(size_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(size_t)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'t'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(ptrdiff_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{name:'char_ptr'});
                                 //Dont do anything on default, if this is a broken format, let it be skipped
                         t2.case("'u'");
                         t2.case("'o'");
@@ -693,24 +697,24 @@ function main() {
                         t3=t2.caseBreak("'X'");
                             t3.jsToC('uint32_t','a','argv[c]',flags,0,errorCleanupFn);
                             t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned int)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned int)a'],{name:'char_ptr'});
                             t4=t3.else().switch('subformat[lasth-i-1]');
                                 t5=t4.caseBreak("'h'");
                                     t6=t5.if("subformat[lasth-i-2]=='h'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned char)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned char)a'],{name:'char_ptr'});
                                     t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned short int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned short int)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'l'");
                                     t6=t5.if("subformat[lasth-i-2]=='l'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned long long int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned long long int)a'],{name:'char_ptr'});
                                     t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(unsigned long int)a'],{name:'char_ptr'});
+                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned long int)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'j'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(uintmax_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(uintmax_t)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'z'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(size_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(size_t)a'],{name:'char_ptr'});
                                 t5=t4.caseBreak("'t'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(ptrdiff_t)a'],{name:'char_ptr'});
+                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{name:'char_ptr'});
                                 //Dont do anything on default, if this is a broken format, let it be skipped
                         t2.case("'f'");
                         t2.case("'F'");
@@ -722,24 +726,24 @@ function main() {
                         t3=t2.caseBreak("'A'");
                             t3.jsToC('double','a','argv[c]',flags,0,errorCleanupFn);
                             t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(double)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(double)a'],{name:'char_ptr'});
                             t4=t3.else();
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(long double)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long double)a'],{name:'char_ptr'});
                         t3=t2.caseBreak("'c'");
                             t3.jsToC('int','a','argv[c]',flags,0,errorCleanupFn);
                             t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(int)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(int)a'],{name:'char_ptr'});
                             t4=t3.else();
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(wint_t)a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(wint_t)a'],{name:'char_ptr'});
                         t3=t2.caseBreak("'s'");
                             t4=t3.if('firsth==lasth');
                                 t4.jsToC('char *','a','argv[c]',flags,0,errorCleanupFn);
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','a'],{name:'char_ptr'});
                             t4=t3.else();
                                 t4.jsToC('wchar_t *','a','argv[c]',flags,0,errorCleanupFn);
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','a'],{name:'char_ptr'});
+                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','a'],{name:'char_ptr'});
                         t3=t2.caseBreak("'p'");
-                            t3.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','(void *)&argv[c]'],{name:'char_ptr'});
+                            t3.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(void *)&argv[c]'],{name:'char_ptr'});
                         t3=t2.caseBreak("'n'");
                             t3.cToJs('int &','argv[c]','(&l)',{dynamicAlloc:true,supressDeclaration:true});
                     t1.statement('subformat[subformatlen]=subformatlenh');
@@ -761,25 +765,21 @@ function main() {
     att = modules['core'].getFunction("LoadWaveSamples");
     att.returnSizeVars = ['wave.frameCount*wave.channels'];
     att.binding.after = gen => gen.call("UnloadWaveSamples", ["returnVal"]);
-
-    modules['core'].ignore("DrawTriangleStrip3D");
-    modules['core'].ignore("LoadMaterials");
-    modules['core'].ignore("LoadModelAnimations");
-    modules['core'].ignore("UpdateModelAnimation");
-    modules['core'].ignore("UnloadModelAnimation");
-    modules['core'].ignore("UnloadModelAnimations");
-    modules['core'].ignore("UnloadRandomSequence");
-    modules['core'].ignore("IsModelAnimationValid");
-    modules['core'].ignore("ExportWaveAsCode");
     // requires returning pointer
-    modules['rlgl'].ignore("rlReadTexturePixels");
+    att = modules['rlgl'].getFunction("rlReadTexturePixels");
+    if(config.defined['GRAPHICS_API_OPENGL_11'] || config.defined['GRAPHICS_API_OPENGL_33']){
+        att.returnSizeVars = ['GetPixelDataSize(width, height, format)'];
+    }else if(config.defined['GRAPHICS_API_OPENGL_ES2']){
+        att.returnSizeVars = ['GetPixelDataSize(width, height, RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)'];
+    }else{
+        modules['rlgl'].ignore("rlReadTexturePixels");
+    }
     att = modules['rlgl'].getFunction("rlGetShaderLocsDefault");
     att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'])];
     // Wave/Sound management functions
     modules['core'].ignore("SetAudioStreamCallback");
     modules['core'].ignore("AttachAudioStreamProcessor");
     modules['core'].ignore("DetachAudioStreamProcessor");
-    //ignore("AttachAudioMixedProcessor");//Working on this
     att = modules['core'].getCallback("AudioCallback");
     att.params[0].type='float *';
     att.binding.threaded = true;
@@ -798,12 +798,7 @@ function main() {
     att = modules['core'].getCallback("SaveFileDataCallback");
     att.params[1].type='unsigned char *';
     att.params[1].sizeVars=['arg_dataSize'];
-    modules['raymath'].ignore("Vector3ToFloatV");
-    modules['raymath'].ignore("MatrixToFloatV");
-    // needs string array
-    modules['raygui'].ignore("GuiTabBar");
-    modules['raygui'].ignore("GuiGetIcons");
-    modules['raygui'].ignore("GuiLoadIcons");
+    // Requires fixes to void* parameters
     modules['rlgl'].ignore("rlLoadExtensions");
     modules['rlgl'].ignore("rlSetVertexAttributeDefault");
     modules['rlgl'].ignore("rlSetUniform");
@@ -835,10 +830,15 @@ function main() {
             }
         }
     }
+    //manual reference assignment
+    att = modules['raygui'].getFunction('GuiColorPicker').params[2];
+    att.type = att.type.replaceAt(att.type.length-1,'&');
     for(let key in modules){
         modules[key].functions.forEach(detectPointer);
         modules[key].callbacks.forEach(detectPointer);
     }
+    att = modules['raygui'].getFunction('GuiTextBox').params[1];
+    att.type = att.type + ' &';
 
     modules['core'].getFunction('LoadShader').params[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;
@@ -851,6 +851,9 @@ function main() {
     modules['raygui'].getFunction('GuiGrid').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiColorBarAlpha').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiTextInputBox').params[6].binding.allowNull=true;
+    modules['core'].getFunction('LoadAutomationEventList').params[0].binding.allowNull=true;
+
+    modules['core'].ignore('bool');
     // Register types
     for(let key in modules){
         const module=modules[key];
@@ -891,7 +894,7 @@ function main() {
             }
         });
         module.gen.writeTo(`src/modules/${module.gen.name}.h`);
-        module.gen.typings.writeTo(`examples/lib.${module.gen.name}.ts`);
+        module.gen.typings.writeTo(`bindings/typings/lib.${module.gen.name}.d.ts`);
     }
     const ignored = modules['core'].functions.filter(x => x.binding.ignore).length;
     console.log(`Converted ${modules['core'].functions.length+modules['core'].structs.length+modules['core'].callbacks.length - ignored}, ${ignored} ignored.`);

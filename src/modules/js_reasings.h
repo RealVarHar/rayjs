@@ -962,7 +962,7 @@ static JSValue js_EaseElasticInOut(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static const JSCFunctionListEntry js_js_reasings_funcs[] = {
+static const JSCFunctionListEntry js_reasings_funcs[] = {
     JS_CFUNC_DEF("EaseLinearNone",4,js_EaseLinearNone),
     JS_CFUNC_DEF("EaseLinearIn",4,js_EaseLinearIn),
     JS_CFUNC_DEF("EaseLinearOut",4,js_EaseLinearOut),
@@ -994,7 +994,7 @@ static const JSCFunctionListEntry js_js_reasings_funcs[] = {
 };
 
 static int js_js_reasings_init(JSContext * ctx, JSModuleDef * m) {
-    JS_SetModuleExportList(ctx, m,js_js_reasings_funcs,countof(js_js_reasings_funcs));
+    JS_SetModuleExportList(ctx, m,js_reasings_funcs,countof(js_reasings_funcs));
     return 0;
 }
 
@@ -1002,7 +1002,7 @@ JSModuleDef * js_init_module_js_reasings(JSContext * ctx, const char * module_na
     JSModuleDef *m;
     m = JS_NewCModule(ctx, module_name, js_js_reasings_init);
     if(!m) return NULL;
-    JS_AddModuleExportList(ctx, m, js_js_reasings_funcs, countof(js_js_reasings_funcs));
+    JS_AddModuleExportList(ctx, m, js_reasings_funcs, countof(js_reasings_funcs));
     return m;
 }
 

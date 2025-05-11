@@ -1,19 +1,27 @@
-import * as rl from 'rayjs:raylib';
-{
-    for (const key in rl) { globalThis[key] = rl[key] };
+ /*******************************************************************************************
+ *
+ *   raylib [models] example - Cubicmap loading and drawing
+ *
+ *   Example originally created with raylib 1.8, last time updated with raylib 3.5
+ *
+ *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+ *   BSD-like license that allows static linking with closed source software
+ *
+ *   Copyright (c) 2015-2023 Ramon Santamaria (@raysan5)
+ *
+ ********************************************************************************************/
 
-    /*******************************************************************************************
-    *
-    *   raylib [models] example - Cubicmap loading and drawing
-    *
-    *   Example originally created with raylib 1.8, last time updated with raylib 3.5
-    *
-    *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-    *   BSD-like license that allows static linking with closed source software
-    *
-    *   Copyright (c) 2015-2023 Ramon Santamaria (@raysan5)
-    *
-    ********************************************************************************************/
+ import {BeginDrawing, BeginMode3D, CAMERA_ORBITAL, CAMERA_PERSPECTIVE, Camera3D,
+     ClearBackground,
+     CloseWindow, DrawFPS, DrawModel, DrawRectangleLines, DrawText, DrawTextureEx, EndDrawing, EndMode3D,
+     GRAY,
+     GREEN, GenMeshCubicmap, InitWindow, LoadImage,
+     LoadMaterialDefault,
+     LoadModelFromMesh, LoadTexture, LoadTextureFromImage, MATERIAL_MAP_DIFFUSE, RAYWHITE, SetMaterialTexture,
+     SetTargetFPS,
+     UnloadImage, UnloadModel, UnloadTexture, UpdateCamera, Vector2, Vector3, WHITE, WindowShouldClose } from "rayjs:raylib";
+
+{
     // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 800;
@@ -53,8 +61,7 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())        // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {       // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         UpdateCamera(camera, CAMERA_ORBITAL);

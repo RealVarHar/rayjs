@@ -1,5 +1,6 @@
-import * as rl from 'rayjs:raylib';
-for (const key in rl) { globalThis[key] = rl[key] };
+import {
+    BeginDrawing, BeginMode2D, BLACK, BLUE, Camera2D, ClearBackground, CloseWindow, Color, DARKGRAY, DrawLine, DrawRectangle, DrawRectangleLines, DrawRectangleRec, DrawText, EndDrawing, EndMode2D, Fade, GetMouseWheelMove, GetRandomValue, GREEN, InitWindow, IsKeyDown, IsKeyPressed, KEY_A, KEY_LEFT, KEY_R, KEY_RIGHT, KEY_S, RAYWHITE, Rectangle, RED, SetTargetFPS, SKYBLUE, Vector2, WindowShouldClose
+} from 'rayjs:raylib';
 
 // Initialization
 //--------------------------------------------------------------------------------------
@@ -111,4 +112,3 @@ while (!WindowShouldClose())        // Detect window close button or ESC key
 // De-Initialization
 //--------------------------------------------------------------------------------------
 CloseWindow();        // Close window and OpenGL context
-//--------------------------------------------------------------------------------------

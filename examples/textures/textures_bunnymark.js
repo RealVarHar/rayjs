@@ -1,10 +1,11 @@
-import * as rl from 'rayjs:raylib';
+import {BLACK, BeginDrawing, ClearBackground, CloseWindow, Color, DrawFPS, DrawRectangle,
+    DrawText, DrawTexture, EndDrawing, GREEN, GetMousePosition, GetRandomValue,
+    GetScreenHeight,
+    GetScreenWidth, InitWindow, IsMouseButtonDown, LoadTexture, MAROON, MOUSE_BUTTON_LEFT, RAYWHITE, SetTargetFPS,
+    UnloadTexture,
+    Vector2, WindowShouldClose } from "rayjs:raylib";
 
 {
-    for (const key in rl) {
-        globalThis[key] = rl[key]
-    }
-    ;
 
     // Initialization
     //--------------------------------------------------------------------------------------
@@ -27,20 +28,18 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             // Create more bunnies
             for (let i = 0; i < 100; i++) {
                 if (bunniesCount < MAX_BUNNIES) {
-                    const bunny = {
+                    bunnies[bunniesCount] = {
                         position: GetMousePosition(),
                         speed: new Vector2(GetRandomValue(-250, 250) / 60.0, GetRandomValue(-250, 250) / 60.0),
                         color: new Color(GetRandomValue(50, 240), GetRandomValue(80, 240), GetRandomValue(100, 240), 255)
-                    }
-                    bunnies[bunniesCount] = bunny
+                    };
                     bunniesCount++;
                 }
             }

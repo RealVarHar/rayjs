@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BLUE, ClearBackground, CloseWindow, DARKBLUE, DARKGREEN, DrawRectangle, DrawText, EndDrawing, GESTURE_TAP, GRAY, GREEN, InitWindow, IsGestureDetected, IsKeyPressed, KEY_ENTER, LIGHTGRAY, MAROON, PURPLE, RAYWHITE, SetTargetFPS, WindowShouldClose
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     /*******************************************************************************************
     *

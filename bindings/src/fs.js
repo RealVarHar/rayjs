@@ -1,4 +1,5 @@
 let readFileSync,writeFileSync;
+// @ts-ignore
 if( typeof process !== 'undefined' && process.release.name === 'node'){
 	const fs = await import('fs');
 	readFileSync=fs.readFileSync;
@@ -63,7 +64,7 @@ if( typeof process !== 'undefined' && process.release.name === 'node'){
 			}
 			let currentbufer=this.currentbufer;
 			if(this.currentLength<this.alloc){
-				currentbufer=new Uint8Array(buffer, 0, this.currentLength);
+				currentbufer=new Uint8Array(currentbufer, 0, this.currentLength);
 			}
 			ret+=String.fromCharCode(...currentbufer);
 			return ret;
@@ -128,7 +129,7 @@ if( typeof process !== 'undefined' && process.release.name === 'node'){
 			const bufferhistory=this.bufferhistory;
 			if(this.currentLength==alloc){
 				bufferhistory.push(this.currentbufer);
-				this.currentbufer=new Uint8Array(alloc);
+				this.currentbufer=new Uint16Array(alloc);
 				this.currentLength=0;
 			}
 			this.currentbufer[this.currentLength]=value;

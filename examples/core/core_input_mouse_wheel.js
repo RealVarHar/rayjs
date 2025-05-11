@@ -1,4 +1,7 @@
 import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, ClearBackground, CloseWindow, DrawRectangle, DrawText, EndDrawing, GetMouseWheelMove, GRAY, InitWindow, LIGHTGRAY, MAROON, RAYWHITE, SetTargetFPS, WindowShouldClose
+} from "rayjs:raylib";
 {
     for (const key in rl) { globalThis[key] = rl[key] };
 

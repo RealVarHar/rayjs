@@ -17,7 +17,11 @@ export class RayJsHeader {
     moduleInit;
     moduleEntry;
     includeDictionary;
-    constructor(name,includeDictionary={},did) {
+    constructor(name,includeDictionary={}) {
+        const did = includeDictionary.moduleNames.findIndex(a=>a=='rayjs:'+name);
+        if(did==-1){
+            throw Error("Module "+name+" must exist in includeDictionary");
+        }
         const thiz=this;
         const lookuphandler={
             get(target, prop, receiver){
@@ -53,9 +57,9 @@ export class RayJsHeader {
         this.structLookup = new Proxy(this.#structLookup,lookuphandler);
         this.#callbackLookup = [includeDictionary.contents[did].callbackLookup,{}];
         this.callbackLookup = new Proxy(this.#callbackLookup,lookuphandler);
-        this.typings = new TypeScriptDeclaration();
+        this.typings = new TypeScriptDeclaration('rayjs:'+name);
         this.includeDictionary =includeDictionary;
-        this.name = name;
+        this.name = 'js_'+name;
         this.root = new QuickJsGenerator(this);
         this.body = this.root.header("JS_" + this.name + "_GUARD");
         this.includeGen = this.body.child();
@@ -112,6 +116,7 @@ export class RayJsHeader {
         }
         this.callbackArgs["callback_" + api.name]=args;
         this.callbackLookup[api.name]="callback_" + api.name;
+        this.typings.addCallback(api.name, args, {struct:this.structLookup,callback:this.callbackLookup,callbackArgs:this.callbackArgs,includeDictionary:this.includeDictionary});
     }
     addCallback(apiName,callbackName,attachMultiple=false,threaded=false){
         //TODO: transform their (void *) types into proper ones
@@ -297,7 +302,7 @@ export class RayJsHeader {
                     //functions with bigger spread use more memory, but are less likely that user will run into limitations
                     //spreadSize Min 2, Max 127
                     if(api.returnType!=='void')fun.declare(api.returnType, "returnVal");
-                    let last=api.params.pop();
+                    let last=api.params[api.params.length-1];
                     params.pop();
                     let sw =fun.switch('size_'+last.name);
                     //0 Arguments will not compile
@@ -336,13 +341,16 @@ export class RayJsHeader {
         }
         // add binding to function declaration
         this.moduleFunctionList.jsFuncDef(jName, (api.params || []).filter(x => !x.binding.ignore).length, fun.getTag("_name"));
-        this.typings.addFunction(jName, api);
+        this.typings.addFunction(jName, api,{struct:this.structLookup,callback:this.callbackLookup,callbackArgs:this.callbackArgs,includeDictionary:this.includeDictionary});
     }
     addEnum(renum) {
+        const binding = renum.binding || {};
+        if (binding.ignore) return;
         console.log("Binding enum " + renum.name);
         renum.values.forEach(x => this.exportGlobalInt(x.name, x.description));
     }
     registerAlias(alias){
+        this.typings.addAlias(alias.name, alias.type, {struct:this.structLookup,callback:this.callbackLookup,callbackArgs:this.callbackArgs,includeDictionary:this.includeDictionary});
         let type=this.structLookup[alias.type];
         if(type!=undefined){
             this.structLookup[alias.name] = this.structLookup[alias.type];return;
@@ -396,8 +404,8 @@ export class RayJsHeader {
 
         const classDecl = this.structGen.jsClassDeclaration(struct.name, classId, finalizer.getTag("_name"), classFuncList.getTag("_name"));
         this.moduleInit.call(classDecl.getTag("_name"), ["ctx", "m"]);
-        if (binding?.createConstructor || binding?.createEmptyConstructor) {
-            const body = this.functionGen.jsStructConstructor(struct.name, binding?.createEmptyConstructor ? [] : struct.fields, classId);
+        if (binding?.createConstructor) {
+            const body = this.functionGen.jsStructConstructor(struct.name, struct.fields, classId);
             this.moduleInit.statement(`JSValue ${struct.name}_constr = JS_NewCFunction2(ctx, ${body.getTag("_name")},"${struct.name}", ${struct.fields.length}, JS_CFUNC_constructor, 0)`);
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
@@ -407,7 +415,7 @@ export class RayJsHeader {
     addApiStruct_array(struct){
         const binding = struct.binding || {};
         if (binding.ignore) return;
-        console.log("Binding struct array" + struct.name);
+        console.log("Binding struct array " + struct.name);
         const classId = "js_ArrayProxy_class_id";
         this.structArgs[struct.name]=struct.fields;
         //multiple typed array is possible by syntax but unimplemented
@@ -452,6 +460,7 @@ export class RayJsHeader {
         branch1 = _get.else();
             branch2 = branch1.if(`property>=0 && property<${length}`);
                 branch2.declare(type, 'src', false, `${ptr}->${name}[property]`);
+                if(type=='void')debugger;
                 branch2.cToJs(type, "ret", 'src');
                 branch2.returnExp('ret');
             branch1.else().returnExp('JS_UNDEFINED');

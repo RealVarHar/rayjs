@@ -87,6 +87,12 @@ export class CodeGenerator {
     iterateChildren() {
         return this.children[Symbol.iterator]();
     }
+    clear(){
+        this.children = [];
+        this.text = [];
+        this.tokens = [];
+        this.tags = {};
+    }
     line(text) {
         this.tokens.push(Token.STRING, Token.NEWLINE);
         this.text.push(text);

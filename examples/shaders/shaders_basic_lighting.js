@@ -1,10 +1,21 @@
-import * as rl from 'rayjs:raylib';
 import * as rlights from 'rayjs:rlights';
 import * as raymath from 'rayjs:raymath';
+import {BLUE, BeginDrawing,
+    BeginMode3D, CAMERA_ORBITAL, CAMERA_PERSPECTIVE, Camera3D, ClearBackground, CloseWindow, ColorAlpha,
+    DARKGRAY, DrawFPS, DrawGrid, DrawModel,
+    DrawSphereEx, DrawSphereWires, DrawText, EndDrawing, EndMode3D, FLAG_MSAA_4X_HINT,
+    GREEN,
+    GenMeshCube,
+    GenMeshPlane, GetShaderLocation, InitWindow, IsKeyPressed,
+    KEY_B,
+    KEY_G,
+    KEY_R, KEY_Y, LoadMaterialDefault, LoadModelFromMesh, LoadShader,
+    RAYWHITE,
+    RED,
+    SHADER_UNIFORM_VEC3,
+    SHADER_UNIFORM_VEC4, SetConfigFlags, SetShaderValue, SetTargetFPS, UnloadModel, UnloadShader, UpdateCamera, Vector3,
+    WHITE, WindowShouldClose, YELLOW } from 'rayjs:raylib';
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
-    for (const key in rlights) { globalThis[key] = rlights[key] };
-    for (const key in raymath) { globalThis[key] = raymath[key] };
 
     /*******************************************************************************************
     *
@@ -79,17 +90,17 @@ import * as raymath from 'rayjs:raymath';
 
     // Create lights
     const lights = new Array(4)
-    lights[0] = CreateLight(LIGHT_POINT, new Vector3(-2,1,-2), Vector3Zero(), YELLOW, shader);
-    lights[1] = CreateLight(LIGHT_POINT, new Vector3(2,1,2), Vector3Zero(), RED, shader);
-    lights[2] = CreateLight(LIGHT_POINT, new Vector3(-2,1,2), Vector3Zero(), GREEN, shader);
-    lights[3] = CreateLight(LIGHT_POINT, new Vector3(2,1,-2), Vector3Zero(), BLUE, shader);
+    lights[0] = rlights.CreateLight(rlights.LIGHT_POINT, new Vector3(-2,1,-2), raymath.Vector3Zero(), YELLOW, shader);
+    lights[1] = rlights.CreateLight(rlights.LIGHT_POINT, new Vector3(2,1,2), raymath.Vector3Zero(), RED, shader);
+    lights[2] = rlights.CreateLight(rlights.LIGHT_POINT, new Vector3(-2,1,2), raymath.Vector3Zero(), GREEN, shader);
+    lights[3] = rlights.CreateLight(rlights.LIGHT_POINT, new Vector3(2,1,-2), raymath.Vector3Zero(), BLUE, shader);
 
-    SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60);                  // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())        // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {     // Detect window close button or ESC key
+
         // Update
         //----------------------------------------------------------------------------------
         UpdateCamera(camera, CAMERA_ORBITAL);
@@ -105,7 +116,7 @@ import * as raymath from 'rayjs:raymath';
         if (IsKeyPressed(KEY_B)) { lights[3].enabled = !lights[3].enabled; }
 
         // Update light values (actually, only enable/disable them)
-        for (let i = 0; i < 4; i++) UpdateLightValues(shader, lights[i]);
+        for (let i = 0; i < 4; i++) rlights.UpdateLightValues(shader, lights[i]);
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -115,12 +126,11 @@ import * as raymath from 'rayjs:raymath';
             ClearBackground(RAYWHITE);
             BeginMode3D(camera);
 
-                DrawModel(floor, Vector3Zero(), 1.0, WHITE);
-                DrawModel(cube, Vector3Zero(), 1.0, WHITE);
+                DrawModel(floor, raymath.Vector3Zero(), 1.0, WHITE);
+                DrawModel(cube, raymath.Vector3Zero(), 1.0, WHITE);
 
                 // Draw spheres to show where the lights are
-                for (let i = 0; i < 4; i++)
-                {
+                for (let i = 0; i < 4; i++) {
                     if (lights[i].enabled) DrawSphereEx(lights[i].position, 0.2, 8, 8, lights[i].color);
                     else DrawSphereWires(lights[i].position, 0.2, 8, 8, ColorAlpha(lights[i].color, 0.3));
                 }

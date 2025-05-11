@@ -11,10 +11,13 @@
 *
 ********************************************************************************************/
 
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BeginMode2D, Camera2D, ClearBackground, CloseWindow, DARKGRAY, DrawCircle, DrawGrid, DrawText, EndDrawing, EndMode2D, GetMouseDelta, GetMousePosition, GetMouseWheelMove, GetScreenHeight, GetScreenToWorld2D, GetScreenWidth, InitWindow, IsKeyPressed, IsMouseButtonDown, IsMouseButtonPressed, KEY_ONE, KEY_TWO, MAROON, MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, RAYWHITE, SetTargetFPS, WindowShouldClose
+} from "rayjs:raylib";
 import * as rlgl from 'rayjs:rlgl';
 import * as raymath from 'rayjs:raymath';
-for (const key in rl) { globalThis[key] = rl[key] };
+import {Clamp, Vector2Add, Vector2Scale} from "rayjs:raymath";
+import {rlPopMatrix, rlPushMatrix, rlRotatef, rlTranslatef} from "rayjs:rlgl";
 for (const key in rlgl) { globalThis[key] = rlgl[key] };
 for (const key in raymath) { globalThis[key] = raymath[key] };
 

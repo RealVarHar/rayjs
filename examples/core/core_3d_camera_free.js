@@ -1,4 +1,7 @@
 import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BeginMode3D, BLACK, BLUE, Camera3D, CAMERA_FREE, CAMERA_PERSPECTIVE, ClearBackground, CloseWindow, DARKGRAY, DisableCursor, DrawCube, DrawCubeWires, DrawGrid, DrawRectangle, DrawRectangleLines, DrawText, EndDrawing, EndMode3D, Fade, InitWindow, IsKeyPressed, MAROON, RAYWHITE, RED, SetTargetFPS, SKYBLUE, UpdateCamera, Vector3, WindowShouldClose
+} from "rayjs:raylib";
 {
     for (const key in rl) { globalThis[key] = rl[key] };
 
@@ -43,7 +46,7 @@ import * as rl from 'rayjs:raylib';
         //----------------------------------------------------------------------------------
         UpdateCamera(camera, CAMERA_FREE);
 
-        if (IsKeyPressed('Z')) camera.target = new Vector3(0.0, 0.0, 0.0);
+        if (IsKeyPressed('Z'.charCodeAt(0))) camera.target = new Vector3(0.0, 0.0, 0.0);
         //----------------------------------------------------------------------------------
 
         // Draw

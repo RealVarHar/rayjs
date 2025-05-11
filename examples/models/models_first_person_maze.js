@@ -1,19 +1,30 @@
-import * as rl from 'rayjs:raylib';
-{
-    for (const key in rl) { globalThis[key] = rl[key] };
+/*******************************************************************************************
+*
+*   raylib [models] example - first person maze
+*
+*   Example originally created with raylib 2.5, last time updated with raylib 3.5
+*
+*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+*   BSD-like license that allows static linking with closed source software
+*
+*   Copyright (c) 2019-2023 Ramon Santamaria (@raysan5)
+*
+********************************************************************************************/
 
-    /*******************************************************************************************
-    *
-    *   raylib [models] example - first person maze
-    *
-    *   Example originally created with raylib 2.5, last time updated with raylib 3.5
-    *
-    *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-    *   BSD-like license that allows static linking with closed source software
-    *
-    *   Copyright (c) 2019-2023 Ramon Santamaria (@raysan5)
-    *
-    ********************************************************************************************/
+import {BeginDrawing, BeginMode3D, CAMERA_FIRST_PERSON, CAMERA_PERSPECTIVE, Camera3D,
+    CheckCollisionCircleRec, ClearBackground, CloseWindow, DisableCursor, DrawFPS, DrawModel,
+    DrawRectangle,
+    DrawRectangleLines,
+    DrawTextureEx,
+    EndDrawing,
+    EndMode3D, GREEN, GenMeshCubicmap, GetScreenWidth, InitWindow, LoadImage,
+    LoadImageColors,
+    LoadMaterialDefault,
+    LoadModelFromMesh, LoadTexture, LoadTextureFromImage, MATERIAL_MAP_DIFFUSE, RAYWHITE,
+    RED, Rectangle, SetMaterialTexture,
+    SetTargetFPS, UnloadImage, UnloadModel, UnloadTexture, UpdateCamera, Vector2, Vector3, WHITE, WindowShouldClose } from "rayjs:raylib";
+
+{
     // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 800;
@@ -23,8 +34,6 @@ import * as rl from 'rayjs:raylib';
 
     // Define the camera to look into our 3d world
     const camera = new Camera3D(new Vector3(0.2, 0.4, 0.2),new Vector3(0.185, 0.4, 0.0),new Vector3(0,1,0), 45, CAMERA_PERSPECTIVE);
-    const position = new Vector3(0,0,0);            // Set model position
-
     const imMap = LoadImage("resources/cubicmap.png");      // Load cubicmap image (RAM)
     const cubicmap = LoadTextureFromImage(imMap);       // Convert image to texture to display (VRAM)
     const mesh = GenMeshCubicmap(imMap, new Vector3(1.0, 1.0, 1.0));
@@ -51,8 +60,7 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         let oldCamPos = camera.position;    // Store old camera position
@@ -75,15 +83,13 @@ import * as rl from 'rayjs:raylib';
 
         // Check map collisions using image data and player position
         // TODO: Improvement: Just check player surrounding cells for collision
-        for (let y = 0; y < cubicmap.height; y++)
-        {
-            for (let x = 0; x < cubicmap.width; x++)
-            {
+        for (let y = 0; y < cubicmap.height; y++) {
+            for (let x = 0; x < cubicmap.width; x++) {
                 const pixelValR = mapPixels[((y*cubicmap.width + x)*4)]
                 if ((pixelValR == 255) &&       // Collision: white pixel, only check R channel
                     (CheckCollisionCircleRec(playerPos, playerRadius, new Rectangle(
-                        mapPosition.x - 0.5 + x*1.0,
-                        mapPosition.z - 0.5 + y*1.0, 1.0, 1.0 ))))
+                        mapPosition.x - 0.5 + x,
+                        mapPosition.z - 0.5 + y, 1.0, 1.0 ))))
                 {
                     // Collision detected, reset camera position
                     camera.position = oldCamPos;

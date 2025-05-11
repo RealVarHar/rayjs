@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+
+    "typeRoots": [
+      "./bindings/typings", "./node_modules/@types"
+    ],
+    "allowJs": true,
+    "target": "esnext",
+    "checkJs": true,
+    "noEmit": true,
+    "lib": ["esnext"],
+    "module": "nodenext"
+  },
+  "include": [
+    "./bindings/typings",",./bindings/src", "./examples"
+  ]
+}

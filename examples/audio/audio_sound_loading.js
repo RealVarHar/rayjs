@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, ClearBackground, CloseAudioDevice, CloseWindow, DrawText, EndDrawing, InitAudioDevice, InitWindow, IsKeyPressed, KEY_ENTER, KEY_SPACE, LIGHTGRAY, LoadSound, PlaySound, RAYWHITE, SetTargetFPS, UnloadSound, WindowShouldClose
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     /*******************************************************************************************
     *

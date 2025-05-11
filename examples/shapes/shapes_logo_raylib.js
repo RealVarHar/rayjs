@@ -1,9 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {BLACK, BeginDrawing, ClearBackground, CloseWindow, DrawRectangle,
+    DrawText, EndDrawing, GOLD, GRAY, InitWindow, RAYWHITE, SetTargetFPS, WindowShouldClose } from "rayjs:raylib";
 
 {
-    for (const key in rl) {
-        globalThis[key] = rl[key]
-    }
     /*******************************************************************************************
      *
      *   raylib [shapes] example - Draw raylib logo using basic shapes
@@ -27,8 +25,7 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here

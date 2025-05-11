@@ -22,8 +22,156 @@ static void js_float3_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_float3_v_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 3; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((float3 *)ptr)->v[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_float3_v_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 3;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_float3_v_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)3);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            float src = ((float3 *)ptr)->v[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_float3_v_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((float3 *)ptr)->v[property] = ret;
+    }
+    return true;
+}
+
+static int js_float3_v_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_float3_get_v(JSContext* ctx, JSValue this_val) {
+    float3* ptr = JS_GetOpaque2(ctx, this_val, js_float3_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_float3_v_values,.keys = js_float3_v_keys,.get = js_float3_v_get,.set = js_float3_v_set,.has = js_float3_v_has});
+    return ret;
+}
+
+static JSValue js_float3_set_v(JSContext* ctx, JSValue this_val, JSValue v) {
+    float3* ptr = JS_GetOpaque2(ctx, this_val, js_float3_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 3 * sizeof(float));
+        for(int i0=0; i0 < 3; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->v, value, 3 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_float3_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","float3", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("v",js_float3_get_v,js_float3_set_v),
 };
 
 static int js_declare_float3(JSContext * ctx, JSModuleDef * m) {
@@ -44,8 +192,156 @@ static void js_float16_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_float16_v_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    for(int i0=0; i0 < 1; i0++){
+        JSValue js_ret = JS_NewFloat64(ctx, (double)((float16 *)ptr)->v[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    if(as_sting==true) {
+        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
+    }
+    return ret;
+}
+
+static int js_float16_v_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
+    int length = 1;
+    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
+    for(int i0=0; i0 < length; i0++){
+        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
+    }
+    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
+    return true;
+}
+
+static JSValue js_float16_v_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            JSValue ret = JS_NewInt32(ctx, (long)1);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+    else {
+        if(property>=0 && property<1) {
+            float src = ((float16 *)ptr)->v[property];
+            JSValue ret = JS_NewFloat64(ctx, (double)src);
+            return ret;
+        }
+        else {
+            return JS_UNDEFINED;
+        }
+    }
+}
+
+static int js_float16_v_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
+    if(as_sting==true) {
+        return false;
+    }
+    else {
+        double double_ret;
+        int err_ret = JS_ToFloat64(ctx, &double_ret, set_to);
+        if(err_ret<0) {
+            JS_ThrowTypeError(ctx, "set_to is not numeric");
+            return -1;
+        }
+        float ret = (float)double_ret;
+        ((float16 *)ptr)->v[property] = ret;
+    }
+    return true;
+}
+
+static int js_float16_v_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
+    if(as_sting==true) {
+        if(property==JS_ATOM_length) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if(property>=0 && property<1) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+static JSValue js_float16_get_v(JSContext* ctx, JSValue this_val) {
+    float16* ptr = JS_GetOpaque2(ctx, this_val, js_float16_class_id);
+    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_float16_v_values,.keys = js_float16_v_keys,.get = js_float16_v_get,.set = js_float16_v_set,.has = js_float16_v_has});
+    return ret;
+}
+
+static JSValue js_float16_set_v(JSContext* ctx, JSValue this_val, JSValue v) {
+    float16* ptr = JS_GetOpaque2(ctx, this_val, js_float16_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        value = (float *)jsc_malloc(ctx, 16 * sizeof(float));
+        for(int i0=0; i0 < 16; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    memcpy(ptr->v, value, 16 * sizeof(float ));
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_float16_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","float16", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("v",js_float16_get_v,js_float16_set_v),
 };
 
 static int js_declare_float16(JSContext * ctx, JSModuleDef * m) {
@@ -57,6 +353,134 @@ static int js_declare_float16(JSContext * ctx, JSModuleDef * m) {
     JS_SetPropertyFunctionList(ctx, proto, js_float16_proto_funcs, countof(js_float16_proto_funcs));
     JS_SetClassProto(ctx, js_float16_class_id, proto);
     return 0;
+}
+
+static JSValue js_float3_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        float3* ptr__return = (float3*)js_calloc(ctx, 1, sizeof(float3));
+        JSValue _return = JS_NewObjectClass(ctx, js_float3_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    float * v;
+    bool freesrc_v = false;
+    JSValue da_v;
+    int64_t size_v;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_v = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_v = *(ArrayProxy_class *)opaque_v;
+        argv[0] = AP_v.values(ctx, AP_v.opaque, 0, false);
+        freesrc_v = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        v = (float *)js_malloc(ctx, 3 * sizeof(float));
+        for(int i0=0; i0 < 3; i0++){
+            JSValue js_v = JS_GetPropertyUint32(ctx,argv[0],i0);
+            double double_vi0;
+            int err_vi0 = JS_ToFloat64(ctx, &double_vi0, js_v);
+            if(err_vi0<0) {
+                JS_ThrowTypeError(ctx, "js_v is not numeric");
+                return JS_EXCEPTION;
+            }
+            v[i0] = (float)double_vi0;
+            JS_FreeValue(ctx, js_v);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_v;
+        v = (float *)JS_GetArrayBuffer(ctx, &size_v, argv[0]);
+    }
+    else {
+        JSClassID classid_v = JS_GetClassID(argv[0]);
+        if(classid_v==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_v;
+            size_t size_v;
+            da_v = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_v,&size_v,NULL);
+            v = (float *)JS_GetArrayBuffer(ctx, &size_v, da_v);
+            v+=offset_v;
+            size_v-=offset_v;
+        }
+        else {
+            if(freesrc_v) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_v) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    float3 _struct = { {v[0],v[1],v[2]} };
+    float3* ptr__return = (float3*)js_malloc(ctx, sizeof(float3));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_float3_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
+}
+
+static JSValue js_float16_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        float16* ptr__return = (float16*)js_calloc(ctx, 1, sizeof(float16));
+        JSValue _return = JS_NewObjectClass(ctx, js_float16_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    float * v;
+    bool freesrc_v = false;
+    JSValue da_v;
+    int64_t size_v;
+    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
+        void * opaque_v = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_v = *(ArrayProxy_class *)opaque_v;
+        argv[0] = AP_v.values(ctx, AP_v.opaque, 0, false);
+        freesrc_v = true;
+    }
+    if(JS_IsArray(argv[0]) == 1) {
+        v = (float *)js_malloc(ctx, 16 * sizeof(float));
+        for(int i0=0; i0 < 16; i0++){
+            JSValue js_v = JS_GetPropertyUint32(ctx,argv[0],i0);
+            double double_vi0;
+            int err_vi0 = JS_ToFloat64(ctx, &double_vi0, js_v);
+            if(err_vi0<0) {
+                JS_ThrowTypeError(ctx, "js_v is not numeric");
+                return JS_EXCEPTION;
+            }
+            v[i0] = (float)double_vi0;
+            JS_FreeValue(ctx, js_v);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_v;
+        v = (float *)JS_GetArrayBuffer(ctx, &size_v, argv[0]);
+    }
+    else {
+        JSClassID classid_v = JS_GetClassID(argv[0]);
+        if(classid_v==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_v;
+            size_t size_v;
+            da_v = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_v,&size_v,NULL);
+            v = (float *)JS_GetArrayBuffer(ctx, &size_v, da_v);
+            v+=offset_v;
+            size_v-=offset_v;
+        }
+        else {
+            if(freesrc_v) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_v) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    float16 _struct = { {v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8],v[9],v[10],v[11],v[12],v[13],v[14],v[15]} };
+    float16* ptr__return = (float16*)js_malloc(ctx, sizeof(float16));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_float16_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
 }
 
 static JSValue js_Clamp(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -1513,6 +1937,21 @@ static JSValue js_Vector3Unproject(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
+static JSValue js_Vector3ToFloatV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
+    if(ptr_v == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Vector3 v = *ptr_v;
+    float3 returnVal = Vector3ToFloatV(v);
+    float3* ptr_ret = (float3*)js_malloc(ctx, sizeof(float3));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_float3_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
 static JSValue js_Vector3Invert(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Vector3* ptr_v = (Vector3*)JS_GetOpaque(argv[0], js_Vector3_class_id);
     if(ptr_v == NULL) {
@@ -2473,6 +2912,21 @@ static JSValue js_MatrixLookAt(JSContext * ctx, JSValue this_val, int argc, JSVa
     return ret;
 }
 
+static JSValue js_MatrixToFloatV(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    Matrix* ptr_mat = (Matrix*)JS_GetOpaque(argv[0], js_Matrix_class_id);
+    if(ptr_mat == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Matrix mat = *ptr_mat;
+    float16 returnVal = MatrixToFloatV(mat);
+    float16* ptr_ret = (float16*)js_malloc(ctx, sizeof(float16));
+    *ptr_ret = returnVal;
+    JSValue ret = JS_NewObjectClass(ctx, js_float16_class_id);
+    JS_SetOpaque(ret, ptr_ret);
+    return ret;
+}
+
 static JSValue js_QuaternionAdd(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     Quaternion* ptr_q1 = (Quaternion*)JS_GetOpaque(argv[0], js_Vector4_class_id);
     if(ptr_q1 == NULL) {
@@ -3080,7 +3534,7 @@ static JSValue js_MatrixDecompose(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
-static const JSCFunctionListEntry js_js_raymath_funcs[] = {
+static const JSCFunctionListEntry js_raymath_funcs[] = {
     JS_CFUNC_DEF("Clamp",3,js_Clamp),
     JS_CFUNC_DEF("Lerp",3,js_Lerp),
     JS_CFUNC_DEF("Normalize",3,js_Normalize),
@@ -3151,6 +3605,7 @@ static const JSCFunctionListEntry js_js_raymath_funcs[] = {
     JS_CFUNC_DEF("Vector3Max",2,js_Vector3Max),
     JS_CFUNC_DEF("Vector3Barycenter",4,js_Vector3Barycenter),
     JS_CFUNC_DEF("Vector3Unproject",3,js_Vector3Unproject),
+    JS_CFUNC_DEF("Vector3ToFloatV",1,js_Vector3ToFloatV),
     JS_CFUNC_DEF("Vector3Invert",1,js_Vector3Invert),
     JS_CFUNC_DEF("Vector3Clamp",3,js_Vector3Clamp),
     JS_CFUNC_DEF("Vector3ClampValue",3,js_Vector3ClampValue),
@@ -3198,6 +3653,7 @@ static const JSCFunctionListEntry js_js_raymath_funcs[] = {
     JS_CFUNC_DEF("MatrixPerspective",4,js_MatrixPerspective),
     JS_CFUNC_DEF("MatrixOrtho",6,js_MatrixOrtho),
     JS_CFUNC_DEF("MatrixLookAt",3,js_MatrixLookAt),
+    JS_CFUNC_DEF("MatrixToFloatV",1,js_MatrixToFloatV),
     JS_CFUNC_DEF("QuaternionAdd",2,js_QuaternionAdd),
     JS_CFUNC_DEF("QuaternionAddValue",2,js_QuaternionAddValue),
     JS_CFUNC_DEF("QuaternionSubtract",2,js_QuaternionSubtract),
@@ -3226,9 +3682,13 @@ static const JSCFunctionListEntry js_js_raymath_funcs[] = {
 };
 
 static int js_js_raymath_init(JSContext * ctx, JSModuleDef * m) {
-    JS_SetModuleExportList(ctx, m,js_js_raymath_funcs,countof(js_js_raymath_funcs));
+    JS_SetModuleExportList(ctx, m,js_raymath_funcs,countof(js_raymath_funcs));
     js_declare_float3(ctx, m);
+    JSValue float3_constr = JS_NewCFunction2(ctx, js_float3_constructor,"float3", 1, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "float3", float3_constr);
     js_declare_float16(ctx, m);
+    JSValue float16_constr = JS_NewCFunction2(ctx, js_float16_constructor,"float16", 1, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "float16", float16_constr);
     JS_SetModuleExport(ctx, m, "EPSILON", JS_NewFloat64(ctx, EPSILON));
     return 0;
 }
@@ -3237,7 +3697,9 @@ JSModuleDef * js_init_module_js_raymath(JSContext * ctx, const char * module_nam
     JSModuleDef *m;
     m = JS_NewCModule(ctx, module_name, js_js_raymath_init);
     if(!m) return NULL;
-    JS_AddModuleExportList(ctx, m, js_js_raymath_funcs, countof(js_js_raymath_funcs));
+    JS_AddModuleExportList(ctx, m, js_raymath_funcs, countof(js_raymath_funcs));
+    JS_AddModuleExport(ctx, m, "float3");
+    JS_AddModuleExport(ctx, m, "float16");
     JS_AddModuleExport(ctx, m, "EPSILON");
     return m;
 }

@@ -17,6 +17,63 @@ function getsubtype(type){
         }
     }
 }
+function subrepeat(fieldname,sizevars){
+    //converts 'type',[2,3] to {{type[0][0],type[0][1],type[0][2]},{type[1][0],type[1][1],type[1][2]}}
+    if(sizevars.length==0)return fieldname;
+    let structuredFields=new Array(sizevars[sizevars.length-1]).fill('');//contains elements in a desired structure
+    //first pass, create structure
+    for(let i=sizevars.length-2;i>=0;i--){
+        let swapstructuredFields = [];
+        for(let j=0;j<sizevars[i];j++){
+            let cpy= structuredClone(structuredFields);
+            swapstructuredFields.push(cpy);
+        }
+        structuredFields = swapstructuredFields;
+    }
+    //second pass, add numbering
+    let unpacked=[[structuredFields,'']];
+    let containers = [structuredFields];
+    while(unpacked.length>0){
+        let [item,size]=unpacked.pop();
+        if(typeof(item[0])=='string'){
+            for(let i=0;i<item.length;i++){
+                item[i]=fieldname+size+`[${i}]`;
+            }
+        }else{
+            for(let i=0;i<item.length;i++){
+                unpacked.push([item[i],size+`[${i}]`]);
+                if(typeof(item[0][0])!='string'){
+                    containers.push(item[i]);
+                }
+            }
+        }
+    }
+    //Third pass, stringify
+    if(typeof(structuredFields[0])=='string'){
+        //if only 1d, skip parsing containers
+        return `{${structuredFields.join(',')}}`;
+    }
+    while(containers.length>0){
+        let item=containers.pop();
+        for(let i=0;i<item.length;i++){
+            item[i]=`{${item[i].join(',')}}`;
+        }
+    }
+    return `{${structuredFields.join(',')}}`;
+}
+function getStaticArrayLen(type){
+    //converts "char[4][3][2]" to ["char",[4,3,2]]
+    let sizevars=[];
+    while(type.endsWith(']')) {
+        const stpos = type.lastIndexOf(']');
+        const st2pos = type.lastIndexOf('[', stpos);
+        let len= type.substring(st2pos+1,stpos).trim();
+        if(!isNaN(len))len=Number(len);
+        sizevars.unshift(len);
+        type = type.substring(0,st2pos).trim();
+    }
+    return {type,sizevars};
+}
 export class QuickJsGenerator extends CodeGenerator {
     jsBindingFunction(jsName) {
         const args = [
@@ -167,7 +224,6 @@ export class QuickJsGenerator extends CodeGenerator {
             }
 
             //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
-            //TODO: check if arrayProxy, if so, call AP.to_array, replace src to use addArray path
 
             //Check if Array
             let arr;
@@ -354,10 +410,9 @@ export class QuickJsGenerator extends CodeGenerator {
             f.jsToC(type,`${name}[${iter}]`,`${src}[${iter}${plusstr}]`,{supressDeclaration:true,dynamicAlloc:true,allowNull:flags.allowNull,altReturn:flags.altReturn},depth+1);
             //Arrays
         }else if(type.endsWith(']')){
-            const stpos=type.indexOf('[');
-            let len=type.substring(stpos+1,type.length-1).trim();
-            sizeVars.push(len);
-            getArray(this,getsubtype(type)+' *',name,src);
+            let arrayLen = getStaticArrayLen(type);
+            sizeVars.push(...arrayLen.sizevars);
+            getArray(this,arrayLen.type+" *".repeat(arrayLen.sizevars.length),name,src);
         }else if(type.endsWith('*')){
             getArray(this,type,name,src);
         }else if(type.endsWith('&')){
@@ -613,10 +668,9 @@ export class QuickJsGenerator extends CodeGenerator {
                             this.declare('int',`${tmpname}_pos`);
                             let iter='i'+depth;
                             this.declare('void *',name,false,allocName+'_c',flags.supressDeclaration);
-                            this.declare('void *',`${tmpname}_ptr`,false,`${src}.u.ptr`);
                             let fi;
                             let fo = this.for(0, `${allocName}_size`, iter,'++');
-                                fi = fo.if(`${allocName}_arr[${iter}].func_obj.u.ptr == ${tmpname}_ptr`);
+                                fi = fo.if(`JS_IsEqual(${allocName}_arr[${iter}].ctx, ${allocName}_arr[${iter}].func_obj, ${src})`);
                                     fi.call('JS_FreeValue',[`ctx`,`${allocName}_arr[${iter}].func_obj`]);
                                     fi.call('JS_FreeValue',[`${allocName}_arr[${iter}].ctx`,`${allocName}_arr[${iter}].func_obj`]);
                                     if(threaded)fi.call('JS_FreeValue',[`${allocName}_arr[${iter}].ctx`,`${allocName}_arr[${iter}].thread_id`]);
@@ -656,7 +710,6 @@ export class QuickJsGenerator extends CodeGenerator {
         //This needs to work with any type, also returned by reference
         //This assumes no return int &
         function setArray(ctx,type,name,src,overrideElse=false){
-            console.log(type,src);
             const subtype=getsubtype(type);
             //Check if String
             if(getsubtype(type)==='char') {
@@ -664,14 +717,19 @@ export class QuickJsGenerator extends CodeGenerator {
                 return;
             }
 
-            //Check if Array
-            if(subtype==='void'){
-                console.log('At: '+type,name);
-                throw new Error('Cannot convert void array type');
-                return;
-            }
             //Dont allow dumb usecases: Array of direct opaque data, array of char
             let srclen=sizeVars.pop();
+
+            //Check if Array
+            if(subtype==='void'){
+                if(srclen !== undefined){
+                    ctx.call('JS_NewArrayBufferCopy',['ctx',src,srclen],{name});
+                }else{
+                    console.log('At: '+type,name);
+                    throw new Error('Cannot convert void array type without length');
+                }
+                return;
+            }
             if(srclen===undefined){
                 //TODO: remove sizeof() based length
                 console.log("WARNING: sizeof length is deprecated, at "+type+name);
@@ -1060,7 +1118,29 @@ export class QuickJsGenerator extends CodeGenerator {
             const para = fields[i];
             body.jsToC(para.type, para.name, "argv[" + i + "]");
         }
-        body.declareStruct(structType, "_struct", fields.map(x => x.name));
+        let structArgs=[];
+        let toCopy = [];
+        for(let field of fields){
+            let type=field.type;
+            if(type.endsWith(']')){
+                let arrayLen = getStaticArrayLen(type);
+                if(arrayLen.sizevars.some(a=>isNaN(a))){
+                    //If contains variable length, fallback on memcpy
+                    toCopy.push([field.name,arrayLen.type,arrayLen.sizevars]);
+                }else{
+                    structArgs.push(subrepeat(field.name,arrayLen.sizevars));
+                }
+            }else{
+                structArgs.push(field.name);
+            }
+        }
+        body.declareStruct(structType, "_struct", structArgs);
+        while(toCopy.length>0){
+            let [name,subtype,sizevars]=toCopy.pop();
+            let size= sizevars.reduce((a,b)=>a*b,1);
+            body.call('memcpy',[`_struct.${name}`,name,`sizeof(${subtype}) * ${size}`]);
+            memcpy(_struct.params,params,sizeof(float) * 4);
+        }
         body.jsStructToOpq(structType, "_return", "_struct", classId);
         body.returnExp("_return");
         return body;

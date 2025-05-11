@@ -1,8 +1,15 @@
-import * as rl from 'rayjs:raylib';
 import * as rgui from 'rayjs:raygui';
+import {BeginDrawing,
+    ClearBackground,
+    CloseWindow,
+    DARKGRAY,
+    DrawCircleSector,
+    DrawCircleSectorLines,
+    DrawFPS,
+    DrawLine,
+    DrawRectangle, DrawText, EndDrawing, Fade, GetScreenHeight, GetScreenWidth, InitWindow,
+    LIGHTGRAY, MAROON, RAYWHITE, Rectangle, SetTargetFPS, TextFormat, Vector2, WindowShouldClose } from 'rayjs:raylib';
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
-    for (const key in rgui) { globalThis[key] = rgui[key] };
 
     /*******************************************************************************************
     *
@@ -37,8 +44,7 @@ import * as rgui from 'rayjs:raygui';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         // NOTE: All variables update happens inside GUI control functions
@@ -58,11 +64,11 @@ import * as rgui from 'rayjs:raygui';
 
             // Draw GUI controls
             //------------------------------------------------------------------------------
-            GuiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", TextFormat("%.2f", startAngle[0]), startAngle, 0, 720);
-            GuiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", TextFormat("%.2f", endAngle[0]), endAngle, 0, 720);
+            rgui.GuiSliderBar(new Rectangle(600, 40, 120, 20), "StartAngle", TextFormat("%.2f", startAngle[0]), startAngle, 0, 720);
+            rgui.GuiSliderBar(new Rectangle(600, 70, 120, 20), "EndAngle", TextFormat("%.2f", endAngle[0]), endAngle, 0, 720);
 
-            GuiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", TextFormat("%.2f", outerRadius[0]), outerRadius, 0, 200);
-            GuiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", TextFormat("%.2f", segments[0]), segments, 0, 100);
+            rgui.GuiSliderBar(new Rectangle(600, 140, 120, 20), "Radius", TextFormat("%.2f", outerRadius[0]), outerRadius, 0, 200);
+            rgui.GuiSliderBar(new Rectangle(600, 170, 120, 20), "Segments", TextFormat("%.2f", segments[0]), segments, 0, 100);
             //------------------------------------------------------------------------------
 
             minSegments = Math.ceil((endAngle[0] - startAngle[0]) / 90);

@@ -10,61 +10,76 @@
 *   Copyright (c) 2017-2024 Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
-import * as rl from 'rayjs:raylib';
+
+import {BLUE, BeginDrawing, BeginMode3D, CAMERA_ORBITAL, Camera3D, ClearBackground,
+    CloseWindow,
+    DARKBLUE,
+    DrawGrid, DrawModel, DrawRectangle, DrawRectangleLines, DrawText,
+    EndDrawing, EndMode3D, Fade, GREEN, GenImageChecked,
+    GenMeshCube,
+    GenMeshCylinder,
+    GenMeshHemiSphere,
+    GenMeshKnot,
+    GenMeshPlane, GenMeshPoly, GenMeshSphere,
+    GenMeshTorus, InitWindow, IsKeyPressed, IsMouseButtonPressed,
+    KEY_LEFT, KEY_RIGHT, LoadModelFromMesh, LoadTextureFromImage,
+    MATERIAL_MAP_DIFFUSE,
+    MOUSE_BUTTON_LEFT, Mesh,
+    RAYWHITE, RED, SKYBLUE, SetTargetFPS, UnloadImage,
+    UnloadModel,
+    UnloadTexture, UpdateCamera, UploadMesh, Vector3, WHITE, WindowShouldClose } from "rayjs:raylib";
+
+// Generate a simple triangle mesh from code
+function genMeshCustom() {
+    const mesh = new Mesh();
+    mesh.triangleCount = 1;
+    mesh.vertexCount = mesh.triangleCount*3;
+    let vertices = new Array(mesh.vertexCount*3).fill(0);    // 3 vertices, 3 coordinates each (x, y, z)
+    let texcoords = new Array(mesh.vertexCount*2).fill(0);   // 3 vertices, 2 coordinates each (x, y)
+    let normals = new Array(mesh.vertexCount*3).fill(0);     // 3 vertices, 3 coordinates each (x, y, z)
+
+    // Vertex at (0, 0, 0)
+    vertices[0] = 0;
+    vertices[1] = 0;
+    vertices[2] = 0;
+    normals[0] = 0;
+    normals[1] = 1;
+    normals[2] = 0;
+    texcoords[0] = 0;
+    texcoords[1] = 0;
+
+    // Vertex at (1, 0, 2)
+    vertices[3] = 1;
+    vertices[4] = 0;
+    vertices[5] = 2;
+    normals[3] = 0;
+    normals[4] = 1;
+    normals[5] = 0;
+    texcoords[2] = 0.5;
+    texcoords[3] = 1.0;
+
+    // Vertex at (2, 0, 0)
+    vertices[6] = 2;
+    vertices[7] = 0;
+    vertices[8] = 0;
+    normals[6] = 0;
+    normals[7] = 1;
+    normals[8] = 0;
+    texcoords[4] = 1;
+    texcoords[5] =0;
+
+    mesh.vertices=vertices;
+    mesh.texcoords=texcoords;
+    mesh.normals=normals;
+
+    // Upload mesh data from CPU (RAM) to GPU (VRAM) memory
+    UploadMesh(mesh, false);
+
+    return mesh;
+}
+
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
-
-    // Generate a simple triangle mesh from code
-    function genMeshCustom()
-    {
-        const mesh = new Mesh();
-        mesh.triangleCount = 1;
-        mesh.vertexCount = mesh.triangleCount*3;
-        let vertices = new Array(mesh.vertexCount*3).fill(0);    // 3 vertices, 3 coordinates each (x, y, z)
-        let texcoords = new Array(mesh.vertexCount*2).fill(0);   // 3 vertices, 2 coordinates each (x, y)
-        let normals = new Array(mesh.vertexCount*3).fill(0);     // 3 vertices, 3 coordinates each (x, y, z)
-
-        // Vertex at (0, 0, 0)
-        vertices[0] = 0;
-        vertices[1] = 0;
-        vertices[2] = 0;
-        normals[0] = 0;
-        normals[1] = 1;
-        normals[2] = 0;
-        texcoords[0] = 0;
-        texcoords[1] = 0;
-
-        // Vertex at (1, 0, 2)
-        vertices[3] = 1;
-        vertices[4] = 0;
-        vertices[5] = 2;
-        normals[3] = 0;
-        normals[4] = 1;
-        normals[5] = 0;
-        texcoords[2] = 0.5;
-        texcoords[3] = 1.0;
-
-        // Vertex at (2, 0, 0)
-        vertices[6] = 2;
-        vertices[7] = 0;
-        vertices[8] = 0;
-        normals[6] = 0;
-        normals[7] = 1;
-        normals[8] = 0;
-        texcoords[4] = 1;
-        texcoords[5] =0;
-
-    	mesh.vertices=vertices;
-    	mesh.texcoords=texcoords;
-    	mesh.normals=normals;
-
-        // Upload mesh data from CPU (RAM) to GPU (VRAM) memory
-        UploadMesh(mesh, false);
-
-        return mesh;
-    }
-
-    var NUM_MODELS = 9;
+    const NUM_MODELS = 9;
 
     // Initialization
     //--------------------------------------------------------------------------------------
@@ -120,24 +135,19 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
     	UpdateCamera(camera, CAMERA_ORBITAL);
 
-    	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        {
+    	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             currentModel = (currentModel + 1)%NUM_MODELS; // Cycle between the textures
         }
 
-        if (IsKeyPressed(KEY_RIGHT))
-        {
+        if (IsKeyPressed(KEY_RIGHT)) {
             currentModel++;
             if (currentModel >= NUM_MODELS) currentModel = 0;
-        }
-        else if (IsKeyPressed(KEY_LEFT))
-        {
+        } else if (IsKeyPressed(KEY_LEFT)) {
             currentModel--;
             if (currentModel < 0) currentModel = NUM_MODELS - 1;
         }
@@ -160,8 +170,7 @@ import * as rl from 'rayjs:raylib';
             DrawRectangleLines(30, 400, 310, 30, Fade(DARKBLUE, 0.5));
             DrawText("MOUSE LEFT BUTTON to CYCLE PROCEDURAL MODELS", 40, 410, 10, BLUE);
 
-            switch(currentModel)
-            {
+            switch(currentModel) {
                 case 0: DrawText("PLANE", 680, 10, 20, DARKBLUE); break;
                 case 1: DrawText("CUBE", 680, 10, 20, DARKBLUE); break;
                 case 2: DrawText("SPHERE", 680, 10, 20, DARKBLUE); break;

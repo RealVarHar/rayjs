@@ -1,7 +1,11 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BeginMode3D, BLACK, BLUE, Camera3D, CAMERA_FIRST_PERSON, CAMERA_FREE, CAMERA_ORBITAL, CAMERA_ORTHOGRAPHIC, CAMERA_PERSPECTIVE, CAMERA_THIRD_PERSON, ClearBackground, CloseWindow, Color, DARKPURPLE, DisableCursor, DrawCube, DrawCubeWires, DrawPlane, DrawRectangle, DrawRectangleLines, DrawText, EndDrawing, EndMode3D, Fade, GetRandomValue, GOLD, InitWindow, IsKeyPressed, KEY_FOUR, KEY_ONE, KEY_P, KEY_THREE, KEY_TWO, LIGHTGRAY, LIME, MAROON, PURPLE, RAYWHITE, SetTargetFPS, SKYBLUE, UpdateCamera, Vector2, Vector3, WindowShouldClose
+} from "rayjs:raylib";
+import {
+    CameraPitch,
+    CameraYaw
+} from "rayjs:rcamera";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
-
     /*******************************************************************************************
     *
     *   raylib [core] example - 3d camera first person
@@ -21,6 +25,7 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
     const screenWidth = 800;
     const screenHeight = 450;
+    const DEG2RAD = Math.PI/180;
 
     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera first person");
 
@@ -94,8 +99,8 @@ import * as rl from 'rayjs:raylib';
                 camera.up = new Vector3(0.0, 1.0, 0.0);
                 camera.projection = CAMERA_ORTHOGRAPHIC;
                 camera.fovy = 20.0; // near plane width in CAMERA_ORTHOGRAPHIC
-                cameraYaw(camera, -135 * DEG2RAD, true);
-                cameraPitch(camera, -45 * DEG2RAD, true, true, false);
+                CameraYaw(camera, -135 * DEG2RAD, true);
+                CameraPitch(camera, -45 * DEG2RAD, true, true, false);
             }
             else if (camera.projection == CAMERA_ORTHOGRAPHIC)
             {
@@ -131,7 +136,7 @@ import * as rl from 'rayjs:raylib';
                 GetMouseDelta().y*0.05f,                            // Rotation: pitch
                 0.0f                                                // Rotation: roll
             },
-            GetMouseWheelMove()*2.0f);                              // Move to target (zoom)
+            GetMouseWheelMove()*2.0);                              // Move to target (zoom)
     */
         //----------------------------------------------------------------------------------
 

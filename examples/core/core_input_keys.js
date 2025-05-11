@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, ClearBackground, CloseWindow, DARKGRAY, DrawCircleV, DrawText, EndDrawing, InitWindow, IsKeyDown, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP, MAROON, RAYWHITE, SetTargetFPS, Vector2, WindowShouldClose
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     // Initialization
     //--------------------------------------------------------------------------------------

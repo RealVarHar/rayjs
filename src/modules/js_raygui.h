@@ -21,8 +21,71 @@ static void js_GuiStyleProp_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
+static JSValue js_GuiStyleProp_get_controlId(JSContext* ctx, JSValue this_val) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    unsigned short controlId = ptr->controlId;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)controlId);
+    return ret;
+}
+
+static JSValue js_GuiStyleProp_set_controlId(JSContext* ctx, JSValue this_val, JSValue v) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned short value = (unsigned short)long_value;
+    ptr->controlId = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GuiStyleProp_get_propertyId(JSContext* ctx, JSValue this_val) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    unsigned short propertyId = ptr->propertyId;
+    JSValue ret = JS_NewUint32(ctx, (unsigned long)propertyId);
+    return ret;
+}
+
+static JSValue js_GuiStyleProp_set_propertyId(JSContext* ctx, JSValue this_val, JSValue v) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    uint32_t long_value;
+    int err_value = JS_ToUint32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned short value = (unsigned short)long_value;
+    ptr->propertyId = value;
+    return JS_UNDEFINED;
+}
+
+static JSValue js_GuiStyleProp_get_propertyValue(JSContext* ctx, JSValue this_val) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    int propertyValue = ptr->propertyValue;
+    JSValue ret = JS_NewInt32(ctx, (long)propertyValue);
+    return ret;
+}
+
+static JSValue js_GuiStyleProp_set_propertyValue(JSContext* ctx, JSValue this_val, JSValue v) {
+    GuiStyleProp* ptr = JS_GetOpaque2(ctx, this_val, js_GuiStyleProp_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->propertyValue = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_GuiStyleProp_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","GuiStyleProp", JS_PROP_CONFIGURABLE),
+    JS_CGETSET_DEF("controlId",js_GuiStyleProp_get_controlId,js_GuiStyleProp_set_controlId),
+    JS_CGETSET_DEF("propertyId",js_GuiStyleProp_get_propertyId,js_GuiStyleProp_set_propertyId),
+    JS_CGETSET_DEF("propertyValue",js_GuiStyleProp_get_propertyValue,js_GuiStyleProp_set_propertyValue),
 };
 
 static int js_declare_GuiStyleProp(JSContext * ctx, JSModuleDef * m) {
@@ -34,6 +97,42 @@ static int js_declare_GuiStyleProp(JSContext * ctx, JSModuleDef * m) {
     JS_SetPropertyFunctionList(ctx, proto, js_GuiStyleProp_proto_funcs, countof(js_GuiStyleProp_proto_funcs));
     JS_SetClassProto(ctx, js_GuiStyleProp_class_id, proto);
     return 0;
+}
+
+static JSValue js_GuiStyleProp_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    if(argc==0) {
+        GuiStyleProp* ptr__return = (GuiStyleProp*)js_calloc(ctx, 1, sizeof(GuiStyleProp));
+        JSValue _return = JS_NewObjectClass(ctx, js_GuiStyleProp_class_id);
+        JS_SetOpaque(_return, ptr__return);
+        return _return;
+    }
+    uint32_t long_controlId;
+    int err_controlId = JS_ToUint32(ctx, &long_controlId, argv[0]);
+    if(err_controlId<0) {
+        JS_ThrowTypeError(ctx, "argv[0] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned short controlId = (unsigned short)long_controlId;
+    uint32_t long_propertyId;
+    int err_propertyId = JS_ToUint32(ctx, &long_propertyId, argv[1]);
+    if(err_propertyId<0) {
+        JS_ThrowTypeError(ctx, "argv[1] is not numeric");
+        return JS_EXCEPTION;
+    }
+    unsigned short propertyId = (unsigned short)long_propertyId;
+    int32_t long_propertyValue;
+    int err_propertyValue = JS_ToInt32(ctx, &long_propertyValue, argv[2]);
+    if(err_propertyValue<0) {
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int propertyValue = (int)long_propertyValue;
+    GuiStyleProp _struct = { controlId, propertyId, propertyValue };
+    GuiStyleProp* ptr__return = (GuiStyleProp*)js_malloc(ctx, sizeof(GuiStyleProp));
+    *ptr__return = _struct;
+    JSValue _return = JS_NewObjectClass(ctx, js_GuiStyleProp_class_id);
+    JS_SetOpaque(_return, ptr__return);
+    return _return;
 }
 
 static JSValue js_GuiEnable(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
@@ -350,6 +449,99 @@ static JSValue js_GuiSetIconScale(JSContext * ctx, JSValue this_val, int argc, J
     return JS_UNDEFINED;
 }
 
+static JSValue js_GuiGetIcons(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    unsigned int * returnVal = GuiGetIcons();
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(unsigned int);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret = JS_NewUint32(ctx, (unsigned long)returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
+static JSValue js_GuiLoadIcons(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    char * fileName;
+    bool freesrc_fileName = false;
+    JSValue da_fileName;
+    int64_t size_fileName;
+    if(JS_IsString(argv[0]) == 1) {
+        fileName = (char *)JS_ToCStringLen(ctx, &size_fileName, argv[0]);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        size_t size_fileName;
+        fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, argv[0]);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            size_t offset_fileName;
+            size_t size_fileName;
+            da_fileName = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,&size_fileName,NULL);
+            fileName = (char *)JS_GetArrayBuffer(ctx, &size_fileName, da_fileName);
+            fileName+=offset_fileName;
+            size_fileName-=offset_fileName;
+        }
+        else {
+            if(freesrc_fileName) {
+                JS_FreeValue(ctx, argv[0]);
+            }
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_fileName) {
+            JS_FreeValue(ctx, argv[0]);
+        }
+    }
+    int js_loadIconsName = JS_ToBool(ctx, argv[1]);
+    if(js_loadIconsName<0) {
+        if(JS_IsArray(argv[0]) == 1) {
+            js_free(ctx, fileName);
+        }
+        else if(JS_IsString(argv[0]) == 1) {
+            JS_FreeCString(ctx, fileName);
+        }
+        else if(JS_IsArrayBuffer(argv[0]) == 1) {
+            JS_FreeValue(ctx, da_fileName);
+        }
+        else {
+            JSClassID classid_fileName = JS_GetClassID(argv[0]);
+            if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+                js_free(ctx, &da_fileName);
+            }
+        }
+        JS_ThrowTypeError(ctx, "argv[1] is not a bool");
+        return JS_EXCEPTION;
+    }
+    bool loadIconsName = js_loadIconsName;
+    char * * returnVal = GuiLoadIcons((const char *)fileName, loadIconsName);
+    if(JS_IsArray(argv[0]) == 1) {
+        js_free(ctx, fileName);
+    }
+    else if(JS_IsString(argv[0]) == 1) {
+        JS_FreeCString(ctx, fileName);
+    }
+    else if(JS_IsArrayBuffer(argv[0]) == 1) {
+        JS_FreeValue(ctx, da_fileName);
+    }
+    else {
+        JSClassID classid_fileName = JS_GetClassID(argv[0]);
+        if(classid_fileName==JS_CLASS_INT8_ARRAY) {
+            js_free(ctx, &da_fileName);
+        }
+    }
+    JSValue ret;
+    ret = JS_NewArray(ctx);
+    size_t size_ret = sizeof(returnVal)/sizeof(char *);
+    for(int i0=0; i0 < size_ret; i0++){
+        JSValue js_ret;
+        js_ret = JS_NewString(ctx, returnVal[i0]);
+        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
+    }
+    return ret;
+}
+
 static JSValue js_GuiDrawIcon(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     int32_t long_iconId;
     int err_iconId = JS_ToInt32(ctx, &long_iconId, argv[0]);
@@ -621,6 +813,139 @@ static JSValue js_GuiPanel(JSContext * ctx, JSValue this_val, int argc, JSValue 
             js_free(ctx, &da_text);
         }
     }
+    JSValue ret = JS_NewInt32(ctx, (long)returnVal);
+    return ret;
+}
+
+static JSValue js_GuiTabBar(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
+    Rectangle* ptr_bounds = (Rectangle*)JS_GetOpaque(argv[0], js_Rectangle_class_id);
+    if(ptr_bounds == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not allow null");
+        return JS_EXCEPTION;
+    }
+    Rectangle bounds = *ptr_bounds;
+    char * * text;
+    int64_t size_text;
+    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
+        void * opaque_text = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_text = *(ArrayProxy_class *)opaque_text;
+        argv[1] = AP_text.values(ctx, AP_text.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[1]);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
+        if(JS_GetLength(ctx,argv[1],&size_text)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        text = (char * *)js_malloc(ctx, size_text * sizeof(char *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, text);
+        for(int i0=0; i0 < size_text; i0++){
+            JSValue js_text = JS_GetPropertyUint32(ctx,argv[1],i0);
+            int64_t size_texti0;
+            if(JS_IsString(js_text) == 1) {
+                text[i0] = (char *)JS_ToCStringLen(ctx, &size_texti0, js_text);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, text[i0]);
+            }
+            else if(JS_IsArrayBuffer(js_text) == 1) {
+                size_t size_texti0;
+                text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, js_text);
+                memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, text[i0]);
+            }
+            else {
+                JSClassID classid_texti0 = JS_GetClassID(js_text);
+                if(classid_texti0==JS_CLASS_INT8_ARRAY) {
+                    size_t offset_texti0;
+                    size_t size_texti0;
+                    JSValue da_texti0 = JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti0,&size_texti0,NULL);
+                    text[i0] = (char *)JS_GetArrayBuffer(ctx, &size_texti0, da_texti0);
+                    text[i0]+=offset_texti0;
+                    size_texti0-=offset_texti0;
+                    memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_texti0);
+                }
+                else {
+                    JS_ThrowTypeError(ctx, "js_text does not match type char *");
+                    return JS_EXCEPTION;
+                }
+            }
+            JS_FreeValue(ctx, js_text);
+        }
+    }
+    else {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[1] does not match type char * *");
+        return JS_EXCEPTION;
+    }
+    int32_t long_count;
+    int err_count = JS_ToInt32(ctx, &long_count, argv[2]);
+    if(err_count<0) {
+        memoryClear(ctx, memoryHead);
+        JS_ThrowTypeError(ctx, "argv[2] is not numeric");
+        return JS_EXCEPTION;
+    }
+    int count = (int)long_count;
+    int * active;
+    int64_t size_active;
+    if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
+        void * opaque_active = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
+        ArrayProxy_class AP_active = *(ArrayProxy_class *)opaque_active;
+        argv[3] = AP_active.values(ctx, AP_active.opaque, 0, false);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[3]);
+    }
+    if(JS_IsArray(argv[3]) == 1) {
+        if(JS_GetLength(ctx,argv[3],&size_active)==-1) {
+            memoryClear(ctx, memoryHead);
+            return JS_EXCEPTION;
+        }
+        active = (int *)js_malloc(ctx, size_active * sizeof(int));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, active);
+        for(int i0=0; i0 < size_active; i0++){
+            JSValue js_active = JS_GetPropertyUint32(ctx,argv[3],i0);
+            int32_t long_activei0;
+            int err_activei0 = JS_ToInt32(ctx, &long_activei0, js_active);
+            if(err_activei0<0) {
+                JS_ThrowTypeError(ctx, "js_active is not numeric");
+                return JS_EXCEPTION;
+            }
+            active[i0] = (int)long_activei0;
+            JS_FreeValue(ctx, js_active);
+        }
+    }
+    else if(JS_IsArrayBuffer(argv[3]) == 1) {
+        size_t size_active;
+        active = (int *)JS_GetArrayBuffer(ctx, &size_active, argv[3]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, active);
+    }
+    else {
+        JSClassID classid_active = JS_GetClassID(argv[3]);
+        if(classid_active==JS_CLASS_INT16_ARRAY) {
+            size_t offset_active;
+            size_t size_active;
+            JSValue da_active = JS_GetTypedArrayBuffer(ctx,argv[3],&offset_active,&size_active,NULL);
+            active = (int *)JS_GetArrayBuffer(ctx, &size_active, da_active);
+            active+=offset_active;
+            size_active-=offset_active;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_active);
+        }
+        else {
+            int32_t long_js_active;
+            int err_js_active = JS_ToInt32(ctx, &long_js_active, argv[3]);
+            if(err_js_active<0) {
+                memoryClear(ctx, memoryHead);
+                JS_ThrowTypeError(ctx, "argv[3] is not numeric");
+                return JS_EXCEPTION;
+            }
+            int js_active = (int)long_js_active;
+            active = &js_active;
+        }
+    }
+    int returnVal = GuiTabBar(bounds, (const char * *)text, count, active);
+    if(JS_IsArray(argv[3]) == 1) {
+        JSValue js_argv3 = JS_NewInt32(ctx, (long)active[0]);
+        JS_DefinePropertyValueUint32(ctx,argv[3],0,js_argv3,JS_PROP_C_W_E);
+    }
+    memoryClear(ctx, memoryHead);
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
 }
@@ -2598,18 +2923,6 @@ static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
         if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
-        else if(JS_IsString(argv[1]) == 1) {
-            JS_FreeCString(ctx, text);
-        }
-        else if(JS_IsArrayBuffer(argv[1]) == 1) {
-            JS_FreeValue(ctx, da_text);
-        }
-        else {
-            JSClassID classid_text = JS_GetClassID(argv[1]);
-            if(classid_text==JS_CLASS_INT8_ARRAY) {
-                js_free(ctx, &da_text);
-            }
-        }
         JS_ThrowTypeError(ctx, "argv[2] is not numeric");
         return JS_EXCEPTION;
     }
@@ -2619,37 +2932,16 @@ static JSValue js_GuiTextBox(JSContext * ctx, JSValue this_val, int argc, JSValu
         if(JS_IsArray(argv[1]) == 1) {
             js_free(ctx, text);
         }
-        else if(JS_IsString(argv[1]) == 1) {
-            JS_FreeCString(ctx, text);
-        }
-        else if(JS_IsArrayBuffer(argv[1]) == 1) {
-            JS_FreeValue(ctx, da_text);
-        }
-        else {
-            JSClassID classid_text = JS_GetClassID(argv[1]);
-            if(classid_text==JS_CLASS_INT8_ARRAY) {
-                js_free(ctx, &da_text);
-            }
-        }
         JS_ThrowTypeError(ctx, "argv[3] is not a bool");
         return JS_EXCEPTION;
     }
     bool editMode = js_editMode;
     int returnVal = GuiTextBox(bounds, text, textSize, editMode);
     if(JS_IsArray(argv[1]) == 1) {
+        argv[1] = JS_NewString(ctx, text);
+    }
+    if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
-    }
-    else if(JS_IsString(argv[1]) == 1) {
-        JS_FreeCString(ctx, text);
-    }
-    else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        JS_FreeValue(ctx, da_text);
-    }
-    else {
-        JSClassID classid_text = JS_GetClassID(argv[1]);
-        if(classid_text==JS_CLASS_INT8_ARRAY) {
-            js_free(ctx, &da_text);
-        }
     }
     JSValue ret = JS_NewInt32(ctx, (long)returnVal);
     return ret;
@@ -4793,7 +5085,7 @@ static JSValue js_GuiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
     return ret;
 }
 
-static const JSCFunctionListEntry js_js_raygui_funcs[] = {
+static const JSCFunctionListEntry js_raygui_funcs[] = {
     JS_CFUNC_DEF("GuiEnable",0,js_GuiEnable),
     JS_CFUNC_DEF("GuiDisable",0,js_GuiDisable),
     JS_CFUNC_DEF("GuiLock",0,js_GuiLock),
@@ -4813,11 +5105,14 @@ static const JSCFunctionListEntry js_js_raygui_funcs[] = {
     JS_CFUNC_DEF("GuiSetTooltip",1,js_GuiSetTooltip),
     JS_CFUNC_DEF("GuiIconText",2,js_GuiIconText),
     JS_CFUNC_DEF("GuiSetIconScale",1,js_GuiSetIconScale),
+    JS_CFUNC_DEF("GuiGetIcons",0,js_GuiGetIcons),
+    JS_CFUNC_DEF("GuiLoadIcons",2,js_GuiLoadIcons),
     JS_CFUNC_DEF("GuiDrawIcon",5,js_GuiDrawIcon),
     JS_CFUNC_DEF("GuiWindowBox",2,js_GuiWindowBox),
     JS_CFUNC_DEF("GuiGroupBox",2,js_GuiGroupBox),
     JS_CFUNC_DEF("GuiLine",2,js_GuiLine),
     JS_CFUNC_DEF("GuiPanel",2,js_GuiPanel),
+    JS_CFUNC_DEF("GuiTabBar",4,js_GuiTabBar),
     JS_CFUNC_DEF("GuiScrollPanel",5,js_GuiScrollPanel),
     JS_CFUNC_DEF("GuiLabel",2,js_GuiLabel),
     JS_CFUNC_DEF("GuiButton",2,js_GuiButton),
@@ -4851,8 +5146,10 @@ static const JSCFunctionListEntry js_js_raygui_funcs[] = {
 };
 
 static int js_js_raygui_init(JSContext * ctx, JSModuleDef * m) {
-    JS_SetModuleExportList(ctx, m,js_js_raygui_funcs,countof(js_js_raygui_funcs));
+    JS_SetModuleExportList(ctx, m,js_raygui_funcs,countof(js_raygui_funcs));
     js_declare_GuiStyleProp(ctx, m);
+    JSValue GuiStyleProp_constr = JS_NewCFunction2(ctx, js_GuiStyleProp_constructor,"GuiStyleProp", 3, JS_CFUNC_constructor, 0);
+    JS_SetModuleExport(ctx, m, "GuiStyleProp", GuiStyleProp_constr);
     JS_SetModuleExport(ctx, m, "STATE_NORMAL", JS_NewInt32(ctx, STATE_NORMAL));
     JS_SetModuleExport(ctx, m, "STATE_FOCUSED", JS_NewInt32(ctx, STATE_FOCUSED));
     JS_SetModuleExport(ctx, m, "STATE_PRESSED", JS_NewInt32(ctx, STATE_PRESSED));
@@ -5203,7 +5500,8 @@ JSModuleDef * js_init_module_js_raygui(JSContext * ctx, const char * module_name
     JSModuleDef *m;
     m = JS_NewCModule(ctx, module_name, js_js_raygui_init);
     if(!m) return NULL;
-    JS_AddModuleExportList(ctx, m, js_js_raygui_funcs, countof(js_js_raygui_funcs));
+    JS_AddModuleExportList(ctx, m, js_raygui_funcs, countof(js_raygui_funcs));
+    JS_AddModuleExport(ctx, m, "GuiStyleProp");
     JS_AddModuleExport(ctx, m, "STATE_NORMAL");
     JS_AddModuleExport(ctx, m, "STATE_FOCUSED");
     JS_AddModuleExport(ctx, m, "STATE_PRESSED");

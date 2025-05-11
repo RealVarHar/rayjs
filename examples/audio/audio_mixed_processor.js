@@ -1,7 +1,6 @@
 import * as os from "qjs:os";
-import * as rl from 'rayjs:raylib';
+import {BeginDrawing, ClearBackground, CloseAudioDevice, CloseWindow, DrawLine, DrawRectangle, DrawRectangleLines, DrawText, EndDrawing, GRAY, InitAudioDevice, InitWindow, IsKeyPressed, KEY_LEFT, KEY_RIGHT, KEY_SPACE, LIGHTGRAY, LoadMusicStream, LoadSound, MAROON, PlayMusicStream, PlaySound, RAYWHITE, SetTargetFPS, StopMusicStream, TextFormat, UnloadMusicStream, UnloadSound, UpdateMusicStream, WindowShouldClose } from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     // Initialization
     //--------------------------------------------------------------------------------------
@@ -11,7 +10,7 @@ import * as rl from 'rayjs:raylib';
     const screenHeight = 450;
     InitWindow(screenWidth, screenHeight, "raylib [audio] example - processing mixed output");
     InitAudioDevice();              // Initialize audio device
-    let myWorker = new os.Worker("./audio_mixed_processor_worker.js");
+    let myWorker = new os.Worker("./_audio_mixed_processor_worker.js");
     myWorker.onmessage = function(e){
         //called as an asynchronous responce to postMessage
         averageVolume=e.data;
@@ -24,8 +23,7 @@ import * as rl from 'rayjs:raylib';
     SetTargetFPS(600);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         UpdateMusicStream(music);   // Update music buffer with new stream data

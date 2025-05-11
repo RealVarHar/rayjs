@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, ClearBackground, CloseAudioDevice, CloseWindow, DrawRectangle, DrawRectangleLines, DrawText, EndDrawing, GetMusicTimeLength, GetMusicTimePlayed, GRAY, InitAudioDevice, InitWindow, IsKeyPressed, KEY_P, KEY_SPACE, LIGHTGRAY, LoadMusicStream, MAROON, PauseMusicStream, PlayMusicStream, RAYWHITE, ResumeMusicStream, SetTargetFPS, StopMusicStream, UnloadMusicStream, UpdateMusicStream, WindowShouldClose
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     /*******************************************************************************************
     *
@@ -27,7 +28,7 @@ import * as rl from 'rayjs:raylib';
 
     PlayMusicStream(music);
 
-    let timePlayed = 0.0;        // Time played normalized [0.0f..1.0f]
+    let timePlayed = 0.0;        // Time played normalized [0.0..1.0]
     let pause = false;             // Music playing paused
 
     SetTargetFPS(30);               // Set our game to run at 30 frames-per-second

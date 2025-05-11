@@ -15,11 +15,11 @@
  *
  ********************************************************************************************/
 
-import * as rl from 'rayjs:raylib';
-import * as rm from 'rayjs:raymath';
+import {
+    BeginDrawing, BeginMode2D, BLACK, Camera2D, ClearBackground, CloseWindow, DARKGRAY, DrawCircleV, DrawRectangleRec, DrawText, EndDrawing, EndMode2D, GetFrameTime, GetMouseWheelMove, GetScreenToWorld2D, GetWorldToScreen2D, GOLD, GRAY, InitWindow, IsKeyDown, IsKeyPressed, KEY_C, KEY_LEFT, KEY_R, KEY_RIGHT, KEY_SPACE, LIGHTGRAY, Rectangle, RED, SetTargetFPS, Vector2, WindowShouldClose
+} from "rayjs:raylib";
+import {Vector2Add, Vector2Length, Vector2Scale, Vector2Subtract} from "rayjs:raymath";
 {
-    for (const key in rl) { globalThis[key] = rl[key]; }
-    for (const key in rm) { globalThis[key] = rm[key]; }
 
     const G=400;
     const PLAYER_JUMP_SPD=350;
@@ -138,18 +138,18 @@ import * as rm from 'rayjs:raymath';
                 camera.target.y += evenOutSpeed*delta;
                 if (camera.target.y > evenOutTarget) {
                     camera.target.y = evenOutTarget;
-                    eveningOut = 0;
+                    eveningOut = false;
                 }
             }else{
                 camera.target.y -= evenOutSpeed*delta;
                 if (camera.target.y < evenOutTarget) {
                     camera.target.y = evenOutTarget;
-                    eveningOut = 0;
+                    eveningOut = false;
                 }
             }
         }else {
-            if (player.canJump && (player.speed == 0) && (player.position.y != camera.target.y)){
-                eveningOut = 1;
+            if (player.canJump && (player.speed === 0) && (player.position.y !== camera.target.y)){
+                eveningOut = true;
                 evenOutTarget = player.position.y;
             }
         }

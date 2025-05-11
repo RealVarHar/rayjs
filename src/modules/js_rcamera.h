@@ -243,7 +243,7 @@ static JSValue js_GetCameraProjectionMatrix(JSContext * ctx, JSValue this_val, i
     return ret;
 }
 
-static const JSCFunctionListEntry js_js_rcamera_funcs[] = {
+static const JSCFunctionListEntry js_rcamera_funcs[] = {
     JS_CFUNC_DEF("GetCameraForward",1,js_GetCameraForward),
     JS_CFUNC_DEF("GetCameraUp",1,js_GetCameraUp),
     JS_CFUNC_DEF("GetCameraRight",1,js_GetCameraRight),
@@ -259,7 +259,7 @@ static const JSCFunctionListEntry js_js_rcamera_funcs[] = {
 };
 
 static int js_js_rcamera_init(JSContext * ctx, JSModuleDef * m) {
-    JS_SetModuleExportList(ctx, m,js_js_rcamera_funcs,countof(js_js_rcamera_funcs));
+    JS_SetModuleExportList(ctx, m,js_rcamera_funcs,countof(js_rcamera_funcs));
     return 0;
 }
 
@@ -267,7 +267,7 @@ JSModuleDef * js_init_module_js_rcamera(JSContext * ctx, const char * module_nam
     JSModuleDef *m;
     m = JS_NewCModule(ctx, module_name, js_js_rcamera_init);
     if(!m) return NULL;
-    JS_AddModuleExportList(ctx, m, js_js_rcamera_funcs, countof(js_js_rcamera_funcs));
+    JS_AddModuleExportList(ctx, m, js_rcamera_funcs, countof(js_rcamera_funcs));
     return m;
 }
 

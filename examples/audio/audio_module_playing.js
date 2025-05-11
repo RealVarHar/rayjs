@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BEIGE, BLUE, BROWN, ClearBackground, CloseAudioDevice, CloseWindow, DrawCircleV, DrawRectangle, DrawRectangleLines, EndDrawing, Fade, FLAG_MSAA_4X_HINT, GetMusicTimeLength, GetMusicTimePlayed, GetRandomValue, GOLD, GRAY, GREEN, InitAudioDevice, InitWindow, IsKeyDown, IsKeyPressed, KEY_DOWN, KEY_P, KEY_SPACE, KEY_UP, LIGHTGRAY, LIME, LoadMusicStream, MAROON, ORANGE, PauseMusicStream, PINK, PlayMusicStream, PURPLE, RAYWHITE, RED, ResumeMusicStream, SetConfigFlags, SetMusicPitch, SetTargetFPS, SKYBLUE, StopMusicStream, UnloadMusicStream, UpdateMusicStream, Vector2, VIOLET, WindowShouldClose, YELLOW
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     /*******************************************************************************************
     *
@@ -46,7 +47,7 @@ import * as rl from 'rayjs:raylib';
 
     const music = LoadMusicStream("resources/mini1111.xm");
     music.looping = false;
-    const pitch = 1.0;
+    let pitch = 1.0;
 
     PlayMusicStream(music);
 

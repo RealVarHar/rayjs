@@ -1,6 +1,10 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing,
+    ClearBackground, CloseWindow, DrawText, DrawTextEx, EndDrawing, GRAY,
+    GetScreenHeight, InitWindow, IsKeyDown, KEY_SPACE, LIGHTGRAY, LIME, LoadFont, LoadFontEx,
+    MAROON,
+    RAYWHITE, SetTargetFPS, SetTextLineSpacing, UnloadFont, Vector2, WindowShouldClose } from 'rayjs:raylib';
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     /*******************************************************************************************
     *
@@ -51,8 +55,7 @@ import * as rl from 'rayjs:raylib';
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
+    while (!WindowShouldClose()) {   // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         if (IsKeyDown(KEY_SPACE)) useTtf = true;
@@ -67,13 +70,10 @@ import * as rl from 'rayjs:raylib';
 
             DrawText("Hold SPACE to use TTF generated font", 20, 20, 20, LIGHTGRAY);
 
-            if (!useTtf)
-            {
+            if (!useTtf) {
                 DrawTextEx(fontBm, msg, new Vector2(20.0, 100.0), fontBm.baseSize/2, 2, MAROON);
                 DrawText("Using BMFont (Angelcode) imported", 20, GetScreenHeight() - 30, 20, GRAY);
-            }
-            else
-            {
+            } else {
                 DrawTextEx(fontTtf, msg, new Vector2(20.0, 100.0), fontTtf.baseSize/2, 2, LIME);
                 DrawText("Using TTF font generated", 20, GetScreenHeight() - 30, 20, GRAY);
             }

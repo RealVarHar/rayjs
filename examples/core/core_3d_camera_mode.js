@@ -1,6 +1,7 @@
-import * as rl from 'rayjs:raylib';
+import {
+    BeginDrawing, BeginMode3D, Camera3D, CAMERA_PERSPECTIVE, ClearBackground, CloseWindow, DARKGRAY, DrawCube, DrawCubeWires, DrawFPS, DrawGrid, DrawText, EndDrawing, EndMode3D, InitWindow, MAROON, RAYWHITE, RED, SetTargetFPS, Vector3, WindowShouldClose
+} from "rayjs:raylib";
 {
-    for (const key in rl) { globalThis[key] = rl[key] };
 
     // Initialization
     //--------------------------------------------------------------------------------------
