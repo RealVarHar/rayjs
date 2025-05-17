@@ -3430,7 +3430,7 @@ static JSValue js_BoneInfo_name_get(JSContext * ctx, void * ptr, int property, b
     else {
         if(property>=0 && property<3) {
             char src = ((BoneInfo *)ptr)->name[property];
-            JSValue js_ret = JS_NewStringLen(ctx, &src,1);
+            JSValue ret = JS_NewStringLen(ctx, &src,1);
             return ret;
         }
         else {
@@ -4241,7 +4241,7 @@ static JSValue js_ModelAnimation_set_frameCount(JSContext* ctx, JSValue this_val
 static JSValue js_ModelAnimation_bones_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((ModelAnimation *)ptr)->boneCount; i0++){
         BoneInfo* ptr_js_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
         *ptr_js_ret = ((ModelAnimation *)ptr)->bones[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_BoneInfo_class_id);
@@ -4255,7 +4255,7 @@ static JSValue js_ModelAnimation_bones_values(JSContext * ctx, void * ptr, int p
 }
 
 static int js_ModelAnimation_bones_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((ModelAnimation *)ptr)->boneCount;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -4267,7 +4267,7 @@ static int js_ModelAnimation_bones_keys(JSContext * ctx, void * ptr, JSPropertyE
 static JSValue js_ModelAnimation_bones_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((ModelAnimation *)ptr)->boneCount);
             return ret;
         }
         else {
@@ -4275,7 +4275,7 @@ static JSValue js_ModelAnimation_bones_get(JSContext * ctx, void * ptr, int prop
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((ModelAnimation *)ptr)->boneCount) {
             BoneInfo src = ((ModelAnimation *)ptr)->bones[property];
             BoneInfo* ptr_ret = (BoneInfo*)js_malloc(ctx, sizeof(BoneInfo));
             *ptr_ret = src;
@@ -4315,7 +4315,7 @@ static int js_ModelAnimation_bones_has(JSContext * ctx, void * ptr, int property
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((ModelAnimation *)ptr)->boneCount) {
             return true;
         }
         else {
@@ -4384,7 +4384,7 @@ static JSValue js_ModelAnimation_set_bones(JSContext* ctx, JSValue this_val, JSV
 static JSValue js_ModelAnimation_framePoses_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((ModelAnimation *)ptr)->frameCount; i0++){
         JSValue js_ret;
         js_ret = JS_NewArray(ctx);
         size_t size_js_ret = sizeof(((ModelAnimation *)ptr)->framePoses[i0])/sizeof(Transform);
@@ -4404,7 +4404,7 @@ static JSValue js_ModelAnimation_framePoses_values(JSContext * ctx, void * ptr, 
 }
 
 static int js_ModelAnimation_framePoses_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((ModelAnimation *)ptr)->frameCount;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -4416,7 +4416,7 @@ static int js_ModelAnimation_framePoses_keys(JSContext * ctx, void * ptr, JSProp
 static JSValue js_ModelAnimation_framePoses_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((ModelAnimation *)ptr)->frameCount);
             return ret;
         }
         else {
@@ -4424,7 +4424,7 @@ static JSValue js_ModelAnimation_framePoses_get(JSContext * ctx, void * ptr, int
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((ModelAnimation *)ptr)->frameCount) {
             Transform * src = ((ModelAnimation *)ptr)->framePoses[property];
             JSValue ret;
             ret = JS_NewArray(ctx);
@@ -4504,7 +4504,7 @@ static int js_ModelAnimation_framePoses_has(JSContext * ctx, void * ptr, int pro
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((ModelAnimation *)ptr)->frameCount) {
             return true;
         }
         else {
@@ -4521,20 +4521,22 @@ static JSValue js_ModelAnimation_get_framePoses(JSContext* ctx, JSValue this_val
 
 static JSValue js_ModelAnimation_set_framePoses(JSContext* ctx, JSValue this_val, JSValue v) {
     ModelAnimation* ptr = JS_GetOpaque2(ctx, this_val, js_ModelAnimation_class_id);
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
     Transform * * value;
-    bool freesrc_value = false;
     int64_t size_value;
     if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
         void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
         ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
         v = AP_value.values(ctx, AP_value.opaque, 0, false);
-        freesrc_value = true;
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &v);
     }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
         value = (Transform * *)jsc_malloc(ctx, size_value * sizeof(Transform *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)jsc_free, value);
         for(int i0=0; i0 < size_value; i0++){
             JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
             int64_t size_valuei0;
@@ -4574,14 +4576,8 @@ static JSValue js_ModelAnimation_set_framePoses(JSContext* ctx, JSValue this_val
         }
     }
     else {
-        if(freesrc_value) {
-            JS_FreeValue(ctx, v);
-        }
         JS_ThrowTypeError(ctx, "v does not match type Transform * *");
         return JS_EXCEPTION;
-    }
-    if(freesrc_value) {
-        JS_FreeValue(ctx, v);
     }
     if(ptr->framePoses!=NULL) {
         jsc_free(ctx, ptr->framePoses);
@@ -4622,7 +4618,7 @@ static JSValue js_ModelAnimation_name_get(JSContext * ctx, void * ptr, int prope
     else {
         if(property>=0 && property<3) {
             char src = ((ModelAnimation *)ptr)->name[property];
-            JSValue js_ret = JS_NewStringLen(ctx, &src,1);
+            JSValue ret = JS_NewStringLen(ctx, &src,1);
             return ret;
         }
         else {
@@ -5065,292 +5061,6 @@ static void js_AudioStream_finalizer(JSRuntime * rt, JSValue val) {
     }
 }
 
-static JSValue js_AudioStream_buffer_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    JSValue ret;
-    ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
-        rAudioBuffer* ptr_js_ret = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
-        *ptr_js_ret = ((AudioStream *)ptr)->buffer[i0];
-        JSValue js_ret = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
-        JS_SetOpaque(js_ret, ptr_js_ret);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
-    if(as_sting==true) {
-        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
-    }
-    return ret;
-}
-
-static int js_AudioStream_buffer_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
-    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
-    for(int i0=0; i0 < length; i0++){
-        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
-    }
-    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
-    return true;
-}
-
-static JSValue js_AudioStream_buffer_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    if(as_sting==true) {
-        if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
-            return ret;
-        }
-        else {
-            return JS_UNDEFINED;
-        }
-    }
-    else {
-        if(property>=0 && property<undefined) {
-            rAudioBuffer src = ((AudioStream *)ptr)->buffer[property];
-            rAudioBuffer* ptr_ret = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
-            *ptr_ret = src;
-            JSValue ret = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
-            JS_SetOpaque(ret, ptr_ret);
-            return ret;
-        }
-        else {
-            return JS_UNDEFINED;
-        }
-    }
-}
-
-static int js_AudioStream_buffer_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
-    if(as_sting==true) {
-        return false;
-    }
-    else {
-        rAudioBuffer* ptr_ret = (rAudioBuffer*)JS_GetOpaque(set_to, js_rAudioBuffer_class_id);
-        if(ptr_ret == NULL) {
-            JS_ThrowTypeError(ctx, "set_to does not allow null");
-            return -1;
-        }
-        rAudioBuffer ret = *ptr_ret;
-        ((AudioStream *)ptr)->buffer[property] = ret;
-    }
-    return true;
-}
-
-static int js_AudioStream_buffer_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    if(as_sting==true) {
-        if(property==JS_ATOM_length) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        if(property>=0 && property<undefined) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-}
-
-static JSValue js_AudioStream_get_buffer(JSContext* ctx, JSValue this_val) {
-    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
-    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AudioStream_buffer_values,.keys = js_AudioStream_buffer_keys,.get = js_AudioStream_buffer_get,.set = js_AudioStream_buffer_set,.has = js_AudioStream_buffer_has});
-    return ret;
-}
-
-static JSValue js_AudioStream_set_buffer(JSContext* ctx, JSValue this_val, JSValue v) {
-    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
-    rAudioBuffer * value;
-    bool freesrc_value = false;
-    JSValue da_value;
-    int64_t size_value;
-    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
-        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
-        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
-        v = AP_value.values(ctx, AP_value.opaque, 0, false);
-        freesrc_value = true;
-    }
-    if(JS_IsArray(v) == 1) {
-        if(JS_GetLength(ctx,v,&size_value)==-1) {
-            return JS_EXCEPTION;
-        }
-        value = (rAudioBuffer *)jsc_malloc(ctx, size_value * sizeof(rAudioBuffer));
-        for(int i0=0; i0 < size_value; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
-            rAudioBuffer* ptr_valuei0 = (rAudioBuffer*)JS_GetOpaque(js_value, js_rAudioBuffer_class_id);
-            if(ptr_valuei0 == NULL) {
-                JS_ThrowTypeError(ctx, "js_value does not allow null");
-                return JS_EXCEPTION;
-            }
-            value[i0] = *ptr_valuei0;
-            JS_FreeValue(ctx, js_value);
-        }
-    }
-    else if(JS_IsArrayBuffer(v) == 1) {
-        size_t size_value;
-        rAudioBuffer * js_value = (rAudioBuffer *)JS_GetArrayBuffer(ctx, &size_value, v);
-        value = (rAudioBuffer *)jsc_malloc(ctx, size_value * sizeof(rAudioBuffer *));
-        memcpy(value, js_value, size_value);
-    }
-    else {
-        if(freesrc_value) {
-            JS_FreeValue(ctx, v);
-        }
-        JS_ThrowTypeError(ctx, "v does not match type rAudioBuffer *");
-        return JS_EXCEPTION;
-    }
-    if(freesrc_value) {
-        JS_FreeValue(ctx, v);
-    }
-    if(ptr->buffer!=NULL) {
-        jsc_free(ctx, ptr->buffer);
-    }
-    ptr->buffer = value;
-    return JS_UNDEFINED;
-}
-
-static JSValue js_AudioStream_processor_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    JSValue ret;
-    ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
-        rAudioProcessor* ptr_js_ret = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
-        *ptr_js_ret = ((AudioStream *)ptr)->processor[i0];
-        JSValue js_ret = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
-        JS_SetOpaque(js_ret, ptr_js_ret);
-        JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
-    }
-    if(as_sting==true) {
-        ret = JS_JSONStringify(ctx, ret, JS_UNDEFINED, JS_UNDEFINED);
-    }
-    return ret;
-}
-
-static int js_AudioStream_processor_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
-    *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
-    for(int i0=0; i0 < length; i0++){
-        (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
-    }
-    (*keys)[length] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
-    return true;
-}
-
-static JSValue js_AudioStream_processor_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    if(as_sting==true) {
-        if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
-            return ret;
-        }
-        else {
-            return JS_UNDEFINED;
-        }
-    }
-    else {
-        if(property>=0 && property<undefined) {
-            rAudioProcessor src = ((AudioStream *)ptr)->processor[property];
-            rAudioProcessor* ptr_ret = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
-            *ptr_ret = src;
-            JSValue ret = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
-            JS_SetOpaque(ret, ptr_ret);
-            return ret;
-        }
-        else {
-            return JS_UNDEFINED;
-        }
-    }
-}
-
-static int js_AudioStream_processor_set(JSContext * ctx, void * ptr, JSValue set_to, int property, bool as_sting) {
-    if(as_sting==true) {
-        return false;
-    }
-    else {
-        rAudioProcessor* ptr_ret = (rAudioProcessor*)JS_GetOpaque(set_to, js_rAudioProcessor_class_id);
-        if(ptr_ret == NULL) {
-            JS_ThrowTypeError(ctx, "set_to does not allow null");
-            return -1;
-        }
-        rAudioProcessor ret = *ptr_ret;
-        ((AudioStream *)ptr)->processor[property] = ret;
-    }
-    return true;
-}
-
-static int js_AudioStream_processor_has(JSContext * ctx, void * ptr, int property, bool as_sting) {
-    if(as_sting==true) {
-        if(property==JS_ATOM_length) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        if(property>=0 && property<undefined) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-}
-
-static JSValue js_AudioStream_get_processor(JSContext* ctx, JSValue this_val) {
-    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
-    JSValue ret = js_NewArrayProxy(ctx, (ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_AudioStream_processor_values,.keys = js_AudioStream_processor_keys,.get = js_AudioStream_processor_get,.set = js_AudioStream_processor_set,.has = js_AudioStream_processor_has});
-    return ret;
-}
-
-static JSValue js_AudioStream_set_processor(JSContext* ctx, JSValue this_val, JSValue v) {
-    AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
-    rAudioProcessor * value;
-    bool freesrc_value = false;
-    JSValue da_value;
-    int64_t size_value;
-    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
-        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
-        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
-        v = AP_value.values(ctx, AP_value.opaque, 0, false);
-        freesrc_value = true;
-    }
-    if(JS_IsArray(v) == 1) {
-        if(JS_GetLength(ctx,v,&size_value)==-1) {
-            return JS_EXCEPTION;
-        }
-        value = (rAudioProcessor *)jsc_malloc(ctx, size_value * sizeof(rAudioProcessor));
-        for(int i0=0; i0 < size_value; i0++){
-            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
-            rAudioProcessor* ptr_valuei0 = (rAudioProcessor*)JS_GetOpaque(js_value, js_rAudioProcessor_class_id);
-            if(ptr_valuei0 == NULL) {
-                JS_ThrowTypeError(ctx, "js_value does not allow null");
-                return JS_EXCEPTION;
-            }
-            value[i0] = *ptr_valuei0;
-            JS_FreeValue(ctx, js_value);
-        }
-    }
-    else if(JS_IsArrayBuffer(v) == 1) {
-        size_t size_value;
-        rAudioProcessor * js_value = (rAudioProcessor *)JS_GetArrayBuffer(ctx, &size_value, v);
-        value = (rAudioProcessor *)jsc_malloc(ctx, size_value * sizeof(rAudioProcessor *));
-        memcpy(value, js_value, size_value);
-    }
-    else {
-        if(freesrc_value) {
-            JS_FreeValue(ctx, v);
-        }
-        JS_ThrowTypeError(ctx, "v does not match type rAudioProcessor *");
-        return JS_EXCEPTION;
-    }
-    if(freesrc_value) {
-        JS_FreeValue(ctx, v);
-    }
-    if(ptr->processor!=NULL) {
-        jsc_free(ctx, ptr->processor);
-    }
-    ptr->processor = value;
-    return JS_UNDEFINED;
-}
-
 static JSValue js_AudioStream_get_sampleRate(JSContext* ctx, JSValue this_val) {
     AudioStream* ptr = JS_GetOpaque2(ctx, this_val, js_AudioStream_class_id);
     unsigned int sampleRate = ptr->sampleRate;
@@ -5413,8 +5123,8 @@ static JSValue js_AudioStream_set_channels(JSContext* ctx, JSValue this_val, JSV
 
 static const JSCFunctionListEntry js_AudioStream_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","AudioStream", JS_PROP_CONFIGURABLE),
-    JS_CGETSET_DEF("buffer",js_AudioStream_get_buffer,js_AudioStream_set_buffer),
-    JS_CGETSET_DEF("processor",js_AudioStream_get_processor,js_AudioStream_set_processor),
+    JS_CGETSET_DEF("buffer",NULL,NULL),
+    JS_CGETSET_DEF("processor",NULL,NULL),
     JS_CGETSET_DEF("sampleRate",js_AudioStream_get_sampleRate,js_AudioStream_set_sampleRate),
     JS_CGETSET_DEF("sampleSize",js_AudioStream_get_sampleSize,js_AudioStream_set_sampleSize),
     JS_CGETSET_DEF("channels",js_AudioStream_get_channels,js_AudioStream_set_channels),
@@ -7231,7 +6941,7 @@ static JSValue js_FilePathList_set_count(JSContext* ctx, JSValue this_val, JSVal
 static JSValue js_FilePathList_paths_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((FilePathList *)ptr)->count; i0++){
         JSValue js_ret;
         js_ret = JS_NewString(ctx, ((FilePathList *)ptr)->paths[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
@@ -7243,7 +6953,7 @@ static JSValue js_FilePathList_paths_values(JSContext * ctx, void * ptr, int pro
 }
 
 static int js_FilePathList_paths_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((FilePathList *)ptr)->count;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -7255,7 +6965,7 @@ static int js_FilePathList_paths_keys(JSContext * ctx, void * ptr, JSPropertyEnu
 static JSValue js_FilePathList_paths_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((FilePathList *)ptr)->count);
             return ret;
         }
         else {
@@ -7263,7 +6973,7 @@ static JSValue js_FilePathList_paths_get(JSContext * ctx, void * ptr, int proper
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((FilePathList *)ptr)->count) {
             char * src = ((FilePathList *)ptr)->paths[property];
             JSValue ret;
             ret = JS_NewString(ctx, src);
@@ -7327,7 +7037,7 @@ static int js_FilePathList_paths_has(JSContext * ctx, void * ptr, int property, 
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((FilePathList *)ptr)->count) {
             return true;
         }
         else {
@@ -7344,20 +7054,22 @@ static JSValue js_FilePathList_get_paths(JSContext* ctx, JSValue this_val) {
 
 static JSValue js_FilePathList_set_paths(JSContext* ctx, JSValue this_val, JSValue v) {
     FilePathList* ptr = JS_GetOpaque2(ctx, this_val, js_FilePathList_class_id);
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
     char * * value;
-    bool freesrc_value = false;
     int64_t size_value;
     if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
         void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
         ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
         v = AP_value.values(ctx, AP_value.opaque, 0, false);
-        freesrc_value = true;
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &v);
     }
     if(JS_IsArray(v) == 1) {
         if(JS_GetLength(ctx,v,&size_value)==-1) {
             return JS_EXCEPTION;
         }
         value = (char * *)jsc_malloc(ctx, size_value * sizeof(char *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)jsc_free, value);
         for(int i0=0; i0 < size_value; i0++){
             JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
             int64_t size_valuei0;
@@ -7390,14 +7102,8 @@ static JSValue js_FilePathList_set_paths(JSContext* ctx, JSValue this_val, JSVal
         }
     }
     else {
-        if(freesrc_value) {
-            JS_FreeValue(ctx, v);
-        }
         JS_ThrowTypeError(ctx, "v does not match type char * *");
         return JS_EXCEPTION;
-    }
-    if(freesrc_value) {
-        JS_FreeValue(ctx, v);
     }
     if(ptr->paths!=NULL) {
         jsc_free(ctx, ptr->paths);
@@ -7686,7 +7392,7 @@ static JSValue js_AutomationEventList_set_count(JSContext* ctx, JSValue this_val
 static JSValue js_AutomationEventList_events_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((AutomationEventList *)ptr)->count; i0++){
         AutomationEvent* ptr_js_ret = (AutomationEvent*)js_malloc(ctx, sizeof(AutomationEvent));
         *ptr_js_ret = ((AutomationEventList *)ptr)->events[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_AutomationEvent_class_id);
@@ -7700,7 +7406,7 @@ static JSValue js_AutomationEventList_events_values(JSContext * ctx, void * ptr,
 }
 
 static int js_AutomationEventList_events_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((AutomationEventList *)ptr)->count;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -7712,7 +7418,7 @@ static int js_AutomationEventList_events_keys(JSContext * ctx, void * ptr, JSPro
 static JSValue js_AutomationEventList_events_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((AutomationEventList *)ptr)->count);
             return ret;
         }
         else {
@@ -7720,7 +7426,7 @@ static JSValue js_AutomationEventList_events_get(JSContext * ctx, void * ptr, in
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((AutomationEventList *)ptr)->count) {
             AutomationEvent src = ((AutomationEventList *)ptr)->events[property];
             AutomationEvent* ptr_ret = (AutomationEvent*)js_malloc(ctx, sizeof(AutomationEvent));
             *ptr_ret = src;
@@ -7760,7 +7466,7 @@ static int js_AutomationEventList_events_has(JSContext * ctx, void * ptr, int pr
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((AutomationEventList *)ptr)->count) {
             return true;
         }
         else {
@@ -8042,7 +7748,7 @@ static char * LoadFileTextCallback_callback_c(const char * arg_fileName) {
 }
 
 static trampolineContext * SaveFileTextCallback_callback_arr = NULL;
-static bool SaveFileTextCallback_callback_c(const char * arg_fileName, char * arg_text) {
+static bool SaveFileTextCallback_callback_c(const char * arg_fileName, const char * arg_text) {
     JSValue func1;
     trampolineContext tctx = *SaveFileTextCallback_callback_arr;
     JSContext * ctx = tctx.ctx;
@@ -10066,6 +9772,8 @@ static JSValue js_ModelAnimation_constructor(JSContext * ctx, JSValue this_val, 
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
     int32_t long_boneCount;
     int err_boneCount = JS_ToInt32(ctx, &long_boneCount, argv[0]);
     if(err_boneCount<0) {
@@ -10081,20 +9789,19 @@ static JSValue js_ModelAnimation_constructor(JSContext * ctx, JSValue this_val, 
     }
     int frameCount = (int)long_frameCount;
     BoneInfo * bones;
-    bool freesrc_bones = false;
-    JSValue da_bones;
     int64_t size_bones;
     if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
         void * opaque_bones = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
         ArrayProxy_class AP_bones = *(ArrayProxy_class *)opaque_bones;
         argv[2] = AP_bones.values(ctx, AP_bones.opaque, 0, false);
-        freesrc_bones = true;
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
     }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_bones)==-1) {
             return JS_EXCEPTION;
         }
         bones = (BoneInfo *)js_malloc(ctx, size_bones * sizeof(BoneInfo));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, bones);
         for(int i0=0; i0 < size_bones; i0++){
             JSValue js_bones = JS_GetPropertyUint32(ctx,argv[2],i0);
             BoneInfo* ptr_bonesi0 = (BoneInfo*)JS_GetOpaque(js_bones, js_BoneInfo_class_id);
@@ -10109,31 +9816,26 @@ static JSValue js_ModelAnimation_constructor(JSContext * ctx, JSValue this_val, 
     else if(JS_IsArrayBuffer(argv[2]) == 1) {
         size_t size_bones;
         bones = (BoneInfo *)JS_GetArrayBuffer(ctx, &size_bones, argv[2]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, bones);
     }
     else {
-        if(freesrc_bones) {
-            JS_FreeValue(ctx, argv[2]);
-        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type BoneInfo *");
         return JS_EXCEPTION;
     }
-    if(freesrc_bones) {
-        JS_FreeValue(ctx, argv[2]);
-    }
     Transform * * framePoses;
-    bool freesrc_framePoses = false;
     int64_t size_framePoses;
     if(JS_GetClassID(argv[3]) == js_ArrayProxy_class_id) {
         void * opaque_framePoses = JS_GetOpaque(argv[3], js_ArrayProxy_class_id);
         ArrayProxy_class AP_framePoses = *(ArrayProxy_class *)opaque_framePoses;
         argv[3] = AP_framePoses.values(ctx, AP_framePoses.opaque, 0, false);
-        freesrc_framePoses = true;
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[3]);
     }
     if(JS_IsArray(argv[3]) == 1) {
         if(JS_GetLength(ctx,argv[3],&size_framePoses)==-1) {
             return JS_EXCEPTION;
         }
         framePoses = (Transform * *)js_malloc(ctx, size_framePoses * sizeof(Transform *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, framePoses);
         for(int i0=0; i0 < size_framePoses; i0++){
             JSValue js_framePoses = JS_GetPropertyUint32(ctx,argv[3],i0);
             int64_t size_framePosesi0;
@@ -10173,45 +9875,34 @@ static JSValue js_ModelAnimation_constructor(JSContext * ctx, JSValue this_val, 
         }
     }
     else {
-        if(freesrc_framePoses) {
-            JS_FreeValue(ctx, argv[3]);
-        }
         JS_ThrowTypeError(ctx, "argv[3] does not match type Transform * *");
         return JS_EXCEPTION;
     }
-    if(freesrc_framePoses) {
-        JS_FreeValue(ctx, argv[3]);
-    }
     char * name;
-    bool freesrc_name = false;
-    JSValue da_name;
     int64_t size_name;
     if(JS_IsString(argv[4]) == 1) {
         name = (char *)JS_ToCStringLen(ctx, &size_name, argv[4]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, name);
     }
     else if(JS_IsArrayBuffer(argv[4]) == 1) {
         size_t size_name;
         name = (char *)JS_GetArrayBuffer(ctx, &size_name, argv[4]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, name);
     }
     else {
         JSClassID classid_name = JS_GetClassID(argv[4]);
         if(classid_name==JS_CLASS_INT8_ARRAY) {
             size_t offset_name;
             size_t size_name;
-            da_name = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_name,&size_name,NULL);
+            JSValue da_name = JS_GetTypedArrayBuffer(ctx,argv[4],&offset_name,&size_name,NULL);
             name = (char *)JS_GetArrayBuffer(ctx, &size_name, da_name);
             name+=offset_name;
             size_name-=offset_name;
+            memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_name);
         }
         else {
-            if(freesrc_name) {
-                JS_FreeValue(ctx, argv[4]);
-            }
             JS_ThrowTypeError(ctx, "argv[4] does not match type char *");
             return JS_EXCEPTION;
-        }
-        if(freesrc_name) {
-            JS_FreeValue(ctx, argv[4]);
         }
     }
     ModelAnimation _struct = { boneCount, frameCount, bones, framePoses, {name[0],name[1],name[2],name[3],name[4],name[5],name[6],name[7],name[8],name[9],name[10],name[11],name[12],name[13],name[14],name[15],name[16],name[17],name[18],name[19],name[20],name[21],name[22],name[23],name[24],name[25],name[26],name[27],name[28],name[29],name[30],name[31]} };
@@ -10377,36 +10068,6 @@ static JSValue js_Wave_constructor(JSContext * ctx, JSValue this_val, int argc, 
     return _return;
 }
 
-static JSValue js_rAudioBuffer_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    if(argc==0) {
-        rAudioBuffer* ptr__return = (rAudioBuffer*)js_calloc(ctx, 1, sizeof(rAudioBuffer));
-        JSValue _return = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
-        JS_SetOpaque(_return, ptr__return);
-        return _return;
-    }
-    rAudioBuffer _struct = {  };
-    rAudioBuffer* ptr__return = (rAudioBuffer*)js_malloc(ctx, sizeof(rAudioBuffer));
-    *ptr__return = _struct;
-    JSValue _return = JS_NewObjectClass(ctx, js_rAudioBuffer_class_id);
-    JS_SetOpaque(_return, ptr__return);
-    return _return;
-}
-
-static JSValue js_rAudioProcessor_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
-    if(argc==0) {
-        rAudioProcessor* ptr__return = (rAudioProcessor*)js_calloc(ctx, 1, sizeof(rAudioProcessor));
-        JSValue _return = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
-        JS_SetOpaque(_return, ptr__return);
-        return _return;
-    }
-    rAudioProcessor _struct = {  };
-    rAudioProcessor* ptr__return = (rAudioProcessor*)js_malloc(ctx, sizeof(rAudioProcessor));
-    *ptr__return = _struct;
-    JSValue _return = JS_NewObjectClass(ctx, js_rAudioProcessor_class_id);
-    JS_SetOpaque(_return, ptr__return);
-    return _return;
-}
-
 static JSValue js_AudioStream_constructor(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     if(argc==0) {
         AudioStream* ptr__return = (AudioStream*)js_calloc(ctx, 1, sizeof(AudioStream));
@@ -10414,85 +10075,15 @@ static JSValue js_AudioStream_constructor(JSContext * ctx, JSValue this_val, int
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
-    rAudioBuffer * buffer;
-    bool freesrc_buffer = false;
-    JSValue da_buffer;
-    int64_t size_buffer;
-    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
-        void * opaque_buffer = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
-        ArrayProxy_class AP_buffer = *(ArrayProxy_class *)opaque_buffer;
-        argv[0] = AP_buffer.values(ctx, AP_buffer.opaque, 0, false);
-        freesrc_buffer = true;
-    }
-    if(JS_IsArray(argv[0]) == 1) {
-        if(JS_GetLength(ctx,argv[0],&size_buffer)==-1) {
-            return JS_EXCEPTION;
-        }
-        buffer = (rAudioBuffer *)js_malloc(ctx, size_buffer * sizeof(rAudioBuffer));
-        for(int i0=0; i0 < size_buffer; i0++){
-            JSValue js_buffer = JS_GetPropertyUint32(ctx,argv[0],i0);
-            rAudioBuffer* ptr_bufferi0 = (rAudioBuffer*)JS_GetOpaque(js_buffer, js_rAudioBuffer_class_id);
-            if(ptr_bufferi0 == NULL) {
-                JS_ThrowTypeError(ctx, "js_buffer does not allow null");
-                return JS_EXCEPTION;
-            }
-            buffer[i0] = *ptr_bufferi0;
-            JS_FreeValue(ctx, js_buffer);
-        }
-    }
-    else if(JS_IsArrayBuffer(argv[0]) == 1) {
-        size_t size_buffer;
-        buffer = (rAudioBuffer *)JS_GetArrayBuffer(ctx, &size_buffer, argv[0]);
-    }
-    else {
-        if(freesrc_buffer) {
-            JS_FreeValue(ctx, argv[0]);
-        }
-        JS_ThrowTypeError(ctx, "argv[0] does not match type rAudioBuffer *");
+    rAudioBuffer * buffer = (rAudioBuffer *)JS_GetOpaque(argv[0], js_rAudioBuffer_class_id);
+    if(buffer == NULL) {
+        JS_ThrowTypeError(ctx, "argv[0] does not match type rAudioBuffer");
         return JS_EXCEPTION;
     }
-    if(freesrc_buffer) {
-        JS_FreeValue(ctx, argv[0]);
-    }
-    rAudioProcessor * processor;
-    bool freesrc_processor = false;
-    JSValue da_processor;
-    int64_t size_processor;
-    if(JS_GetClassID(argv[1]) == js_ArrayProxy_class_id) {
-        void * opaque_processor = JS_GetOpaque(argv[1], js_ArrayProxy_class_id);
-        ArrayProxy_class AP_processor = *(ArrayProxy_class *)opaque_processor;
-        argv[1] = AP_processor.values(ctx, AP_processor.opaque, 0, false);
-        freesrc_processor = true;
-    }
-    if(JS_IsArray(argv[1]) == 1) {
-        if(JS_GetLength(ctx,argv[1],&size_processor)==-1) {
-            return JS_EXCEPTION;
-        }
-        processor = (rAudioProcessor *)js_malloc(ctx, size_processor * sizeof(rAudioProcessor));
-        for(int i0=0; i0 < size_processor; i0++){
-            JSValue js_processor = JS_GetPropertyUint32(ctx,argv[1],i0);
-            rAudioProcessor* ptr_processori0 = (rAudioProcessor*)JS_GetOpaque(js_processor, js_rAudioProcessor_class_id);
-            if(ptr_processori0 == NULL) {
-                JS_ThrowTypeError(ctx, "js_processor does not allow null");
-                return JS_EXCEPTION;
-            }
-            processor[i0] = *ptr_processori0;
-            JS_FreeValue(ctx, js_processor);
-        }
-    }
-    else if(JS_IsArrayBuffer(argv[1]) == 1) {
-        size_t size_processor;
-        processor = (rAudioProcessor *)JS_GetArrayBuffer(ctx, &size_processor, argv[1]);
-    }
-    else {
-        if(freesrc_processor) {
-            JS_FreeValue(ctx, argv[1]);
-        }
-        JS_ThrowTypeError(ctx, "argv[1] does not match type rAudioProcessor *");
+    rAudioProcessor * processor = (rAudioProcessor *)JS_GetOpaque(argv[1], js_rAudioProcessor_class_id);
+    if(processor == NULL) {
+        JS_ThrowTypeError(ctx, "argv[1] does not match type rAudioProcessor");
         return JS_EXCEPTION;
-    }
-    if(freesrc_processor) {
-        JS_FreeValue(ctx, argv[1]);
     }
     uint32_t long_sampleRate;
     int err_sampleRate = JS_ToUint32(ctx, &long_sampleRate, argv[2]);
@@ -11162,6 +10753,8 @@ static JSValue js_FilePathList_constructor(JSContext * ctx, JSValue this_val, in
         JS_SetOpaque(_return, ptr__return);
         return _return;
     }
+    memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
+    memoryNode * memoryCurrent = memoryHead;
     uint32_t long_capacity;
     int err_capacity = JS_ToUint32(ctx, &long_capacity, argv[0]);
     if(err_capacity<0) {
@@ -11177,19 +10770,19 @@ static JSValue js_FilePathList_constructor(JSContext * ctx, JSValue this_val, in
     }
     unsigned int count = (unsigned int)long_count;
     char * * paths;
-    bool freesrc_paths = false;
     int64_t size_paths;
     if(JS_GetClassID(argv[2]) == js_ArrayProxy_class_id) {
         void * opaque_paths = JS_GetOpaque(argv[2], js_ArrayProxy_class_id);
         ArrayProxy_class AP_paths = *(ArrayProxy_class *)opaque_paths;
         argv[2] = AP_paths.values(ctx, AP_paths.opaque, 0, false);
-        freesrc_paths = true;
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[2]);
     }
     if(JS_IsArray(argv[2]) == 1) {
         if(JS_GetLength(ctx,argv[2],&size_paths)==-1) {
             return JS_EXCEPTION;
         }
         paths = (char * *)js_malloc(ctx, size_paths * sizeof(char *));
+        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, paths);
         for(int i0=0; i0 < size_paths; i0++){
             JSValue js_paths = JS_GetPropertyUint32(ctx,argv[2],i0);
             int64_t size_pathsi0;
@@ -11222,14 +10815,8 @@ static JSValue js_FilePathList_constructor(JSContext * ctx, JSValue this_val, in
         }
     }
     else {
-        if(freesrc_paths) {
-            JS_FreeValue(ctx, argv[2]);
-        }
         JS_ThrowTypeError(ctx, "argv[2] does not match type char * *");
         return JS_EXCEPTION;
-    }
-    if(freesrc_paths) {
-        JS_FreeValue(ctx, argv[2]);
     }
     FilePathList _struct = { capacity, count, paths };
     FilePathList* ptr__return = (FilePathList*)js_malloc(ctx, sizeof(FilePathList));
@@ -14288,7 +13875,7 @@ static JSValue js_SaveFileText(JSContext * ctx, JSValue this_val, int argc, JSVa
             return JS_EXCEPTION;
         }
     }
-    bool returnVal = SaveFileText((const char *)fileName, text);
+    bool returnVal = SaveFileText((const char *)fileName, (const char *)text);
     memoryClear(ctx, memoryHead);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
@@ -15635,52 +15222,31 @@ static JSValue js_EncodeDataBase64(JSContext * ctx, JSValue this_val, int argc, 
 static JSValue js_DecodeDataBase64(JSContext * ctx, JSValue this_val, int argc, JSValue * argv) {
     memoryNode * memoryHead = (memoryNode *)calloc(1,sizeof(memoryNode));
     memoryNode * memoryCurrent = memoryHead;
-    unsigned char * data;
+    char * data;
     int64_t size_data;
-    if(JS_GetClassID(argv[0]) == js_ArrayProxy_class_id) {
-        void * opaque_data = JS_GetOpaque(argv[0], js_ArrayProxy_class_id);
-        ArrayProxy_class AP_data = *(ArrayProxy_class *)opaque_data;
-        argv[0] = AP_data.values(ctx, AP_data.opaque, 0, false);
-        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValue, &argv[0]);
-    }
-    if(JS_IsArray(argv[0]) == 1) {
-        if(JS_GetLength(ctx,argv[0],&size_data)==-1) {
-            memoryClear(ctx, memoryHead);
-            return JS_EXCEPTION;
-        }
-        data = (unsigned char *)js_malloc(ctx, size_data * sizeof(unsigned char));
-        memoryCurrent = memoryStore(memoryCurrent, (void *)js_free, data);
-        for(int i0=0; i0 < size_data; i0++){
-            JSValue js_data = JS_GetPropertyUint32(ctx,argv[0],i0);
-            uint32_t long_datai0;
-            int err_datai0 = JS_ToUint32(ctx, &long_datai0, js_data);
-            if(err_datai0<0) {
-                JS_ThrowTypeError(ctx, "js_data is not numeric");
-                return JS_EXCEPTION;
-            }
-            data[i0] = (unsigned char)long_datai0;
-            JS_FreeValue(ctx, js_data);
-        }
+    if(JS_IsString(argv[0]) == 1) {
+        data = (char *)JS_ToCStringLen(ctx, &size_data, argv[0]);
+        memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeCString, data);
     }
     else if(JS_IsArrayBuffer(argv[0]) == 1) {
         size_t size_data;
-        data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
+        data = (char *)JS_GetArrayBuffer(ctx, &size_data, argv[0]);
         memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, data);
     }
     else {
         JSClassID classid_data = JS_GetClassID(argv[0]);
-        if(classid_data==JS_CLASS_UINT8_ARRAY || classid_data==JS_CLASS_UINT8C_ARRAY) {
+        if(classid_data==JS_CLASS_INT8_ARRAY) {
             size_t offset_data;
             size_t size_data;
             JSValue da_data = JS_GetTypedArrayBuffer(ctx,argv[0],&offset_data,&size_data,NULL);
-            data = (unsigned char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
+            data = (char *)JS_GetArrayBuffer(ctx, &size_data, da_data);
             data+=offset_data;
             size_data-=offset_data;
             memoryCurrent = memoryStore(memoryCurrent, (void *)JS_FreeValuePtr, &da_data);
         }
         else {
             memoryClear(ctx, memoryHead);
-            JS_ThrowTypeError(ctx, "argv[0] does not match type unsigned char *");
+            JS_ThrowTypeError(ctx, "argv[0] does not match type char *");
             return JS_EXCEPTION;
         }
     }
@@ -15733,7 +15299,7 @@ static JSValue js_DecodeDataBase64(JSContext * ctx, JSValue this_val, int argc, 
             return JS_EXCEPTION;
         }
     }
-    unsigned char * returnVal = DecodeDataBase64((const unsigned char *)data, outputSize);
+    unsigned char * returnVal = DecodeDataBase64((const char *)data, outputSize);
     memoryClear(ctx, memoryHead);
     JSValue ret;
     ret = JS_NewArray(ctx);
@@ -16170,6 +15736,7 @@ static JSValue js_SetAutomationEventList(JSContext * ctx, JSValue this_val, int 
         return JS_EXCEPTION;
     }
     SetAutomationEventList(list);
+    JS_SetOpaque(argv[0], list);
     return JS_UNDEFINED;
 }
 
@@ -16835,6 +16402,7 @@ static JSValue js_UpdateCamera(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     int mode = (int)long_mode;
     UpdateCamera(camera, mode);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -16864,6 +16432,7 @@ static JSValue js_UpdateCameraPro(JSContext * ctx, JSValue this_val, int argc, J
     }
     float zoom = (float)double_zoom;
     UpdateCameraPro(camera, movement, rotation, zoom);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -19423,6 +18992,7 @@ static JSValue js_CheckCollisionLines(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     bool returnVal = CheckCollisionLines(startPos1, endPos1, startPos2, endPos2, collisionPoint);
+    JS_SetOpaque(argv[4], collisionPoint);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -21058,6 +20628,7 @@ static JSValue js_ImageFormat(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     int newFormat = (int)long_newFormat;
     ImageFormat(image, newFormat);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21074,6 +20645,7 @@ static JSValue js_ImageToPOT(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     Color fill = *ptr_fill;
     ImageToPOT(image, fill);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21090,6 +20662,7 @@ static JSValue js_ImageCrop(JSContext * ctx, JSValue this_val, int argc, JSValue
     }
     Rectangle crop = *ptr_crop;
     ImageCrop(image, crop);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21107,6 +20680,7 @@ static JSValue js_ImageAlphaCrop(JSContext * ctx, JSValue this_val, int argc, JS
     }
     float threshold = (float)double_threshold;
     ImageAlphaCrop(image, threshold);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21130,6 +20704,7 @@ static JSValue js_ImageAlphaClear(JSContext * ctx, JSValue this_val, int argc, J
     }
     float threshold = (float)double_threshold;
     ImageAlphaClear(image, color, threshold);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21146,6 +20721,7 @@ static JSValue js_ImageAlphaMask(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Image alphaMask = *ptr_alphaMask;
     ImageAlphaMask(image, alphaMask);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21156,6 +20732,7 @@ static JSValue js_ImageAlphaPremultiply(JSContext * ctx, JSValue this_val, int a
         return JS_EXCEPTION;
     }
     ImageAlphaPremultiply(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21173,6 +20750,7 @@ static JSValue js_ImageBlurGaussian(JSContext * ctx, JSValue this_val, int argc,
     }
     int blurSize = (int)long_blurSize;
     ImageBlurGaussian(image, blurSize);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21254,6 +20832,7 @@ static JSValue js_ImageKernelConvolution(JSContext * ctx, JSValue this_val, int 
     }
     int kernelSize = (int)long_kernelSize;
     ImageKernelConvolution(image, (const float *)kernel, kernelSize);
+    JS_SetOpaque(argv[0], image);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, kernel);
     }
@@ -21290,6 +20869,7 @@ static JSValue js_ImageResize(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     int newHeight = (int)long_newHeight;
     ImageResize(image, newWidth, newHeight);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21314,6 +20894,7 @@ static JSValue js_ImageResizeNN(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     int newHeight = (int)long_newHeight;
     ImageResizeNN(image, newWidth, newHeight);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21358,6 +20939,7 @@ static JSValue js_ImageResizeCanvas(JSContext * ctx, JSValue this_val, int argc,
     }
     Color fill = *ptr_fill;
     ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21368,6 +20950,7 @@ static JSValue js_ImageMipmaps(JSContext * ctx, JSValue this_val, int argc, JSVa
         return JS_EXCEPTION;
     }
     ImageMipmaps(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21406,6 +20989,7 @@ static JSValue js_ImageDither(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     int aBpp = (int)long_aBpp;
     ImageDither(image, rBpp, gBpp, bBpp, aBpp);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21416,6 +21000,7 @@ static JSValue js_ImageFlipVertical(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     ImageFlipVertical(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21426,6 +21011,7 @@ static JSValue js_ImageFlipHorizontal(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     ImageFlipHorizontal(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21443,6 +21029,7 @@ static JSValue js_ImageRotate(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     int degrees = (int)long_degrees;
     ImageRotate(image, degrees);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21453,6 +21040,7 @@ static JSValue js_ImageRotateCW(JSContext * ctx, JSValue this_val, int argc, JSV
         return JS_EXCEPTION;
     }
     ImageRotateCW(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21463,6 +21051,7 @@ static JSValue js_ImageRotateCCW(JSContext * ctx, JSValue this_val, int argc, JS
         return JS_EXCEPTION;
     }
     ImageRotateCCW(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21479,6 +21068,7 @@ static JSValue js_ImageColorTint(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Color color = *ptr_color;
     ImageColorTint(image, color);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21489,6 +21079,7 @@ static JSValue js_ImageColorInvert(JSContext * ctx, JSValue this_val, int argc, 
         return JS_EXCEPTION;
     }
     ImageColorInvert(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21499,6 +21090,7 @@ static JSValue js_ImageColorGrayscale(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     ImageColorGrayscale(image);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21516,6 +21108,7 @@ static JSValue js_ImageColorContrast(JSContext * ctx, JSValue this_val, int argc
     }
     float contrast = (float)double_contrast;
     ImageColorContrast(image, contrast);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21533,6 +21126,7 @@ static JSValue js_ImageColorBrightness(JSContext * ctx, JSValue this_val, int ar
     }
     int brightness = (int)long_brightness;
     ImageColorBrightness(image, brightness);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21555,6 +21149,7 @@ static JSValue js_ImageColorReplace(JSContext * ctx, JSValue this_val, int argc,
     }
     Color replace = *ptr_replace;
     ImageColorReplace(image, color, replace);
+    JS_SetOpaque(argv[0], image);
     return JS_UNDEFINED;
 }
 
@@ -21670,6 +21265,7 @@ static JSValue js_UnloadImageColors(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     UnloadImageColors(colors);
+    JS_SetOpaque(argv[0], colors);
     return JS_UNDEFINED;
 }
 
@@ -21680,6 +21276,7 @@ static JSValue js_UnloadImagePalette(JSContext * ctx, JSValue this_val, int argc
         return JS_EXCEPTION;
     }
     UnloadImagePalette(colors);
+    JS_SetOpaque(argv[0], colors);
     return JS_UNDEFINED;
 }
 
@@ -21747,6 +21344,7 @@ static JSValue js_ImageClearBackground(JSContext * ctx, JSValue this_val, int ar
     }
     Color color = *ptr_color;
     ImageClearBackground(dst, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21777,6 +21375,7 @@ static JSValue js_ImageDrawPixel(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Color color = *ptr_color;
     ImageDrawPixel(dst, posX, posY, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21799,6 +21398,7 @@ static JSValue js_ImageDrawPixelV(JSContext * ctx, JSValue this_val, int argc, J
     }
     Color color = *ptr_color;
     ImageDrawPixelV(dst, position, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21843,6 +21443,7 @@ static JSValue js_ImageDrawLine(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Color color = *ptr_color;
     ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21871,6 +21472,7 @@ static JSValue js_ImageDrawLineV(JSContext * ctx, JSValue this_val, int argc, JS
     }
     Color color = *ptr_color;
     ImageDrawLineV(dst, start, end, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21906,6 +21508,7 @@ static JSValue js_ImageDrawLineEx(JSContext * ctx, JSValue this_val, int argc, J
     }
     Color color = *ptr_color;
     ImageDrawLineEx(dst, start, end, thick, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21943,6 +21546,7 @@ static JSValue js_ImageDrawCircle(JSContext * ctx, JSValue this_val, int argc, J
     }
     Color color = *ptr_color;
     ImageDrawCircle(dst, centerX, centerY, radius, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -21972,6 +21576,7 @@ static JSValue js_ImageDrawCircleV(JSContext * ctx, JSValue this_val, int argc, 
     }
     Color color = *ptr_color;
     ImageDrawCircleV(dst, center, radius, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22009,6 +21614,7 @@ static JSValue js_ImageDrawCircleLines(JSContext * ctx, JSValue this_val, int ar
     }
     Color color = *ptr_color;
     ImageDrawCircleLines(dst, centerX, centerY, radius, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22038,6 +21644,7 @@ static JSValue js_ImageDrawCircleLinesV(JSContext * ctx, JSValue this_val, int a
     }
     Color color = *ptr_color;
     ImageDrawCircleLinesV(dst, center, radius, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22082,6 +21689,7 @@ static JSValue js_ImageDrawRectangle(JSContext * ctx, JSValue this_val, int argc
     }
     Color color = *ptr_color;
     ImageDrawRectangle(dst, posX, posY, width, height, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22110,6 +21718,7 @@ static JSValue js_ImageDrawRectangleV(JSContext * ctx, JSValue this_val, int arg
     }
     Color color = *ptr_color;
     ImageDrawRectangleV(dst, position, size, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22132,6 +21741,7 @@ static JSValue js_ImageDrawRectangleRec(JSContext * ctx, JSValue this_val, int a
     }
     Color color = *ptr_color;
     ImageDrawRectangleRec(dst, rec, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22161,6 +21771,7 @@ static JSValue js_ImageDrawRectangleLines(JSContext * ctx, JSValue this_val, int
     }
     Color color = *ptr_color;
     ImageDrawRectangleLines(dst, rec, thick, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22195,6 +21806,7 @@ static JSValue js_ImageDrawTriangle(JSContext * ctx, JSValue this_val, int argc,
     }
     Color color = *ptr_color;
     ImageDrawTriangle(dst, v1, v2, v3, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22241,6 +21853,7 @@ static JSValue js_ImageDrawTriangleEx(JSContext * ctx, JSValue this_val, int arg
     }
     Color c3 = *ptr_c3;
     ImageDrawTriangleEx(dst, v1, v2, v3, c1, c2, c3);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22275,6 +21888,7 @@ static JSValue js_ImageDrawTriangleLines(JSContext * ctx, JSValue this_val, int 
     }
     Color color = *ptr_color;
     ImageDrawTriangleLines(dst, v1, v2, v3, color);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22350,6 +21964,7 @@ static JSValue js_ImageDrawTriangleFan(JSContext * ctx, JSValue this_val, int ar
     }
     Color color = *ptr_color;
     ImageDrawTriangleFan(dst, points, pointCount, color);
+    JS_SetOpaque(argv[0], dst);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, points);
     }
@@ -22431,6 +22046,7 @@ static JSValue js_ImageDrawTriangleStrip(JSContext * ctx, JSValue this_val, int 
     }
     Color color = *ptr_color;
     ImageDrawTriangleStrip(dst, points, pointCount, color);
+    JS_SetOpaque(argv[0], dst);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, points);
     }
@@ -22471,6 +22087,7 @@ static JSValue js_ImageDraw(JSContext * ctx, JSValue this_val, int argc, JSValue
     }
     Color tint = *ptr_tint;
     ImageDraw(dst, src, srcRec, dstRec, tint);
+    JS_SetOpaque(argv[0], dst);
     return JS_UNDEFINED;
 }
 
@@ -22600,6 +22217,7 @@ static JSValue js_ImageDrawText(JSContext * ctx, JSValue this_val, int argc, JSV
     }
     Color color = *ptr_color;
     ImageDrawText(dst, (const char *)text, posX, posY, fontSize, color);
+    JS_SetOpaque(argv[0], dst);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
@@ -22749,6 +22367,7 @@ static JSValue js_ImageDrawTextEx(JSContext * ctx, JSValue this_val, int argc, J
     }
     Color tint = *ptr_tint;
     ImageDrawTextEx(dst, font, (const char *)text, position, fontSize, spacing, tint);
+    JS_SetOpaque(argv[0], dst);
     if(JS_IsArray(argv[2]) == 1) {
         js_free(ctx, text);
     }
@@ -23006,6 +22625,7 @@ static JSValue js_GenTextureMipmaps(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     GenTextureMipmaps(texture);
+    JS_SetOpaque(argv[0], texture);
     return JS_UNDEFINED;
 }
 
@@ -28959,6 +28579,7 @@ static JSValue js_UploadMesh(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     bool dynamic = js_dynamic;
     UploadMesh(mesh, dynamic);
+    JS_SetOpaque(argv[0], mesh);
     return JS_UNDEFINED;
 }
 
@@ -29153,6 +28774,7 @@ static JSValue js_GenMeshTangents(JSContext * ctx, JSValue this_val, int argc, J
         return JS_EXCEPTION;
     }
     GenMeshTangents(mesh);
+    JS_SetOpaque(argv[0], mesh);
     return JS_UNDEFINED;
 }
 
@@ -29747,6 +29369,7 @@ static JSValue js_SetMaterialTexture(JSContext * ctx, JSValue this_val, int argc
     }
     Texture2D texture = *ptr_texture;
     SetMaterialTexture(material, mapType, texture);
+    JS_SetOpaque(argv[0], material);
     return JS_UNDEFINED;
 }
 
@@ -29771,6 +29394,7 @@ static JSValue js_SetModelMeshMaterial(JSContext * ctx, JSValue this_val, int ar
     }
     int materialId = (int)long_materialId;
     SetModelMeshMaterial(model, meshId, materialId);
+    JS_SetOpaque(argv[0], model);
     return JS_UNDEFINED;
 }
 
@@ -30869,6 +30493,7 @@ static JSValue js_WaveCrop(JSContext * ctx, JSValue this_val, int argc, JSValue 
     }
     int finalFrame = (int)long_finalFrame;
     WaveCrop(wave, initFrame, finalFrame);
+    JS_SetOpaque(argv[0], wave);
     return JS_UNDEFINED;
 }
 
@@ -30900,6 +30525,7 @@ static JSValue js_WaveFormat(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     int channels = (int)long_channels;
     WaveFormat(wave, sampleRate, sampleSize, channels);
+    JS_SetOpaque(argv[0], wave);
     return JS_UNDEFINED;
 }
 
@@ -32261,11 +31887,7 @@ static int js_js_raylib_init(JSContext * ctx, JSModuleDef * m) {
     JSValue Wave_constr = JS_NewCFunction2(ctx, js_Wave_constructor,"Wave", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "Wave", Wave_constr);
     js_declare_rAudioBuffer(ctx, m);
-    JSValue rAudioBuffer_constr = JS_NewCFunction2(ctx, js_rAudioBuffer_constructor,"rAudioBuffer", 0, JS_CFUNC_constructor, 0);
-    JS_SetModuleExport(ctx, m, "rAudioBuffer", rAudioBuffer_constr);
     js_declare_rAudioProcessor(ctx, m);
-    JSValue rAudioProcessor_constr = JS_NewCFunction2(ctx, js_rAudioProcessor_constructor,"rAudioProcessor", 0, JS_CFUNC_constructor, 0);
-    JS_SetModuleExport(ctx, m, "rAudioProcessor", rAudioProcessor_constr);
     js_declare_AudioStream(ctx, m);
     JSValue AudioStream_constr = JS_NewCFunction2(ctx, js_AudioStream_constructor,"AudioStream", 5, JS_CFUNC_constructor, 0);
     JS_SetModuleExport(ctx, m, "AudioStream", AudioStream_constr);
@@ -32795,8 +32417,6 @@ JSModuleDef * js_init_module_js_raylib(JSContext * ctx, const char * module_name
     JS_AddModuleExport(ctx, m, "RayCollision");
     JS_AddModuleExport(ctx, m, "BoundingBox");
     JS_AddModuleExport(ctx, m, "Wave");
-    JS_AddModuleExport(ctx, m, "rAudioBuffer");
-    JS_AddModuleExport(ctx, m, "rAudioProcessor");
     JS_AddModuleExport(ctx, m, "AudioStream");
     JS_AddModuleExport(ctx, m, "Sound");
     JS_AddModuleExport(ctx, m, "Music");

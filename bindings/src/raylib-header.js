@@ -226,6 +226,8 @@ export class RayJsHeader {
         if (options.ignore) return;
         const jName = options.jsName || api.name;
         console.log("Binding function " + api.name);
+        if(api.name=='SetAutomationEventList')debugger;
+        if(api.name=='UnloadRandomSequence')debugger;
         const fun = this.functionGen.jsBindingFunction(jName);
         if (options.body) {
             options.body(fun);
@@ -426,7 +428,10 @@ export class RayJsHeader {
         const ptr=`((${struct.name} *)ptr)`;
         const type=struct.fields[0].type;
         let length=binding.properties[name].sizeVars[0];
-        length=String(length).replace('ptr->',`${ptr}->`);
+        if(length==undefined){
+            throw Error(structName+' requires array length definition');
+        }
+        length=String(length).replaceAll('ptr->',`${ptr}->`);
 
         const args = { ctx:{ type: "JSContext *", name: "ctx" },
             ptr:{ type: "void *", name: "ptr" },

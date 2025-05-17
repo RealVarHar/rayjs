@@ -1645,6 +1645,8 @@ static JSValue js_Vector3OrthoNormalize(JSContext * ctx, JSValue this_val, int a
         return JS_EXCEPTION;
     }
     Vector3OrthoNormalize(v1, v2);
+    JS_SetOpaque(argv[0], v1);
+    JS_SetOpaque(argv[1], v2);
     return JS_UNDEFINED;
 }
 
@@ -3531,6 +3533,9 @@ static JSValue js_MatrixDecompose(JSContext * ctx, JSValue this_val, int argc, J
         return JS_EXCEPTION;
     }
     MatrixDecompose(mat, translation, rotation, scale);
+    JS_SetOpaque(argv[1], translation);
+    JS_SetOpaque(argv[2], rotation);
+    JS_SetOpaque(argv[3], scale);
     return JS_UNDEFINED;
 }
 

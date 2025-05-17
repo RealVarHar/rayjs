@@ -18,6 +18,7 @@ static JSValue js_GetCameraForward(JSContext * ctx, JSValue this_val, int argc, 
         return JS_EXCEPTION;
     }
     Vector3 returnVal = GetCameraForward(camera);
+    JS_SetOpaque(argv[0], camera);
     Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ptr_ret = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
@@ -32,6 +33,7 @@ static JSValue js_GetCameraUp(JSContext * ctx, JSValue this_val, int argc, JSVal
         return JS_EXCEPTION;
     }
     Vector3 returnVal = GetCameraUp(camera);
+    JS_SetOpaque(argv[0], camera);
     Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ptr_ret = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
@@ -46,6 +48,7 @@ static JSValue js_GetCameraRight(JSContext * ctx, JSValue this_val, int argc, JS
         return JS_EXCEPTION;
     }
     Vector3 returnVal = GetCameraRight(camera);
+    JS_SetOpaque(argv[0], camera);
     Vector3* ptr_ret = (Vector3*)js_malloc(ctx, sizeof(Vector3));
     *ptr_ret = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Vector3_class_id);
@@ -73,6 +76,7 @@ static JSValue js_CameraMoveForward(JSContext * ctx, JSValue this_val, int argc,
     }
     bool moveInWorldPlane = js_moveInWorldPlane;
     CameraMoveForward(camera, distance, moveInWorldPlane);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -90,6 +94,7 @@ static JSValue js_CameraMoveUp(JSContext * ctx, JSValue this_val, int argc, JSVa
     }
     float distance = (float)double_distance;
     CameraMoveUp(camera, distance);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -113,6 +118,7 @@ static JSValue js_CameraMoveRight(JSContext * ctx, JSValue this_val, int argc, J
     }
     bool moveInWorldPlane = js_moveInWorldPlane;
     CameraMoveRight(camera, distance, moveInWorldPlane);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -130,6 +136,7 @@ static JSValue js_CameraMoveToTarget(JSContext * ctx, JSValue this_val, int argc
     }
     float delta = (float)double_delta;
     CameraMoveToTarget(camera, delta);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -153,6 +160,7 @@ static JSValue js_CameraYaw(JSContext * ctx, JSValue this_val, int argc, JSValue
     }
     bool rotateAroundTarget = js_rotateAroundTarget;
     CameraYaw(camera, angle, rotateAroundTarget);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -188,6 +196,7 @@ static JSValue js_CameraPitch(JSContext * ctx, JSValue this_val, int argc, JSVal
     }
     bool rotateUp = js_rotateUp;
     CameraPitch(camera, angle, lockView, rotateAroundTarget, rotateUp);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -205,6 +214,7 @@ static JSValue js_CameraRoll(JSContext * ctx, JSValue this_val, int argc, JSValu
     }
     float angle = (float)double_angle;
     CameraRoll(camera, angle);
+    JS_SetOpaque(argv[0], camera);
     return JS_UNDEFINED;
 }
 
@@ -215,6 +225,7 @@ static JSValue js_GetCameraViewMatrix(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     Matrix returnVal = GetCameraViewMatrix(camera);
+    JS_SetOpaque(argv[0], camera);
     Matrix* ptr_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ptr_ret = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Matrix_class_id);
@@ -236,6 +247,7 @@ static JSValue js_GetCameraProjectionMatrix(JSContext * ctx, JSValue this_val, i
     }
     float aspect = (float)double_aspect;
     Matrix returnVal = GetCameraProjectionMatrix(camera, aspect);
+    JS_SetOpaque(argv[0], camera);
     Matrix* ptr_ret = (Matrix*)js_malloc(ctx, sizeof(Matrix));
     *ptr_ret = returnVal;
     JSValue ret = JS_NewObjectClass(ctx, js_Matrix_class_id);

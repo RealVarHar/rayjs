@@ -792,8 +792,11 @@ export class QuickJsGenerator extends CodeGenerator {
             setArray(this,type,name,src);
         }else if(type.endsWith('&')){
             // set flag supressDeclaration=true (we already have JSValue) in the function ABOVE, for readability
-            if(this.root.structLookup[subtype]){
-                return;//class by pointer, no work to do
+            const classId = this.root.structLookup[subtype];
+            if(classId !== undefined){
+                //class by pointer
+                this.jsStructToOpq(subtype, name, src, classId, flags.supressDeclaration);
+                return;
             }
             // int * & is [int,int]
             // int & is [int] or int without writeback
@@ -830,7 +833,7 @@ export class QuickJsGenerator extends CodeGenerator {
                     break;
                 }
                 case "char":{
-                    this.declare("JSValue", 'js_' + name, false, `JS_NewStringLen(ctx, &${src},1)`, flags.supressDeclaration);
+                    this.declare("JSValue",  name, false, `JS_NewStringLen(ctx, &${src},1)`, flags.supressDeclaration);
                     break;
                 }
                 case "int8_t":
@@ -905,11 +908,15 @@ export class QuickJsGenerator extends CodeGenerator {
             }
         }
     }
-    jsStructToOpq(structType, jsVar, srcVar, classId) {
-        this.declare(structType + "*", 'ptr_'+jsVar, false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
-        this.statement("*ptr_" + jsVar + " = " + srcVar);
-        this.declare("JSValue", jsVar, false, `JS_NewObjectClass(ctx, ${classId})`);
-        this.call("JS_SetOpaque", [jsVar, "ptr_"+jsVar]);
+    jsStructToOpq(structType, jsVar, srcVar, classId, supressDeclaration=false) {
+        if(!supressDeclaration){
+            this.declare(structType + "*", 'ptr_'+jsVar, false, `(${structType}*)js_malloc(ctx, sizeof(${structType}))`);
+            this.statement("*ptr_" + jsVar + " = " + srcVar);
+            this.declare("JSValue", jsVar, false, `JS_NewObjectClass(ctx, ${classId})`);
+            this.call("JS_SetOpaque", [jsVar, "ptr_"+jsVar]);
+        }else{
+            this.call("JS_SetOpaque", [jsVar, srcVar]);
+        }
     }
     jsCleanUpParameter(type, name, src, flags = {}) {
         //Data clearing when not using dynamic Allocation
@@ -1066,6 +1073,14 @@ export class QuickJsGenerator extends CodeGenerator {
             this.root.addApiStruct_array({name:structName, fields:[{type:type2,name:element.name,child:undefined}], binding:{properties}});
             declarefunction();
             NewArrayProxy();
+        }else if(type.endsWith('&')){
+            let type2 = getsubtype(type);
+            properties[element.name]={sizeVars};
+            declarefunction();
+            fun.declare(type2+" *", field, false, "ptr->" + field);
+            if(type2 == 'rAudioBuffer')debugger;
+            //TODO: Logical issue: we create a copy here, so if someone does origin.pointer.prop = 0 this will not update properly
+            fun.cToJs(type, "ret", field,{allowNull:true},0,sizeVars);
         }else{
             declarefunction();
             fun.declare(type, field, false, "ptr->" + field);
@@ -1086,7 +1101,14 @@ export class QuickJsGenerator extends CodeGenerator {
         const args = [{ type: "JSContext*", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
         const fun = this.function(`js_${structName}_set_${field}`, "JSValue", args, true);
         fun.declare(structName + "*", "ptr", false, `JS_GetOpaque2(ctx, this_val, ${classId})`);
-        fun.jsToC(type, "value", "v",{noContextAlloc:true});
+        let flags={noContextAlloc:true};
+        if( (type.match(/\*/g)||[]).length > 1 ){
+            flags.dynamicAlloc = true;
+            fun.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+            fun.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
+        }
+        fun.jsToC(type, "value", "v",flags);
+
         if (element.overrideWrite) {
             element.overrideWrite(fun);
         } else {
@@ -1114,9 +1136,19 @@ export class QuickJsGenerator extends CodeGenerator {
             r1.declare("JSValue", '_return', false, `JS_NewObjectClass(ctx, ${classId})`);
             r1.call("JS_SetOpaque", ['_return', "ptr__return"]);
             r1.returnExp("_return");
+        let flags={};
         for(let i = 0; i < fields.length; i++) {
             const para = fields[i];
-            body.jsToC(para.type, para.name, "argv[" + i + "]");
+            if( (para.type.match(/\*/g)||[]).length > 1){
+                flags.dynamicAlloc = true;
+                body.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
+                body.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
+                break;
+            }
+        }
+        for(let i = 0; i < fields.length; i++) {
+            const para = fields[i];
+            body.jsToC(para.type, para.name, "argv[" + i + "]",flags);
         }
         let structArgs=[];
         let toCopy = [];

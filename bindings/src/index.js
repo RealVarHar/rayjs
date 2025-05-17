@@ -167,15 +167,9 @@ function main() {
         },
         createConstructor: true
     };
-    modules['rlightmapper'].getStruct('Lightmapper').binding = {
-        properties: {
-            data: {get: true },
-            w: { get: true },
-            h: { get: true },
-            progress: { get: true }
-        },
-        createConstructor: true
-    };
+    modules['rlightmapper'].getStruct('Lightmapper').binding.properties.data.sizeVars=['ptr->w * ptr->h * 4'];
+    modules['rlightmapper'].getStruct('Lightmapper');
+    modules['rlightmapper'].getStruct('Lightmapper').binding.properties['lm_handle']={};//Internal lightmapper context, no reason to bind this
     modules['rlightmapper'].getStruct('LightmapperConfig').binding = {
         properties: {
             hemisphereSize: { get: true, set: true },
@@ -332,6 +326,8 @@ function main() {
         createConstructor: true
         //destructor: "UnloadModel"
     };
+    modules['core'].getStruct("ModelAnimation").binding.properties.bones.sizeVars=['ptr->boneCount'];
+    modules['core'].getStruct("ModelAnimation").binding.properties.framePoses.sizeVars=['ptr->frameCount','ptr->boneCount'];
     modules['core'].getStruct("Mesh").binding = {
         properties: {
             vertexCount: { get: true, set: true },
@@ -404,6 +400,17 @@ function main() {
         createConstructor: true
         //destructor: "UnloadMaterial"
     };
+    modules['core'].getStruct("FilePathList").binding.properties.paths.sizeVars=["ptr->count"];
+    modules['core'].getStruct("AutomationEventList").binding.properties.events.sizeVars=["ptr->count"];
+    att = modules['rlgl'].getStruct("rlVertexBuffer").binding.properties;
+    att.vertices.sizeVars=["ptr->elementCount*3*4"];
+    att.texcoords.sizeVars=["ptr->elementCount*2*4"];
+    att.normals.sizeVars=["ptr->elementCount*3*4"];
+    att.colors.sizeVars=["ptr->elementCount*4*4"];
+    if(att.indices!==undefined)att.indices.sizeVars=["ptr->elementCount*6"];
+    att = modules['rlgl'].getStruct("rlRenderBatch").binding.properties;
+    att.vertexBuffer.sizeVars=["ptr->bufferCount"];
+    att.draws.sizeVars=["RL_DEFAULT_BATCH_DRAWCALLS"];
     const structDI = modules['core'].getStruct("VrDeviceInfo");
     structDI.binding = {
         properties: {
@@ -839,6 +846,16 @@ function main() {
     }
     att = modules['raygui'].getFunction('GuiTextBox').params[1];
     att.type = att.type + ' &';
+    cb = modules['core'].getStruct('AudioStream').fields;
+    att = cb.find(field=>field.name=='buffer');
+    att.type = att.type.replace(" *"," &");
+    att = cb.find(field=>field.name=='processor');
+    att.type = att.type.replace(" *"," &");
+    //Dont allow using buffer (searching for typedef source is not supported yet)
+    modules['core'].getStruct('AudioStream').binding.properties.buffer={};
+    modules['core'].getStruct('AudioStream').binding.properties.processor={};
+    modules['core'].getStruct('rAudioBuffer').binding.createConstructor=false;
+    modules['core'].getStruct('rAudioProcessor').binding.createConstructor=false;
 
     modules['core'].getFunction('LoadShader').params[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;

@@ -273,24 +273,22 @@ declare module "rayjs:raylib" {
     }
     var rAudioBuffer: {
         prototype: rAudioBuffer;
-        new(): rAudioBuffer;
     }
     interface rAudioProcessor {
     }
     var rAudioProcessor: {
         prototype: rAudioProcessor;
-        new(): rAudioProcessor;
     }
     interface AudioStream {
-        buffer: rAudioBuffer[],
-        processor: rAudioProcessor[],
+        buffer: rAudioBuffer | rAudioBuffer[],
+        processor: rAudioProcessor | rAudioProcessor[],
         sampleRate: number,
         sampleSize: number,
         channels: number,
     }
     var AudioStream: {
         prototype: AudioStream;
-        new(buffer?: rAudioBuffer[], processor?: rAudioProcessor[], sampleRate?: number, sampleSize?: number, channels?: number): AudioStream;
+        new(buffer?: rAudioBuffer | rAudioBuffer[], processor?: rAudioProcessor | rAudioProcessor[], sampleRate?: number, sampleSize?: number, channels?: number): AudioStream;
     }
     interface Sound {
         frameCount: number,
@@ -638,7 +636,7 @@ declare module "rayjs:raylib" {
     /** undefined */
     function EncodeDataBase64(data: number[], dataSize: number, outputSize: number[]): string;
     /** undefined */
-    function DecodeDataBase64(data: number[], outputSize: number[]): number[];
+    function DecodeDataBase64(data: string, outputSize: number[]): number[];
     /** undefined */
     function ComputeCRC32(data: number[], dataSize: number): number;
     /** undefined */

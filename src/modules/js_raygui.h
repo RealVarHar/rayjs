@@ -1060,6 +1060,8 @@ static JSValue js_GuiScrollPanel(JSContext * ctx, JSValue this_val, int argc, JS
         return JS_EXCEPTION;
     }
     int returnVal = GuiScrollPanel(bounds, (const char *)text, content, scroll, view);
+    JS_SetOpaque(argv[3], scroll);
+    JS_SetOpaque(argv[4], view);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
     else if(JS_IsArray(argv[1]) == 1) {
@@ -3625,6 +3627,7 @@ static JSValue js_GuiGrid(JSContext * ctx, JSValue this_val, int argc, JSValue *
         return JS_EXCEPTION;
     }
     int returnVal = GuiGrid(bounds, (const char *)text, spacing, subdivs, mouseCell);
+    JS_SetOpaque(argv[4], mouseCell);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
     else if(JS_IsArray(argv[1]) == 1) {
@@ -4504,6 +4507,7 @@ static JSValue js_GuiColorPicker(JSContext * ctx, JSValue this_val, int argc, JS
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPicker(bounds, (const char *)text, color);
+    JS_SetOpaque(argv[2], color);
     if(JS_IsNull(argv[1]) || JS_IsUndefined(argv[1])) {
     }
     else if(JS_IsArray(argv[1]) == 1) {
@@ -4585,6 +4589,7 @@ static JSValue js_GuiColorPanel(JSContext * ctx, JSValue this_val, int argc, JSV
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPanel(bounds, (const char *)text, color);
+    JS_SetOpaque(argv[2], color);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
@@ -4987,6 +4992,7 @@ static JSValue js_GuiColorPickerHSV(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPickerHSV(bounds, (const char *)text, colorHsv);
+    JS_SetOpaque(argv[2], colorHsv);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }
@@ -5066,6 +5072,7 @@ static JSValue js_GuiColorPanelHSV(JSContext * ctx, JSValue this_val, int argc, 
         return JS_EXCEPTION;
     }
     int returnVal = GuiColorPanelHSV(bounds, (const char *)text, colorHsv);
+    JS_SetOpaque(argv[2], colorHsv);
     if(JS_IsArray(argv[1]) == 1) {
         js_free(ctx, text);
     }

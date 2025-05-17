@@ -1,6 +1,7 @@
 declare module "rayjs:rlightmapper" {
     import type {Mesh,Color,Material,Image} from 'rayjs:raylib';
     interface Lightmapper {
+        lm_handle: ArrayBuffer,
         data: number[],
         w: number,
         h: number,
@@ -8,7 +9,7 @@ declare module "rayjs:rlightmapper" {
     }
     var Lightmapper: {
         prototype: Lightmapper;
-        new(data?: number[], w?: number, h?: number, progress?: number): Lightmapper;
+        new(lm_handle?: ArrayBuffer, data?: number[], w?: number, h?: number, progress?: number): Lightmapper;
     }
     interface LightmapperConfig {
         hemisphereSize: number,

@@ -21,7 +21,6 @@ export class TypeScriptDeclaration {
         this.constants.tags.module=this.module.tags.module;
     }
     addFunction(name, api, lookups) {
-        if(name=='TextFormat')debugger;
         const options = api.binding || {};
         const para = (api.params || []).filter(x => !x.binding.ignore).map(x => ({ name: (x.type=='...'||x.binding.jsType=='...'?'...':'')+x.name, type: x.binding.jsType ?? this.toJsType(x.type,lookups) }));
         const returnType = options.jsReturns ?? this.toJsType(api.returnType,lookups);

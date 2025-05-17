@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include "quickjs.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -40,28 +41,13 @@
 #include <signal.h>
 #include <limits.h>
 #include <sys/stat.h>
-#if defined(_WIN32)
-    //dirent is included in raylib already, use extern
-    typedef ptrdiff_t handle_type;
-    struct dirent {
-        char *d_name;
-    };
-    struct DIR {
-        handle_type handle;
-        struct _finddata_t info;
-        struct dirent result;
-        char *name;
-    };
-    typedef struct DIR DIR;
-    extern DIR* opendir (const char*);
-    extern struct dirent* readdir (DIR*);
-    extern int closedir (DIR*);
+#if defined(_MSC_VER)
+#include "dirent_compat.h"
 #else
-    #include <dirent.h>
+#include <dirent.h>
 #endif
-
 #if defined(_WIN32)
-#include "windows.h"
+#include <windows.h>
 #include <direct.h>
 #include <io.h>
 #include <conio.h>
@@ -73,7 +59,6 @@
 #define rmdir _rmdir
 #define getcwd _getcwd
 #define chdir _chdir
-#define pipe(fds) _pipe(fds,4096, O_BINARY)
 #else
 #include <sys/ioctl.h>
 #if !defined(__wasi__)
@@ -96,21 +81,18 @@ extern char **environ;
 
 #endif /* _WIN32 */
 
-#if ! (defined(_WIN32) && !defined(__MINGW32__)) && !defined(__wasi__)
-/* enable the os.Worker API. IT relies on POSIX threads */
-#define USE_WORKER
-#endif
-
-#ifdef USE_WORKER
-#include <pthread.h>
-#include "quickjs-c-atomics.h"
-#endif
-
 #include "cutils.h"
 #include "list.h"
 #include "quickjs-libc.h"
 
+#if JS_HAVE_THREADS
+#include "quickjs-c-atomics.h"
+#define USE_WORKER // enable os.Worker
+#endif
+
+#ifndef MAX_SAFE_INTEGER // already defined in amalgamation builds
 #define MAX_SAFE_INTEGER (((int64_t) 1 << 53) - 1)
+#endif
 
 #ifndef QJS_NATIVE_MODULE_SUFFIX
 #ifdef _WIN32
@@ -145,6 +127,8 @@ typedef struct {
     JSValue func;
 } JSOSTimer;
 
+#ifdef USE_WORKER
+
 typedef struct {
     struct list_head link;
     uint8_t *data;
@@ -154,14 +138,20 @@ typedef struct {
     size_t sab_tab_len;
 } JSWorkerMessage;
 
-typedef struct {
-    int ref_count;
-#ifdef USE_WORKER
-    pthread_mutex_t mutex;
-#endif
-    struct list_head msg_queue; /* list of JSWorkerMessage.link */
+typedef struct JSWaker {
+#ifdef _WIN32
+    HANDLE handle;
+#else
     int read_fd;
     int write_fd;
+#endif
+} JSWaker;
+
+typedef struct {
+    int ref_count;
+    js_mutex_t mutex;
+    struct list_head msg_queue; /* list of JSWorkerMessage.link */
+    JSWaker waker;
 } JSWorkerMessagePipe;
 
 typedef struct {
@@ -169,6 +159,8 @@ typedef struct {
     JSWorkerMessagePipe *recv_pipe;
     JSValue on_message_func;
 } JSWorkerMessageHandler;
+
+#endif // USE_WORKER
 
 typedef struct JSThreadState {
     struct list_head os_rw_handlers; /* list of JSOSRWHandler.link */
@@ -179,16 +171,26 @@ typedef struct JSThreadState {
     int64_t next_timer_id; /* for setTimeout / setInterval */
     bool can_js_os_poll;
     /* not used in the main thread */
+#ifdef USE_WORKER
     JSWorkerMessagePipe *recv_pipe, *send_pipe;
+#else
+    void *recv_pipe;
+#endif // USE_WORKER
     JSClassID std_file_class_id;
     JSClassID worker_class_id;
 } JSThreadState;
 
 static uint64_t os_pending_signals;
 
+static void *js_std_dbuf_realloc(void *opaque, void *ptr, size_t size)
+{
+    JSRuntime *rt = opaque;
+    return js_realloc_rt(rt, ptr, size);
+}
+
 static void js_std_dbuf_init(JSContext *ctx, DynBuf *s)
 {
-    dbuf_init2(s, JS_GetRuntime(ctx), (DynBufReallocFunc *)js_realloc_rt);
+    dbuf_init2(s, JS_GetRuntime(ctx), js_std_dbuf_realloc);
 }
 
 static bool my_isdigit(int c)
@@ -211,7 +213,7 @@ static void js_set_thread_state(JSRuntime *rt, JSThreadState *ts)
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif // __GNUC__
 static JSValue js_printf_internal(JSContext *ctx,
-                                  int argc, JSValue *argv, FILE *fp)
+                                  int argc, JSValueConst *argv, FILE *fp)
 {
     char fmtbuf[32];
     uint8_t cbuf[UTF8_CHAR_LEN_MAX+1];
@@ -432,51 +434,43 @@ fail:
 uint8_t *js_load_file(JSContext *ctx, size_t *pbuf_len, const char *filename)
 {
     FILE *f;
-    uint8_t *buf;
-    size_t buf_len;
-    long lret;
+    size_t n, len;
+    uint8_t *p, *buf, tmp[8192];
 
     f = fopen(filename, "rb");
     if (!f)
         return NULL;
-    if (fseek(f, 0, SEEK_END) < 0)
-        goto fail;
-    lret = ftell(f);
-    if (lret < 0)
-        goto fail;
-    /* XXX: on Linux, ftell() return LONG_MAX for directories */
-    if (lret == LONG_MAX) {
-        errno = EISDIR;
-        goto fail;
-    }
-    buf_len = lret;
-    if (fseek(f, 0, SEEK_SET) < 0)
-        goto fail;
-    if (ctx)
-        buf = js_malloc(ctx, buf_len + 1);
-    else
-        buf = malloc(buf_len + 1);
-    if (!buf)
-        goto fail;
-    if (fread(buf, 1, buf_len, f) != buf_len) {
-        errno = EIO;
-        if (ctx)
-            js_free(ctx, buf);
-        else
-            free(buf);
-    fail:
-        fclose(f);
-        return NULL;
-    }
-    buf[buf_len] = '\0';
+    buf = NULL;
+    len = 0;
+    do {
+        n = fread(tmp, 1, sizeof(tmp), f);
+        if (ctx) {
+            p = js_realloc(ctx, buf, len + n + 1);
+        } else {
+            p = realloc(buf, len + n + 1);
+        }
+        if (!p) {
+            if (ctx) {
+                js_free(ctx, buf);
+            } else {
+                free(buf);
+            }
+            fclose(f);
+            return NULL;
+        }
+        memcpy(&p[len], tmp, n);
+        buf = p;
+        len += n;
+        buf[len] = '\0';
+    } while (n == sizeof(tmp));
     fclose(f);
-    *pbuf_len = buf_len;
+    *pbuf_len = len;
     return buf;
 }
 
 /* load and evaluate a file */
-static JSValue js_loadScript(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_loadScript(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     uint8_t *buf;
     const char *filename;
@@ -500,7 +494,7 @@ static JSValue js_loadScript(JSContext *ctx, JSValue this_val,
 }
 
 static int get_bool_option(JSContext *ctx, bool *pbool,
-                           JSValue obj,
+                           JSValueConst obj,
                            const char *option)
 {
     JSValue val;
@@ -519,12 +513,13 @@ static void free_buf(JSRuntime *rt, void *opaque, void *ptr) {
 }
 
 /* load a file as a UTF-8 encoded string or Uint8Array */
-static JSValue js_std_loadFile(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_std_loadFile(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     uint8_t *buf;
     const char *filename;
-    JSValue ret, options_obj;
+    JSValueConst options_obj;
+    JSValue ret;
     size_t buf_len;
     bool binary = false;
 
@@ -549,6 +544,67 @@ static JSValue js_std_loadFile(JSContext *ctx, JSValue this_val,
         js_free(ctx, buf);
     }
 
+    return ret;
+}
+
+static JSValue js_std_writeFile(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
+{
+    const char *filename;
+    const char *mode;
+    const void *buf;
+    size_t len, n;
+    JSValueConst data;
+    JSValue val, ret, unref;
+    bool release;
+    FILE *fp;
+
+    ret = JS_EXCEPTION;
+    len = 0;
+    buf = "";
+    mode = "w";
+    data = argv[1];
+    unref = JS_UNDEFINED;
+    release = false;
+    filename = JS_ToCString(ctx, argv[0]);
+    if (!filename)
+        return JS_EXCEPTION;
+    if (JS_IsObject(data)) {
+        val = JS_GetPropertyStr(ctx, data, "buffer");
+        if (JS_IsException(val))
+            goto exception;
+        if (JS_IsArrayBuffer(val)) {
+            data = unref = val;
+        } else {
+            JS_FreeValue(ctx, val);
+        }
+    }
+    if (JS_IsArrayBuffer(data)) {
+        buf = JS_GetArrayBuffer(ctx, &len, data);
+        mode = "wb";
+    } else if (!JS_IsUndefined(data)) {
+        buf = JS_ToCStringLen(ctx, &len, data);
+        release = true;
+    }
+    if (!buf)
+        goto exception;
+    fp = fopen(filename, mode);
+    if (!fp) {
+        JS_ThrowPlainError(ctx, "error opening %s for writing", filename);
+        goto exception;
+    }
+    n = fwrite(buf, len, 1, fp);
+    fclose(fp);
+    if (n != 1) {
+        JS_ThrowPlainError(ctx, "error writing to %s", filename);
+        goto exception;
+    }
+    ret = JS_UNDEFINED;
+exception:
+    JS_FreeCString(ctx, filename);
+    if (release)
+        JS_FreeCString(ctx, buf);
+    JS_FreeValue(ctx, unref);
     return ret;
 }
 
@@ -660,7 +716,7 @@ static JSModuleDef *js_module_loader_so(JSContext *ctx,
 }
 #endif /* !_WIN32 */
 
-int js_module_set_import_meta(JSContext *ctx, JSValue func_val,
+int js_module_set_import_meta(JSContext *ctx, JSValueConst func_val,
                               bool use_realpath, bool is_main)
 {
     JSModuleDef *m;
@@ -749,8 +805,8 @@ JSModuleDef *js_module_loader(JSContext *ctx,
     return m;
 }
 
-static JSValue js_std_exit(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_std_exit(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     int status;
     if (JS_ToInt32(ctx, &status, argv[0]))
@@ -759,8 +815,8 @@ static JSValue js_std_exit(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_std_getenv(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_std_getenv(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *name, *str;
     name = JS_ToCString(ctx, argv[0]);
@@ -796,8 +852,8 @@ static void unsetenv(const char *name)
 }
 #endif /* _WIN32 */
 
-static JSValue js_std_setenv(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_std_setenv(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *name, *value;
     name = JS_ToCString(ctx, argv[0]);
@@ -814,8 +870,8 @@ static JSValue js_std_setenv(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_std_unsetenv(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_std_unsetenv(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     const char *name;
     name = JS_ToCString(ctx, argv[0]);
@@ -828,8 +884,8 @@ static JSValue js_std_unsetenv(JSContext *ctx, JSValue this_val,
 
 /* return an object containing the list of the available environment
    variables. */
-static JSValue js_std_getenviron(JSContext *ctx, JSValue this_val,
-                                 int argc, JSValue *argv)
+static JSValue js_std_getenviron(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
 {
     char **envp;
     const char *name, *p, *value;
@@ -865,8 +921,8 @@ static JSValue js_std_getenviron(JSContext *ctx, JSValue this_val,
     return JS_EXCEPTION;
 }
 
-static JSValue js_std_gc(JSContext *ctx, JSValue this_val,
-                         int argc, JSValue *argv)
+static JSValue js_std_gc(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
 {
     JS_RunGC(JS_GetRuntime(ctx));
     return JS_UNDEFINED;
@@ -877,15 +933,15 @@ static int interrupt_handler(JSRuntime *rt, void *opaque)
     return (os_pending_signals >> SIGINT) & 1;
 }
 
-static JSValue js_evalScript(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_evalScript(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
     const char *str = NULL;
     size_t len;
     JSValue ret, obj;
-    JSValue options_obj;
+    JSValueConst options_obj, arg;
     bool backtrace_barrier = false;
     bool eval_function = false;
     bool eval_module = false;
@@ -917,17 +973,17 @@ static JSValue js_evalScript(JSContext *ctx, JSValue this_val,
     }
 
     if (eval_module) {
-        obj = argv[0];
-        if (JS_VALUE_GET_TAG(obj) != JS_TAG_MODULE)
+        arg = argv[0];
+        if (JS_VALUE_GET_TAG(arg) != JS_TAG_MODULE)
             return JS_ThrowTypeError(ctx, "not a module");
 
-        if (JS_ResolveModule(ctx, obj) < 0)
+        if (JS_ResolveModule(ctx, arg) < 0)
             return JS_EXCEPTION;
 
-        if (js_module_set_import_meta(ctx, obj, false, false) < 0)
+        if (js_module_set_import_meta(ctx, arg, false, false) < 0)
             return JS_EXCEPTION;
 
-        return JS_EvalFunction(ctx, obj);
+        return JS_EvalFunction(ctx, JS_DupValue(ctx, arg));
     }
 
     if (!eval_function) {
@@ -975,7 +1031,7 @@ static bool is_stdio(FILE *f)
     return f == stdin || f == stdout || f == stderr;
 }
 
-static void js_std_file_finalizer(JSRuntime *rt, JSValue val)
+static void js_std_file_finalizer(JSRuntime *rt, JSValueConst val)
 {
     JSThreadState *ts = js_get_thread_state(rt);
     JSSTDFile *s = JS_GetOpaque(val, ts->std_file_class_id);
@@ -999,8 +1055,8 @@ static ssize_t js_get_errno(ssize_t ret)
     return ret;
 }
 
-static JSValue js_std_strerror(JSContext *ctx, JSValue this_val,
-                                     int argc, JSValue *argv)
+static JSValue js_std_strerror(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     int err;
     if (JS_ToInt32(ctx, &err, argv[0]))
@@ -1028,15 +1084,15 @@ static JSValue js_new_std_file(JSContext *ctx, FILE *f, bool is_popen)
     return obj;
 }
 
-static void js_set_error_object(JSContext *ctx, JSValue obj, int err)
+static void js_set_error_object(JSContext *ctx, JSValueConst obj, int err)
 {
     if (!JS_IsUndefined(obj)) {
         JS_SetPropertyStr(ctx, obj, "errno", JS_NewInt32(ctx, err));
     }
 }
 
-static JSValue js_std_open(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_std_open(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     const char *filename, *mode = NULL;
     FILE *f;
@@ -1072,8 +1128,8 @@ static JSValue js_std_open(JSContext *ctx, JSValue this_val,
 }
 
 #if !defined(__wasi__)
-static JSValue js_std_popen(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_std_popen(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     const char *filename, *mode = NULL;
     FILE *f;
@@ -1109,8 +1165,8 @@ static JSValue js_std_popen(JSContext *ctx, JSValue this_val,
 }
 #endif // !defined(__wasi__)
 
-static JSValue js_std_fdopen(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_std_fdopen(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *mode;
     FILE *f;
@@ -1143,8 +1199,8 @@ static JSValue js_std_fdopen(JSContext *ctx, JSValue this_val,
 }
 
 #if !defined(__wasi__)
-static JSValue js_std_tmpfile(JSContext *ctx, JSValue this_val,
-                              int argc, JSValue *argv)
+static JSValue js_std_tmpfile(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     FILE *f;
     f = tmpfile();
@@ -1156,19 +1212,19 @@ static JSValue js_std_tmpfile(JSContext *ctx, JSValue this_val,
 }
 #endif
 
-static JSValue js_std_sprintf(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_std_sprintf(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     return js_printf_internal(ctx, argc, argv, NULL);
 }
 
-static JSValue js_std_printf(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_std_printf(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     return js_printf_internal(ctx, argc, argv, stdout);
 }
 
-static FILE *js_std_file_get(JSContext *ctx, JSValue obj)
+static FILE *js_std_file_get(JSContext *ctx, JSValueConst obj)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -1182,8 +1238,8 @@ static FILE *js_std_file_get(JSContext *ctx, JSValue obj)
     return s->f;
 }
 
-static JSValue js_std_file_puts(JSContext *ctx, JSValue this_val,
-                                int argc, JSValue *argv, int magic)
+static JSValue js_std_file_puts(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv, int magic)
 {
     FILE *f;
     int i;
@@ -1208,8 +1264,8 @@ static JSValue js_std_file_puts(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_std_file_close(JSContext *ctx, JSValue this_val,
-                                 int argc, JSValue *argv)
+static JSValue js_std_file_close(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -1231,8 +1287,8 @@ static JSValue js_std_file_close(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, err);
 }
 
-static JSValue js_std_file_printf(JSContext *ctx, JSValue this_val,
-                                  int argc, JSValue *argv)
+static JSValue js_std_file_printf(JSContext *ctx, JSValueConst this_val,
+                                  int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1240,8 +1296,8 @@ static JSValue js_std_file_printf(JSContext *ctx, JSValue this_val,
     return js_printf_internal(ctx, argc, argv, f);
 }
 
-static JSValue js_std_file_flush(JSContext *ctx, JSValue this_val,
-                                 int argc, JSValue *argv)
+static JSValue js_std_file_flush(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1250,8 +1306,8 @@ static JSValue js_std_file_flush(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_std_file_tell(JSContext *ctx, JSValue this_val,
-                                int argc, JSValue *argv, int is_bigint)
+static JSValue js_std_file_tell(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv, int is_bigint)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     int64_t pos;
@@ -1268,8 +1324,8 @@ static JSValue js_std_file_tell(JSContext *ctx, JSValue this_val,
         return JS_NewInt64(ctx, pos);
 }
 
-static JSValue js_std_file_seek(JSContext *ctx, JSValue this_val,
-                                int argc, JSValue *argv)
+static JSValue js_std_file_seek(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     int64_t pos;
@@ -1290,8 +1346,8 @@ static JSValue js_std_file_seek(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, ret);
 }
 
-static JSValue js_std_file_eof(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_std_file_eof(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1299,8 +1355,8 @@ static JSValue js_std_file_eof(JSContext *ctx, JSValue this_val,
     return JS_NewBool(ctx, feof(f));
 }
 
-static JSValue js_std_file_error(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_std_file_error(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1308,8 +1364,8 @@ static JSValue js_std_file_error(JSContext *ctx, JSValue this_val,
     return JS_NewBool(ctx, ferror(f));
 }
 
-static JSValue js_std_file_clearerr(JSContext *ctx, JSValue this_val,
-                                    int argc, JSValue *argv)
+static JSValue js_std_file_clearerr(JSContext *ctx, JSValueConst this_val,
+                                    int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1318,8 +1374,8 @@ static JSValue js_std_file_clearerr(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_std_file_fileno(JSContext *ctx, JSValue this_val,
-                                  int argc, JSValue *argv)
+static JSValue js_std_file_fileno(JSContext *ctx, JSValueConst this_val,
+                                  int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1327,8 +1383,8 @@ static JSValue js_std_file_fileno(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, fileno(f));
 }
 
-static JSValue js_std_file_read_write(JSContext *ctx, JSValue this_val,
-                                      int argc, JSValue *argv, int magic)
+static JSValue js_std_file_read_write(JSContext *ctx, JSValueConst this_val,
+                                      int argc, JSValueConst *argv, int magic)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     uint64_t pos, len;
@@ -1354,8 +1410,8 @@ static JSValue js_std_file_read_write(JSContext *ctx, JSValue this_val,
 }
 
 /* XXX: could use less memory and go faster */
-static JSValue js_std_file_getline(JSContext *ctx, JSValue this_val,
-                                   int argc, JSValue *argv)
+static JSValue js_std_file_getline(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     int c;
@@ -1390,8 +1446,8 @@ static JSValue js_std_file_getline(JSContext *ctx, JSValue this_val,
 }
 
 /* XXX: could use less memory and go faster */
-static JSValue js_std_file_readAs(JSContext *ctx, JSValue this_val,
-                                  int argc, JSValue *argv, int magic)
+static JSValue js_std_file_readAs(JSContext *ctx, JSValueConst this_val,
+                                  int argc, JSValueConst *argv, int magic)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     int c;
@@ -1399,7 +1455,7 @@ static JSValue js_std_file_readAs(JSContext *ctx, JSValue this_val,
     JSValue obj;
     uint64_t max_size64;
     size_t max_size;
-    JSValue max_size_val;
+    JSValueConst max_size_val;
 
     if (!f)
         return JS_EXCEPTION;
@@ -1436,8 +1492,8 @@ static JSValue js_std_file_readAs(JSContext *ctx, JSValue this_val,
     return obj;
 }
 
-static JSValue js_std_file_getByte(JSContext *ctx, JSValue this_val,
-                                   int argc, JSValue *argv)
+static JSValue js_std_file_getByte(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     if (!f)
@@ -1445,8 +1501,8 @@ static JSValue js_std_file_getByte(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, fgetc(f));
 }
 
-static JSValue js_std_file_putByte(JSContext *ctx, JSValue this_val,
-                                   int argc, JSValue *argv)
+static JSValue js_std_file_putByte(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
 {
     FILE *f = js_std_file_get(ctx, this_val);
     int c;
@@ -1498,8 +1554,8 @@ static int http_get_status(const char *buf)
     return atoi(p);
 }
 
-static JSValue js_std_urlGet(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_std_urlGet(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *url;
     DynBuf cmd_buf;
@@ -1509,7 +1565,7 @@ static JSValue js_std_urlGet(JSContext *ctx, JSValue this_val,
     size_t i, len;
     int status;
     JSValue response = JS_UNDEFINED, ret_obj;
-    JSValue options_obj;
+    JSValueConst options_obj;
     FILE *f;
     bool binary_flag, full_flag;
 
@@ -1690,6 +1746,7 @@ static const JSCFunctionListEntry js_std_funcs[] = {
     JS_CFUNC_DEF("urlGet", 1, js_std_urlGet ),
 #endif
     JS_CFUNC_DEF("loadFile", 1, js_std_loadFile ),
+    JS_CFUNC_DEF("writeFile", 2, js_std_writeFile ),
     JS_CFUNC_DEF("strerror", 1, js_std_strerror ),
 
     /* FILE I/O */
@@ -1770,8 +1827,8 @@ JSModuleDef *js_init_module_std(JSContext *ctx, const char *module_name)
 /**********************************************************/
 /* 'os' object */
 
-static JSValue js_os_open(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_open(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
     const char *filename;
     int flags, mode, ret;
@@ -1800,8 +1857,8 @@ static JSValue js_os_open(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, ret);
 }
 
-static JSValue js_os_close(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_os_close(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     int fd, ret;
     if (JS_ToInt32(ctx, &fd, argv[0]))
@@ -1810,8 +1867,8 @@ static JSValue js_os_close(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, ret);
 }
 
-static JSValue js_os_seek(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_seek(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
     int fd, whence;
     int64_t pos, ret;
@@ -1833,8 +1890,8 @@ static JSValue js_os_seek(JSContext *ctx, JSValue this_val,
         return JS_NewInt64(ctx, ret);
 }
 
-static JSValue js_os_read_write(JSContext *ctx, JSValue this_val,
-                                      int argc, JSValue *argv, int magic)
+static JSValue js_os_read_write(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv, int magic)
 {
     int fd;
     uint64_t pos, len;
@@ -1860,8 +1917,8 @@ static JSValue js_os_read_write(JSContext *ctx, JSValue this_val,
     return JS_NewInt64(ctx, ret);
 }
 
-static JSValue js_os_isatty(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_isatty(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     int fd;
     if (JS_ToInt32(ctx, &fd, argv[0]))
@@ -1870,8 +1927,8 @@ static JSValue js_os_isatty(JSContext *ctx, JSValue this_val,
 }
 
 #if defined(_WIN32)
-static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValue this_val,
-                                   int argc, JSValue *argv)
+static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
 {
     int fd;
     HANDLE handle;
@@ -1896,8 +1953,8 @@ static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValue this_val,
 #define __ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define __ENABLE_VIRTUAL_TERMINAL_INPUT 0x0200
 
-static JSValue js_os_ttySetRaw(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_os_ttySetRaw(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     int fd;
     HANDLE handle;
@@ -1914,8 +1971,8 @@ static JSValue js_os_ttySetRaw(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 #elif !defined(__wasi__)
-static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValue this_val,
-                                   int argc, JSValue *argv)
+static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
 {
     int fd;
     struct winsize ws;
@@ -1944,8 +2001,8 @@ static void term_exit(void)
 }
 
 /* XXX: should add a way to go back to normal mode */
-static JSValue js_os_ttySetRaw(JSContext *ctx, JSValue this_val,
-                               int argc, JSValue *argv)
+static JSValue js_os_ttySetRaw(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
 {
     struct termios tty;
     int fd;
@@ -1974,8 +2031,8 @@ static JSValue js_os_ttySetRaw(JSContext *ctx, JSValue this_val,
 
 #endif /* !_WIN32 && !__wasi__ */
 
-static JSValue js_os_remove(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_os_remove(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *filename;
     int ret;
@@ -2000,8 +2057,8 @@ static JSValue js_os_remove(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, ret);
 }
 
-static JSValue js_os_rename(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_rename(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     const char *oldpath, *newpath;
     int ret;
@@ -2049,14 +2106,14 @@ static void free_rw_handler(JSRuntime *rt, JSOSRWHandler *rh)
     js_free_rt(rt, rh);
 }
 
-static JSValue js_os_setReadHandler(JSContext *ctx, JSValue this_val,
-                                    int argc, JSValue *argv, int magic)
+static JSValue js_os_setReadHandler(JSContext *ctx, JSValueConst this_val,
+                                    int argc, JSValueConst *argv, int magic)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
     JSOSRWHandler *rh;
     int fd;
-    JSValue func;
+    JSValueConst func;
 
     if (JS_ToInt32(ctx, &fd, argv[0]))
         return JS_EXCEPTION;
@@ -2119,14 +2176,14 @@ static void os_signal_handler(int sig_num)
 typedef void (*sighandler_t)(int sig_num);
 #endif
 
-static JSValue js_os_signal(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_signal(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
     JSOSSignalHandler *sh;
     uint32_t sig_num;
-    JSValue func;
+    JSValueConst func;
     sighandler_t handler;
 
     if (!is_main_thread(rt))
@@ -2167,8 +2224,8 @@ static JSValue js_os_signal(JSContext *ctx, JSValue this_val,
 }
 
 #if !defined(_WIN32) && !defined(__wasi__)
-static JSValue js_os_cputime(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_os_cputime(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     struct rusage ru;
     int64_t cputime;
@@ -2181,8 +2238,18 @@ static JSValue js_os_cputime(JSContext *ctx, JSValue this_val,
 }
 #endif
 
-static JSValue js_os_now(JSContext *ctx, JSValue this_val,
-                         int argc, JSValue *argv)
+static JSValue js_os_exepath(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
+{
+    char buf[JS__PATH_MAX];
+    size_t len = sizeof(buf);
+    if (js_exepath(buf, &len))
+        return JS_UNDEFINED;
+    return JS_NewStringLen(ctx, buf, len);
+}
+
+static JSValue js_os_now(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
 {
     return JS_NewInt64(ctx, js__hrtime_ns() / 1000);
 }
@@ -2201,13 +2268,13 @@ static void free_timer(JSRuntime *rt, JSOSTimer *th)
 
 // TODO(bnoordhuis) accept string as first arg and eval at timer expiry
 // TODO(bnoordhuis) retain argv[2..] as args for callback if argc > 2
-static JSValue js_os_setTimeout(JSContext *ctx, JSValue this_val,
-                                int argc, JSValue *argv, int magic)
+static JSValue js_os_setTimeout(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv, int magic)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
     int64_t delay;
-    JSValue func;
+    JSValueConst func;
     JSOSTimer *th;
 
     func = argv[0];
@@ -2244,8 +2311,8 @@ static JSOSTimer *find_timer_by_id(JSThreadState *ts, int timer_id)
     return NULL;
 }
 
-static JSValue js_os_clearTimeout(JSContext *ctx, JSValue this_val,
-                                  int argc, JSValue *argv)
+static JSValue js_os_clearTimeout(JSContext *ctx, JSValueConst this_val,
+                                  int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -2262,8 +2329,8 @@ static JSValue js_os_clearTimeout(JSContext *ctx, JSValue this_val,
 }
 
 /* return a promise */
-static JSValue js_os_sleepAsync(JSContext *ctx, JSValue this_val,
-                                int argc, JSValue *argv)
+static JSValue js_os_sleepAsync(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -2348,6 +2415,80 @@ static int js_os_run_timers(JSRuntime *rt, JSContext *ctx, JSThreadState *ts, in
 
 #ifdef USE_WORKER
 
+#ifdef _WIN32
+
+static int js_waker_init(JSWaker *w)
+{
+    w->handle = CreateEvent(NULL, TRUE, FALSE, NULL);
+    return w->handle ? 0 : -1;
+}
+
+static void js_waker_signal(JSWaker *w)
+{
+    SetEvent(w->handle);
+}
+
+static void js_waker_clear(JSWaker *w)
+{
+    ResetEvent(w->handle);
+}
+
+static void js_waker_close(JSWaker *w)
+{
+    CloseHandle(w->handle);
+    w->handle = INVALID_HANDLE_VALUE;
+}
+
+#else // !_WIN32
+
+static int js_waker_init(JSWaker *w)
+{
+    int fds[2];
+
+    if (pipe(fds) < 0)
+        return -1;
+    w->read_fd = fds[0];
+    w->write_fd = fds[1];
+    return 0;
+}
+
+static void js_waker_signal(JSWaker *w)
+{
+    int ret;
+
+    for(;;) {
+        ret = write(w->write_fd, "", 1);
+        if (ret == 1)
+            break;
+        if (ret < 0 && (errno != EAGAIN || errno != EINTR))
+            break;
+    }
+}
+
+static void js_waker_clear(JSWaker *w)
+{
+    uint8_t buf[16];
+    int ret;
+
+    for(;;) {
+        ret = read(w->read_fd, buf, sizeof(buf));
+        if (ret >= 0)
+            break;
+        if (errno != EAGAIN && errno != EINTR)
+            break;
+    }
+}
+
+static void js_waker_close(JSWaker *w)
+{
+    close(w->read_fd);
+    close(w->write_fd);
+    w->read_fd = -1;
+    w->write_fd = -1;
+}
+
+#endif // _WIN32
+
 static void js_free_message(JSWorkerMessage *msg);
 
 /* return 1 if a message was handled, 0 if no message */
@@ -2360,7 +2501,7 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
     JSWorkerMessage *msg;
     JSValue obj, data_obj, func, retval;
 
-    pthread_mutex_lock(&ps->mutex);
+    js_mutex_lock(&ps->mutex);
     if (!list_empty(&ps->msg_queue)) {
         el = ps->msg_queue.next;
         msg = list_entry(el, JSWorkerMessage, link);
@@ -2368,21 +2509,14 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
         /* remove the message from the queue */
         list_del(&msg->link);
 
-        if (list_empty(&ps->msg_queue)) {
-            uint8_t buf[16];
-            int ret;
-            for(;;) {
-                ret = read(ps->read_fd, buf, sizeof(buf));
-                if (ret >= 0)
-                    break;
-                if (errno != EAGAIN && errno != EINTR)
-                    break;
-            }
-        }
+        // drain read end of pipe
+        if (list_empty(&ps->msg_queue))
+            js_waker_clear(&ps->waker);
 
-        pthread_mutex_unlock(&ps->mutex);
+        js_mutex_unlock(&ps->mutex);
 
-        data_obj = JS_ReadObject(ctx, msg->data, msg->data_len,JS_READ_OBJ_SAB | JS_READ_OBJ_REFERENCE);
+        data_obj = JS_ReadObject(ctx, msg->data, msg->data_len,
+                                 JS_READ_OBJ_SAB | JS_READ_OBJ_REFERENCE);
 
         js_free_message(msg);
 
@@ -2398,7 +2532,7 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
         /* 'func' might be destroyed when calling itself (if it frees the
            handler), so must take extra care */
         func = JS_DupValue(ctx, port->on_message_func);
-        retval = JS_Call(ctx, func, JS_UNDEFINED, 1, &obj);
+        retval = JS_Call(ctx, func, JS_UNDEFINED, 1, (JSValueConst *)&obj);
         JS_FreeValue(ctx, obj);
         JS_FreeValue(ctx, func);
         if (JS_IsException(retval)) {
@@ -2409,44 +2543,25 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
         }
         ret = 1;
     } else {
-        pthread_mutex_unlock(&ps->mutex);
+        js_mutex_unlock(&ps->mutex);
         ret = 0;
     }
     return ret;
 }
-#else
-static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
-                                 JSWorkerMessageHandler *port)
-{
-    return 0;
-}
-#endif
+
+#endif // USE_WORKER
 
 #if defined(_WIN32)
-
 static int js_os_poll(JSContext *ctx)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
-    int min_delay, console_fd;
+    int min_delay, count;
     JSOSRWHandler *rh;
     struct list_head *el;
+    HANDLE handles[MAXIMUM_WAIT_OBJECTS]; // 64
 
-    /* only check signals in the main thread */
-    if (!ts->recv_pipe &&
-        unlikely(os_pending_signals != 0)) {
-        JSOSSignalHandler *sh;
-        uint64_t mask;
-
-        list_for_each(el, &ts->os_signal_handlers) {
-            sh = list_entry(el, JSOSSignalHandler, link);
-            mask = (uint64_t)1 << sh->sig_num;
-            if (os_pending_signals & mask) {
-                os_pending_signals &= ~mask;
-                return call_handler(ctx, sh->func);
-            }
-        }
-    }
+    /* XXX: handle signals if useful */
 
     if (js_os_run_timers(rt, ctx, ts, &min_delay))
         return -1;
@@ -2456,65 +2571,56 @@ static int js_os_poll(JSContext *ctx)
         if (list_empty(&ts->os_rw_handlers) && list_empty(&ts->port_list))
             return -1; /* no more events */
 
-    DWORD os_handles_length = 0;
-    HANDLE os_handles[MAXIMUM_WAIT_OBJECTS] = {0};
+    count = 0;
     list_for_each(el, &ts->os_rw_handlers) {
         rh = list_entry(el, JSOSRWHandler, link);
-        if (rh->fd == 0 && !JS_IsNull(rh->rw_func[0])) {
-            console_fd = rh->fd;
-            os_handles[os_handles_length]=(HANDLE)_get_osfhandle(rh->fd);
-            os_handles_length++;
+        if (rh->fd == 0 && !JS_IsNull(rh->rw_func[0]))
+            handles[count++] = (HANDLE)_get_osfhandle(rh->fd); // stdin
+        if (count == (int)countof(handles))
             break;
-        }
     }
-    #if defined(USE_WORKER)
+
     list_for_each(el, &ts->port_list) {
         JSWorkerMessageHandler *port = list_entry(el, JSWorkerMessageHandler, link);
-        if (!JS_IsNull(port->on_message_func)) {
-            JSWorkerMessagePipe *ps = port->recv_pipe;
-            os_handles[os_handles_length]=(HANDLE)_get_osfhandle(ps->read_fd);
-            os_handles_length++;
-        }
+        if (JS_IsNull(port->on_message_func))
+            continue;
+        handles[count++] = port->recv_pipe->waker.handle;
+        if (count == (int)countof(handles))
+            break;
     }
-    #endif
 
-    if (os_handles_length > 0) {
-        DWORD ti, ret;
-        HANDLE handle;
-        if (min_delay == -1)
-            ti = INFINITE;
-        else
-            ti = min_delay;
-        ret = WaitForMultipleObjects(os_handles_length,os_handles,FALSE, ti);
-        if (ret >= WAIT_OBJECT_0 && ret < WAIT_OBJECT_0+os_handles_length) {
-            //TODO: possible optimization: WAIT_OBJECT_ can be used to determine the exact handler
+    if (count > 0) {
+        DWORD ret, timeout = INFINITE;
+        if (min_delay != -1)
+            timeout = min_delay;
+        ret = WaitForMultipleObjects(count, handles, FALSE, timeout);
+        if (ret < count) {
             list_for_each(el, &ts->os_rw_handlers) {
                 rh = list_entry(el, JSOSRWHandler, link);
-                if (rh->fd == console_fd && !JS_IsNull(rh->rw_func[0])) {
+                if (rh->fd == 0 && !JS_IsNull(rh->rw_func[0])) {
                     return call_handler(ctx, rh->rw_func[0]);
                     /* must stop because the list may have been modified */
                 }
             }
-            #if defined(USE_WORKER)
+
             list_for_each(el, &ts->port_list) {
                 JSWorkerMessageHandler *port = list_entry(el, JSWorkerMessageHandler, link);
                 if (!JS_IsNull(port->on_message_func)) {
                     JSWorkerMessagePipe *ps = port->recv_pipe;
-                    //if (FD_ISSET(ps->read_fd, &rfds)) { //missing condition, is it possible for port_list to change since start of pthread_cond_wait?
-                    if (handle_posted_message(rt, ctx, port))
-                        goto done;
+                    if (ps->waker.handle == handles[ret]) {
+                        if (handle_posted_message(rt, ctx, port))
+                            goto done;
+                    }
                 }
             }
-            #endif
         }
-    }else{
+    } else {
         Sleep(min_delay);
     }
-    done:
+done:
     return 0;
 }
-
-#else
+#else // !defined(_WIN32)
 static int js_os_poll(JSContext *ctx)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
@@ -2568,14 +2674,16 @@ static int js_os_poll(JSContext *ctx)
             FD_SET(rh->fd, &wfds);
     }
 
+#ifdef USE_WORKER
     list_for_each(el, &ts->port_list) {
         JSWorkerMessageHandler *port = list_entry(el, JSWorkerMessageHandler, link);
         if (!JS_IsNull(port->on_message_func)) {
             JSWorkerMessagePipe *ps = port->recv_pipe;
-            fd_max = max_int(fd_max, ps->read_fd);
-            FD_SET(ps->read_fd, &rfds);
+            fd_max = max_int(fd_max, ps->waker.read_fd);
+            FD_SET(ps->waker.read_fd, &rfds);
         }
     }
+#endif // USE_WORKER
 
     ret = select(fd_max + 1, &rfds, &wfds, NULL, tvp);
     if (ret > 0) {
@@ -2592,22 +2700,25 @@ static int js_os_poll(JSContext *ctx)
                 /* must stop because the list may have been modified */
             }
         }
-
+#ifdef USE_WORKER
         list_for_each(el, &ts->port_list) {
             JSWorkerMessageHandler *port = list_entry(el, JSWorkerMessageHandler, link);
             if (!JS_IsNull(port->on_message_func)) {
                 JSWorkerMessagePipe *ps = port->recv_pipe;
-                if (FD_ISSET(ps->read_fd, &rfds)) {
+                if (FD_ISSET(ps->waker.read_fd, &rfds)) {
                     if (handle_posted_message(rt, ctx, port))
                         goto done;
                 }
             }
         }
+#endif // USE_WORKER
     }
-    done:
+    goto done; // silence unused label warning
+done:
     return 0;
 }
-#endif /* !_WIN32 */
+#endif // defined(_WIN32)
+
 
 static JSValue make_obj_error(JSContext *ctx,
                               JSValue obj,
@@ -2634,8 +2745,8 @@ static JSValue make_string_error(JSContext *ctx,
 }
 
 /* return [cwd, errorcode] */
-static JSValue js_os_getcwd(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_getcwd(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     char buf[PATH_MAX];
     int err;
@@ -2649,8 +2760,8 @@ static JSValue js_os_getcwd(JSContext *ctx, JSValue this_val,
     return make_string_error(ctx, buf, err);
 }
 
-static JSValue js_os_chdir(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_os_chdir(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     const char *target;
     int err;
@@ -2663,8 +2774,8 @@ static JSValue js_os_chdir(JSContext *ctx, JSValue this_val,
     return JS_NewInt32(ctx, err);
 }
 
-static JSValue js_os_mkdir(JSContext *ctx, JSValue this_val,
-                           int argc, JSValue *argv)
+static JSValue js_os_mkdir(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     int mode, ret;
     const char *path;
@@ -2689,8 +2800,8 @@ static JSValue js_os_mkdir(JSContext *ctx, JSValue this_val,
 }
 
 /* return [array, errorcode] */
-static JSValue js_os_readdir(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_os_readdir(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     const char *path;
     DIR *f;
@@ -2740,8 +2851,8 @@ static int64_t timespec_to_ms(const struct timespec *tv)
 #endif
 
 /* return [obj, errcode] */
-static JSValue js_os_stat(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv, int is_lstat)
+static JSValue js_os_stat(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv, int is_lstat)
 {
     const char *path;
     int err, res;
@@ -2839,8 +2950,8 @@ static void ms_to_timeval(struct timeval *tv, uint64_t v)
 }
 #endif
 
-static JSValue js_os_utimes(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_utimes(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     const char *path;
     int64_t atime, mtime;
@@ -2873,8 +2984,8 @@ static JSValue js_os_utimes(JSContext *ctx, JSValue this_val,
 }
 
 /* sleep(delay_ms) */
-static JSValue js_os_sleep(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_sleep(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
     int64_t delay;
     int ret;
@@ -2916,8 +3027,8 @@ static char *realpath(const char *path, char *buf)
 
 #if !defined(__wasi__)
 /* return [path, errorcode] */
-static JSValue js_os_realpath(JSContext *ctx, JSValue this_val,
-                              int argc, JSValue *argv)
+static JSValue js_os_realpath(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     const char *path;
     char buf[PATH_MAX], *res;
@@ -2939,8 +3050,8 @@ static JSValue js_os_realpath(JSContext *ctx, JSValue this_val,
 #endif
 
 #if !defined(_WIN32) && !defined(__wasi__)
-static JSValue js_os_symlink(JSContext *ctx, JSValue this_val,
-                              int argc, JSValue *argv)
+static JSValue js_os_symlink(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     const char *target, *linkpath;
     int err;
@@ -2960,8 +3071,8 @@ static JSValue js_os_symlink(JSContext *ctx, JSValue this_val,
 }
 
 /* return [path, errorcode] */
-static JSValue js_os_readlink(JSContext *ctx, JSValue this_val,
-                              int argc, JSValue *argv)
+static JSValue js_os_readlink(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     const char *path;
     char buf[PATH_MAX];
@@ -3106,16 +3217,16 @@ static js_once_t js_os_exec_once = JS_ONCE_INIT;
 
 static void js_os_exec_once_init(void)
 {
-    js_os_exec_closefrom = dlsym(RTLD_DEFAULT, "closefrom");
+     *(void **) (&js_os_exec_closefrom) = dlsym(RTLD_DEFAULT, "closefrom");
 }
 
 #endif
 
 /* exec(args[, options]) -> exitcode */
-static JSValue js_os_exec(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
-    JSValue options, args = argv[0];
+    JSValueConst options, args = argv[0];
     JSValue val, ret_val;
     const char **exec_argv, *file = NULL, *str, *cwd = NULL;
     char **envp = environ;
@@ -3320,15 +3431,15 @@ static JSValue js_os_exec(JSContext *ctx, JSValue this_val,
 }
 
 /* getpid() -> pid */
-static JSValue js_os_getpid(JSContext *ctx, JSValue this_val,
-                            int argc, JSValue *argv)
+static JSValue js_os_getpid(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
 {
     return JS_NewInt32(ctx, getpid());
 }
 
 /* waitpid(pid, block) -> [pid, status] */
-static JSValue js_os_waitpid(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_os_waitpid(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     int pid, status, options, ret;
     JSValue obj;
@@ -3355,8 +3466,8 @@ static JSValue js_os_waitpid(JSContext *ctx, JSValue this_val,
 }
 
 /* pipe() -> [read_fd, write_fd] or null if error */
-static JSValue js_os_pipe(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_pipe(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
     int pipe_fds[2], ret;
     JSValue obj;
@@ -3375,8 +3486,8 @@ static JSValue js_os_pipe(JSContext *ctx, JSValue this_val,
 }
 
 /* kill(pid, sig) */
-static JSValue js_os_kill(JSContext *ctx, JSValue this_val,
-                          int argc, JSValue *argv)
+static JSValue js_os_kill(JSContext *ctx, JSValueConst this_val,
+                          int argc, JSValueConst *argv)
 {
     int pid, sig, ret;
 
@@ -3389,8 +3500,8 @@ static JSValue js_os_kill(JSContext *ctx, JSValue this_val,
 }
 
 /* dup(fd) */
-static JSValue js_os_dup(JSContext *ctx, JSValue this_val,
-                         int argc, JSValue *argv)
+static JSValue js_os_dup(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
 {
     int fd, ret;
 
@@ -3401,8 +3512,8 @@ static JSValue js_os_dup(JSContext *ctx, JSValue this_val,
 }
 
 /* dup2(fd) */
-static JSValue js_os_dup2(JSContext *ctx, JSValue this_val,
-                         int argc, JSValue *argv)
+static JSValue js_os_dup2(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
 {
     int fd, fd2, ret;
 
@@ -3478,22 +3589,17 @@ static void js_sab_dup(void *opaque, void *ptr)
 static JSWorkerMessagePipe *js_new_message_pipe(void)
 {
     JSWorkerMessagePipe *ps;
-    int pipe_fds[2];
-
-    if (pipe(pipe_fds) < 0)
-        return NULL;
 
     ps = malloc(sizeof(*ps));
-    if (!ps) {
-        close(pipe_fds[0]);
-        close(pipe_fds[1]);
+    if (!ps)
+        return NULL;
+    if (js_waker_init(&ps->waker)) {
+        free(ps);
         return NULL;
     }
     ps->ref_count = 1;
     init_list_head(&ps->msg_queue);
-    pthread_mutex_init(&ps->mutex, NULL);
-    ps->read_fd = pipe_fds[0];
-    ps->write_fd = pipe_fds[1];
+    js_mutex_init(&ps->mutex);
     return ps;
 }
 
@@ -3531,9 +3637,8 @@ static void js_free_message_pipe(JSWorkerMessagePipe *ps)
             msg = list_entry(el, JSWorkerMessage, link);
             js_free_message(msg);
         }
-        pthread_mutex_destroy(&ps->mutex);
-        close(ps->read_fd);
-        close(ps->write_fd);
+        js_mutex_destroy(&ps->mutex);
+        js_waker_close(&ps->waker);
         free(ps);
     }
 }
@@ -3548,7 +3653,7 @@ static void js_free_port(JSRuntime *rt, JSWorkerMessageHandler *port)
     }
 }
 
-static void js_worker_finalizer(JSRuntime *rt, JSValue val)
+static void js_worker_finalizer(JSRuntime *rt, JSValueConst val)
 {
     JSThreadState *ts = js_get_thread_state(rt);
     JSWorkerData *worker = JS_GetOpaque(val, ts->worker_class_id);
@@ -3565,7 +3670,7 @@ static JSClassDef js_worker_class = {
     .finalizer = js_worker_finalizer,
 };
 
-static void *worker_func(void *opaque)
+static void worker_func(void *opaque)
 {
     WorkerFuncArgs *args = opaque;
     JSRuntime *rt;
@@ -3612,10 +3717,9 @@ static void *worker_func(void *opaque)
     js_std_free_handlers(rt);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
-    return NULL;
 }
 
-static JSValue js_worker_ctor_internal(JSContext *ctx, JSValue new_target,
+static JSValue js_worker_ctor_internal(JSContext *ctx, JSValueConst new_target,
                                        JSWorkerMessagePipe *recv_pipe,
                                        JSWorkerMessagePipe *send_pipe)
 {
@@ -3649,13 +3753,12 @@ static JSValue js_worker_ctor_internal(JSContext *ctx, JSValue new_target,
     return JS_EXCEPTION;
 }
 
-static JSValue js_worker_ctor(JSContext *ctx, JSValue new_target,
-                              int argc, JSValue *argv)
+static JSValue js_worker_ctor(JSContext *ctx, JSValueConst new_target,
+                              int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     WorkerFuncArgs *args = NULL;
-    pthread_t tid;
-    pthread_attr_t attr;
+    js_thread_t thr;
     JSValue obj = JS_UNDEFINED;
     int ret;
     const char *filename = NULL, *basename;
@@ -3702,14 +3805,7 @@ static JSValue js_worker_ctor(JSContext *ctx, JSValue new_target,
     if (JS_IsException(obj))
         goto fail;
 
-    pthread_attr_init(&attr);
-    /* no join at the end */
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    // musl libc gives threads 80 kb stacks, much smaller than
-    // JS_DEFAULT_STACK_SIZE (1 MB)
-    pthread_attr_setstacksize(&attr, 2 << 20); // 2 MB, glibc default
-    ret = pthread_create(&tid, &attr, worker_func, args);
-    pthread_attr_destroy(&attr);
+    ret = js_thread_create(&thr, worker_func, args, JS_THREAD_CREATE_DETACHED);
     if (ret != 0) {
         JS_ThrowTypeError(ctx, "could not create worker");
         goto fail;
@@ -3733,8 +3829,8 @@ static JSValue js_worker_ctor(JSContext *ctx, JSValue new_target,
     return JS_EXCEPTION;
 }
 
-static JSValue js_worker_postMessage(JSContext *ctx, JSValue this_val,
-                                     int argc, JSValue *argv)
+static JSValue js_worker_postMessage(JSContext *ctx, JSValueConst this_val,
+                                     int argc, JSValueConst *argv)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -3784,21 +3880,12 @@ static JSValue js_worker_postMessage(JSContext *ctx, JSValue this_val,
     }
 
     ps = worker->send_pipe;
-    pthread_mutex_lock(&ps->mutex);
+    js_mutex_lock(&ps->mutex);
     /* indicate that data is present */
-    if (list_empty(&ps->msg_queue)) {
-        uint8_t ch = '\0';
-        int ret;
-        for(;;) {
-            ret = write(ps->write_fd, &ch, 1);
-            if (ret == 1)
-                break;
-            if (ret < 0 && (errno != EAGAIN || errno != EINTR))
-                break;
-        }
-    }
+    if (list_empty(&ps->msg_queue))
+        js_waker_signal(&ps->waker);
     list_add_tail(&msg->link, &ps->msg_queue);
-    pthread_mutex_unlock(&ps->mutex);
+    js_mutex_unlock(&ps->mutex);
     return JS_UNDEFINED;
  fail:
     if (msg) {
@@ -3830,8 +3917,8 @@ JSValue js_postMessage(JSContext *ctx,JSValue worker,int argc, JSValue *argv){
     //TODO: allow providing a c function callback
 }
 
-static JSValue js_worker_set_onmessage(JSContext *ctx, JSValue this_val,
-                                   JSValue func)
+static JSValue js_worker_set_onmessage(JSContext *ctx, JSValueConst this_val,
+                                       JSValueConst func)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -3865,7 +3952,7 @@ static JSValue js_worker_set_onmessage(JSContext *ctx, JSValue this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_worker_get_onmessage(JSContext *ctx, JSValue this_val)
+static JSValue js_worker_get_onmessage(JSContext *ctx, JSValueConst this_val)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = js_get_thread_state(rt);
@@ -3972,6 +4059,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
     OS_FLAG(SIGTTOU),
     JS_CFUNC_DEF("cputime", 0, js_os_cputime ),
 #endif
+    JS_CFUNC_DEF("exePath", 0, js_os_exepath ),
     JS_CFUNC_DEF("now", 0, js_os_now ),
     JS_CFUNC_MAGIC_DEF("setTimeout", 2, js_os_setTimeout, 0 ),
     JS_CFUNC_MAGIC_DEF("setInterval", 2, js_os_setTimeout, 1 ),
@@ -4091,18 +4179,17 @@ JSValue js_copyWorker(JSContext *ctx1, JSContext *ctx2){
     }
     return js_worker_ctor_internal(ctx2, JS_UNDEFINED, ts1->send_pipe, ts1->recv_pipe);//Inverted pipes, sends to self, instead of to parent
 }
-
 /**********************************************************/
 
-static JSValue js_print(JSContext *ctx, JSValue this_val,
-                        int argc, JSValue *argv)
+static JSValue js_print(JSContext *ctx, JSValueConst this_val,
+                        int argc, JSValueConst *argv)
 {
 #ifdef _WIN32
     HANDLE handle;
     DWORD mode;
 #endif
     const char *s;
-    JSValue v;
+    JSValueConst v;
     DynBuf b;
     int i;
 
@@ -4112,9 +4199,9 @@ static JSValue js_print(JSContext *ctx, JSValue this_val,
         s = JS_ToCString(ctx, v);
         if (!s && JS_IsObject(v)) {
             JS_FreeValue(ctx, JS_GetException(ctx));
-            v = JS_ToObjectString(ctx, v);
-            s = JS_ToCString(ctx, v);
-            JS_FreeValue(ctx, v);
+            JSValue t = JS_ToObjectString(ctx, v);
+            s = JS_ToCString(ctx, t);
+            JS_FreeValue(ctx, t);
         }
         if (s) {
             dbuf_printf(&b, "%s%s", &" "[!i], s);
@@ -4247,7 +4334,7 @@ void js_std_free_handlers(JSRuntime *rt)
 #endif
 }
 
-static void js_dump_obj(JSContext *ctx, FILE *f, JSValue val)
+static void js_dump_obj(JSContext *ctx, FILE *f, JSValueConst val)
 {
     const char *str;
 
@@ -4260,7 +4347,7 @@ static void js_dump_obj(JSContext *ctx, FILE *f, JSValue val)
     }
 }
 
-static void js_std_dump_error1(JSContext *ctx, JSValue exception_val)
+static void js_std_dump_error1(JSContext *ctx, JSValueConst exception_val)
 {
     JSValue val;
     bool is_error;
@@ -4287,8 +4374,8 @@ void js_std_dump_error(JSContext *ctx)
     JS_FreeValue(ctx, exception_val);
 }
 
-void js_std_promise_rejection_tracker(JSContext *ctx, JSValue promise,
-                                      JSValue reason,
+void js_std_promise_rejection_tracker(JSContext *ctx, JSValueConst promise,
+                                      JSValueConst reason,
                                       bool is_handled, void *opaque)
 {
     if (!is_handled) {
@@ -4397,8 +4484,8 @@ void js_std_eval_binary(JSContext *ctx, const uint8_t *buf, size_t buf_len,
     }
 }
 
-static JSValue js_bjson_read(JSContext *ctx, JSValue this_val,
-                             int argc, JSValue *argv)
+static JSValue js_bjson_read(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
     uint8_t *buf;
     uint64_t pos, len;
@@ -4421,8 +4508,8 @@ static JSValue js_bjson_read(JSContext *ctx, JSValue this_val,
     return obj;
 }
 
-static JSValue js_bjson_write(JSContext *ctx, JSValue this_val,
-                              int argc, JSValue *argv)
+static JSValue js_bjson_write(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
 {
     size_t len;
     uint8_t *buf;

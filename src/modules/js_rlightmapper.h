@@ -26,7 +26,7 @@ static void js_Lightmapper_finalizer(JSRuntime * rt, JSValue val) {
 static JSValue js_Lightmapper_data_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((Lightmapper *)ptr)->w * ((Lightmapper *)ptr)->h * 4; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)((Lightmapper *)ptr)->data[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -37,7 +37,7 @@ static JSValue js_Lightmapper_data_values(JSContext * ctx, void * ptr, int prope
 }
 
 static int js_Lightmapper_data_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((Lightmapper *)ptr)->w * ((Lightmapper *)ptr)->h * 4;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -49,7 +49,7 @@ static int js_Lightmapper_data_keys(JSContext * ctx, void * ptr, JSPropertyEnum 
 static JSValue js_Lightmapper_data_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((Lightmapper *)ptr)->w * ((Lightmapper *)ptr)->h * 4);
             return ret;
         }
         else {
@@ -57,7 +57,7 @@ static JSValue js_Lightmapper_data_get(JSContext * ctx, void * ptr, int property
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((Lightmapper *)ptr)->w * ((Lightmapper *)ptr)->h * 4) {
             float src = ((Lightmapper *)ptr)->data[property];
             JSValue ret = JS_NewFloat64(ctx, (double)src);
             return ret;
@@ -95,7 +95,7 @@ static int js_Lightmapper_data_has(JSContext * ctx, void * ptr, int property, bo
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((Lightmapper *)ptr)->w * ((Lightmapper *)ptr)->h * 4) {
             return true;
         }
         else {
@@ -110,11 +110,90 @@ static JSValue js_Lightmapper_get_data(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_Lightmapper_set_data(JSContext* ctx, JSValue this_val, JSValue v) {
+    Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
+    float * value;
+    bool freesrc_value = false;
+    JSValue da_value;
+    int64_t size_value;
+    if(JS_GetClassID(v) == js_ArrayProxy_class_id) {
+        void * opaque_value = JS_GetOpaque(v, js_ArrayProxy_class_id);
+        ArrayProxy_class AP_value = *(ArrayProxy_class *)opaque_value;
+        v = AP_value.values(ctx, AP_value.opaque, 0, false);
+        freesrc_value = true;
+    }
+    if(JS_IsArray(v) == 1) {
+        if(JS_GetLength(ctx,v,&size_value)==-1) {
+            return JS_EXCEPTION;
+        }
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float));
+        for(int i0=0; i0 < size_value; i0++){
+            JSValue js_value = JS_GetPropertyUint32(ctx,v,i0);
+            double double_valuei0;
+            int err_valuei0 = JS_ToFloat64(ctx, &double_valuei0, js_value);
+            if(err_valuei0<0) {
+                JS_ThrowTypeError(ctx, "js_value is not numeric");
+                return JS_EXCEPTION;
+            }
+            value[i0] = (float)double_valuei0;
+            JS_FreeValue(ctx, js_value);
+        }
+    }
+    else if(JS_IsArrayBuffer(v) == 1) {
+        size_t size_value;
+        float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, v);
+        value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+        memcpy(value, js_value, size_value);
+    }
+    else {
+        JSClassID classid_value = JS_GetClassID(v);
+        if(classid_value==JS_CLASS_FLOAT32_ARRAY) {
+            size_t offset_value;
+            size_t size_value;
+            da_value = JS_GetTypedArrayBuffer(ctx,v,&offset_value,&size_value,NULL);
+            float * js_value = (float *)JS_GetArrayBuffer(ctx, &size_value, da_value);
+            js_value+=offset_value;
+            size_value-=offset_value;
+            value = (float *)jsc_malloc(ctx, size_value * sizeof(float *));
+            memcpy(value, js_value, size_value);
+            JS_FreeValuePtr(ctx, &da_value);
+        }
+        else {
+            if(freesrc_value) {
+                JS_FreeValue(ctx, v);
+            }
+            JS_ThrowTypeError(ctx, "v does not match type float *");
+            return JS_EXCEPTION;
+        }
+        if(freesrc_value) {
+            JS_FreeValue(ctx, v);
+        }
+    }
+    if(ptr->data!=NULL) {
+        jsc_free(ctx, ptr->data);
+    }
+    ptr->data = value;
+    return JS_UNDEFINED;
+}
+
 static JSValue js_Lightmapper_get_w(JSContext* ctx, JSValue this_val) {
     Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
     int w = ptr->w;
     JSValue ret = JS_NewInt32(ctx, (long)w);
     return ret;
+}
+
+static JSValue js_Lightmapper_set_w(JSContext* ctx, JSValue this_val, JSValue v) {
+    Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->w = value;
+    return JS_UNDEFINED;
 }
 
 static JSValue js_Lightmapper_get_h(JSContext* ctx, JSValue this_val) {
@@ -124,6 +203,19 @@ static JSValue js_Lightmapper_get_h(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_Lightmapper_set_h(JSContext* ctx, JSValue this_val, JSValue v) {
+    Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
+    int32_t long_value;
+    int err_value = JS_ToInt32(ctx, &long_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    int value = (int)long_value;
+    ptr->h = value;
+    return JS_UNDEFINED;
+}
+
 static JSValue js_Lightmapper_get_progress(JSContext* ctx, JSValue this_val) {
     Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
     float progress = ptr->progress;
@@ -131,12 +223,26 @@ static JSValue js_Lightmapper_get_progress(JSContext* ctx, JSValue this_val) {
     return ret;
 }
 
+static JSValue js_Lightmapper_set_progress(JSContext* ctx, JSValue this_val, JSValue v) {
+    Lightmapper* ptr = JS_GetOpaque2(ctx, this_val, js_Lightmapper_class_id);
+    double double_value;
+    int err_value = JS_ToFloat64(ctx, &double_value, v);
+    if(err_value<0) {
+        JS_ThrowTypeError(ctx, "v is not numeric");
+        return JS_EXCEPTION;
+    }
+    float value = (float)double_value;
+    ptr->progress = value;
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_Lightmapper_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]","Lightmapper", JS_PROP_CONFIGURABLE),
-    JS_CGETSET_DEF("data",js_Lightmapper_get_data,NULL),
-    JS_CGETSET_DEF("w",js_Lightmapper_get_w,NULL),
-    JS_CGETSET_DEF("h",js_Lightmapper_get_h,NULL),
-    JS_CGETSET_DEF("progress",js_Lightmapper_get_progress,NULL),
+    JS_CGETSET_DEF("lm_handle",NULL,NULL),
+    JS_CGETSET_DEF("data",js_Lightmapper_get_data,js_Lightmapper_set_data),
+    JS_CGETSET_DEF("w",js_Lightmapper_get_w,js_Lightmapper_set_w),
+    JS_CGETSET_DEF("h",js_Lightmapper_get_h,js_Lightmapper_set_h),
+    JS_CGETSET_DEF("progress",js_Lightmapper_get_progress,js_Lightmapper_set_progress),
 };
 
 static int js_declare_Lightmapper(JSContext * ctx, JSModuleDef * m) {
@@ -584,6 +690,7 @@ static JSValue js_BeginLightmapFragment(JSContext * ctx, JSValue this_val, int a
         return JS_EXCEPTION;
     }
     bool returnVal = BeginLightmapFragment(lm);
+    JS_SetOpaque(argv[0], lm);
     JSValue ret = JS_NewBool(ctx, returnVal);
     return ret;
 }
@@ -595,6 +702,7 @@ static JSValue js_EndLightmapFragment(JSContext * ctx, JSValue this_val, int arg
         return JS_EXCEPTION;
     }
     EndLightmapFragment(lm);
+    JS_SetOpaque(argv[0], lm);
     return JS_UNDEFINED;
 }
 

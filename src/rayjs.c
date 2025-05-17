@@ -38,6 +38,7 @@
 
 #include "cutils.h"
 #include "quickjs.h"
+#include "modules/quickjs-libc.c"//include only once
 #include "modules/quickjs-libc.h"
 
 #ifdef QJS_USE_MIMALLOC

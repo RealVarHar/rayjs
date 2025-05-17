@@ -8,7 +8,7 @@ include(JoinPaths)
 
 # Sets build type if not set by now
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    if(RAYLIB_IS_MAIN)
+    if(PROJECT_IS_TOP_LEVEL)
         set(default_build_type Debug)
     else()
         message(WARNING "Default build type is not set (CMAKE_BUILD_TYPE)")
@@ -86,12 +86,12 @@ if (WITH_PIC OR BUILD_SHARED_LIBS)
     set_property(TARGET raylib PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif ()
 
+@mimalloc.cmake@
+
 if (BUILD_SHARED_LIBS)
     # Hide raylib's symbols by default so RLAPI can expose them
     set_property(TARGET raylib PROPERTY C_VISIBILITY_PRESET hidden)
 endif ()
-
-@mimalloc.cmake@
 
 target_link_libraries(raylib "${LIBS_PRIVATE}")
 

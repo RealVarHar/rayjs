@@ -47,7 +47,7 @@ static JSValue js_rlVertexBuffer_set_elementCount(JSContext* ctx, JSValue this_v
 static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlVertexBuffer *)ptr)->elementCount*3*4; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)((rlVertexBuffer *)ptr)->vertices[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -58,7 +58,7 @@ static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx, void * ptr, in
 }
 
 static int js_rlVertexBuffer_vertices_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlVertexBuffer *)ptr)->elementCount*3*4;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -70,7 +70,7 @@ static int js_rlVertexBuffer_vertices_keys(JSContext * ctx, void * ptr, JSProper
 static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlVertexBuffer *)ptr)->elementCount*3*4);
             return ret;
         }
         else {
@@ -78,7 +78,7 @@ static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx, void * ptr, int p
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*3*4) {
             float src = ((rlVertexBuffer *)ptr)->vertices[property];
             JSValue ret = JS_NewFloat64(ctx, (double)src);
             return ret;
@@ -116,7 +116,7 @@ static int js_rlVertexBuffer_vertices_has(JSContext * ctx, void * ptr, int prope
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*3*4) {
             return true;
         }
         else {
@@ -200,7 +200,7 @@ static JSValue js_rlVertexBuffer_set_vertices(JSContext* ctx, JSValue this_val, 
 static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlVertexBuffer *)ptr)->elementCount*2*4; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)((rlVertexBuffer *)ptr)->texcoords[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -211,7 +211,7 @@ static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx, void * ptr, i
 }
 
 static int js_rlVertexBuffer_texcoords_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlVertexBuffer *)ptr)->elementCount*2*4;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -223,7 +223,7 @@ static int js_rlVertexBuffer_texcoords_keys(JSContext * ctx, void * ptr, JSPrope
 static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlVertexBuffer *)ptr)->elementCount*2*4);
             return ret;
         }
         else {
@@ -231,7 +231,7 @@ static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx, void * ptr, int 
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*2*4) {
             float src = ((rlVertexBuffer *)ptr)->texcoords[property];
             JSValue ret = JS_NewFloat64(ctx, (double)src);
             return ret;
@@ -269,7 +269,7 @@ static int js_rlVertexBuffer_texcoords_has(JSContext * ctx, void * ptr, int prop
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*2*4) {
             return true;
         }
         else {
@@ -353,7 +353,7 @@ static JSValue js_rlVertexBuffer_set_texcoords(JSContext* ctx, JSValue this_val,
 static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlVertexBuffer *)ptr)->elementCount*3*4; i0++){
         JSValue js_ret = JS_NewFloat64(ctx, (double)((rlVertexBuffer *)ptr)->normals[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -364,7 +364,7 @@ static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx, void * ptr, int
 }
 
 static int js_rlVertexBuffer_normals_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlVertexBuffer *)ptr)->elementCount*3*4;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -376,7 +376,7 @@ static int js_rlVertexBuffer_normals_keys(JSContext * ctx, void * ptr, JSPropert
 static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlVertexBuffer *)ptr)->elementCount*3*4);
             return ret;
         }
         else {
@@ -384,7 +384,7 @@ static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx, void * ptr, int pr
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*3*4) {
             float src = ((rlVertexBuffer *)ptr)->normals[property];
             JSValue ret = JS_NewFloat64(ctx, (double)src);
             return ret;
@@ -422,7 +422,7 @@ static int js_rlVertexBuffer_normals_has(JSContext * ctx, void * ptr, int proper
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*3*4) {
             return true;
         }
         else {
@@ -506,7 +506,7 @@ static JSValue js_rlVertexBuffer_set_normals(JSContext* ctx, JSValue this_val, J
 static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlVertexBuffer *)ptr)->elementCount*4*4; i0++){
         JSValue js_ret = JS_NewUint32(ctx, (unsigned long)((rlVertexBuffer *)ptr)->colors[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -517,7 +517,7 @@ static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx, void * ptr, int 
 }
 
 static int js_rlVertexBuffer_colors_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlVertexBuffer *)ptr)->elementCount*4*4;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -529,7 +529,7 @@ static int js_rlVertexBuffer_colors_keys(JSContext * ctx, void * ptr, JSProperty
 static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlVertexBuffer *)ptr)->elementCount*4*4);
             return ret;
         }
         else {
@@ -537,7 +537,7 @@ static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx, void * ptr, int pro
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*4*4) {
             unsigned char src = ((rlVertexBuffer *)ptr)->colors[property];
             JSValue ret = JS_NewUint32(ctx, (unsigned long)src);
             return ret;
@@ -575,7 +575,7 @@ static int js_rlVertexBuffer_colors_has(JSContext * ctx, void * ptr, int propert
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*4*4) {
             return true;
         }
         else {
@@ -659,7 +659,7 @@ static JSValue js_rlVertexBuffer_set_colors(JSContext* ctx, JSValue this_val, JS
 static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlVertexBuffer *)ptr)->elementCount*6; i0++){
         JSValue js_ret = JS_NewUint32(ctx, (unsigned long)((rlVertexBuffer *)ptr)->indices[i0]);
         JS_DefinePropertyValueUint32(ctx,ret,i0,js_ret,JS_PROP_C_W_E);
     }
@@ -670,7 +670,7 @@ static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx, void * ptr, int
 }
 
 static int js_rlVertexBuffer_indices_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlVertexBuffer *)ptr)->elementCount*6;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -682,7 +682,7 @@ static int js_rlVertexBuffer_indices_keys(JSContext * ctx, void * ptr, JSPropert
 static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlVertexBuffer *)ptr)->elementCount*6);
             return ret;
         }
         else {
@@ -690,7 +690,7 @@ static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx, void * ptr, int pr
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*6) {
             unsigned int src = ((rlVertexBuffer *)ptr)->indices[property];
             JSValue ret = JS_NewUint32(ctx, (unsigned long)src);
             return ret;
@@ -728,7 +728,7 @@ static int js_rlVertexBuffer_indices_has(JSContext * ctx, void * ptr, int proper
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlVertexBuffer *)ptr)->elementCount*6) {
             return true;
         }
         else {
@@ -1155,7 +1155,7 @@ static JSValue js_rlRenderBatch_set_currentBuffer(JSContext* ctx, JSValue this_v
 static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < ((rlRenderBatch *)ptr)->bufferCount; i0++){
         rlVertexBuffer* ptr_js_ret = (rlVertexBuffer*)js_malloc(ctx, sizeof(rlVertexBuffer));
         *ptr_js_ret = ((rlRenderBatch *)ptr)->vertexBuffer[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_rlVertexBuffer_class_id);
@@ -1169,7 +1169,7 @@ static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx, void * ptr,
 }
 
 static int js_rlRenderBatch_vertexBuffer_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = ((rlRenderBatch *)ptr)->bufferCount;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -1181,7 +1181,7 @@ static int js_rlRenderBatch_vertexBuffer_keys(JSContext * ctx, void * ptr, JSPro
 static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)((rlRenderBatch *)ptr)->bufferCount);
             return ret;
         }
         else {
@@ -1189,7 +1189,7 @@ static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx, void * ptr, in
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlRenderBatch *)ptr)->bufferCount) {
             rlVertexBuffer src = ((rlRenderBatch *)ptr)->vertexBuffer[property];
             rlVertexBuffer* ptr_ret = (rlVertexBuffer*)js_malloc(ctx, sizeof(rlVertexBuffer));
             *ptr_ret = src;
@@ -1229,7 +1229,7 @@ static int js_rlRenderBatch_vertexBuffer_has(JSContext * ctx, void * ptr, int pr
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<((rlRenderBatch *)ptr)->bufferCount) {
             return true;
         }
         else {
@@ -1298,7 +1298,7 @@ static JSValue js_rlRenderBatch_set_vertexBuffer(JSContext* ctx, JSValue this_va
 static JSValue js_rlRenderBatch_draws_values(JSContext * ctx, void * ptr, int property, bool as_sting) {
     JSValue ret;
     ret = JS_NewArray(ctx);
-    for(int i0=0; i0 < undefined; i0++){
+    for(int i0=0; i0 < RL_DEFAULT_BATCH_DRAWCALLS; i0++){
         rlDrawCall* ptr_js_ret = (rlDrawCall*)js_malloc(ctx, sizeof(rlDrawCall));
         *ptr_js_ret = ((rlRenderBatch *)ptr)->draws[i0];
         JSValue js_ret = JS_NewObjectClass(ctx, js_rlDrawCall_class_id);
@@ -1312,7 +1312,7 @@ static JSValue js_rlRenderBatch_draws_values(JSContext * ctx, void * ptr, int pr
 }
 
 static int js_rlRenderBatch_draws_keys(JSContext * ctx, void * ptr, JSPropertyEnum ** keys) {
-    int length = undefined;
+    int length = RL_DEFAULT_BATCH_DRAWCALLS;
     *keys = js_malloc(ctx, (length+1) * sizeof(JSPropertyEnum));
     for(int i0=0; i0 < length; i0++){
         (*keys)[i0] = (JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i0)};
@@ -1324,7 +1324,7 @@ static int js_rlRenderBatch_draws_keys(JSContext * ctx, void * ptr, JSPropertyEn
 static JSValue js_rlRenderBatch_draws_get(JSContext * ctx, void * ptr, int property, bool as_sting) {
     if(as_sting==true) {
         if(property==JS_ATOM_length) {
-            JSValue ret = JS_NewInt32(ctx, (long)undefined);
+            JSValue ret = JS_NewInt32(ctx, (long)RL_DEFAULT_BATCH_DRAWCALLS);
             return ret;
         }
         else {
@@ -1332,7 +1332,7 @@ static JSValue js_rlRenderBatch_draws_get(JSContext * ctx, void * ptr, int prope
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<RL_DEFAULT_BATCH_DRAWCALLS) {
             rlDrawCall src = ((rlRenderBatch *)ptr)->draws[property];
             rlDrawCall* ptr_ret = (rlDrawCall*)js_malloc(ctx, sizeof(rlDrawCall));
             *ptr_ret = src;
@@ -1372,7 +1372,7 @@ static int js_rlRenderBatch_draws_has(JSContext * ctx, void * ptr, int property,
         }
     }
     else {
-        if(property>=0 && property<undefined) {
+        if(property>=0 && property<RL_DEFAULT_BATCH_DRAWCALLS) {
             return true;
         }
         else {
@@ -3297,6 +3297,7 @@ static JSValue js_rlDrawRenderBatch(JSContext * ctx, JSValue this_val, int argc,
         return JS_EXCEPTION;
     }
     rlDrawRenderBatch(batch);
+    JS_SetOpaque(argv[0], batch);
     return JS_UNDEFINED;
 }
 
@@ -3307,6 +3308,7 @@ static JSValue js_rlSetRenderBatchActive(JSContext * ctx, JSValue this_val, int 
         return JS_EXCEPTION;
     }
     rlSetRenderBatchActive(batch);
+    JS_SetOpaque(argv[0], batch);
     return JS_UNDEFINED;
 }
 
