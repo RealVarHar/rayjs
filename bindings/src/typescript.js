@@ -1,4 +1,3 @@
-import { CodeGenerator, CodeWriter } from "./generation.js"
 import { writeFileSync } from "./fs.js";
 
 export class TypeScriptDeclaration {
@@ -19,20 +18,24 @@ export class TypeScriptDeclaration {
         this.functions.tags.module=this.module.tags.module;
         this.constants = this.module.child();
         this.constants.tags.module=this.module.tags.module;
+        this.defined={};
     }
     addFunction(name, api, lookups) {
         const options = api.binding || {};
         const para = (api.params || []).filter(x => !x.binding.ignore).map(x => ({ name: (x.type=='...'||x.binding.jsType=='...'?'...':'')+x.name, type: x.binding.jsType ?? this.toJsType(x.type,lookups) }));
         const returnType = options.jsReturns ?? this.toJsType(api.returnType,lookups);
         this.functions.tsDeclareFunction(name, para, returnType, api.description);
+        this.defined[name]=true;
     }
     addStruct(api) {
         const options = api.binding || {};
         var fields = api.fields.filter(x => !!(options.properties || {})[x.name]).map(x => ({ name: x.name, description: x.description, type: this.toJsType(x.type) }));
         this.structs.tsDeclareInterface(api.name, fields);
         this.structs.tsDeclareType(api.name, !!(options.createConstructor), fields);
+        this.defined[api.name]=true;
     }
     addCallback(name, parameters, lookups){
+        if(this.defined[name])return;
         let ret = parameters.returnType;
         if(ret==undefined) {
             ret=='void';
@@ -47,6 +50,7 @@ export class TypeScriptDeclaration {
             inlinefn = `(${parameters.map(a=>`${a.name}:${this.toJsType(a.type.replaceAll('&', '*'),lookups)}`).join(',')})=>${ret}`;
         }
         this.structs.tsAliasType(name, inlinefn);
+        this.defined[name]=true;
     }
     addAlias(name, aliasof, lookups){
         aliasof = this.toJsType(aliasof,lookups);
@@ -57,11 +61,11 @@ export class TypeScriptDeclaration {
             type = type.substring('const '.length);
         }
         if(lookups!=undefined){
-            if(lookups.struct[type] || lookups.callback[type]){
+            let variable=lookups.variables[type];
+            if(variable){
                 //custom type
-                let sourceModule = lookups.includeDictionary.lookup[type];
-                sourceModule = lookups.includeDictionary.moduleNames[sourceModule];
-                if(sourceModule != this.module.name){
+                let sourceModule=lookups.includegen.tokenList.find(a=>a.type=='include'&&a.text.vars.find(b=>b.name==type)!=undefined);
+                if(sourceModule.text.name != this.module.name){
                     if(this.includeList[sourceModule]==undefined)this.includeList[sourceModule]=[];
                     this.includeList[sourceModule][type]=true;
                 }
@@ -71,7 +75,7 @@ export class TypeScriptDeclaration {
             const subtype = type.substring(0,type.length-1).trim();
             if(lookups!=undefined){
                 //No need to wrap in array custom objects
-                if(lookups.struct[subtype] || lookups.callback[subtype]){
+                if(lookups.variables[subtype]){
                     return this.toJsType(subtype,lookups);
                 }
             }
@@ -143,37 +147,64 @@ export class TypeScriptDeclaration {
     }
     writeTo(filename) {
         //reset includes
-        this.includes.clear();
         for(let key in this.includeList){
             let toload = this.includeList[key];
             this.includes.tsImportTypes(key,Object.keys(toload));
         }
         //generate code
-        const writer = new CodeWriter();
-        writer.writeGenerator(this.root);
-        writeFileSync(filename, writer.toString());
+        writeFileSync(filename, this.root.toString());
     }
 }
-class TypescriptGenerator extends CodeGenerator {
+class TypescriptGenerator {
+    /**
+     * @type {[TypescriptGenerator|int|string]}
+     */
+    tokenList=[];
+    initdepth=0;
+    tags={};
+    toString(){
+        let ret="";
+        let depth=this.initdepth;
+        for(let token of this.tokenList){
+            switch(typeof(token)){
+                case "object":ret+=token.toString();break;
+                case "number":depth+=token;break;
+                case "string":{
+                    let indent=" ".repeat(depth);
+                    if(token[token.length-1]=="\n"){
+                        token=indent+token.substring(0,token.length-1).replaceAll("\n","\n"+indent)+"\n";
+                    }else{
+                        token=indent+token.replaceAll("\n","\n"+indent)
+                    }
+                    ret+=token;
+                }break;
+            }
+        }
+        return ret;
+    }
+    line(text){this.tokenList.push(text);}
+    child(){const c=new TypescriptGenerator();c.initdepth=this.depth;this.tokenList.push(c);return c;}
+    indent(){this.tokenList.push(1);}
+    unindent(){this.tokenList.push(-1);}
     tsDeclareFunction(name, parameters, returnType, description) {
         let declare =this.tags.module?'':'declare ';
         this.tsDocComment(description);
-        this.statement(`${declare}function ${name}(${parameters.map(x => x.name + ': ' + x.type).join(', ')}): ${returnType}`);
+        this.line(`${declare}function ${name}(${parameters.map(x => x.name + ': ' + x.type).join(', ')}): ${returnType}`);
     }
     tsDeclareConstant(name, type, description) {
         let declare =this.tags.module?'':'declare ';
         this.tsDocComment(description);
-        this.statement(`${declare}var ${name}: ${type}`);
+        this.line(`${declare}var ${name}: ${type}`);
     }
     tsDeclareType(name, hasConstructor, parameters) {
         let declare =this.tags.module?'':'declare ';
-        this.line(`${declare}var ${name}: {`);
+        this.line(`${declare}var ${name}: {\n`);
         this.indent();
-        this.statement("prototype: " + name);
+        this.line("prototype: " + name);
         if (hasConstructor)
-            this.statement(`new(${parameters.map(x => x.name + "?: " + x.type).join(', ')}): ${name}`);
+            this.line(`new(${parameters.map(x => x.name + "?: " + x.type).join(', ')}): ${name}`);
         this.unindent();
-        this.line("}");
+        this.line("}\n");
     }
     //Class should have constructor and notify that this module allows its creation
     tsDeclareClass(name, fileds) {
@@ -181,32 +212,32 @@ class TypescriptGenerator extends CodeGenerator {
     }
     //Interfaces should define only class parameters
     tsDeclareInterface(name, fields) {
-        this.line(`interface ${name} {`);
+        this.line(`interface ${name} {\n`);
         this.indent();
         for (const field of fields) {
             if (field.description)
                 this.tsDocComment(field.description);
-            this.line(field.name + ": " + field.type + ",");
+            this.line(field.name + ": " + field.type + ",\n");
         }
         this.unindent();
-        this.line("}");
+        this.line("}\n");
     }
     tsImportTypes(module,types){
-        this.statement(`import type {${types.join(',')}} from '${module}'`);
+        this.line(`import type {${types.join(',')}} from '${module}'`);
     }
     tsDeclareModule(name){
-        this.line(`declare module "${name}" {`);
+        this.line(`declare module "${name}" {\n`);
         this.indent();
         let child=this.child();
         child.tags.module=true;
         this.unindent();
-        this.line("}");
+        this.line("}\n");
         return child;
     }
     tsAliasType(name, aliasof){
-        this.statement(`type ${name} = ${aliasof}`);
+        this.line(`type ${name} = ${aliasof}`);
     }
     tsDocComment(comment) {
-        this.line(`/** ${comment} */`);
+        this.line(`/** ${comment} */\n`);
     }
 }

@@ -23,7 +23,6 @@ typedef struct trampolineContext {
     JSContext * ctx;
     JSValue func_obj;
     JSValue thread_id;
-
 } trampolineContext;
 
 static JSClassID js_ArrayProxy_class_id;
@@ -98,6 +97,8 @@ static void jsc_free(JSContext *ctx, void * ptr );
 #define RL_FREE(ptr)        free(ptr)
 #endif
 #endif
+
+static int app_update_quickjs(JSContext *ctx);
 
 /* also used to initialize the worker context */
 static JSContext *JS_NewCustomContext(JSRuntime *rt);

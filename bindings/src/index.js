@@ -1,7 +1,15 @@
 import * as fs from "./fs.js";
 globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
+globalThis.extrainfo={};
 const rayjs_header = (await import("./raylib-header.js")).RayJsHeader;
-const source_parser = (await import("./source_parser.js")).source_parser;
+
+let source_parser,simpleregex;
+{
+    let sp = (await import("./source_parser.js"));
+    source_parser=sp.source_parser;
+    simpleregex=sp.simpleregex;
+}
+const QuickJsGenerator = (await import("./quickjs.js")).QuickJsGenerator;
 
 // @ts-ignore
 String.prototype.replaceAt = function(index, replacement) {
@@ -55,92 +63,293 @@ function removeDuplicates(module,key,names){
     }
     if(j<module[key].length)module[key]=module[key].slice(0,j);
 }
-const includeDictionary={lookup:{},contents:[],moduleNames:[]};
-function addModuleToDictionary(module,name,include){
-    let id=includeDictionary.contents.length;
-    let contents={include};
-    contents.structLookup={};
-    contents.callbackLookup={};
-    contents.enumLookup={};
-    contents.functionLookup={};
-    includeDictionary.contents[id]=contents;
-    includeDictionary.moduleNames[id]='rayjs:'+name;
-    return id;
+const includeDictionary={};
+function fixModuleRedefs(source){
+    //Sometimes when parsing source in C it is a redefinition of something yet to be declared
+    //We want to catch those and mark them correctly
+    let varsMap={};
+    let toScan=[];
+    let newDefined=[];
+    for(let fn of source.functions)varsMap[fn.name] = [source.functions,fn];
+    for(let fn of source.callbacks)varsMap[fn.name] = [source.callbacks,fn];
+    for(let en of source.enums){
+        for(let value of en.values){
+            varsMap[value.name] = [en.values,value];
+        }
+    }
+    for(let en of source.unions){
+        varsMap[en.name] = [source.unions,en];
+    }
+    for(let st of source.structs){
+        varsMap[st.name] = [source.structs,st];
+    }
+    for(let al of source.aliases){
+        varsMap[al.name] = [al,source.aliases];
+    }
+    for(let value of source.staticData){
+        varsMap[value.name] = [source.staticData,value];
+    }
+    for(let def of source.defines){
+        if(def.type=='undefined'){
+            if(def.content.body!=''){
+                toScan.push(def);
+            }else{
+                newDefined.push(def);
+            }
+        }else{
+            varsMap[def.name] = [def,source.defines];
+            newDefined.push(def);
+        }
+    }
+    //Try to resolve undefined
+    for(let def of toScan){
+        let redefOf = varsMap[def.content.body];
+        if(redefOf==undefined){
+            newDefined.push(def);
+        }else{
+            let copy=structuredClone(redefOf[1]);
+            copy.name=def.name;
+            redefOf[0].push(copy);
+        }
+    }
+}
+//TODO: debug bool true=NaN
+//TODO: debug eval DEG2RAD="PI/180.0f)"
+function sourceToVars(source){
+    let varsMap={};
+    for(let fn of source.functions){
+        varsMap[fn.name] = {type:'function',name:fn.name,args:fn.params.map(a=>{return {type:a.type,name:a.name};}),returnType:(fn.props.const?'const ':'')+fn.returnType};
+    }
+    for(let fn of source.callbacks){
+        varsMap[fn.name] = {type:'type',subtype:'function',ptrtype:fn.type,name:fn.name,args:fn.params.map(a=>{return {type:a.type,name:a.name};}),returnType:fn.returnType};
+    }
+    for(let en of source.enums){
+        for(let value of en.values){
+            varsMap[value.name] = {type:'value',subtype:'int',name:value.name,props:{}};
+        }
+    }
+    for(let en of source.unions){
+        varsMap[en.name] = ({type:'type',subtype:'enum',name:en.name,fields:en.fields});
+    }
+    for(let st of source.structs){
+        varsMap[st.name] = ({type:'type',subtype:'struct',name:st.name,fields:st.fields,props:st.props});
+    }
+    for(let al of source.aliases){
+        varsMap[al.name] = ({type:'alias',name:al.name,aliasof:al.type});
+    }
+    for(let value of source.staticData){
+        let type=value.type;
+        let props={};
+        if(type.startsWith('static ')){
+            props.static=true;
+            type=type.substring('static '.length).trim();
+        }
+        varsMap[value.name] = ({type:'value',subtype:type,props,name:value.name});
+    }
+    for(let def of source.defines){
+        if(def.type=='bool'){
+            varsMap[def.name] = ({type:'value',subtype:'int',name:def.name,props:{}});
+        }else if(def.type=='eval'){
+            varsMap[def.name] = ({type:'value',subtype:'double',name:def.name,props:{}});
+        }else if(def.type=='function'){
+            varsMap[def.name] = {type:'function',name:def.name,args:def.content.args.map(a=>'void'),returnType:'void'};
+        }else if(def.type=='struct'){
+            varsMap[def.name] = ({type:"value",subtype:def.content.type,name:def.name});
+        }else if(def.type=='int'){
+            varsMap[def.name] = ({type:'value',subtype:'int',name:def.name,props:{}});
+        }else if(def.type=='string'){
+            varsMap[def.name] = ({type:'value',subtype:'char *',name:def.name,props:{}});
+        }else if(def.type=='float'){
+            varsMap[def.name] = ({type:'value',subtype:'float',name:def.name,props:{}});
+        }else if(def.type=='double'){
+            varsMap[def.name] = ({type:'value',subtype:'double',name:def.name,props:{}});
+        }else if(def.type=='undefined'){
+            //Most likely a redefinition, check if exists
+            if(def.content.body.startsWith('JS_MKVAL(')||def.content.body.startsWith('JS_MKPTR(')||def.content.body.startsWith('JS_NAN(')){
+                varsMap[def.name] = {type:'value',subtype:'JSValue',name:def.name,props:{}};
+            }
+        }
+    }
+    return varsMap;
+}
+function updateInclude(module,includeName,key,value){
+    const vars = module.gen.includeGen.tokenList.find(a=>a.text.name==includeName).text.vars;
+    let varLoc=vars.findIndex(a=>a.name==key);
+    if(key!=-1){
+        vars[key]=value;
+    }else{
+        vars.push(value);
+    }
 }
 function main() {
-    new source_parser(fs.readFileSync("thirdparty/raylib/src/config.h", "utf8"));//only parse to add #defined
     let att,cb;
     // load quickjs.c since it has the enum we need
-    let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"));
+    //let toolsSource = new source_parser(fs.readFileSync("src/rayjs_base.c", "utf8"));
+    let sourcefiles= {
+        "quickjs.h": "thirdparty/quickjs/quickjs.h",
+        "rayjs_generated.c": "src/rayjs_generated.c",
+        "modules/quickjs-libc.h": "src/modules/quickjs-libc.h",
+        "quickjs-atom.h": "thirdparty/quickjs/quickjs-atom.h",
+        "stdbool.h":false,"stdio.h":false,"stdint.h":false,"string.h":false,"math.h":false,"sal.h":false,"stdarg.h":false,"stdlib.h":false,"inttypes.h":false,"assert.h":false,"time.h":false,"sys/time.h":false,
+        "timezoneapi.h":false,"intrin.h":false,"fenv.h":false,"cutils.h":"src/cutils.h","libregexp.h":false,"quickjs-c-atomics.h":false,"builtin-array-fromasync.h":false,"mimalloc.h":false,"raymath.h":false,"raylib.h":false,
+        "ctype.h":false,"OpenGL/gl.h":false,"OpenGL/glext.h":false,"GL/gl.h":false,"external/glad.h":false,"GLES":false,"external/glad_gles":false,"rlgl.h":false,"lightmapper.h":false,"list.h":false,"xsum.h":false,
+        "quickjs-opcode.h":false,"winsock2.h":false,"malloc.h":false,"malloc/malloc.h":false,"malloc_np.h":false,"windows.h":false,"errno.h":false,"pthread.h":false,"limits.h":false,"unistd.h":false,"GLES3/gl3.h":false,
+        "GLES2/gl2ext.h":false,"external/glad_gles2.h":false,"GLES2/gl2.h":false
+    };
+    let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"),sourcefiles);
     let classEnum=quickjsSource.enums.find(a=>a.name===''&&a.values.some(b=>b.name==='JS_CLASS_OBJECT'));
     let classEnumLine="enum {\n";
     for(let value of classEnum.values){
         classEnumLine+=value.name+' = '+value.value+',';
     }
     classEnumLine+="\n};";
-    fs.writeFileSync("src/rayjs_generated.c",classEnumLine);
+
+
+    globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));//We want to re-parse inner quickjs.h, so reset info gained from quickjs.c
+    let configmodule=new source_parser(fs.readFileSync("thirdparty/raylib/src/config.h", "utf8"));//only parse to add #defined
+    let toolsSource = new source_parser(fs.readFileSync("src/rayjs_base.h", "utf8"),sourcefiles);
+    toolsSource=sourceToVars(toolsSource);
+    toolsSource['countof']={name:'countof',type:'function',args:[{type:'any',name:'a'}],returnType:'size_t'};
+    toolsSource['sizeof']={name:'sizeof',type:'function',args:[{type:'any',name:'a'}],returnType:'size_t'};
+    globalThis.toolsSource=Object.values(toolsSource);
+    toolsSource=undefined;
     // Load the pre-generated raylib api
     let once={};
-    modules['core'] = new source_parser(fs.readFileSync("thirdparty/raylib/src/raylib.h", "utf8"));
-    addModuleToDictionary(modules['core'],"raylib",(gen)=>{
-        gen.includeGen.include("raylib.h");
-    });
-    modules['core'].gen = new rayjs_header("raylib",includeDictionary);
-    modules['raymath']=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"));
-    addModuleToDictionary(modules['raymath'],"raymath",(gen)=>{
-        gen.includeGen.include("raymath.h");
-    });
-    modules['raymath'].gen = new rayjs_header("raymath",includeDictionary);
-    modules['rcamera']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"));
-    addModuleToDictionary(modules['rcamera'],"rcamera",(gen)=>{
-        gen.includeGen.include("rcamera.h");
-    });
-    modules['rcamera'].gen = new rayjs_header("rcamera",includeDictionary);
-    modules['raygui']=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"));
-    addModuleToDictionary(modules['raygui'],"raygui",(gen)=>{
+    modules['raylib'] = new source_parser(fs.readFileSync("thirdparty/raylib/src/raylib.h", "utf8"),sourcefiles);
+    attachGetters(modules['raylib']);
+
+    att = modules['raylib'].getCallback("AudioCallback");
+    att.params[0].type='float *';
+    att.binding.threaded = true;
+    //audioCallback has different sizes depending on what called it
+    cb = structuredClone(att);
+    cb.name='AudioStreamCallback';
+    cb.params[0].sizeVars = ['frames*2'];
+    modules['raylib'].callbacks.push(cb);
+    modules['raylib'].getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
+    cb = structuredClone(att);
+    cb.name='AudioMixedProcessor';
+    //cb.params[0].type += ' &';
+    cb.params[0].sizeVars = [`frames*${config.defined['AUDIO_DEVICE_CHANNELS'].content.body}`];
+    modules['raylib'].callbacks.push(cb);
+    modules['raymath']=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"),sourcefiles);
+    modules['rcamera']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"),sourcefiles);
+    modules['raygui']=new source_parser(fs.readFileSync("thirdparty/raygui/src/raygui.h", "utf8"),sourcefiles);
+    modules['rlights']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"),sourcefiles);
+    modules['reasings']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"),sourcefiles);
+    modules['rlgl']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"),sourcefiles);
+    modules['rlightmapper']=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"),sourcefiles);
+    //gather shared code for rayjs_generated
+    let modules_generated={
+        functions: [],
+        staticData: [],
+        unions: [],
+        callbacks: [],
+        aliases: [],
+        defines: [],
+        comments: [],
+        enums:[classEnum],
+        structs:[],
+    };
+    for(let key in modules){
+        for(let struct of modules[key].structs){
+            //modules_generated.staticData.push({type:"JSClassID",name:`js_${struct.name}_class_id`});
+        }
+        modules_generated.structs=modules_generated.structs.concat(modules[key].structs);
+    }
+    modules_generated.gen = new QuickJsGenerator();
+
+    for(let struct of modules_generated.structs){
+        // Register types
+        struct.props=struct.props||{};
+        struct.props.bound_name = `js_${struct.name}_class_id`;
+        modules_generated.gen.jsClassId(struct.props.bound_name);
+        modules_generated.staticData.push({type:"JSClassID",name:struct.props.bound_name});
+    }
+    for(let en of modules_generated.enums){
+        // Register enum
+
+    }
+    fs.writeFileSync(`src/rayjs_generated.h`, modules_generated.gen.cgen.toString());
+
+    //We dont expect to both create an include and import it, so re-creation is necessary
+    includeDictionary['generated']=(gen,vars)=>{
+        gen.includeGen.include("rayjs_generated.h",vars);
+    };
+    includeDictionary["config"]=(gen,vars)=>{
+        gen.includeGen.include("config.h",vars);
+    };
+    includeDictionary["raylib"]=(gen,vars)=>{
+        gen.includeGen.include("raylib.h",vars);
+    };
+    modules['raylib'].gen = new rayjs_header("raylib");
+    includeDictionary["raymath"]=(gen,vars)=>{
+        gen.includeGen.include("raymath.h",vars);
+    };
+    modules['raymath'].gen = new rayjs_header("raymath");
+    includeDictionary["rcamera"]=(gen,vars)=>{
+        gen.includeGen.include("rcamera.h",vars);
+    };
+    modules['rcamera'].gen = new rayjs_header("rcamera");
+    includeDictionary["raygui"]=(gen,vars)=>{
+        let defines=[];
         if(!once['raygui']){
             once['raygui']=true;
-            gen.includeGen.line("#define RAYGUI_IMPLEMENTATION");
+            defines.push("RAYGUI_IMPLEMENTATION");
         }
-        gen.includeGen.include("raygui.h");
-    });
-    modules['raygui'].gen = new rayjs_header("raygui",includeDictionary);
-    modules['rlights']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/shaders/rlights.h", "utf8"));
-    addModuleToDictionary(modules['rlights'],"rlights", (gen)=>{
+        gen.includeGen.include("raygui.h",vars,defines);
+    };
+    modules['raygui'].gen = new rayjs_header("raygui");
+    includeDictionary["rlights"]=(gen,vars)=>{
+        let defines=[];
         if(!once['rlights']){
             once['rlights']=true;
-            gen.includeGen.line("#define RLIGHTS_IMPLEMENTATION");
+            defines.push("RLIGHTS_IMPLEMENTATION");
         }
-        gen.includeGen.include("rlights.h");
-    });
-    modules['rlights'].gen = new rayjs_header("rlights",includeDictionary);
-    modules['reasings']=new source_parser(fs.readFileSync("thirdparty/raylib/examples/others/reasings.h", "utf8"));
-    addModuleToDictionary(modules['reasings'],"reasings", (gen)=>{
-        gen.includeGen.include("reasings.h");
-    });
-    modules['reasings'].gen = new rayjs_header("reasings",includeDictionary);
-    modules['rlgl']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rlgl.h", "utf8"));
-    addModuleToDictionary(modules['rlgl'],"rlgl", (gen)=>{
-        gen.includeGen.include("rlgl.h");
-    });
-    modules['rlgl'].gen = new rayjs_header("rlgl",includeDictionary);
-    modules['rlightmapper']=new source_parser(fs.readFileSync("src/rlightmapper.h", "utf8"));
-    addModuleToDictionary(modules['rlightmapper'],'rlightmapper',(gen)=>{
+        gen.includeGen.include("rlights.h",vars,defines);
+    };
+    modules['rlights'].gen = new rayjs_header("rlights");
+    includeDictionary["reasings"]=(gen,vars)=>{
+        gen.includeGen.include("reasings.h",vars );
+    };
+    modules['reasings'].gen = new rayjs_header("reasings");
+    includeDictionary["rlgl"]=(gen,vars)=>{
+        gen.includeGen.include("rlgl.h",vars );
+    };
+    modules['rlgl'].gen = new rayjs_header("rlgl");
+    includeDictionary['rlightmapper']=(gen,vars)=>{
+        let defines=[];
         if(!once['rlightmapper']){
             once['rlightmapper']=true;
-            gen.includeGen.line("#define RLIGHTMAPPER_IMPLEMENTATION");
+            defines.push("RLIGHTMAPPER_IMPLEMENTATION");
         }
-        gen.includeGen.include("rlightmapper.h");
-    });
-    modules['rlightmapper'].gen = new rayjs_header("rlightmapper",includeDictionary);
+        gen.includeGen.include("rlightmapper.h",vars,defines);
+    };
+    modules['rlightmapper'].gen = new rayjs_header("rlightmapper");
     for(let key in modules)attachGetters(modules[key]);
+
+    //generate hashmap of names to detect dependencies
+    //This is done ahead of time to avoid ref types (&) that will be deprecated
+    const namemap={};
+    const namemap_val={};
+    namemap['generated']=sourceToVars(modules_generated);
+    namemap_val['generated']=Object.values(namemap['generated']);
+    namemap['config']=sourceToVars(configmodule);
+    namemap_val['config']=Object.values(namemap['config']);
+    for(let key in modules){
+        fixModuleRedefs(modules[key]);
+        namemap[key]=sourceToVars(modules[key]);
+        namemap_val[key]=Object.values(namemap[key]);
+    }
+
+
 
     // Remove duplicate structs and functions from modules
     let dedup=new Set();
-    for(let i=0;i<modules['core'].functions.length;i++){dedup.add(modules['core'].functions[i].name);}
-    for(let i=0;i<modules['core'].structs.length;i++){dedup.add(modules['core'].structs[i].name);}
-    for(let i=0;i<modules['core'].enums.length;i++){dedup.add(modules['core'].enums[i].name);}
-    for(let i=0;i<modules['core'].aliases.length;i++){dedup.add(modules['core'].aliases[i].name);}
+    for(let i=0;i<modules['raylib'].functions.length;i++){dedup.add(modules['raylib'].functions[i].name);}
+    for(let i=0;i<modules['raylib'].structs.length;i++){dedup.add(modules['raylib'].structs[i].name);}
+    for(let i=0;i<modules['raylib'].enums.length;i++){dedup.add(modules['raylib'].enums[i].name);}
+    for(let i=0;i<modules['raylib'].aliases.length;i++){dedup.add(modules['raylib'].aliases[i].name);}
     for(let name in modules){
         //set access all fields by default
         for(let struct of modules[name].structs){
@@ -150,7 +359,7 @@ function main() {
                 binding.properties[field.name]={get: true, set: true};
             }
         }
-        if(name=='core')continue;
+        if(name=='raylib')continue;
         removeDuplicates(modules[name],'functions',dedup);
         removeDuplicates(modules[name],'structs',dedup);
         removeDuplicates(modules[name],'enums',dedup);
@@ -167,7 +376,7 @@ function main() {
         },
         createConstructor: true
     };
-    modules['rlightmapper'].getStruct('Lightmapper').binding.properties.data.sizeVars=['ptr->w * ptr->h * 4'];
+    modules['rlightmapper'].getStruct('Lightmapper').binding.properties.data.sizeVars=['ptr.w * ptr.h * 4'];
     modules['rlightmapper'].getStruct('Lightmapper');
     modules['rlightmapper'].getStruct('Lightmapper').binding.properties['lm_handle']={};//Internal lightmapper context, no reason to bind this
     modules['rlightmapper'].getStruct('LightmapperConfig').binding = {
@@ -183,7 +392,7 @@ function main() {
         createConstructor: true
     };
 
-    modules['core'].getStruct("Color").binding = {
+    modules['raylib'].getStruct("Color").binding = {
         properties: {
             r: { get: true, set: true },
             g: { get: true, set: true },
@@ -192,7 +401,7 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Rectangle").binding = {
+    modules['raylib'].getStruct("Rectangle").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
@@ -201,14 +410,14 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Vector2").binding = {
+    modules['raylib'].getStruct("Vector2").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Vector3").binding = {
+    modules['raylib'].getStruct("Vector3").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
@@ -216,7 +425,7 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Vector4").binding = {
+    modules['raylib'].getStruct("Vector4").binding = {
         properties: {
             x: { get: true, set: true },
             y: { get: true, set: true },
@@ -225,14 +434,14 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Ray").binding = {
+    modules['raylib'].getStruct("Ray").binding = {
         properties: {
             position: { get: false, set: true },
             direction: { get: false, set: true },
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Camera2D").binding = {
+    modules['raylib'].getStruct("Camera2D").binding = {
         properties: {
             offset: { get: true, set: true },
             target: { get: true, set: true },
@@ -241,7 +450,7 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Camera3D").binding = {
+    modules['raylib'].getStruct("Camera3D").binding = {
         properties: {
             position: { get: true, set: true },
             target: { get: true, set: true },
@@ -251,18 +460,18 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("BoundingBox").binding = {
+    modules['raylib'].getStruct("BoundingBox").binding = {
         properties: {
             min: { get: true, set: true },
             max: { get: true, set: true },
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Matrix").binding = {
+    modules['raylib'].getStruct("Matrix").binding = {
         properties: {},
         createConstructor: false
     };
-    modules['core'].getStruct("NPatchInfo").binding = {
+    modules['raylib'].getStruct("NPatchInfo").binding = {
         properties: {
             source: { get: true, set: true },
             left: { get: true, set: true },
@@ -273,7 +482,7 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getStruct("Image").binding = {
+    modules['raylib'].getStruct("Image").binding = {
         properties: {
             data: { set: true },
             width: { get: true, set: true },
@@ -284,7 +493,7 @@ function main() {
         createConstructor: true
         //destructor: "UnloadImage"
     };
-    modules['core'].getStruct("Wave").binding = {
+    modules['raylib'].getStruct("Wave").binding = {
         properties: {
             frameCount: { get: true },
             sampleRate: { get: true },
@@ -294,14 +503,14 @@ function main() {
         createConstructor: true
         //destructor: "UnloadWave"
     };
-    modules['core'].getStruct("Sound").binding = {
+    modules['raylib'].getStruct("Sound").binding = {
         properties: {
             frameCount: { get: true }
         },
         createConstructor: true
         //destructor: "UnloadSound"
     };
-    modules['core'].getStruct("Music").binding = {
+    modules['raylib'].getStruct("Music").binding = {
         properties: {
             stream: { get: true },
             frameCount: { get: true },
@@ -311,50 +520,50 @@ function main() {
         createConstructor: true
         //destructor: "UnloadMusicStream"
     };
-    modules['core'].getStruct("Model").binding = {
+    modules['raylib'].getStruct("Model").binding = {
         properties: {
             transform: { get: true, set: true },
             meshCount: { get: true },
             materialCount: { get: true },
-            meshes: { get: true, set: true, sizeVars:['ptr->meshCount']},
-            materials: { get: true, set: true, sizeVars:['ptr->materialCount'] },
-            meshMaterial: { get: true, sizeVars:['ptr->meshCount'] },
+            meshes: { get: true, set: true, sizeVars:['ptr.meshCount']},
+            materials: { get: true, set: true, sizeVars:['ptr.materialCount'] },
+            meshMaterial: { get: true, sizeVars:['ptr.meshCount'] },
             boneCount: { get: true },
-            bones: { get: true, sizeVars:['ptr->boneCount'] },//TODO: check if there is a valid reason why we are disallowing set bones
-            bindPose: { get: true, sizeVars:['ptr->boneCount'] }
+            bones: { get: true, sizeVars:['ptr.boneCount'] },//TODO: check if there is a valid reason why we are disallowing set bones
+            bindPose: { get: true, sizeVars:['ptr.boneCount'] }
         },
         createConstructor: true
         //destructor: "UnloadModel"
     };
-    modules['core'].getStruct("ModelAnimation").binding.properties.bones.sizeVars=['ptr->boneCount'];
-    modules['core'].getStruct("ModelAnimation").binding.properties.framePoses.sizeVars=['ptr->frameCount','ptr->boneCount'];
-    modules['core'].getStruct("Mesh").binding = {
+    modules['raylib'].getStruct("ModelAnimation").binding.properties.bones.sizeVars=['ptr.boneCount'];
+    modules['raylib'].getStruct("ModelAnimation").binding.properties.framePoses.sizeVars=['ptr.frameCount','ptr.boneCount'];
+    modules['raylib'].getStruct("Mesh").binding = {
         properties: {
             vertexCount: { get: true, set: true },
             triangleCount: { get: true, set: true },
-            vertices: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
-            texcoords: { get:true, set: true, sizeVars:['ptr->vertexCount*2'] },
-            texcoords2: { set: true, sizeVars:['ptr->vertexCount*2'] },
-            normals: { get:true, set: true, sizeVars:['ptr->vertexCount*3'] },
-            tangents: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
-            colors: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
-            indices: { get: true, set: true, sizeVars:['ptr->vertexCount'] },
-            animVertices: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
-            animNormals: { get: true, set: true, sizeVars:['ptr->vertexCount*3'] },
-            boneIds: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
-            boneWeights: { get: true, set: true, sizeVars:['ptr->vertexCount*4'] },
+            vertices: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
+            texcoords: { get:true, set: true, sizeVars:['ptr.vertexCount*2'] },
+            texcoords2: { set: true, sizeVars:['ptr.vertexCount*2'] },
+            normals: { get:true, set: true, sizeVars:['ptr.vertexCount*3'] },
+            tangents: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
+            colors: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
+            indices: { get: true, set: true, sizeVars:['ptr.vertexCount'] },
+            animVertices: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
+            animNormals: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
+            boneIds: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
+            boneWeights: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
         },
         createConstructor: true
         //destructor: "UnloadMesh"
     };
-    modules['core'].getStruct("Shader").binding = {
+    modules['raylib'].getStruct("Shader").binding = {
         properties: {
             id: { get: true }
         },
         createConstructor: true
         //destructor: "UnloadShader"
     };
-    modules['core'].getStruct("Texture").binding = {
+    modules['raylib'].getStruct("Texture").binding = {
         properties: {
             width: { get: true },
             height: { get: true },
@@ -364,17 +573,19 @@ function main() {
         createConstructor: true
         //destructor: "UnloadTexture"
     };
-    modules['core'].getStruct("Font").binding = {
+    modules['raylib'].getStruct("Font").binding = {
         properties: {
             baseSize: { get: true },
             glyphCount: { get: true },
             glyphPadding: { get: true },
 			texture: { get: true },
+            recs: { get: true, sizeVars:['ptr.glyphCount'] },
+            glyphs: { get: true, sizeVars:['ptr.glyphCount'] },
         },
         createConstructor: true
         //destructor: "UnloadFont"
     };
-    modules['core'].getStruct("RenderTexture").binding = {
+    modules['raylib'].getStruct("RenderTexture").binding = {
         properties: {
             id: { get: true },
             texture: { get: true },
@@ -383,7 +594,7 @@ function main() {
         createConstructor: true
         //destructor: "UnloadRenderTexture"
     };
-    modules['core'].getStruct("MaterialMap").binding = {
+    modules['raylib'].getStruct("MaterialMap").binding = {
         properties: {
             texture: { set: true },
             color: { set: true, get: true },
@@ -392,26 +603,26 @@ function main() {
         createConstructor: true
         //destructor: "UnloadMaterialMap"
     };
-    modules['core'].getStruct("Material").binding = {
+    modules['raylib'].getStruct("Material").binding = {
         properties: {
             shader: { get: true, set: true },
-            maps: { get: true, sizeVars:[config.defined['MAX_MATERIAL_MAPS']] }
+            maps: { get: true, sizeVars:[config.defined['MAX_MATERIAL_MAPS'].content.body] }
         },
         createConstructor: true
         //destructor: "UnloadMaterial"
     };
-    modules['core'].getStruct("FilePathList").binding.properties.paths.sizeVars=["ptr->count"];
-    modules['core'].getStruct("AutomationEventList").binding.properties.events.sizeVars=["ptr->count"];
+    modules['raylib'].getStruct("FilePathList").binding.properties.paths.sizeVars=["ptr.count"];
+    modules['raylib'].getStruct("AutomationEventList").binding.properties.events.sizeVars=["ptr.count"];
     att = modules['rlgl'].getStruct("rlVertexBuffer").binding.properties;
-    att.vertices.sizeVars=["ptr->elementCount*3*4"];
-    att.texcoords.sizeVars=["ptr->elementCount*2*4"];
-    att.normals.sizeVars=["ptr->elementCount*3*4"];
-    att.colors.sizeVars=["ptr->elementCount*4*4"];
-    if(att.indices!==undefined)att.indices.sizeVars=["ptr->elementCount*6"];
+    att.vertices.sizeVars=["ptr.elementCount*3*4"];
+    att.texcoords.sizeVars=["ptr.elementCount*2*4"];
+    att.normals.sizeVars=["ptr.elementCount*3*4"];
+    att.colors.sizeVars=["ptr.elementCount*4*4"];
+    if(att.indices!==undefined)att.indices.sizeVars=["ptr.elementCount*6"];
     att = modules['rlgl'].getStruct("rlRenderBatch").binding.properties;
-    att.vertexBuffer.sizeVars=["ptr->bufferCount"];
+    att.vertexBuffer.sizeVars=["ptr.bufferCount"];
     att.draws.sizeVars=["RL_DEFAULT_BATCH_DRAWCALLS"];
-    const structDI = modules['core'].getStruct("VrDeviceInfo");
+    const structDI = modules['raylib'].getStruct("VrDeviceInfo");
     structDI.binding = {
         properties: {
             hResolution: { set: true, get: true },
@@ -426,163 +637,163 @@ function main() {
         },
         createConstructor: true
     };
-    modules['core'].getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
+    modules['raylib'].getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
     // Custom frame control functions
     // NOT SUPPORTED BECAUSE NEEDS COMPILER FLAG
-    modules['core'].ignore("SwapScreenBuffer");
-    modules['core'].ignore("PollInputEvents");
-    modules['core'].getFunction("SetShaderValue").binding = { body: (gen) => {
-        gen.jsToC("Shader", "shader", "argv[0]");
-        gen.jsToC("int", "locIndex", "argv[1]");
-        gen.declare("void *", "value", false, "NULL");
+    modules['raylib'].ignore("SwapScreenBuffer");
+    modules['raylib'].ignore("PollInputEvents");
+    modules['raylib'].getFunction("SetShaderValue").binding = {};
+    modules['raylib'].getFunction("SetShaderValue").binding.body = (gen) => {
+        let qjs = new QuickJsGenerator(gen);
+        qjs.jsToC("Shader", "shader", "argv[0]");
+        qjs.jsToC("int", "locIndex", "argv[1]");
+        gen.declare("void *", "value", "NULL");
         gen.declare("JSValue", "da_value");
-        gen.jsToC("int", "uniformType", "argv[3]");
-        const sw = gen.switch("uniformType");
+        qjs.jsToC("int", "uniformType", "argv[3]");
+        let cases={
+            "SHADER_UNIFORM_FLOAT":['[1]','float'],
+            "SHADER_UNIFORM_VEC2":['[2]','float'],
+            "SHADER_UNIFORM_VEC3":['[3]','float'],
+            "SHADER_UNIFORM_VEC4":['[4]','float'],
+            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D":['[1]','int'],
+            "SHADER_UNIFORM_IVEC2":['[2]','float'],
+            "SHADER_UNIFORM_IVEC3":['[3]','float'],
+            "SHADER_UNIFORM_IVEC4":['[4]','float'],
+            "default":[]
+        };
         //Named VEC but examples and inner code use (float *) technically the same
-        let b = sw.caseBreak("SHADER_UNIFORM_FLOAT");
-            b.jsToC("float &", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_VEC2");
-            b.jsToC("float [2]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_VEC3");
-            b.jsToC("float [3]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_VEC4");
-            b.jsToC("float [4]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        sw.case("SHADER_UNIFORM_INT");
-        b = sw.caseBreak("SHADER_UNIFORM_SAMPLER2D");
-            b.jsToC("int &", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_IVEC2");
-            b.jsToC("int [2]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_IVEC3");
-            b.jsToC("int [3]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.caseBreak("SHADER_UNIFORM_IVEC4");
-            b.jsToC("int [4]", "val", "argv[2]");
-            b.statement("value = (void *)val");b.statement("da_value = da_val");
-        b = sw.defaultBreak();
-            b.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
-            b.returnExp("JS_EXCEPTION");
+        const sw = gen.switch("uniformType",Object.keys(cases),(ctx,i)=>{
+            if(i=='default'){
+                ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
+                ctx.return("JS_EXCEPTION");
+            }else{
+                new QuickJsGenerator(ctx).jsToC(`${cases[i][1]} ${cases[i][0]}`, "val", "argv[2]");
+                ctx.assign("value",'val(void *)');
+                ctx.assign("da_value",'da_val');
+            }
+        });
         gen.call("SetShaderValue", ["shader", "locIndex", "value", "uniformType"]);
-        gen.jsCleanUpParameter("void *", 'value', "argv[2]");
-        gen.returnExp("JS_UNDEFINED");
-    } };
-    modules['core'].getFunction("SetShaderValueV").binding = { body: (gen) => {
-            gen.jsToC("Shader", "shader", "argv[0]");
-            gen.jsToC("int", "locIndex", "argv[1]");
-            gen.jsToC("int", "uniformType", "argv[3]");
-            gen.jsToC("int", "count", "argv[4]");
-            gen.declare("void *", "value", false, "NULL");
-            gen.declare("JSValue", "da_value");
-            const sw = gen.switch("uniformType");
-            //Named VEC but examples and inner code use (float *) technically the same
-            let b;
-            sw.case("SHADER_UNIFORM_FLOAT");
-            sw.case("SHADER_UNIFORM_VEC2");
-            sw.case("SHADER_UNIFORM_VEC3");
-            b = sw.caseBreak("SHADER_UNIFORM_VEC4");
-                b.jsToC("float *", "val", "argv[2]");
-                b.statement("value = (void *)val");b.statement("da_value = da_val");
-            sw.case("SHADER_UNIFORM_INT");
-            sw.case("SHADER_UNIFORM_SAMPLER2D");
-            sw.case("SHADER_UNIFORM_IVEC2");
-            sw.case("SHADER_UNIFORM_IVEC3");
-            b = sw.caseBreak("SHADER_UNIFORM_IVEC4");
-                b.jsToC("int *", "val", "argv[2]");
-                b.statement("value = (void*)val");b.statement("da_value = da_val");
-            b = sw.defaultBreak();
-                b.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
-                b.returnExp("JS_EXCEPTION");
-            gen.call("SetShaderValueV", ["shader", "locIndex", "value", "uniformType",'count']);
-            gen.jsCleanUpParameter("void *", 'value', "argv[2]");
-            gen.returnExp("JS_UNDEFINED");
-        } };
-    modules['core'].getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
+        qjs.jsCleanUpParameter("void *", 'value', "argv[2]");
+        gen.return("JS_UNDEFINED");
+    };
+    modules['raylib'].getFunction("SetShaderValueV").binding = {};
+    modules['raylib'].getFunction("SetShaderValueV").binding.body = (gen) => {
+        let qjs = new QuickJsGenerator(gen);
+        qjs.jsToC("Shader", "shader", "argv[0]");
+        qjs.jsToC("int", "locIndex", "argv[1]");
+        qjs.jsToC("int", "uniformType", "argv[3]");
+        qjs.jsToC("int", "count", "argv[4]");
+        gen.declare("void *", "value", "NULL");
+        gen.declare("JSValue", "da_value");
+        const sw = gen.switch("uniformType",[
+            "SHADER_UNIFORM_FLOAT||SHADER_UNIFORM_VEC2||SHADER_UNIFORM_VEC3",
+            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D||SHADER_UNIFORM_IVEC2||SHADER_UNIFORM_IVEC3||SHADER_UNIFORM_IVEC4",
+            "default"],(ctx,i)=>{
+            if(i=="SHADER_UNIFORM_FLOAT||SHADER_UNIFORM_VEC2||SHADER_UNIFORM_VEC3"){
+                (new QuickJsGenerator(ctx)).jsToC("int *", "val", "argv[2]");
+            }else if(i=="SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D||SHADER_UNIFORM_IVEC2||SHADER_UNIFORM_IVEC3||SHADER_UNIFORM_IVEC4"){
+                (new QuickJsGenerator(ctx)).jsToC("float *", "val", "argv[2]");
+            }else{
+                ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
+                ctx.return("JS_EXCEPTION");
+                return;
+            }
+            ctx.assign("value","val(void *)");
+            ctx.assign("da_value","da_val");
+        });
+        //Named VEC but examples and inner code use (float *) technically the same
+        gen.call("SetShaderValueV", ["shader", "locIndex", "value", "uniformType",'count']);
+        qjs.jsCleanUpParameter("void *", 'value', "argv[2]");
+        gen.return("JS_UNDEFINED");
+    };
+    modules['raylib'].getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
 
 
     /*******OPINION*********/
     //Opinion sections exist due to developer opinion and shall be accessable behind a config flag (TODO)
     // JS User has no need to raw allocate memory
-    modules['core'].ignore("MemAlloc");
-    modules['core'].ignore("MemRealloc");
-    modules['core'].ignore("MemFree");
+    modules['raylib'].ignore("MemAlloc");
+    modules['raylib'].ignore("MemRealloc");
+    modules['raylib'].ignore("MemFree");
     // JS User should never freeze process using sleep (no async will fire)
-    modules['core'].ignore("WaitTime");
+    modules['raylib'].ignore("WaitTime");
     // Right now, it is not usefull to users to get native window handler address
-    modules['core'].ignore("GetWindowHandle");
+    modules['raylib'].ignore("GetWindowHandle");
     /*******OPINION*********/
 
     // SetTraceLogCallback uses va_list and as such needs custom any[] implementation
-    modules['core'].getFunction("ComputeMD5").returnSizeVars = [4];
-    modules['core'].getFunction("ComputeSHA1").returnSizeVars = [5];
-    modules['core'].ignore("TraceLogCallback");
-    modules['core'].ignore("SetTraceLogCallback");
+    modules['raylib'].getFunction("ComputeMD5").returnSizeVars = [4];
+    modules['raylib'].getFunction("ComputeSHA1").returnSizeVars = [5];
+    modules['raylib'].ignore("TraceLogCallback");
+    modules['raylib'].ignore("SetTraceLogCallback");
     // Files management functions
-    att = modules['core'].getFunction("LoadFileData");
+    att = modules['raylib'].getFunction("LoadFileData");
     //att.params.find(a=>a.name=='dataSize').type='int &';
     att.returnSizeVars = ['dataSize[0]'];
     att.returnType = "void *";//casting to void* is an estetic choice to use buffer like SaveFileData
     att.binding.after = gen => gen.call("UnloadFileData", ["returnVal"]);
-    modules['core'].ignore("UnloadFileData");
-    att = modules['core'].getFunction("ExportImageToMemory");
+    modules['raylib'].ignore("UnloadFileData");
+    att = modules['raylib'].getFunction("ExportImageToMemory");
     att.returnSizeVars = ['fileSize[0]'];
     // TODO: SaveFileData works but unnecessary makes copy of memory
-    modules['core'].getFunction("SaveFileData").binding = {};
-    modules['core'].getFunction("LoadFileText").binding.after = gen => gen.call("UnloadFileText", ["returnVal"]);
-    modules['core'].ignore("UnloadFileText");
+    modules['raylib'].getFunction("SaveFileData").binding = {};
+    modules['raylib'].getFunction("LoadFileText").binding.after = gen => gen.call("UnloadFileText", ["returnVal"]);
+    modules['raylib'].ignore("UnloadFileText");
     const createFileList = (gen, loadName, unloadName, args) => {
         gen.call(loadName, args, { type: "FilePathList", name: "files" });
         gen.call("JS_NewArray", ["ctx"], { type: "JSValue", name: "ret" });
-        const f = gen.for("0", "files.count");
-        f.call("JS_SetPropertyUint32", ["ctx", "ret", "i", "JS_NewString(ctx,files.paths[i])"]);
+        gen.for(0, "files.count",(ctx,iter)=>{
+            let tmpvar=ctx.allocVariable('str');
+            ctx.call('JS_NewString',['ctx','files.paths['+iter+']'],{type:'JSValue',name:tmpvar});
+            ctx.call("JS_SetPropertyUint32", ["ctx", "ret", iter, tmpvar]);
+        });
         gen.call(unloadName, ["files"]);
     };
-    modules['core'].getFunction("LoadDirectoryFiles").binding = {
+    modules['raylib'].getFunction("LoadDirectoryFiles").binding = {
         jsReturns: "string[]",
         body: gen => {
-            gen.jsToC("const char *", "dirPath", "argv[0]");
+            let qjs = new QuickJsGenerator(gen);
+            qjs.jsToC("const char *", "dirPath", "argv[0]");
             createFileList(gen, "LoadDirectoryFiles", "UnloadDirectoryFiles", ["dirPath"]);
-            gen.statement(`JS_FreeCString(ctx, dirPath)`);
-            gen.returnExp("ret");
+            gen.call('JS_FreeCString',['ctx','dirPath']);
+            gen.return("ret");
         }
     };
-    modules['core'].getFunction("LoadDirectoryFilesEx").binding = {
+    modules['raylib'].getFunction("LoadDirectoryFilesEx").binding = {
         jsReturns: "string[]",
         body: gen => {
-            gen.jsToC("const char *", "basePath", "argv[0]");
-            gen.jsToC("const char *", "filter", "argv[1]");
-            gen.jsToC("bool", "scanSubdirs", "argv[2]");
+            let qjs = new QuickJsGenerator(gen);
+            qjs.jsToC("const char *", "basePath", "argv[0]");
+            qjs.jsToC("const char *", "filter", "argv[1]");
+            qjs.jsToC("bool", "scanSubdirs", "argv[2]");
             createFileList(gen, "LoadDirectoryFilesEx", "UnloadDirectoryFiles", ["basePath", "filter", "scanSubdirs"]);
-            gen.statement(`JS_FreeCString(ctx, basePath)`);
-            gen.statement(`JS_FreeCString(ctx, filter)`);
-            gen.returnExp("ret");
+            gen.call('JS_FreeCString',['ctx','basePath']);
+            gen.call('JS_FreeCString',['ctx','filter']);
+            gen.return("ret");
         }
     };
-    modules['core'].ignore("UnloadDirectoryFiles");
-    modules['core'].getFunction("LoadDroppedFiles").binding = {
+    modules['raylib'].ignore("UnloadDirectoryFiles");
+    modules['raylib'].getFunction("LoadDroppedFiles").binding = {
         jsReturns: "string[]",
         body: gen => {
             createFileList(gen, "LoadDroppedFiles", "UnloadDroppedFiles", []);
-            gen.returnExp("ret");
+            gen.return("ret");
         }
     };
-    modules['core'].ignore("UnloadDroppedFiles");
-    modules['core'].getFunction("LoadImageColors").binding = {
+    modules['raylib'].ignore("UnloadDroppedFiles");
+    modules['raylib'].getFunction("LoadImageColors").binding = {
         jsReturns: "ArrayBuffer",
         body: gen => {
-            gen.jsToC("Image", "image", "argv[0]");
+            let qjs = new QuickJsGenerator(gen);
+            qjs.jsToC("Image", "image", "argv[0]");
             gen.call("LoadImageColors", ["image"], { name: "colors", type: "Color *" });
-            gen.statement("JSValue retVal = JS_NewArrayBufferCopy(ctx, (const uint8_t*)colors, image.width*image.height*sizeof(Color))");
+            gen.call('JS_NewArrayBufferCopy',['ctx','colors','image.width*image.height*sizeof(Color)'],{type:'JSValue',name:'retVal'});
             gen.call("UnloadImageColors", ["colors"]);
-            gen.returnExp("retVal");
+            gen.return("retVal");
         }
     };
     let applyffix=false;
-    const lfx = modules['core'].getFunction("LoadFontEx");
+    const lfx = modules['raylib'].getFunction("LoadFontEx");
     if(applyffix){
         lfx.params[2].binding = { ignore: true };
         lfx.params[3].binding = { ignore: true };
@@ -592,14 +803,14 @@ function main() {
     }
     if(!config.bindText){
         //Text functions are enabled for compatibility
-        modules['core'].functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['core'].ignore(x.name));
+        modules['raylib'].functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['raylib'].ignore(x.name));
     }else{
         /*******OPINION*********/
         //Using textCopy is more cumbersome than doing it natively, due to not supporting C string offsets
-        modules['core'].ignore("TextCopy");
+        modules['raylib'].ignore("TextCopy");
         /*******OPINION*********/
-        //modules['core'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
-        modules['core'].getFunction("TextFormat").binding.body=(gen)=>{
+        //modules['raylib'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+        modules['raylib'].getFunction("TextFormat").binding.body=(gen)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
             const errorCleanupFn =(ctx)=>{
@@ -608,168 +819,208 @@ function main() {
                 if(bufferdefined)ctx.call('js_free',['ctx','buffer']);
             };
             let flags={dynamicAlloc:true};//reduces code size
-            gen.declare('memoryNode *', 'memoryHead',false,`(memoryNode *)calloc(1,sizeof(memoryNode))`);
-            gen.declare('memoryNode *', 'memoryCurrent',false,'memoryHead');
+            gen.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
+            gen.declare('memoryNode *', 'memoryCurrent','memoryHead');
 
-            gen.declare('size_t','char_ptrlen',false,10);
-            gen.declare('char *','char_ptr',false,'(char *)js_calloc(ctx, char_ptrlen, sizeof(char))');
+            gen.declare('size_t','char_ptrlen',10);
+            gen.call('js_calloc',['ctx', 'char_ptrlen', 'sizeof(char)'],{type:'char *',name:'char_ptr'});
             gen.declare("int64_t","formatlen");
-            let fi = gen.if('JS_GetLength(ctx,argv[0],&formatlen)==-1');
-            errorCleanupFn(fi);
-            fi.returnExp("JS_EXCEPTION");
-            gen.jsToC('char *','format','argv[0]',flags);
-            gen.declare('char *','subformat',false,`format`);
-            gen.declare('size_t','subformatlen',false,0);
+            gen.if('JS_GetLength(ctx,argv[0],formatlen)==-1',(ctx)=>{
+                errorCleanupFn(ctx);
+                ctx.return("JS_EXCEPTION");
+            });
+            let qjs = new QuickJsGenerator(gen);
+            qjs.jsToC('char *','format','argv[0]',flags);
+            gen.declare('char *','subformat',`format`);
+            gen.declare('size_t','subformatlen',0);
             gen.declare('char','subformatlenh');
-            gen.declare('size_t','bufferlen',false,'formatlen*2');
-            gen.declare('char *','buffer',false,'(char *)js_calloc(ctx, bufferlen, sizeof(char))');
+            gen.declare('size_t','bufferlen','formatlen*2');
+            gen.call('js_calloc',['ctx','bufferlen','sizeof(char)'],{type:'char *',name:'buffer'});
             bufferdefined=true;
-            gen.declare('int','l',false,0);
-            gen.declare('int','c',false,1);
-            gen.declare('int','ilen',false,0);
-            let t0,t1,t2,t3,t4,t5,t6;
-            t0=gen.for(0, 'formatlen');
-                t0.declare('int','n',false,2);
-                t0.declare('int','w',false,0);
-                t0.declare('int','p',false,0);
-                t1=t0.if("format[i]!='%'");
-                    t1.statement('buffer[l]=format[i]');
-                    t1.statement('l++');
-                t1=t0.else();
-                    t1.declare('int','firsth',false,'i+1');
-                    t1.declare('char','har',false,'format[firsth]');
-                        t2=t1.if('har==0');
-                        t2.cToJs('char *','ret','buffer',{},0,['l']);
-                        errorCleanupFn(t2);
-                        t2.returnExp('ret');
-                    t2=t1.while("!(har>=97&&har<=122)&&!(har>=65&&har<=90)&&har!='%'");
-                        t2.statement('firsth++');
-                        t2.statement('har=format[firsth]');
-                        t3=t2.if('har==0');
-                            t3.cToJs('char *','ret','buffer',{},0,['l']);
-                            errorCleanupFn(t3);
-                            t3.returnExp('ret');
-                    t1.declare('int','lasth',false,'firsth');
-                    t1.statement('har=format[lasth]');
-                    t2=t1.while('strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL');
-                        t3=t2.if("har=='*'");
-                            t4=t3.if("n==1");
-                                t4.declare('int','w',false,'p',true);
-                            t3.jsToC('int','p','argv[c]',flags,0,errorCleanupFn);
-                            t3.statement('c++');
-                            t3.statement('n--');
-                        t2.statement('lasth++');
-                        t2.declare('char','har',false,'format[lasth]',true);
-                        t3=t2.if('har==0');
-                            t3.cToJs('char *','ret','buffer',{},0,['l']);
-                            errorCleanupFn(t3);
-                            t3.returnExp('ret');
-                    t1.declare('size_t','subformatlen',false,'lasth-i+1',true);
-                    t1.declare('char','subformatlenh',false,'format[lasth+1]',true);
-                    t1.declare('char *','subformat',false,'format+i',true);
-                    t1.statement('subformat[subformatlen]=0');
-                    t2=t1.if("format[lasth]=='%'");
-                        t2.declare('int','i',false,'lasth',true);
-                        t2.statement("buffer[l]='%'");
-                        t2.statement("l++");
-                        t2.statement("continue");
-                    t1.statement('memset(char_ptr,0,ilen * sizeof(char))');
-                    t2=t1.switch('har');
-                        t2.case("'d'");
-                        t3=t2.caseBreak("'i'");
-                            t3.jsToC('int64_t','a','argv[c]',flags,0,errorCleanupFn);
-                            t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(int)a'],{name:'char_ptr'});
-                            t4=t3.else().switch('format[lasth-1]');
-                                t5=t4.caseBreak("'h'");
-                                    t6=t5.if("subformat[lasth-i-2]=='h'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(signed char)a'],{name:'char_ptr'});
-                                    t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(short int)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'l'");
-                                    t6=t5.if("subformat[lasth-i-2]=='l'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long long int)a'],{name:'char_ptr'});
-                                    t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long int)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'j'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(intmax_t)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'z'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(size_t)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'t'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{name:'char_ptr'});
-                                //Dont do anything on default, if this is a broken format, let it be skipped
-                        t2.case("'u'");
-                        t2.case("'o'");
-                        t2.case("'x'");
-                        t3=t2.caseBreak("'X'");
-                            t3.jsToC('uint32_t','a','argv[c]',flags,0,errorCleanupFn);
-                            t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned int)a'],{name:'char_ptr'});
-                            t4=t3.else().switch('subformat[lasth-i-1]');
-                                t5=t4.caseBreak("'h'");
-                                    t6=t5.if("subformat[lasth-i-2]=='h'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned char)a'],{name:'char_ptr'});
-                                    t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned short int)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'l'");
-                                    t6=t5.if("subformat[lasth-i-2]=='l'");
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned long long int)a'],{name:'char_ptr'});
-                                    t6=t5.else();
-                                        t6.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(unsigned long int)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'j'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(uintmax_t)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'z'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(size_t)a'],{name:'char_ptr'});
-                                t5=t4.caseBreak("'t'");
-                                    t5.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{name:'char_ptr'});
-                                //Dont do anything on default, if this is a broken format, let it be skipped
-                        t2.case("'f'");
-                        t2.case("'F'");
-                        t2.case("'e'");
-                        t2.case("'E'");
-                        t2.case("'g'");
-                        t2.case("'G'");
-                        t2.case("'a'");
-                        t3=t2.caseBreak("'A'");
-                            t3.jsToC('double','a','argv[c]',flags,0,errorCleanupFn);
-                            t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(double)a'],{name:'char_ptr'});
-                            t4=t3.else();
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(long double)a'],{name:'char_ptr'});
-                        t3=t2.caseBreak("'c'");
-                            t3.jsToC('int','a','argv[c]',flags,0,errorCleanupFn);
-                            t4=t3.if('firsth==lasth');
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(int)a'],{name:'char_ptr'});
-                            t4=t3.else();
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(wint_t)a'],{name:'char_ptr'});
-                        t3=t2.caseBreak("'s'");
-                            t4=t3.if('firsth==lasth');
-                                t4.jsToC('char *','a','argv[c]',flags,0,errorCleanupFn);
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','a'],{name:'char_ptr'});
-                            t4=t3.else();
-                                t4.jsToC('wchar_t *','a','argv[c]',flags,0,errorCleanupFn);
-                                t4.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','a'],{name:'char_ptr'});
-                        t3=t2.caseBreak("'p'");
-                            t3.call('asnprintf',['ctx','char_ptr','&char_ptrlen','subformat','n','w','p','(void *)&argv[c]'],{name:'char_ptr'});
-                        t3=t2.caseBreak("'n'");
-                            t3.cToJs('int &','argv[c]','(&l)',{dynamicAlloc:true,supressDeclaration:true});
-                    t1.statement('subformat[subformatlen]=subformatlenh');
-                    t1.statement('c++');
-                    t1.declare('int','ilen',false,'strlen(char_ptr)',true);
-                    t1.declare('int','maxstrlen',false,'formatlen+l+ilen-lasth');
-                    t2=t1.if('bufferlen<maxstrlen');
-                        t2.declare('char *','buffer',false,'js_realloc(ctx,buffer,maxstrlen)',true);
-                        t2.call('memset',['buffer+bufferlen',0,'maxstrlen-bufferlen']);
-                        t2.declare('int','bufferlen',false,'maxstrlen',true);
-                    t1.call('strncpy',['buffer+l','char_ptr','ilen']);
-                    t1.statement('l+=ilen');
-                    t1.declare('int','i',false,'lasth',true);
-            gen.cToJs('char *','js_buffer','buffer');
+            gen.declare('int','l',0);
+            gen.declare('int','c',1);
+            gen.declare('int','ilen',0);
+            gen.for(0, 'formatlen',(ctx)=>{
+                ctx.declare('int','n',2);
+                ctx.declare('int','w',0);
+                ctx.declare('int','p',0);
+                ctx.if(["format[i]!='%'",''],(ctx)=>{
+                    ctx.assign('buffer[l]','format[i]');
+                    ctx.add('int','l',1);
+                },(ctx)=>{
+                    ctx.declare('int','firsth','i+1');
+                    ctx.declare('char','har','format[firsth]');
+                    ctx.if('har==0',(ctx)=>{
+                        (new QuickJsGenerator(ctx)).cToJs('char *','ret','buffer',{},0,['l']);
+                        errorCleanupFn(ctx);
+                        ctx.return('ret');
+                    });
+
+                    ctx.while("!(har>=97&&har<=122)&&!(har>=65&&har<=90)&&har!='%'",(ctx)=>{
+                        ctx.add('int','firsth',1);
+                        ctx.declare('char','har','format[firsth]');
+                        ctx.if('har==0',(ctx)=>{
+                            (new QuickJsGenerator(ctx)).cToJs('char *','ret','buffer',{},0,['l']);
+                            errorCleanupFn(ctx);
+                            ctx.return('ret');
+                        });
+                    });
+                    ctx.declare('int','lasth','firsth');
+                    ctx.assign('har','format[lasth]');
+                    ctx.while('strchr("diuoxXfFeEfFeEgGaAcspn%", har)==NULL',(ctx)=>{
+                        ctx.if("har=='*'",(ctx)=>{
+                            ctx.if("n==1",(ctx)=>{
+                                ctx.declare('int','w','p');
+                            });
+                            (new QuickJsGenerator(ctx)).jsToC('int','p','argv[c]',flags,0,errorCleanupFn);
+                            ctx.add('int','c',1);
+                            ctx.sub('int','n',1);
+                        });
+                        ctx.add('','lasth',1);
+                        ctx.declare('char','har','format[lasth]');
+                        ctx.if('har==0',(ctx)=>{
+                            (new QuickJsGenerator(ctx)).cToJs('char *','ret','buffer',{},0,['l']);
+                            errorCleanupFn(ctx);
+                            ctx.return('ret');
+                        });
+                    });
+                    ctx.declare('size_t','subformatlen','lasth-i+1');
+                    ctx.declare('char','subformatlenh','format[lasth+1]');
+                    ctx.declare('char *','subformat','format+i');
+                    ctx.assign('subformat[subformatlen]',0);
+                    ctx.if("format[lasth]=='%'",(ctx)=>{
+                        ctx.declare('int','i','lasth');
+                        ctx.assign("buffer[l]","'%'");
+                        ctx.add('int',"l",1);
+                        ctx.continue();
+                    });
+                    ctx.call('memset',['char_ptr',0,'ilen * sizeof(char)']);
+                    ctx.switch('har',["'d'||'i'","'u'||'o'||'x'||'X'","'f'||'F'||'e'||'E'||'g'||'G'||'a'||'A'","'c'","'s'","'p'","'n'"],(ctx,cas)=>{
+                        switch(cas){
+                            case "'d'||'i'":{
+                                (new QuickJsGenerator(ctx)).jsToC('int64_t','a','argv[c]',flags,0,errorCleanupFn);
+                                ctx.if(['firsth==lasth',''],(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(int)a'],{type:'char *',name:'char_ptr'});
+                                },(ctx)=>{
+                                    ctx.switch('format[lasth-1]',["'h'","'l'","'j'","'z'","'t'"],(ctx,cas)=>{
+                                        switch(cas){
+                                            case "'h'":{
+                                                ctx.if(["subformat[lasth-i-2]=='h'",''],(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(signed char)a'],{type:'char *',name:'char_ptr'});
+                                                },(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(short int)a'],{type:'char *',name:'char_ptr'});
+                                                });
+                                            }break;
+                                            case "'l'":{
+                                                ctx.if(["subformat[lasth-i-2]=='l'",''],(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(long long int)a'],{type:'char *',name:'char_ptr'});
+                                                },(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(long int)a'],{type:'char *',name:'char_ptr'});
+                                                });
+                                            }break;
+                                            case "'j'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(intmax_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                            case "'z'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(size_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                            case "'t'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                            //Dont do anything on default, if this is a broken format, let it be skipped
+                                        }
+                                    });
+                                });
+                            }break;
+                            case "'u'||'o'||'x'||'X'":{
+                                (new QuickJsGenerator(ctx)).jsToC('uint32_t','a','argv[c]',flags,0,errorCleanupFn);
+                                ctx.if(['firsth==lasth',''],(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned int)a'],{type:'char *',name:'char_ptr'});
+                                },(ctx)=>{
+                                    ctx.switch('subformat[lasth-i-1]',["'h'","'l'","'j'","'z'","'t'"],(ctx,cas)=>{
+                                        switch(cas){
+                                            case "'h'":{
+                                                ctx.if(["subformat[lasth-i-2]=='h'",''],(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned char)a'],{type:'char *',name:'char_ptr'});
+                                                },(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned short int)a'],{type:'char *',name:'char_ptr'});
+                                                });
+                                            }break;
+                                            case "'l'":{
+                                                ctx.if(["subformat[lasth-i-2]=='l'",''],(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned long long int)a'],{type:'char *',name:'char_ptr'});
+                                                },(ctx)=>{
+                                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned long int)a'],{type:'char *',name:'char_ptr'});
+                                                });
+                                            }break;
+                                            case "'j'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(uintmax_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                            case "'z'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(size_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                            case "'t'":{
+                                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(ptrdiff_t)a'],{type:'char *',name:'char_ptr'});
+                                            }break;
+                                        }
+                                        //Dont do anything on default, if this is a broken format, let it be skipped
+                                    });
+                                });
+                            }break;
+                            case "'f'||'F'||'e'||'E'||'g'||'G'||'a'||'A'":{
+                                (new QuickJsGenerator(ctx)).jsToC('double','a','argv[c]',flags,0,errorCleanupFn);
+                                ctx.if(['firsth==lasth',''],(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(double)a'],{type:'char *',name:'char_ptr'});
+                                },(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(long double)a'],{type:'char *',name:'char_ptr'});
+                                });
+
+                            }break;
+                            case "'c'":{
+                                (new QuickJsGenerator(ctx)).jsToC('int','a','argv[c]',flags,0,errorCleanupFn);
+                                ctx.if(['firsth==lasth',''],(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(int)a'],{type:'char *',name:'char_ptr'});
+                                },(ctx)=>{
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(wint_t)a'],{type:'char *',name:'char_ptr'});
+                                });
+                            }break;
+                            case "'s'":{
+                                ctx.if(['firsth==lasth',''],(ctx)=>{
+                                    (new QuickJsGenerator(ctx)).jsToC('char *','a','argv[c]',flags,0,errorCleanupFn);
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','a'],{type:'char *',name:'char_ptr'});
+                                },(ctx)=>{
+                                    (new QuickJsGenerator(ctx)).jsToC('wchar_t *','a','argv[c]',flags,0,errorCleanupFn);
+                                    ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','a'],{type:'char *',name:'char_ptr'});
+                                });
+                            }break;
+                            case "'p'":{
+                                ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(void *)&argv[c]'],{type:'char *',name:'char_ptr'});
+                            }break;
+                            case "'n'":{
+                                (new QuickJsGenerator(ctx)).cToJs('int','argv[c]','l',{dynamicAlloc:true,supressDeclaration:true});
+                            }break;
+                        }
+                    });
+                    ctx.assign('subformat[subformatlen]','subformatlenh');
+                    ctx.add('int','c',1);
+                    ctx.call('strlen',['char_ptr'],{type:'int',name:'ilen'});
+                    ctx.declare('int','maxstrlen','formatlen+l+ilen-lasth');
+                    ctx.if('bufferlen<maxstrlen',(ctx)=>{
+                        ctx.call('js_realloc',['ctx','buffer','maxstrlen'],{type:'char *',name:'buffer'});
+                        ctx.call('memset',['buffer+bufferlen',0,'maxstrlen-bufferlen']);
+                        ctx.declare('int','bufferlen','maxstrlen');
+                    });
+                    ctx.call('strncpy',['buffer+l','char_ptr','ilen']);
+                    ctx.add('int','l','ilen');
+                    ctx.declare('int','i','lasth');
+                });
+            });
+            (new QuickJsGenerator(gen)).cToJs('char *','js_buffer','buffer');
             errorCleanupFn(gen);
-            gen.returnExp('js_buffer');
+            gen.return('js_buffer');
         };
     }
-    att = modules['core'].getFunction("LoadWaveSamples");
+    att = modules['raylib'].getFunction("LoadWaveSamples");
     att.returnSizeVars = ['wave.frameCount*wave.channels'];
     att.binding.after = gen => gen.call("UnloadWaveSamples", ["returnVal"]);
     // requires returning pointer
@@ -782,34 +1033,20 @@ function main() {
         modules['rlgl'].ignore("rlReadTexturePixels");
     }
     att = modules['rlgl'].getFunction("rlGetShaderLocsDefault");
-    att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'])];
+    att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'].content.body)];
     // Wave/Sound management functions
-    modules['core'].ignore("SetAudioStreamCallback");
-    modules['core'].ignore("AttachAudioStreamProcessor");
-    modules['core'].ignore("DetachAudioStreamProcessor");
-    att = modules['core'].getCallback("AudioCallback");
-    att.params[0].type='float *';
-    att.binding.threaded = true;
-    //audioCallback has different sizes depending on what called it
-    cb = structuredClone(att);
-    cb.name='AudioStreamCallback';
-    cb.params[0].sizeVars = ['arg_frames*2'];
-    modules['core'].callbacks.push(cb);
-    modules['core'].getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
-    cb = structuredClone(att);
-    cb.name='AudioMixedProcessor';
-    cb.params[0].type += ' &';
-    cb.params[0].sizeVars = [`arg_frames*${config.defined['AUDIO_DEVICE_CHANNELS']}`];
-    modules['core'].callbacks.push(cb);
-    modules['core'].getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';
-    att = modules['core'].getCallback("SaveFileDataCallback");
+    modules['raylib'].ignore("SetAudioStreamCallback");
+    modules['raylib'].ignore("AttachAudioStreamProcessor");
+    modules['raylib'].ignore("DetachAudioStreamProcessor");
+    modules['raylib'].getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';
+    att = modules['raylib'].getCallback("SaveFileDataCallback");
     att.params[1].type='unsigned char *';
-    att.params[1].sizeVars=['arg_dataSize'];
+    att.params[1].sizeVars=['dataSize'];
     // Requires fixes to void* parameters
     modules['rlgl'].ignore("rlLoadExtensions");
     modules['rlgl'].ignore("rlSetVertexAttributeDefault");
     modules['rlgl'].ignore("rlSetUniform");
-    att = modules['core'].getFunction("LoadRandomSequence");
+    att = modules['raylib'].getFunction("LoadRandomSequence");
     att.returnSizeVars = ['count'];
     att.binding = { after: gen => gen.call("UnloadRandomSequence", ['returnVal']) };
     att = modules['rlgl'].getFunction("rlReadScreenPixels");
@@ -846,18 +1083,18 @@ function main() {
     }
     att = modules['raygui'].getFunction('GuiTextBox').params[1];
     att.type = att.type + ' &';
-    cb = modules['core'].getStruct('AudioStream').fields;
+    cb = modules['raylib'].getStruct('AudioStream').fields;
     att = cb.find(field=>field.name=='buffer');
     att.type = att.type.replace(" *"," &");
     att = cb.find(field=>field.name=='processor');
     att.type = att.type.replace(" *"," &");
     //Dont allow using buffer (searching for typedef source is not supported yet)
-    modules['core'].getStruct('AudioStream').binding.properties.buffer={};
-    modules['core'].getStruct('AudioStream').binding.properties.processor={};
-    modules['core'].getStruct('rAudioBuffer').binding.createConstructor=false;
-    modules['core'].getStruct('rAudioProcessor').binding.createConstructor=false;
+    modules['raylib'].getStruct('AudioStream').binding.properties.buffer={};
+    modules['raylib'].getStruct('AudioStream').binding.properties.processor={};
+    modules['raylib'].getStruct('rAudioBuffer').binding.createConstructor=false;
+    modules['raylib'].getStruct('rAudioProcessor').binding.createConstructor=false;
 
-    modules['core'].getFunction('LoadShader').params[0].binding.allowNull=true;
+    modules['raylib'].getFunction('LoadShader').params[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiValueBox').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiColorPicker').params[1].binding.allowNull=true;
@@ -868,23 +1105,63 @@ function main() {
     modules['raygui'].getFunction('GuiGrid').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiColorBarAlpha').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiTextInputBox').params[6].binding.allowNull=true;
-    modules['core'].getFunction('LoadAutomationEventList').params[0].binding.allowNull=true;
+    modules['raylib'].getFunction('LoadAutomationEventList').params[0].binding.allowNull=true;
 
-    modules['core'].ignore('bool');
-    // Register types
-    for(let key in modules){
-        const module=modules[key];
-        module.structs.forEach(x => module.gen.registerApiStruct(x));
-        module.callbacks.forEach(x => module.gen.registerCallback(x));
-    }
+    modules['raylib'].ignore('bool');
     for(let key in modules){
         const module=modules[key];
         module.aliases.forEach(x => module.gen.registerAlias(x));
     }
+
     //Generate Code
     for(let key in modules){
         const module=modules[key];
+        console.log("Module: "+key);
+        includeDictionary['config'](modules[key].gen,namemap_val['config']);
+        includeDictionary['generated'](modules[key].gen,namemap_val['generated']);
+        //need to figure out if module requires other modules
+        let checks={};
+        for(let fn of module.functions){
+            for(let param of fn.params){
+                for(let type of param.type.split(' '))checks[type]=true;
+            }
+        }
+        for(let alias of module.aliases){
+            for(let type of alias.type.split(' '))checks[type]=true;
+        }
+        for(let callback of module.callbacks){
+            for(let param of callback.params){
+                for(let type of param.type.split(' '))checks[type]=true;
+            }
+        }
+        checks=Object.keys(checks);
+        for(let modulekey in modules){
+            if(modulekey==key){
+                includeDictionary[key](modules[key].gen,namemap_val[modulekey]);
+                continue;
+            }
+            const namemap_module=namemap[modulekey]
+            for(let check of checks){
+                if(namemap_module[check]){
+                    includeDictionary[modulekey](modules[key].gen,namemap_val[modulekey]);
+                    break;
+                }
+            }
+        }
         module.structs.forEach(x => module.gen.addApiStruct_object(x));
+        //On top level, before assigning functions, check for callbacks, if present in a function, add callback first
+        const callbacks=module.callbacks.map(c=>c.name);
+        module.functions.forEach(fn => {
+            let param=fn.params.find(param=>callbacks.includes(param.type));
+            if(param!==undefined){
+                let callback=module.callbacks.find(a=>a.name==param.type);
+                let capture=[];
+                const attachmode=simpleregex(fn.name.toLowerCase(),['os','set','os','attach'],0,capture);
+                capture=capture.join('');
+                if(capture=='')return;
+                module.gen.addCallback("callback_"+callback.name,param.type,callback,capture=='attach',callback.binding.threaded==true);
+            }
+        });
         module.functions.forEach(x => module.gen.addApiFunction(x));
         module.enums.forEach(x => module.gen.addEnum(x));
         module.defines.forEach(x => {
@@ -896,10 +1173,7 @@ function main() {
                 module.gen.exportGlobalDouble(x.name,x.description);
             }
             if(x.type=='struct'){
-                let structId=module.gen.structLookup[x.content.type];
-                if(structId!=undefined){
-                    module.gen.exportGlobalStruct(x.content.type, x.name, x.content.values, x.description);
-                }
+                module.gen.exportGlobalStruct(x.content.body.type, x.name, x.content.body.values, x.description);
             }
             if(x.type=='undefined' && module.gen.exported[x.content]!=undefined){
                 const aliasof=module.gen.exported[x.content];
@@ -910,11 +1184,16 @@ function main() {
                 }
             }
         });
+    }
+    //Write to file
+    for(let key in modules){
+        const module=modules[key];
+        console.log("Writing module "+module.gen.name);
         module.gen.writeTo(`src/modules/${module.gen.name}.h`);
         module.gen.typings.writeTo(`bindings/typings/lib.${module.gen.name}.d.ts`);
     }
-    const ignored = modules['core'].functions.filter(x => x.binding.ignore).length;
-    console.log(`Converted ${modules['core'].functions.length+modules['core'].structs.length+modules['core'].callbacks.length - ignored}, ${ignored} ignored.`);
+    const ignored = modules['raylib'].functions.filter(x => x.binding.ignore).length;
+    console.log(`Converted ${modules['raylib'].functions.length+modules['raylib'].structs.length+modules['raylib'].callbacks.length - ignored}, ${ignored} ignored.`);
     console.log("Success!");
 }
 try{

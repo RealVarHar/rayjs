@@ -43,7 +43,7 @@ import {BROWN, BeginDrawing, ClearBackground, CloseWindow, DrawText, DrawTexture
     let height = 480;
 
     // Dynamic memory allocation to store pixels data (Color type)
-    let pixels = new Array(width*height);
+    let pixels = new Uint8Array(width*height);
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -54,7 +54,7 @@ import {BROWN, BeginDrawing, ClearBackground, CloseWindow, DrawText, DrawTexture
 
     // Load pixels data into an image structure and create texture
     let checkedIm = new Image();
-    checkedIm.data = pixels;             // We can assign pixels directly to data
+    checkedIm.data = pixels.buffer;             // We can assign pixels directly to data
     checkedIm.width = width;
     checkedIm.height = height;
     checkedIm.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;

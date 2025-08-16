@@ -98,6 +98,8 @@ message("=== Configure raylib ===")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib EXCLUDE_FROM_ALL)
 #target_link_libraries(raylib PUBLIC mimalloc)
 
+add_library(expose_system STATIC src/windows.c)
+
 message("=== Bind files together ===")
 file(GLOB files src/*.c)
 add_executable(${CMAKE_PROJECT_NAME} ${files})
@@ -113,7 +115,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${quickjs_sources_root}
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE include)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
-set(RAYJS_LINK_LIBRARIES "quickjs")
+set(RAYJS_LINK_LIBRARIES "quickjs" "expose_system")
 if(RAYJS_USE_MIMALLOC)
 	set(RAYJS_LINK_LIBRARIES "${RAYJS_LINK_LIBRARIES}" "mimalloc-static")
 endif()

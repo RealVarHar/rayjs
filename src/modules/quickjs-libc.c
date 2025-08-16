@@ -47,7 +47,7 @@
 #include <dirent.h>
 #endif
 #if defined(_WIN32)
-#include <windows.h>
+//#include <windows.h>
 #include <direct.h>
 #include <io.h>
 #include <conio.h>

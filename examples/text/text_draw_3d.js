@@ -53,6 +53,9 @@ import {BLACK, BLUE, BeginDrawing, BeginMode3D,
     KEY_DOWN,
     KEY_END,
     KEY_ENTER,
+    KEY_F1,
+    KEY_F2,
+    KEY_F3,
     KEY_HOME,
     KEY_INSERT,
     KEY_LEFT,
@@ -78,6 +81,14 @@ const LETTER_BOUNDRY_COLOR = VIOLET;
 
 let SHOW_LETTER_BOUNDRY = false;
 let SHOW_TEXT_BOUNDRY = false;
+
+class WaveTextConfig{
+    constructor() {
+        this.waveRange=new Vector3();
+        this.waveSpeed=new Vector3();
+        this.waveOffset=new Vector3();
+    }
+}
 
 //--------------------------------------------------------------------------------------
 // Module Functions
@@ -304,16 +315,14 @@ function MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing) {
 
     for (let i = 0; i < len; i++) {
         lenCounter++;
-
-        let next = 0;
+        let next = [0];
         letter = GetCodepoint(text.substring(i), next);
         index = GetGlyphIndex(font, letter);
 
         // NOTE: normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
         // but we need to draw all of the bad bytes using the '?' symbol so to not skip any we set next = 1
-        if (letter == 0x3f) next = 1;
-        i += next - 1;
-
+        if (letter == 0x3f) next[0] = 1;
+        i += next[0] - 1;
         if (letter != '\n'.codePointAt(0)) {
             if (letter == '~'.codePointAt(0) && GetCodepoint(text.substring(i+1), next) == '~'.codePointAt(0)) {
                 i++;
@@ -330,7 +339,6 @@ function MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing) {
 
         if (tempLen < lenCounter) tempLen = lenCounter;
     }
-
     if (tempTextWidth < textWidth) tempTextWidth = textWidth;
 
     let vec = new Vector3();
@@ -358,6 +366,7 @@ function GenerateRandomColor(s, v) {
     //--------------------------------------------------------------------------------------
     const screenWidth = 800;
     const screenHeight = 450;
+    let logId=1;
 
     SetConfigFlags(FLAG_MSAA_4X_HINT|FLAG_VSYNC_HINT);
     InitWindow(screenWidth, screenHeight, "raylib [text] example - draw 2D text in 3D");
@@ -412,13 +421,11 @@ function GenerateRandomColor(s, v) {
 
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
-
     // Main game loop
     while (!WindowShouldClose()) {       // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         UpdateCamera(camera, camera_mode);
-        
         // Handle font files dropped
         if (IsFileDropped()) {
             let droppedFiles = LoadDroppedFiles();
@@ -433,7 +440,6 @@ function GenerateRandomColor(s, v) {
                 fontSize = font.baseSize;
             }
         }
-
         // Handle Events
         if (IsKeyPressed(KEY_F1)) SHOW_LETTER_BOUNDRY = !SHOW_LETTER_BOUNDRY;
         if (IsKeyPressed(KEY_F2)) SHOW_TEXT_BOUNDRY = !SHOW_TEXT_BOUNDRY;
@@ -455,7 +461,6 @@ function GenerateRandomColor(s, v) {
                 camera_mode = CAMERA_FREE;
             }
         }
-
         // Handle clicking the cube
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             let ray = GetScreenToWorldRay(GetMousePosition(), camera);
@@ -472,7 +477,6 @@ function GenerateRandomColor(s, v) {
                 dark = GenerateRandomColor(0.4, 0.58);
             }
         }
-
         // Handle text layers changes
         if (IsKeyPressed(KEY_HOME)) { if (layers > 1) --layers; }
         else if (IsKeyPressed(KEY_END)) { if (layers < TEXT_MAX_LAYERS) ++layers; }
@@ -497,7 +501,6 @@ function GenerateRandomColor(s, v) {
                 }
             }
         }
-
         // Handle text input
         let ch = GetCharPressed();
         if (IsKeyPressed(KEY_BACKSPACE)) {
@@ -514,7 +517,6 @@ function GenerateRandomColor(s, v) {
 
         // Measure 3D text so we can center it
         tbox = MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing);
-
         quads = 0;                      // Reset quad counter
         time += GetFrameTime();         // Update timer needed by `DrawTextWave3D()`
         //----------------------------------------------------------------------------------
@@ -530,7 +532,6 @@ function GenerateRandomColor(s, v) {
                 DrawCubeWires(cubePosition, 2.1, 2.1, 2.1, light);
 
                 DrawGrid(10, 2);
-
                 // Use a shader to handle the depth buffer issue with transparent textures
                 // NOTE: more info at https://bedroomcoders.co.uk/posts/198
                 BeginShaderMode(alphaDiscard);
@@ -553,7 +554,6 @@ function GenerateRandomColor(s, v) {
                     // Don't draw the letter boundries for the 3D text below
                     let slb = SHOW_LETTER_BOUNDRY;
                     SHOW_LETTER_BOUNDRY = false;
-
                     // Draw 3D options (use default font)
                     //-------------------------------------------------------------------------
                     rg.rlPushMatrix();
@@ -623,7 +623,6 @@ function GenerateRandomColor(s, v) {
                     pos.x = -m.x/2;
                     DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
                     pos.z += 0.5 + m.z;
-
                     opt = "press [PgUp]/[PgDown] to change the line spacing";
                     quads += 48;
                     m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
@@ -649,7 +648,6 @@ function GenerateRandomColor(s, v) {
                 EndShaderMode();
 
             EndMode3D();
-
             // Draw 2D info text & stats
             //-------------------------------------------------------------------------
             DrawText("Drag & drop a font file to change the font!\nType something, see what happens!\n\n"+
@@ -671,14 +669,12 @@ function GenerateRandomColor(s, v) {
             tmp = "click the [CUBE] for a random color";
             width = MeasureText(tmp, 10);
             DrawText(tmp, screenWidth - 20 - width, 55, 10, DARKGRAY);
-
             tmp = "[Tab] to toggle multicolor mode";
             width = MeasureText(tmp, 10);
             DrawText(tmp, screenWidth - 20 - width, 70, 10, DARKGRAY);
             //-------------------------------------------------------------------------
 
             DrawFPS(10, 10);
-
         EndDrawing();
         //----------------------------------------------------------------------------------
     }

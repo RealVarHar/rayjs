@@ -36,6 +36,24 @@ import {
 // this text will be scanned to get all the required codepoints
 const text = "いろはにほへと　ちりぬるを\nわかよたれそ　つねならむ\nうゐのおくやま　けふこえて\nあさきゆめみし　ゑひもせす";
 
+if(globalThis.structuredClone==undefined){
+    globalThis.structuredClone=(obj)=>{
+        if(typeof(obj)=='object'){
+            let obj2;
+            if(Array.isArray(obj)){
+                obj2=[];
+            }else{
+                obj2={};
+            }
+            for(let key in obj){
+                obj2[key]=globalThis.structuredClone(obj[key]);
+            }
+            return obj2;
+        }
+        return obj;
+    }
+}
+
 // Remove codepoint duplicates if requested
 // WARNING: This process could be a bit slow if there text to process is very long
 function CodepointRemoveDuplicates(codepoints, codepointCount, codepointsResultCount) {

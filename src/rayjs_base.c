@@ -58,6 +58,35 @@ static void * jsc_realloc(JSContext *ctx, void * ptr, size_t sz ){ return reallo
 static void jsc_free(JSContext *ctx, void * ptr ){ free(ptr); }
 #endif
 
+static JSValue app_update_finish(JSContext *ctx,int argc, JSValue *argv){
+    JSValue resolve = argv[0];
+    JSValue ret = JS_Call(ctx, resolve, JS_UNDEFINED,0,NULL);// resolve()
+    //js_promise_resolve_function_call 0 argc is ok
+    JS_FreeValue(ctx, ret);
+    return JS_UNDEFINED;
+}
+
+static int app_update_quickjs(JSContext *ctx){
+    //We need to call pool to allow async processing between frames
+    //This basically runs await setTimeout(0)
+    JSValue resolving_funcs[2];//dont set to JS_UNDEFINED, see js_promise_executor_new
+    JSValue args[1];
+    JSValue promise = JS_NewPromiseCapability(ctx, resolving_funcs);
+    if (JS_IsException(promise)){
+        return 0;
+    }
+    args[0]=resolving_funcs[0];
+    JS_EnqueueJob(ctx, app_update_finish, 1, args);
+    JSValue val = js_std_await(ctx, promise);
+    if (JS_IsException(val)){
+        js_std_dump_error(ctx);
+    }
+    JS_FreeValue(ctx, val);
+    JS_FreeValue(ctx, resolving_funcs[0]);
+    JS_FreeValue(ctx, resolving_funcs[1]);
+    return 1;
+}
+
 static void js_declare_ArrayProxy(JSContext * ctx);
 static void js_declare_ArrayProxy_RT(JSRuntime * rt);
 

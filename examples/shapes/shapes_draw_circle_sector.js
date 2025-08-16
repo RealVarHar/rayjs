@@ -58,7 +58,6 @@ import {BeginDrawing,
 
             DrawLine(500, 0, 500, GetScreenHeight(), Fade(LIGHTGRAY, 0.6));
             DrawRectangle(500, 0, GetScreenWidth() - 500, GetScreenHeight(), Fade(LIGHTGRAY, 0.3));
-
             DrawCircleSector(center, outerRadius[0], startAngle[0], endAngle[0], segments[0], Fade(MAROON, 0.3));
             DrawCircleSectorLines(center, outerRadius[0], startAngle[0], endAngle[0], segments[0], Fade(MAROON, 0.6));
 
