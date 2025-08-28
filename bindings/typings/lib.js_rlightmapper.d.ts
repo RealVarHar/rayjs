@@ -1,24 +1,12 @@
 declare module "rayjs:rlightmapper" {
 import type {LightmapperConfig,Mesh,Lightmapper,Color,Material,Image} from '[object Object]'interface Lightmapper {
-lm_handle: ArrayBuffer,
-data: number[],
-w: number,
-h: number,
-progress: number,
 }
 var Lightmapper: {
-prototype: Lightmappernew(lm_handle?: ArrayBuffer, data?: number[], w?: number, h?: number, progress?: number): Lightmapper}
+prototype: Lightmappernew(): Lightmapper}
 interface LightmapperConfig {
-hemisphereSize: number,
-zNear: number,
-zFar: number,
-backgroundColor: Color,
-interpolationPasses: number,
-interpolationThreshold: number,
-cameraToSurfaceDistanceModifier: number,
 }
 var LightmapperConfig: {
-prototype: LightmapperConfignew(hemisphereSize?: number, zNear?: number, zFar?: number, backgroundColor?: Color, interpolationPasses?: number, interpolationThreshold?: number, cameraToSurfaceDistanceModifier?: number): LightmapperConfig}
+prototype: LightmapperConfignew(): LightmapperConfig}
 /** undefined */
 function GetDefaultLightmapperConfig(): LightmapperConfig/** undefined */
 function LoadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper/** undefined */

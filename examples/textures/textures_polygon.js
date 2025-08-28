@@ -33,9 +33,10 @@ const MAX_POINTS = 11;      // 10 points and back to the start
 // NOTE: Polygon center must have straight line path to all points
 // without crossing perimeter, points must be in anticlockwise order
 function DrawTexturePoly(texture, center, points, texcoords, pointCount, tint) {
-    rlSetTexture(texture.id);
 
     rlBegin(RL_TRIANGLES);
+
+    rlSetTexture(texture.id);
 
     rlColor4ub(tint.r, tint.g, tint.b, tint.a);
 

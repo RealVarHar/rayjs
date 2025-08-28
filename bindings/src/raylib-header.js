@@ -258,13 +258,12 @@ export class RayJsHeader {
                 for (let i = 0; i < len; i++) {
                     const param = activeParams[i];
                     allocLen+=this.paramAllocLen(param);
-                    if (param.binding.customConverter) {
-                        param.binding.customConverter(fun, "argv[" + i + "]");
-                    } else {
-                        //cleans parameters initialized before an error
-                        //TODO: reorder parameters to limit amount of code generated in cleanup
-                        (new QuickJsGenerator(fun)).jsToC(param.spread+param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
+                    //cleans parameters initialized before an error
+                    //TODO: reorder parameters to limit amount of code generated in cleanup
+                    if(param.binding.typeCast!=undefined){
+                        fun.declare(param.spread+param.type.replaceAll('&','*'),param.name);
                     }
+                    (new QuickJsGenerator(fun)).jsToC(param.binding.typeCast||(param.spread+param.type), param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
                 }
                 // call c function
                 if (options.customizeCall){
@@ -299,17 +298,16 @@ export class RayJsHeader {
                         (new QuickJsGenerator(fun)).cToJs(param.type,"argv[" + i + "]",param.name,{allowNull:param.binding.allowNull,supressDeclaration:true});
                     }
                 }
-                errorCleanupFn(fun);
                 // return result
                 if (api.returnType === "void") {
-                    if (options.after)
-                        options.after(fun);
+                    if (options.after) options.after(fun);
+                    errorCleanupFn(fun);
                     fun.return("JS_UNDEFINED");
                 }
                 else {
                     (new QuickJsGenerator(fun)).cToJs(api.returnType, "ret", "returnVal", {}, 0, api.returnSizeVars);
-                    if (options.after)
-                        options.after(fun);
+                    if (options.after) options.after(fun);
+                    errorCleanupFn(fun);
                     fun.return("ret");
                 }
             }
@@ -358,25 +356,16 @@ export class RayJsHeader {
         let classFuncList = [];
         classFuncList.push(this.structGen.jsPropStringDef("[Symbol.toStringTag]", struct.name));
         this.structArgs[struct.name]=struct.fields;
-        if (binding && binding.properties) {
-            for (const field of Object.keys(binding.properties)) {
-                const type = struct.fields.find(x => x.name === field)?.type;
-                if (!type){
-                    console.log(struct.fields);
-                    throw new Error(`Struct ${struct.name} does not contain field ${field}`);
-                }
-                const el = binding.properties[field];
-                el.name=field;
-                let _getName = undefined;
-                let _setName = undefined;
-                if (el.get){
-                    _getName = this.jsStructGetter(struct.name, classId, field, type, el);
-                }
-                if (el.set){
-                    _setName = this.structGen.jsStructSetter(struct.name, classId, field, type, el);
-                }
-                classFuncList.push(this.structGen.jsGetSetDef(field, _getName, _setName));
+        for (const field of struct.fields) {
+            let _getName = undefined;
+            let _setName = undefined;
+            if (field.binding.get){
+                _getName = this.jsStructGetter(struct.name, field, classId);
             }
+            if (field.binding.set){
+                _setName = this.jsStructSetter(struct.name, field, classId);
+            }
+            classFuncList.push(this.structGen.jsGetSetDef(field.name, _getName, _setName));
         }
         classFuncList = this.structGen.cgen.declare("static const JSCFunctionListEntry []",`js_${struct.name}_proto_funcs`,classFuncList,struct.props);
 
@@ -390,86 +379,115 @@ export class RayJsHeader {
         }
         this.typings.addStruct(struct);
     }
-    jsStructGetter(structName, classId, field, type, element, nested) {
+    jsStructSetter(structName, field, classId) {
+        //console.log('jsStructSetter',structName, classId, field, type, ids, overrideWrite);
+        const args = [{ type: "JSContext *", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
+        this.structGen.cgen.function("JSValue",`js_${structName}_set_${field.name}`, args, true,(fun)=>{
+            fun.call('JS_GetOpaque2',['ctx','this_val',classId],{type:`${structName} *`,name:'ptr'});
+            let flags={noContextAlloc:true};
+            if( (field.type.match(/\*/g)||[]).length > 1 ){
+                flags.dynamicAlloc = true;
+                fun.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
+                fun.declare('memoryNode *', 'memoryCurrent','memoryHead');
+            }
+            (new QuickJsGenerator(fun)).jsToC(field.type, "value", "v",flags);
+
+            if(field.type.endsWith('*')){
+                fun.if(`ptr.${field.name}!=NULL`,(ctx)=>{
+                    ctx.call('jsc_free',['ctx',"ptr[0]." + field.name]);
+                });
+                //fun.call('js_malloc',['ctx',`sizeof(${field.type})`],{type:field.type,name:`ptr.${field.name}`});
+                //fun.call(`memcpy`,[`ptr[0].${field.name}`,'value',`sizeof(${field.type})`]);
+                fun.declare(field.type,`ptr[0].${field.name}`,'value');
+            }else if(field.type.endsWith(']')){
+                let type2=field.type.split('[');
+                let amount=type2[1].substring(0,type2[1].length-1);
+                type2=type2[0];
+                fun.call(`memcpy`,[`ptr[0].${field.name}`,'value',`${amount} * sizeof(${type2})`]);
+            }else{
+                fun.assign(`ptr.${field.name}`,"value");
+            }
+
+            fun.return("JS_UNDEFINED");
+        });
+        return `js_${structName}_set_${field.name}`;//function name
+    }
+    jsStructGetter(structName, field, classId) {
         const args = [{ type: "JSContext *", name: "ctx" }, { type: "JSValue", name: "this_val" }];
         let thiz=this;
-        let fnname=structName+'_'+element.name
-        function NewArrayProxy(fun){
-            let ArrayProxy_class = {};
-            ArrayProxy_class['anchor']='this_val';
-            ArrayProxy_class['opaque']='ptr';
-            ArrayProxy_class['values']=`js_${fnname}_values`;
-            ArrayProxy_class['keys']=`js_${fnname}_keys`;
-            ArrayProxy_class['get']=`js_${fnname}_get`;
-            ArrayProxy_class['set']=`js_${fnname}_set`;
-            ArrayProxy_class['has']=`js_${fnname}_has`;
-            ArrayProxy_class='(ArrayProxy_class){'+Object.entries(ArrayProxy_class).map(a=>'.'+a[0]+' = '+a[1]).join(',')+'}';
-            fun.call('js_NewArrayProxy',['ctx',ArrayProxy_class],{type:'JSValue',name:"ret"});
-        }
-        let sizeVars=element.sizeVars||[];
-        let properties={};
 
-        if(type.endsWith(']')){
-            let type2=type.split('[');
+        //array proxy functions should be defined before _get_
+        if(field.type.endsWith(']')){
+            let type2=field.type.split('[');
             let amount=type2[1].split(']')[0].trim();
             type2=type2[0].trim();
-            properties[element.name]={sizeVars:amount};
-            thiz.addApiStruct_array({name:structName, fields:[{type:type2,name:element.name,child:undefined}], binding:{properties}});
-        }else if(type.endsWith('*')){
-            let type2 = getsubtype(type);
-            properties[element.name]={sizeVars};
-            thiz.addApiStruct_array({name:structName, fields:[{type:type2,name:element.name,child:undefined}], binding:{properties}});
+            field=structuredClone(field);
+            if(field.binding.sizeVars==undefined)field.binding.sizeVars=[];
+            field.binding.sizeVars.push(amount);
+            field.type=type2+' *';
+            thiz.jsStructGetter_array(structName, field);
+        }else if(field.type.endsWith('*')){
+            thiz.jsStructGetter_array(structName, field);
         }
 
-        this.structGen.cgen.function("JSValue",`js_${structName}_get_${field}`, args, true,(fun)=>{
+        this.structGen.cgen.function("JSValue",`js_${structName}_get_${field.name}`, args, true,(fun)=>{
             fun.call('JS_GetOpaque2',['ctx', 'this_val', classId],{type:`${structName} *`,name:"ptr"});
-            if(type.endsWith(']') || type.endsWith('*')){
-                NewArrayProxy(fun);
-            }else if(type.endsWith('&')){
-                let type2 = getsubtype(type);
-                properties[element.name]={sizeVars};
-                fun.declare(type2+" *", field, "ptr." + field);
+            if(field.type.endsWith(']') || field.type.endsWith('*')){
+                let ArrayProxy_class = {
+                    anchor:'this_val',
+                    opaque:'ptr',
+                    values:`js_${structName}_${field.name}_values`,
+                    keys:`js_${structName}_${field.name}_keys`,
+                    get:`js_${structName}_${field.name}_get`,
+                    set:`js_${structName}_${field.name}_set`,
+                    has:`js_${structName}_${field.name}_has`,
+                };
+                ArrayProxy_class='(ArrayProxy_class){'+Object.entries(ArrayProxy_class).map(a=>'.'+a[0]+' = '+a[1]).join(',')+'}';
+                fun.call('js_NewArrayProxy',['ctx',ArrayProxy_class],{type:'JSValue',name:"ret"});
+            }else if(field.type.endsWith('&')){
+                fun.declare(field.type, field.name, "ptr." + field.name);
                 //TODO: Logical issue: we create a copy here, so if someone does origin.pointer.prop = 0 this will not update properly
-                (new QuickJsGenerator(fun)).cToJs(type, "ret", field,{allowNull:true},0,sizeVars);
+                (new QuickJsGenerator(fun)).cToJs(field.type, "ret", field.name,{allowNull:true},0,field.binding.sizeVars);
             }else{
-                fun.declare(type, field, "ptr." + field);
-                (new QuickJsGenerator(fun)).cToJs(type, "ret", field,{allowNull:true},0,sizeVars);
+                fun.declare(field.type, field.name, "ptr." + field.name);
+                (new QuickJsGenerator(fun)).cToJs(field.type, "ret", field.name,{allowNull:true},0,field.binding.sizeVars);
             }
             //TODO: call addApiStruct here
             fun.return("ret");
         });
 
-        return `js_${structName}_get_${field}`;//function name
+        return `js_${structName}_get_${field.name}`;//function name
     }
-    addApiStruct_array(struct){
-        const binding = struct.binding || {};
+    jsStructGetter_array(structName, field){
+        const binding = field.binding || {};
         if (binding.ignore) return;
-        console.log("Binding struct array " + struct.name);
+        console.log(`Binding struct array ${structName}.${field.name}`);
         const classId = "js_ArrayProxy_class_id";
-        this.structArgs[struct.name]=struct.fields;
         //multiple typed array is possible by syntax but unimplemented
 
         //provide ArrayProxy_function to_array, ArrayProxy_function get, ArrayProxy_function set, ArrayProxy_function free
-        const name=struct.fields[0].name;
-        const structName=struct.name+'_'+name;
-        const ptr=`ptr(${struct.name} *)`;
-        const type=struct.fields[0].type;
-        let length=binding.properties[name].sizeVars[0];
-        if(length==undefined){
+        if(binding.sizeVars==undefined || binding.sizeVars[0]==undefined){
             throw Error(structName+' requires array length definition');
         }
-        length=String(length).replaceAll('ptr.',`${ptr}.`);
+        let length=binding.sizeVars[0];
 
-        const args = { ctx:{ type: "JSContext *", name: "ctx" },
-            ptr:{ type: "void *", name: "ptr" },
+        const args = {
+            ctx:{ type: "JSContext *", name: "ctx" },
+            ptr:{ type: "void *", name: "ptr_u" },
             set_to:{ type: "JSValue", name: "set_to" },
             property:{ type: "int", name: "property" },
             as_string:{ type: "bool", name: "as_sting" },
             keys: { type: "JSPropertyEnum * *", name: "keys" }
         };
         const get_args = [args.ctx,args.ptr,args.property,args.as_string];
-        this.structGen.cgen.function("JSValue",`js_${structName}_values`, get_args, true,(ctx)=>{
-            (new QuickJsGenerator(ctx)).cToJs(type+' *','ret',`${ptr}.${name}`,{},0,[length]);
+        this.structGen.cgen.function("JSValue",`js_${structName}_${field.name}_values`, get_args, true,(ctx)=>{
+            ctx.declare(`${structName} *`,'ptr','ptr_u');
+            let ptrcast=`ptr.${field.name}`;
+            if(binding.typeCast!=undefined){
+                ptrcast+=`(${binding.typeCast})`;
+            }
+            (new QuickJsGenerator(ctx)).cToJs(binding.typeCast||field.type,'ret',ptrcast,{},0,[length]);
+
             ctx.if(`as_sting==true`,(ctx)=>{
                 ctx.call('JS_JSONStringify',['ctx','ret','JS_UNDEFINED','JS_UNDEFINED'],{type:'JSValue',name:'ret'});
             });
@@ -477,7 +495,8 @@ export class RayJsHeader {
         });
 
         const keys_args = [args.ctx,args.ptr,args.keys];
-        this.structGen.cgen.function( "int", `js_${structName}_keys`, keys_args, true,ctx=>{
+        this.structGen.cgen.function( "int", `js_${structName}_${field.name}_keys`, keys_args, true,ctx=>{
+            ctx.declare(`${structName} *`,'ptr','ptr_u');
             ctx.declare('int','length',length);
             ctx.call('js_malloc',['ctx','(length+1) * sizeof(JSPropertyEnum)'],{type:'JSPropertyEnum * *',name:'keys[0]'});
             ctx.for(0,'length',(ctx,loopkey)=>{
@@ -488,8 +507,8 @@ export class RayJsHeader {
             ctx.return('true');
         });
 
-
-        this.structGen.cgen.function("JSValue", `js_${structName}_get`, get_args, true,(ctx)=>{
+        this.structGen.cgen.function("JSValue", `js_${structName}_${field.name}_get`, get_args, true,(ctx)=>{
+            ctx.declare(`${structName} *`,'ptr','ptr_u');
             ctx.if([`as_sting==true`,''],ctx=>{
                 ctx.if([`property==JS_ATOM_length`,''],ctx=>{
                     (new QuickJsGenerator(ctx)).cToJs('int','ret',length,{});
@@ -499,8 +518,14 @@ export class RayJsHeader {
                 });
             },ctx=>{
                 ctx.if([`property>=0 && property<${length}`,''],ctx=>{
-                    ctx.declare(type, 'src', `${ptr}.${name}[property]`);
-                    if(type=='void')debugger;
+                    let type=getsubtype(field.type);
+                    let ptrcast=`ptr.${field.name}`;
+                    if(binding.typeCast!=undefined){
+                        ptrcast=ctx.allocVariable('ptrcast');
+                        ctx.declare(binding.typeCast, ptrcast, `ptr.${field.name}`);
+                        type=getsubtype(binding.typeCast);
+                    }
+                    ctx.declare(type, 'src', `${ptrcast}[property]`);
                     (new QuickJsGenerator(ctx)).cToJs(type, "ret", 'src');
                     ctx.return('ret');
                 },ctx=>{
@@ -511,28 +536,31 @@ export class RayJsHeader {
 
 
         const set_args = [args.ctx,args.ptr,args.set_to,args.property,args.as_string];
-        this.structGen.cgen.function( "int", `js_${structName}_set`, set_args, true,ctx=>{
+        this.structGen.cgen.function( "int", `js_${structName}_${field.name}_set`, set_args, true,ctx=>{
+            ctx.declare(`${structName} *`,'ptr','ptr_u');
             ctx.if([`as_sting==true`,''],ctx=>{
                 ctx.return('false');
             },ctx=>{
-                (new QuickJsGenerator(ctx)).jsToC(type,'ret','set_to',{altReturn:'-1'});
-                ctx.declare(type, `${ptr}.${name}[property]`, `ret`);
+                (new QuickJsGenerator(ctx)).jsToC(getsubtype(binding.typeCast||field.type),'ret','set_to',{altReturn:'-1'});
+                const cast=(binding.typeCast==undefined?'':`(${binding.typeCast})`);
+                ctx.declare(binding.typeCast||field.type, `ptr.${field.name}${cast}[property]`, `ret`);
             });
             ctx.return('true');
         });
 
 
-        this.structGen.cgen.function( "int",`js_${structName}_has`, get_args, true,ctx=>{
-             ctx.if([`as_sting==true`,''],ctx=>{
+        this.structGen.cgen.function( "int",`js_${structName}_${field.name}_has`, get_args, true,ctx=>{
+            ctx.declare(`${structName} *`,'ptr','ptr_u');
+            ctx.if([`as_sting==true`,''],ctx=>{
                 ctx.if([`property==JS_ATOM_length`,''],ctx=>{
                     ctx.return('true');
                 },ctx=>{
-                    ctx.return('false');
+                   ctx.return('false');
                 });
             },ctx=>{
-                 ctx.if([`property>=0 && property<${length}`,''],(ctx)=>{
-                     ctx.return('true');
-                 },(ctx)=>{
+                ctx.if([`property>=0 && property<${length}`,''],(ctx)=>{
+                    ctx.return('true');
+                },(ctx)=>{
                     ctx.return('false');
                 });
             });

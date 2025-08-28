@@ -26,6 +26,7 @@ import {BLACK, BeginDrawing, BeginShaderMode, ClearBackground,
     MeasureTextEx,
     RAYWHITE,
     RED,
+    Rectangle,
     SetTargetFPS, SetTextureFilter, TEXTURE_FILTER_BILINEAR, TextFormat,
     UnloadFont, UnloadImage, UnloadShader, Vector2, WindowShouldClose } from 'rayjs:raylib';
 
@@ -62,11 +63,17 @@ if(['Andriod','iOS'].includes(os.platform)){
 
     // Loading font data from memory data
     // Parameters > font size: 16, no glyphs array provided (0), glyphs count: 95 (autogenerate chars array)
-    fontDefault.glyphs = LoadFontData(fileData, fileSize[0], 16, 0, 95, FONT_DEFAULT);
+    fontDefault.glyphs = LoadFontData(fileData, fileSize[0], 16, null, 95, FONT_DEFAULT);
     // Parameters > glyphs count: 95, font size: 16, glyphs padding in image: 4 px, pack method: 0 (default)
-    let atlas = GenImageFontAtlas(fontDefault.glyphs, fontDefault.recs, 95, 16, 4, 0);
+    console.log(-2);
+    let recs=[];
+    let atlas = GenImageFontAtlas(fontDefault.glyphs, recs, 95, 16, 4, 0);
+    fontDefault.recs=recs[0];
+    console.log(-1);
     fontDefault.texture = LoadTextureFromImage(atlas);
+    console.log(0);
     UnloadImage(atlas);
+    console.log(1);
 
     // SDF font generation from TTF font
     let fontSDF = new Font();

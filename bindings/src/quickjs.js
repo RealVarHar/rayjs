@@ -2,7 +2,6 @@ import { CodeScope, getsubtype, resolveVariable, getVariableParts } from "./cgen
 import * as fs from "./fs.js";
 import { source_parser } from "./source_parser.js";
 function getBoundName(variable){
-    if(variable.props==undefined)debugger;
     let bound_name=variable.props.bound_name;
     if(!variable.aliased_types)return bound_name;
     while(bound_name==undefined && variable.aliased_types.length==1){
@@ -214,13 +213,6 @@ export class QuickJsGenerator {
             }
             ctx.if([]);
 
-            //Check if NULL
-            if(flags.allowNull){
-                ctx.elsif(`JS_IsNull(${src}) || JS_IsUndefined(${src})`,(ctx)=>{
-                   ctx.declare(type,name,'NULL');
-                });
-            }
-
             //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
 
 
@@ -242,7 +234,7 @@ export class QuickJsGenerator {
                 });
 
                 //TODO: allow dynamic binding of array properties
-                ctx.elsif(`JS_IsArray(${src}) == 1`,(ctx)=>{
+                ctx.if(`JS_IsArray(${src}) == 1`,(ctx)=>{
                     let srclen = sizeVars.pop();
                     let size=srclen;
                     //get length from existing jsArray
@@ -289,6 +281,13 @@ export class QuickJsGenerator {
                 });
             }
 
+            //Check if NULL
+            if(flags.allowNull){
+                ctx.elsif(`JS_IsNull(${src}) || JS_IsUndefined(${src})`,(ctx)=>{
+                    ctx.declare(type,name,'NULL');
+                });
+            }
+
             //Check if String
             if(addString) {
                 ctx.elsif(`JS_IsString(${src}) == 1`,(ctx)=>{
@@ -318,15 +317,9 @@ export class QuickJsGenerator {
                         ctx.call('JS_GetArrayBuffer',['ctx', `size_${tmpname}`, src],{type,name:'js_'+name});
                         ctx.call(jsc.malloc,['ctx', `size_${tmpname} * sizeof(${type})`],{type,name});
                         ctx.call(`memcpy`,[name,`js_${name}`,"size_" + tmpname]);
-                        if(flags.dynamicAlloc){
-                            ctx.call('memoryStore',['memoryCurrent', `${jsc.free}`, name],{type:'memoryNode *',name:'memoryCurrent'});
-                        }
                     }else{
                         //arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
                         ctx.call('JS_GetArrayBuffer',['ctx',`size_${tmpname}`,src],{type,name});
-                        if(flags.dynamicAlloc){
-                            ctx.call('memoryStore',['memoryCurrent', 'JS_FreeValuePtr', name],{type:'memoryNode *',name:'memoryCurrent'});
-                        }
                     }
                 });
             }
@@ -429,8 +422,13 @@ export class QuickJsGenerator {
             let subtype=getsubtype(type);
 
             let variable=this.cgen.getVariables()[subtype];
+            while(variable!=undefined && variable.type=='type' && variable.subtype=='direct'){
+                variable=this.cgen.getVariables()[variable.src];
+            }
             //functions must be a pointer, don't check for them
-            if (variable!=undefined && variable.type=='type' && variable.subtype=='struct'){
+            if(subtype=='void'){
+                this.cgen.declare('void *',`${name}[0]`,`NULL`);
+            }else if (variable!=undefined && variable.type=='type' && variable.subtype=='struct'){
                 let bound_name=getBoundName(variable);
                 if(bound_name==undefined){
                     throw new Error("struct must have been bound to exist as opaque");
@@ -445,7 +443,8 @@ export class QuickJsGenerator {
                 //A pointer may be declared as [el]
                 let els=this;
                 if(subtype.endsWith('*')){
-                    getArray(this.cgen,subtype,name,src);
+                    flags.jsType="array";
+                    getArray(this.cgen,subtype+' *',name,src);
                 }else{
                     //differrenciate between [a] and a
                     if(flags.jsType===undefined){
@@ -868,7 +867,7 @@ export class QuickJsGenerator {
             //Check if NULL
             let arr=this.cgen;
             if(flags.allowNull){
-                arr.if(`${src} != NULL`);
+                arr.if(`${src} != NULL`,(fn=>{arr=fn;}));
             }
             if(subtype.endsWith(' *')){
                 sizeVars.push("&");
@@ -1103,40 +1102,6 @@ export class QuickJsGenerator {
         //We do need some function JS_CFunc_Def refers to
 
         return fun;
-    }
-    jsStructSetter(structName, classId, field, type, element, nested) {
-        //console.log('jsStructSetter',structName, classId, field, type, ids, overrideWrite);
-        const args = [{ type: "JSContext *", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
-        this.cgen.function("JSValue",`js_${structName}_set_${field}`, args, true,(fun)=>{
-            fun.call('JS_GetOpaque2',['ctx','this_val',classId],{type:`${structName} *`,name:'ptr'});
-            let flags={noContextAlloc:true};
-            if( (type.match(/\*/g)||[]).length > 1 ){
-                flags.dynamicAlloc = true;
-                fun.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
-                fun.declare('memoryNode *', 'memoryCurrent','memoryHead');
-            }
-            (new QuickJsGenerator(fun)).jsToC(type, "value", "v",flags);
-
-            if (element.overrideWrite) {
-                element.overrideWrite(fun);
-            } else {
-                if(type.endsWith('*')){
-                    fun.if(`ptr.${field}!=NULL`,(ctx)=>{
-                        ctx.call('jsc_free',['ctx',"ptr[0]." + field]);
-                    });
-                }
-                if(type.endsWith(']')){
-                    let type2=type.split('[');
-                    let amount=type2[1].substring(0,type2[1].length-1);
-                    type2=type2[0];
-                    fun.call(`memcpy`,[`ptr[0].${field}`,'value',`${amount} * sizeof(${type2})`]);
-                }else{
-                    fun.assign(`ptr.${field}`,"value");
-                }
-            }
-            fun.return("JS_UNDEFINED");
-        });
-        return `js_${structName}_set_${field}`;//function name
     }
     jsStructConstructor(structType, fields, classId) {
         //console.log('jsStructConstructor',structType, fields, classId, ids);

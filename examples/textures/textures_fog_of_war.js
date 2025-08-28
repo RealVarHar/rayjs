@@ -47,8 +47,8 @@ let PLAYER_TILE_VISIBILITY = 2; // Player can see 2 tiles around its position
         // NOTE: We can have up to 256 values for tile ids and for tile fog state,
         // probably we don't need that many values for fog state, it can be optimized
         // to use only 2 bits per fog state (reducing size by 4) but logic will be a bit more complex
-        tileIds: new Array(15*25),
-        tileFog: new Array(15*25)
+        tileIds: new Array(15*25).fill(0),
+        tileFog: new Array(15*25).fill(0)
     }
 
     // Load map tiles (generating 2 random tile ids for testing)

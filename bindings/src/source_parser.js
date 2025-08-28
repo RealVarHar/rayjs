@@ -5,7 +5,7 @@ export const aZ='ABCDEFGHIJKLMNOPRSTUVQWXYZ';
 export const a0='1234567890';
 export const azZ=az+aZ;
 export const azZ0=az+aZ+a0+'_-';
-export const defaultTypeParts =['int_least16_t','int_fast16_t','int_least8_t','int_fast8_t','unsigned', 'uint64_t', 'uint32_t','volatile','restrict','uint16_t', 'int32_t', 'int64_t','wchar_t','int16_t','uint8_t','int8_t', 'signed', 'double', 'short', 'float', 'const', 'bool', 'char', 'long', 'int','*'];
+export const defaultTypeParts =['int_least16_t','int_fast16_t','int_least8_t','int_fast8_t','unsigned', 'uint64_t', 'uint32_t','volatile','restrict','uint16_t', 'int32_t', 'int64_t','wchar_t','int16_t','uint8_t','int8_t', 'signed', 'double', 'short', 'float', 'const', 'bool', 'char', 'long', 'int','*', '&', '...'];
 
 function isType(input){return input.split(' ').filter(a=>a!=''&&!defaultTypeParts.includes(a)).join('').length==0}
 //text detection
@@ -319,7 +319,7 @@ export class source_parser {
                         let args=input.substring(ret+1,pos3).split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
                         input=input.substring(0,start)+this.safeEval(def.content.body,Object.fromEntries(args))+input.substring(pos3+1);
                     }else{
-                        throw new Error("aaaaaaaaaaaaaaaaaaa");
+                        throw new Error("Known definitions other than function are not yet supported");
                     }
                 }else{
                     //Not a function so it must be direct math
@@ -393,6 +393,7 @@ export class source_parser {
                     capture[1]=capture[4];
                     capture=capture.slice(0,2);
                 }else{
+                    capture.push('');
                     ret=simpleregex(parts[i],['br+',azZ0],parts[i].length-1,capture);
                 }
                 if(ret===false)return values;
@@ -549,8 +550,8 @@ export class source_parser {
                 const def=defined[word];
                 if(def==undefined)return word;
                 if(def.type=='function'){
-                    let args=args.split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
-                    word = this.safeEval(def.content.body,Object.fromEntries(args));
+                    args=args.split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
+                    word = thiz.safeEval(def.content.body,Object.fromEntries(args));
                 }else{
                     return word;
                 }
@@ -1022,8 +1023,7 @@ export class source_parser {
         }
         return ret.length==1?ret[0]:ret.join('');
     }
-    parseDefine(input,save)
-    {
+    parseDefine(input,save){
         //Parse #define and register poperly
         let thiz=this;
         function getStack(input,pos,capture=[]){

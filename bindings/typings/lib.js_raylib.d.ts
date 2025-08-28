@@ -1,213 +1,108 @@
 declare module "rayjs:raylib" {
 import type {Image,Vector2,Color,Camera2D,Camera3D,RenderTexture2D,Shader,VrStereoConfig,VrDeviceInfo,Matrix,Texture2D,Camera,Ray,Vector3,LoadFileDataCallback,SaveFileDataCallback,LoadFileTextCallback,SaveFileTextCallback,AutomationEventList,AutomationEvent,Rectangle,Font,TextureCubemap,NPatchInfo,Vector4,GlyphInfo,Model,Mesh,BoundingBox,Material,ModelAnimation,RayCollision,Wave,Sound,Music,AudioStream,AudioMixedProcessor,AudioCallback} from '[object Object]'type Quaternion = Vector4type Texture2D = Texturetype TextureCubemap = Texturetype RenderTexture2D = RenderTexturetype Camera = Camera3Dinterface Vector2 {
-x: number,
-y: number,
 }
 var Vector2: {
-prototype: Vector2new(x?: number, y?: number): Vector2}
+prototype: Vector2new(): Vector2}
 interface Vector3 {
-x: number,
-y: number,
-z: number,
 }
 var Vector3: {
-prototype: Vector3new(x?: number, y?: number, z?: number): Vector3}
+prototype: Vector3new(): Vector3}
 interface Vector4 {
-x: number,
-y: number,
-z: number,
-w: number,
 }
 var Vector4: {
-prototype: Vector4new(x?: number, y?: number, z?: number, w?: number): Vector4}
+prototype: Vector4new(): Vector4}
 interface Matrix {
 }
 var Matrix: {
-prototype: Matrix}
+prototype: Matrixnew(): Matrix}
 interface Color {
-r: number,
-g: number,
-b: number,
-a: number,
 }
 var Color: {
-prototype: Colornew(r?: number, g?: number, b?: number, a?: number): Color}
+prototype: Colornew(): Color}
 interface Rectangle {
-x: number,
-y: number,
-width: number,
-height: number,
 }
 var Rectangle: {
-prototype: Rectanglenew(x?: number, y?: number, width?: number, height?: number): Rectangle}
+prototype: Rectanglenew(): Rectangle}
 interface Image {
-data: ArrayBuffer,
-width: number,
-height: number,
-mipmaps: number,
-format: number,
 }
 var Image: {
-prototype: Imagenew(data?: ArrayBuffer, width?: number, height?: number, mipmaps?: number, format?: number): Image}
+prototype: Imagenew(): Image}
 interface Texture {
-width: number,
-height: number,
-mipmaps: number,
-format: number,
 }
 var Texture: {
-prototype: Texturenew(width?: number, height?: number, mipmaps?: number, format?: number): Texture}
+prototype: Texturenew(): Texture}
 interface RenderTexture {
-id: number,
-texture: Texture,
-depth: Texture,
 }
 var RenderTexture: {
-prototype: RenderTexturenew(id?: number, texture?: Texture, depth?: Texture): RenderTexture}
+prototype: RenderTexturenew(): RenderTexture}
 interface NPatchInfo {
-source: Rectangle,
-left: number,
-top: number,
-right: number,
-bottom: number,
-layout: number,
 }
 var NPatchInfo: {
-prototype: NPatchInfonew(source?: Rectangle, left?: number, top?: number, right?: number, bottom?: number, layout?: number): NPatchInfo}
+prototype: NPatchInfonew(): NPatchInfo}
 interface GlyphInfo {
-value: number,
-offsetX: number,
-offsetY: number,
-advanceX: number,
-image: Image,
 }
 var GlyphInfo: {
-prototype: GlyphInfonew(value?: number, offsetX?: number, offsetY?: number, advanceX?: number, image?: Image): GlyphInfo}
+prototype: GlyphInfonew(): GlyphInfo}
 interface Font {
-baseSize: number,
-glyphCount: number,
-glyphPadding: number,
-texture: Texture2D,
-recs: Rectangle[],
-glyphs: GlyphInfo[],
 }
 var Font: {
-prototype: Fontnew(baseSize?: number, glyphCount?: number, glyphPadding?: number, texture?: Texture2D, recs?: Rectangle[], glyphs?: GlyphInfo[]): Font}
+prototype: Fontnew(): Font}
 interface Camera3D {
-position: Vector3,
-target: Vector3,
-up: Vector3,
-fovy: number,
-projection: number,
 }
 var Camera3D: {
-prototype: Camera3Dnew(position?: Vector3, target?: Vector3, up?: Vector3, fovy?: number, projection?: number): Camera3D}
+prototype: Camera3Dnew(): Camera3D}
 interface Camera2D {
-offset: Vector2,
-target: Vector2,
-rotation: number,
-zoom: number,
 }
 var Camera2D: {
-prototype: Camera2Dnew(offset?: Vector2, target?: Vector2, rotation?: number, zoom?: number): Camera2D}
+prototype: Camera2Dnew(): Camera2D}
 interface Mesh {
-vertexCount: number,
-triangleCount: number,
-vertices: number[],
-texcoords: number[],
-texcoords2: number[],
-normals: number[],
-tangents: number[],
-colors: number[],
-indices: number[],
-animVertices: number[],
-animNormals: number[],
-boneIds: number[],
-boneWeights: number[],
 }
 var Mesh: {
-prototype: Meshnew(vertexCount?: number, triangleCount?: number, vertices?: number[], texcoords?: number[], texcoords2?: number[], normals?: number[], tangents?: number[], colors?: number[], indices?: number[], animVertices?: number[], animNormals?: number[], boneIds?: number[], boneWeights?: number[]): Mesh}
+prototype: Meshnew(): Mesh}
 interface Shader {
-id: number,
 }
 var Shader: {
-prototype: Shadernew(id?: number): Shader}
+prototype: Shadernew(): Shader}
 interface MaterialMap {
-texture: Texture2D,
-color: Color,
-value: number,
 }
 var MaterialMap: {
-prototype: MaterialMapnew(texture?: Texture2D, color?: Color, value?: number): MaterialMap}
+prototype: MaterialMapnew(): MaterialMap}
 interface Material {
-shader: Shader,
-maps: MaterialMap[],
 }
 var Material: {
-prototype: Materialnew(shader?: Shader, maps?: MaterialMap[]): Material}
+prototype: Materialnew(): Material}
 interface Transform {
-translation: Vector3,
-rotation: Quaternion,
-scale: Vector3,
 }
 var Transform: {
-prototype: Transformnew(translation?: Vector3, rotation?: Quaternion, scale?: Vector3): Transform}
+prototype: Transformnew(): Transform}
 interface BoneInfo {
-name: string,
-parent: number,
 }
 var BoneInfo: {
-prototype: BoneInfonew(name?: string, parent?: number): BoneInfo}
+prototype: BoneInfonew(): BoneInfo}
 interface Model {
-transform: Matrix,
-meshCount: number,
-materialCount: number,
-meshes: Mesh[],
-materials: Material[],
-meshMaterial: number[],
-boneCount: number,
-bones: BoneInfo[],
-bindPose: Transform[],
 }
 var Model: {
-prototype: Modelnew(transform?: Matrix, meshCount?: number, materialCount?: number, meshes?: Mesh[], materials?: Material[], meshMaterial?: number[], boneCount?: number, bones?: BoneInfo[], bindPose?: Transform[]): Model}
+prototype: Modelnew(): Model}
 interface ModelAnimation {
-boneCount: number,
-frameCount: number,
-bones: BoneInfo[],
-framePoses: Transform[][],
-name: string,
 }
 var ModelAnimation: {
-prototype: ModelAnimationnew(boneCount?: number, frameCount?: number, bones?: BoneInfo[], framePoses?: Transform[][], name?: string): ModelAnimation}
+prototype: ModelAnimationnew(): ModelAnimation}
 interface Ray {
-position: Vector3,
-direction: Vector3,
 }
 var Ray: {
-prototype: Raynew(position?: Vector3, direction?: Vector3): Ray}
+prototype: Raynew(): Ray}
 interface RayCollision {
-hit: boolean,
-distance: number,
-point: Vector3,
-normal: Vector3,
 }
 var RayCollision: {
-prototype: RayCollisionnew(hit?: boolean, distance?: number, point?: Vector3, normal?: Vector3): RayCollision}
+prototype: RayCollisionnew(): RayCollision}
 interface BoundingBox {
-min: Vector3,
-max: Vector3,
 }
 var BoundingBox: {
-prototype: BoundingBoxnew(min?: Vector3, max?: Vector3): BoundingBox}
+prototype: BoundingBoxnew(): BoundingBox}
 interface Wave {
-frameCount: number,
-sampleRate: number,
-sampleSize: number,
-channels: number,
 }
 var Wave: {
-prototype: Wavenew(frameCount?: number, sampleRate?: number, sampleSize?: number, channels?: number): Wave}
+prototype: Wavenew(): Wave}
 interface rAudioBuffer {
 }
 var rAudioBuffer: {
@@ -217,73 +112,37 @@ interface rAudioProcessor {
 var rAudioProcessor: {
 prototype: rAudioProcessor}
 interface AudioStream {
-buffer: rAudioBuffer | rAudioBuffer[],
-processor: rAudioProcessor | rAudioProcessor[],
-sampleRate: number,
-sampleSize: number,
-channels: number,
 }
 var AudioStream: {
-prototype: AudioStreamnew(buffer?: rAudioBuffer | rAudioBuffer[], processor?: rAudioProcessor | rAudioProcessor[], sampleRate?: number, sampleSize?: number, channels?: number): AudioStream}
+prototype: AudioStreamnew(): AudioStream}
 interface Sound {
-frameCount: number,
 }
 var Sound: {
-prototype: Soundnew(frameCount?: number): Sound}
+prototype: Soundnew(): Sound}
 interface Music {
-stream: AudioStream,
-frameCount: number,
-looping: boolean,
-ctxType: number,
 }
 var Music: {
-prototype: Musicnew(stream?: AudioStream, frameCount?: number, looping?: boolean, ctxType?: number): Music}
+prototype: Musicnew(): Music}
 interface VrDeviceInfo {
-hResolution: number,
-vResolution: number,
-hScreenSize: number,
-vScreenSize: number,
-eyeToScreenDistance: number,
-lensSeparationDistance: number,
-interpupillaryDistance: number,
-lensDistortionValues: [number,number,number,number],
-chromaAbCorrection: [number,number,number,number],
 }
 var VrDeviceInfo: {
-prototype: VrDeviceInfonew(hResolution?: number, vResolution?: number, hScreenSize?: number, vScreenSize?: number, eyeToScreenDistance?: number, lensSeparationDistance?: number, interpupillaryDistance?: number, lensDistortionValues?: [number,number,number,number], chromaAbCorrection?: [number,number,number,number]): VrDeviceInfo}
+prototype: VrDeviceInfonew(): VrDeviceInfo}
 interface VrStereoConfig {
-projection: [Matrix,Matrix],
-viewOffset: [Matrix,Matrix],
-leftLensCenter: [number,number],
-rightLensCenter: [number,number],
-leftScreenCenter: [number,number],
-rightScreenCenter: [number,number],
-scale: [number,number],
-scaleIn: [number,number],
 }
 var VrStereoConfig: {
-prototype: VrStereoConfignew(projection?: [Matrix,Matrix], viewOffset?: [Matrix,Matrix], leftLensCenter?: [number,number], rightLensCenter?: [number,number], leftScreenCenter?: [number,number], rightScreenCenter?: [number,number], scale?: [number,number], scaleIn?: [number,number]): VrStereoConfig}
+prototype: VrStereoConfignew(): VrStereoConfig}
 interface FilePathList {
-capacity: number,
-count: number,
-paths: string[],
 }
 var FilePathList: {
-prototype: FilePathListnew(capacity?: number, count?: number, paths?: string[]): FilePathList}
+prototype: FilePathListnew(): FilePathList}
 interface AutomationEvent {
-frame: number,
-type: number,
-params: [number,number,number,number],
 }
 var AutomationEvent: {
-prototype: AutomationEventnew(frame?: number, type?: number, params?: [number,number,number,number]): AutomationEvent}
+prototype: AutomationEventnew(): AutomationEvent}
 interface AutomationEventList {
-capacity: number,
-count: number,
-events: AutomationEvent[],
 }
 var AutomationEventList: {
-prototype: AutomationEventListnew(capacity?: number, count?: number, events?: AutomationEvent[]): AutomationEventList}
+prototype: AutomationEventListnew(): AutomationEventList}
 type LoadFileDataCallback = (arg_fileName:string,arg_dataSize:number[])=>number[]type SaveFileDataCallback = (arg_fileName:string,arg_data:number[],arg_dataSize:number)=>booleantype LoadFileTextCallback = (arg_fileName:string)=>stringtype SaveFileTextCallback = (arg_fileName:string,arg_text:string)=>booleantype AudioStreamCallback = (arg_bufferData:number[],arg_frames:number)=>voidtype AudioCallback = (arg_bufferData:number[],arg_frames:number)=>voidtype AudioMixedProcessor = (arg_bufferData:number[],arg_frames:number)=>void/** undefined */
 function InitWindow(width: number, height: number, title: string): void/** undefined */
 function CloseWindow(): void/** undefined */
@@ -421,7 +280,7 @@ function GetFileModTime(fileName: string): number/** undefined */
 function CompressData(data: number[], dataSize: number, compDataSize: number[]): string/** undefined */
 function DecompressData(compData: number[], compDataSize: number, dataSize: number | number[]): string/** undefined */
 function EncodeDataBase64(data: number[], dataSize: number, outputSize: number[]): string/** undefined */
-function DecodeDataBase64(data: string, outputSize: number[]): string/** undefined */
+function DecodeDataBase64(text: string, outputSize: number[]): string/** undefined */
 function ComputeCRC32(data: number[], dataSize: number): number/** undefined */
 function ComputeMD5(data: number[], dataSize: number): number[]/** undefined */
 function ComputeSHA1(data: number[], dataSize: number): number[]/** undefined */
@@ -500,7 +359,9 @@ function DrawCircleV(center: Vector2, radius: number, color: Color): void/** und
 function DrawCircleLines(centerX: number, centerY: number, radius: number, color: Color): void/** undefined */
 function DrawCircleLinesV(center: Vector2, radius: number, color: Color): void/** undefined */
 function DrawEllipse(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void/** undefined */
+function DrawEllipseV(center: Vector2, radiusH: number, radiusV: number, color: Color): void/** undefined */
 function DrawEllipseLines(centerX: number, centerY: number, radiusH: number, radiusV: number, color: Color): void/** undefined */
+function DrawEllipseLinesV(center: Vector2, radiusH: number, radiusV: number, color: Color): void/** undefined */
 function DrawRing(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void/** undefined */
 function DrawRingLines(center: Vector2, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number, segments: number, color: Color): void/** undefined */
 function DrawRectangle(posX: number, posY: number, width: number, height: number, color: Color): void/** undefined */
@@ -509,7 +370,7 @@ function DrawRectangleRec(rec: Rectangle, color: Color): void/** undefined */
 function DrawRectanglePro(rec: Rectangle, origin: Vector2, rotation: number, color: Color): void/** undefined */
 function DrawRectangleGradientV(posX: number, posY: number, width: number, height: number, top: Color, bottom: Color): void/** undefined */
 function DrawRectangleGradientH(posX: number, posY: number, width: number, height: number, left: Color, right: Color): void/** undefined */
-function DrawRectangleGradientEx(rec: Rectangle, topLeft: Color, bottomLeft: Color, topRight: Color, bottomRight: Color): void/** undefined */
+function DrawRectangleGradientEx(rec: Rectangle, topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color): void/** undefined */
 function DrawRectangleLines(posX: number, posY: number, width: number, height: number, color: Color): void/** undefined */
 function DrawRectangleLinesEx(rec: Rectangle, lineThick: number, color: Color): void/** undefined */
 function DrawRectangleRounded(rec: Rectangle, roundness: number, segments: number, color: Color): void/** undefined */
@@ -670,7 +531,7 @@ function LoadFontFromImage(image: Image, key: Color, firstChar: number): Font/**
 function LoadFontFromMemory(fileType: string, fileData: number[], dataSize: number, fontSize: number, codepoints: number[], codepointCount: number): Font/** undefined */
 function IsFontValid(font: Font): boolean/** undefined */
 function LoadFontData(fileData: number[], dataSize: number, fontSize: number, codepoints: number[], codepointCount: number, type: number): GlyphInfo[]/** undefined */
-function GenImageFontAtlas(glyphs: GlyphInfo[], glyphRecs: Rectangle[][], glyphCount: number, fontSize: number, padding: number, packMethod: number): Image/** undefined */
+function GenImageFontAtlas(glyphs: GlyphInfo[], glyphRecs: Rectangle[] | Rectangle[][], glyphCount: number, fontSize: number, padding: number, packMethod: number): Image/** undefined */
 function UnloadFontData(glyphs: GlyphInfo[], glyphCount: number): void/** undefined */
 function UnloadFont(font: Font): void/** undefined */
 function ExportFontAsCode(font: Font, fileName: string): boolean/** undefined */
@@ -691,10 +552,12 @@ function UnloadUTF8(text: string): void/** undefined */
 function LoadCodepoints(text: string, count: number | number[]): number[]/** undefined */
 function UnloadCodepoints(codepoints: number | number[]): void/** undefined */
 function GetCodepointCount(text: string): number/** undefined */
-function GetCodepoint(text: string, codepointSize: number[]): number/** undefined */
-function GetCodepointNext(text: string, codepointSize: number[]): number/** undefined */
-function GetCodepointPrevious(text: string, codepointSize: number[]): number/** undefined */
+function GetCodepoint(text: string, codepointSize: number | number[]): number/** undefined */
+function GetCodepointNext(text: string, codepointSize: number | number[]): number/** undefined */
+function GetCodepointPrevious(text: string, codepointSize: number | number[]): number/** undefined */
 function CodepointToUTF8(codepoint: number, utf8Size: number[]): string/** undefined */
+function LoadTextLines(text: string, count: number | number[]): string[]/** undefined */
+function UnloadTextLines(text: string | string[]): void/** undefined */
 function TextIsEqual(text1: string, text2: string): boolean/** undefined */
 function TextLength(text: string): number/** undefined */
 function TextFormat(text: string, ...args: any): string/** undefined */

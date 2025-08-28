@@ -370,6 +370,8 @@
 			}
 		}
 		char * returnVal=(char *)GuiIconText(iconId,(const char *)text);
+		JSValue ret;
+		ret =JS_NewString(ctx,(const char *)returnVal);
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -380,8 +382,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret;
-		ret =JS_NewString(ctx,(const char *)returnVal);
 		return ret;
 	}
 	
@@ -451,16 +451,6 @@
 		}
 		bool loadIconsName=(bool)js_loadIconsName;
 		char * * returnVal=GuiLoadIcons((const char *)fileName,loadIconsName);
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)fileName);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)fileName);
-		}else{
-			JSClassID classid_fileName=JS_GetClassID(argv[0]);
-			if(classid_fileName==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_fileName);
-			}
-		}
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		char * * sizeref_ret=returnVal;
@@ -472,6 +462,16 @@
 			JSValue js_ret;
 			js_ret =JS_NewString(ctx,(const char *)returnVal[i]);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		}
+		if(JS_IsArray(argv[0])==1){
+			js_free(ctx,(void *)fileName);
+		}else if(JS_IsString(argv[0])==1){
+			JS_FreeCString(ctx,(const char *)fileName);
+		}else{
+			JSClassID classid_fileName=JS_GetClassID(argv[0]);
+			if(classid_fileName==JS_CLASS_INT8_ARRAY){
+				js_free(ctx,(void *)&da_fileName);
+			}
 		}
 		return ret;
 	}
@@ -515,6 +515,42 @@
 		return JS_UNDEFINED;
 	}
 	
+	static JSValue js_GuiGetTextWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		char * text;
+		JSValue da_text;
+		int64_t size_text;
+		if(JS_IsString(argv[0])==1){
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[0]);
+		}else if(JS_IsArrayBuffer(argv[0])==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[0]);
+		}else{
+			JSClassID classid_text=JS_GetClassID(argv[0]);
+			if(classid_text==JS_CLASS_INT8_ARRAY){
+				size_t offset_text;
+				da_text =JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,(size_t *)&size_text,NULL);
+				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
+				text +=offset_text;
+				size_text -=offset_text;
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
+				return JS_EXCEPTION;
+			}
+		}
+		int returnVal=GuiGetTextWidth((const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		if(JS_IsArray(argv[0])==1){
+			js_free(ctx,(void *)text);
+		}else if(JS_IsString(argv[0])==1){
+			JS_FreeCString(ctx,(const char *)text);
+		}else{
+			JSClassID classid_text=JS_GetClassID(argv[0]);
+			if(classid_text==JS_CLASS_INT8_ARRAY){
+				js_free(ctx,(void *)&da_text);
+			}
+		}
+		return ret;
+	}
+	
 	static JSValue js_GuiWindowBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
@@ -543,6 +579,7 @@
 			}
 		}
 		int returnVal=GuiWindowBox(bounds,(const char *)title);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)title);
 		}else if(JS_IsString(argv[1])==1){
@@ -553,7 +590,6 @@
 				js_free(ctx,(void *)&da_title);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -585,6 +621,7 @@
 			}
 		}
 		int returnVal=GuiGroupBox(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -595,7 +632,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -627,6 +663,7 @@
 			}
 		}
 		int returnVal=GuiLine(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -637,7 +674,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -669,6 +705,7 @@
 			}
 		}
 		int returnVal=GuiPanel(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -679,7 +716,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -700,7 +736,8 @@
 			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
 			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[1]);
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -716,7 +753,6 @@
 					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
 				}else if(JS_IsArrayBuffer(js_text)==1){
 					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
-					memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)text[i]);
 				}else{
 					JSClassID classid_texti=JS_GetClassID(js_text);
 					if(classid_texti==JS_CLASS_INT8_ARRAY){
@@ -754,7 +790,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[3] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_active)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -789,8 +826,8 @@
 			JSValue js_argv3=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -878,6 +915,7 @@
 		int returnVal=GuiScrollPanel(bounds,(const char *)text,content,scroll,view);
 		JS_SetOpaque(argv[3],(void *)scroll);
 		JS_SetOpaque(argv[4],(void *)view);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -890,7 +928,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -922,6 +959,7 @@
 			}
 		}
 		int returnVal=GuiLabel(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -932,7 +970,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -964,6 +1001,7 @@
 			}
 		}
 		int returnVal=GuiButton(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -974,7 +1012,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1006,6 +1043,7 @@
 			}
 		}
 		int returnVal=GuiLabelButton(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1016,7 +1054,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1056,7 +1093,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1106,6 +1144,7 @@
 			JSValue js_argv2=JS_NewBool(ctx,active[0]);
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1119,7 +1158,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1159,7 +1197,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1211,6 +1250,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1224,7 +1264,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1264,7 +1303,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1316,6 +1356,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1329,7 +1370,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1369,7 +1409,8 @@
 			ArrayProxy_class AP_checked=((ArrayProxy_class *)opaque_checked)[0];
 			argv[2] =AP_checked.values(ctx,AP_checked.opaque,(int)0,(bool)false);
 			freesrc_checked =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_checked)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1419,6 +1460,7 @@
 			JSValue js_argv2=JS_NewBool(ctx,checked[0]);
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1432,7 +1474,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)checked);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1472,7 +1513,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1524,6 +1566,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1537,7 +1580,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1577,7 +1619,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -1648,6 +1691,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -1661,7 +1705,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1703,7 +1746,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
@@ -1824,6 +1868,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -1839,7 +1884,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)value);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -1881,7 +1925,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
@@ -2002,6 +2047,7 @@
 			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -2017,7 +2063,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)value);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -2037,7 +2082,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)text);
 		}else{
 			JSClassID classid_text=JS_GetClassID(argv[1]);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
@@ -2060,7 +2104,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textValue);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textValue);
 		}else{
 			JSClassID classid_textValue=JS_GetClassID(argv[2]);
 			if(classid_textValue==JS_CLASS_INT8_ARRAY){
@@ -2084,7 +2127,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -2126,8 +2170,8 @@
 			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -2138,31 +2182,58 @@
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
+		char * * text;
+		bool freesrc_text=(bool)false;
 		int64_t size_text;
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
+		JSClassID text_class=JS_GetClassID(argv[1]);
+		if(text_class==js_ArrayProxy_class_id){
+			void * opaque_text=JS_GetOpaque(argv[1],js_ArrayProxy_class_id);
+			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
+			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
+			freesrc_text =(bool)true;
+		}
+		if(JS_IsArray(argv[1])==1){
+			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
 				return JS_EXCEPTION;
 			}
+			text =(char * *)js_malloc(ctx,size_text*sizeof(char *));
+			int i;
+			for(i=0;i<size_text;i++){
+				JSValue js_text=JS_GetPropertyUint32(ctx,argv[1],(uint32_t)i);
+				int64_t size_texti;
+				if(JS_IsString(js_text)==1){
+					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,js_text);
+					memoryNode * memoryCurrent=memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
+				}else if(JS_IsArrayBuffer(js_text)==1){
+					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
+				}else{
+					JSClassID classid_texti=JS_GetClassID(js_text);
+					if(classid_texti==JS_CLASS_INT8_ARRAY){
+						size_t offset_texti;
+						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti,(size_t *)&size_texti,NULL);
+						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
+						text[i] +=offset_texti;
+						size_texti -=offset_texti;
+						memoryNode * memoryCurrent=memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_texti);
+					}else{
+						JS_ThrowTypeError(ctx,(const char *)"js_text does not match type char *");
+						return JS_EXCEPTION;
+					}
+				}
+				JS_FreeValue(ctx,js_text);
+			}
+		}else{
+			if(freesrc_text){
+				JS_FreeValue(ctx,argv[1]);
+			}
+			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char * *");
+			return JS_EXCEPTION;
 		}
 		int32_t long_textSize;
 		int err_textSize=JS_ToInt32(ctx,&long_textSize,argv[2]);
 		if(err_textSize<0){
 			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
+				js_free(ctx,(void *)*text);
 			}
 			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
 			return JS_EXCEPTION;
@@ -2171,20 +2242,20 @@
 		int js_editMode=JS_ToBool(ctx,argv[3]);
 		if(js_editMode<0){
 			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
+				js_free(ctx,(void *)*text);
 			}
 			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
 			return JS_EXCEPTION;
 		}
 		bool editMode=(bool)js_editMode;
-		int returnVal=GuiTextBox(bounds,text,textSize,editMode);
+		int returnVal=GuiTextBox(bounds,*text,textSize,editMode);
 		if(JS_IsArray(argv[1])==1){
-			argv[1] =JS_NewString(ctx,(const char *)text);
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
+			argv[1] =JS_NewString(ctx,(const char *)*text);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		if(JS_IsArray(argv[1])==1){
+			js_free(ctx,(void *)*text);
+		}
 		return ret;
 	}
 	
@@ -2206,7 +2277,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textLeft);
 		}else{
 			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
@@ -2229,7 +2299,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textRight);
 		}else{
 			JSClassID classid_textRight=JS_GetClassID(argv[2]);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
@@ -2253,7 +2322,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -2304,8 +2374,8 @@
 			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -2327,7 +2397,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textLeft);
 		}else{
 			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
@@ -2350,7 +2419,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textRight);
 		}else{
 			JSClassID classid_textRight=JS_GetClassID(argv[2]);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
@@ -2374,7 +2442,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -2425,8 +2494,8 @@
 			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -2448,7 +2517,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textLeft);
 		}else{
 			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
@@ -2471,7 +2539,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)textRight);
 		}else{
 			JSClassID classid_textRight=JS_GetClassID(argv[2]);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
@@ -2495,7 +2562,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -2546,8 +2614,8 @@
 			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -2579,6 +2647,7 @@
 			}
 		}
 		int returnVal=GuiStatusBar(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -2589,7 +2658,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -2621,6 +2689,7 @@
 			}
 		}
 		int returnVal=GuiDummyRec(bounds,(const char *)text);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -2631,7 +2700,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -2721,6 +2789,7 @@
 		}
 		int returnVal=GuiGrid(bounds,(const char *)text,spacing,subdivs,mouseCell);
 		JS_SetOpaque(argv[4],(void *)mouseCell);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -2733,7 +2802,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -2773,7 +2841,8 @@
 			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
 			argv[2] =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
 			freesrc_scrollIndex =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_scrollIndex)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -2829,7 +2898,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[3] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -2891,6 +2961,7 @@
 			JSValue js_argv3=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -2907,7 +2978,6 @@
 		if(JS_IsArray(argv[3])==1){
 			js_free(ctx,(void *)active);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -2928,7 +2998,8 @@
 			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
 			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[1]);
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -2944,7 +3015,6 @@
 					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
 				}else if(JS_IsArrayBuffer(js_text)==1){
 					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
-					memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)text[i]);
 				}else{
 					JSClassID classid_texti=JS_GetClassID(js_text);
 					if(classid_texti==JS_CLASS_INT8_ARRAY){
@@ -2982,7 +3052,8 @@
 			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
 			argv[3] =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_scrollIndex)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3020,7 +3091,8 @@
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
 			argv[4] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[4]);
-		}else if(JS_IsArray(argv[4])==1){
+		}
+		if(JS_IsArray(argv[4])==1){
 			if(JS_GetLength(ctx,argv[4],&size_active)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3058,7 +3130,8 @@
 			ArrayProxy_class AP_focus=((ArrayProxy_class *)opaque_focus)[0];
 			argv[5] =AP_focus.values(ctx,AP_focus.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[5]);
-		}else if(JS_IsArray(argv[5])==1){
+		}
+		if(JS_IsArray(argv[5])==1){
 			if(JS_GetLength(ctx,argv[5],&size_focus)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3079,7 +3152,6 @@
 			}
 		}else if(JS_IsArrayBuffer(argv[5])==1){
 			focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,argv[5]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)focus);
 		}else{
 			JSClassID classid_focus=JS_GetClassID(argv[5]);
 			if(classid_focus==JS_CLASS_INT16_ARRAY){
@@ -3104,8 +3176,8 @@
 			JSValue js_argv4=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[4],(uint32_t)0,js_argv4,JS_PROP_C_W_E);
 		}
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -3125,7 +3197,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)title);
 		}else{
 			JSClassID classid_title=JS_GetClassID(argv[1]);
 			if(classid_title==JS_CLASS_INT8_ARRAY){
@@ -3148,7 +3219,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)message);
 		}else{
 			JSClassID classid_message=JS_GetClassID(argv[2]);
 			if(classid_message==JS_CLASS_INT8_ARRAY){
@@ -3171,7 +3241,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
 		}else if(JS_IsArrayBuffer(argv[3])==1){
 			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,argv[3]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)buttons);
 		}else{
 			JSClassID classid_buttons=JS_GetClassID(argv[3]);
 			if(classid_buttons==JS_CLASS_INT8_ARRAY){
@@ -3188,8 +3257,8 @@
 			}
 		}
 		int returnVal=GuiMessageBox(bounds,(const char *)title,(const char *)message,(const char *)buttons);
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -3209,7 +3278,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)title);
 		}else{
 			JSClassID classid_title=JS_GetClassID(argv[1]);
 			if(classid_title==JS_CLASS_INT8_ARRAY){
@@ -3232,7 +3300,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)message);
 		}else{
 			JSClassID classid_message=JS_GetClassID(argv[2]);
 			if(classid_message==JS_CLASS_INT8_ARRAY){
@@ -3255,7 +3322,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
 		}else if(JS_IsArrayBuffer(argv[3])==1){
 			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,argv[3]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)buttons);
 		}else{
 			JSClassID classid_buttons=JS_GetClassID(argv[3]);
 			if(classid_buttons==JS_CLASS_INT8_ARRAY){
@@ -3278,7 +3344,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
 		}else if(JS_IsArrayBuffer(argv[4])==1){
 			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[4]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)text);
 		}else{
 			JSClassID classid_text=JS_GetClassID(argv[4]);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
@@ -3305,14 +3370,13 @@
 		bool * secretViewActive;
 		int64_t size_secretViewActive;
 		JSClassID secretViewActive_class=JS_GetClassID(argv[6]);
-		if(JS_IsNull(argv[6])||JS_IsUndefined(argv[6])){
-			secretViewActive =NULL;
-		}else if(secretViewActive_class==js_ArrayProxy_class_id){
+		if(secretViewActive_class==js_ArrayProxy_class_id){
 			void * opaque_secretViewActive=JS_GetOpaque(argv[6],js_ArrayProxy_class_id);
 			ArrayProxy_class AP_secretViewActive=((ArrayProxy_class *)opaque_secretViewActive)[0];
 			argv[6] =AP_secretViewActive.values(ctx,AP_secretViewActive.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[6]);
-		}else if(JS_IsArray(argv[6])==1){
+		}
+		if(JS_IsArray(argv[6])==1){
 			if(JS_GetLength(ctx,argv[6],&size_secretViewActive)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3330,17 +3394,18 @@
 				secretViewActive[i] =(bool)js_secretViewActivei;
 				JS_FreeValue(ctx,js_secretViewActive);
 			}
+		}else if(JS_IsNull(argv[6])||JS_IsUndefined(argv[6])){
+			secretViewActive =NULL;
 		}else if(JS_IsArrayBuffer(argv[6])==1){
 			secretViewActive =(bool *)JS_GetArrayBuffer(ctx,(size_t *)&size_secretViewActive,argv[6]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)secretViewActive);
 		}else{
 			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[6] does not match type bool *");
 			return JS_EXCEPTION;
 		}
 		int returnVal=GuiTextInputBox(bounds,(const char *)title,(const char *)message,(const char *)buttons,text,textMaxSize,secretViewActive);
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -3392,6 +3457,7 @@
 		}
 		int returnVal=GuiColorPicker(bounds,(const char *)text,color);
 		JS_SetOpaque(argv[2],(void *)color);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -3404,7 +3470,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -3452,6 +3517,7 @@
 		}
 		int returnVal=GuiColorPanel(bounds,(const char *)text,color);
 		JS_SetOpaque(argv[2],(void *)color);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -3462,7 +3528,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -3504,7 +3569,8 @@
 			ArrayProxy_class AP_alpha=((ArrayProxy_class *)opaque_alpha)[0];
 			argv[2] =AP_alpha.values(ctx,AP_alpha.opaque,(int)0,(bool)false);
 			freesrc_alpha =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_alpha)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
@@ -3560,6 +3626,7 @@
 			JSValue js_argv2=JS_NewFloat64(ctx,((double)alpha[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 		}
 		if(JS_IsArray(argv[1])==1){
@@ -3575,7 +3642,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)alpha);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -3615,7 +3681,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
@@ -3667,6 +3734,7 @@
 			JSValue js_argv2=JS_NewFloat64(ctx,((double)value[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
 		}
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -3680,7 +3748,6 @@
 		if(JS_IsArray(argv[2])==1){
 			js_free(ctx,(void *)value);
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -3728,6 +3795,7 @@
 		}
 		int returnVal=GuiColorPickerHSV(bounds,(const char *)text,colorHsv);
 		JS_SetOpaque(argv[2],(void *)colorHsv);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -3738,7 +3806,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -3786,6 +3853,7 @@
 		}
 		int returnVal=GuiColorPanelHSV(bounds,(const char *)text,colorHsv);
 		JS_SetOpaque(argv[2],(void *)colorHsv);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -3796,7 +3864,6 @@
 				js_free(ctx,(void *)&da_text);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	static const JSCFunctionListEntry jsraygui_funcs[]={
@@ -3822,6 +3889,7 @@
 		JS_CFUNC_DEF("GuiGetIcons",0,js_GuiGetIcons),
 		JS_CFUNC_DEF("GuiLoadIcons",2,js_GuiLoadIcons),
 		JS_CFUNC_DEF("GuiDrawIcon",5,js_GuiDrawIcon),
+		JS_CFUNC_DEF("GuiGetTextWidth",1,js_GuiGetTextWidth),
 		JS_CFUNC_DEF("GuiWindowBox",2,js_GuiWindowBox),
 		JS_CFUNC_DEF("GuiGroupBox",2,js_GuiGroupBox),
 		JS_CFUNC_DEF("GuiLine",2,js_GuiLine),

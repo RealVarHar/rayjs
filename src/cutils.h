@@ -41,115 +41,15 @@ extern "C" {
 #define alloca _alloca
 #define ssize_t ptrdiff_t
 #endif
-
-//system integrations
-typedef struct {
-    void *Ptr;
-} INIT_ONCE;
-typedef struct {
-    void *Ptr;
-} CRITICAL_SECTION;
-typedef struct {
-    void *Ptr;
-} CONDITION_VARIABLE;
-typedef void * HANDLE;
-typedef void* HMODULE;
-typedef void* FARPROC;
-typedef unsigned long DWORD;
-typedef int BOOL;
-typedef unsigned int UINT;
-typedef unsigned short WORD;
-typedef const void* LPCVOID;
-typedef void* LPVOID;
-typedef const char* LPCSTR;
-typedef char* LPSTR;
-typedef unsigned long ULONG_PTR;
-typedef void * HINSTANCE;
-
-typedef struct _COORD {
-    short X;
-    short Y;
-} COORD;
-
-typedef struct _SMALL_RECT {
-    short Left;
-    short Top;
-    short Right;
-    short Bottom;
-} SMALL_RECT;
-
-typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
-    COORD dwSize;
-    COORD dwCursorPosition;
-    WORD  wAttributes;
-    SMALL_RECT srWindow;
-    COORD dwMaximumWindowSize;
-} CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO;
-
-
-// Function declarations
-__declspec(dllimport) HMODULE __stdcall LoadLibraryA(const char* lpLibFileName);
-__declspec(dllimport) int      __stdcall FreeLibrary(HMODULE hLibModule);
-__declspec(dllimport) FARPROC  __stdcall GetProcAddress(HMODULE hModule, const char* lpProcName);
-__declspec(dllimport) DWORD    __stdcall GetLastError(void);
-
-__declspec(dllimport) BOOL     __stdcall GetConsoleScreenBufferInfo(HANDLE hConsoleOutput, PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
-__declspec(dllimport) BOOL     __stdcall SetConsoleMode(HANDLE hConsoleHandle, DWORD dwMode);
-__declspec(dllimport) HANDLE   __stdcall CreateEventA(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName);
-__declspec(dllimport) HANDLE   __stdcall CreateEventW(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName);
-#ifdef UNICODE
-  #define CreateEvent CreateEventW
-#else
-  #define CreateEvent CreateEventA
+#if defined(__APPLE__)
+#include <malloc/malloc.h>
+#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__GLIBC__)
+#include <malloc.h>
+#elif defined(__FreeBSD__)
+#include <malloc_np.h>
+#elif defined(_WIN32)
+#include "shadow_windows.h"
 #endif
-__declspec(dllimport) BOOL     __stdcall SetEvent(HANDLE hEvent);
-__declspec(dllimport) BOOL     __stdcall ResetEvent(HANDLE hEvent);
-__declspec(dllimport) BOOL     __stdcall CloseHandle(HANDLE hObject);
-__declspec(dllimport) DWORD    __stdcall WaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
-__declspec(dllimport) DWORD    __stdcall GetFileType(HANDLE hFile);
-__declspec(dllimport) BOOL     __stdcall GetConsoleMode(HANDLE hConsoleHandle, DWORD* lpMode);
-__declspec(dllimport) HANDLE   __stdcall GetStdHandle(DWORD nStdHandle);
-__declspec(dllimport) UINT     __stdcall GetConsoleOutputCP(void);
-__declspec(dllimport) BOOL     __stdcall SetConsoleOutputCP(UINT wCodePageID);
-__declspec(dllimport) BOOL     __stdcall WriteConsoleA(HANDLE hConsoleOutput, const void* lpBuffer, DWORD nNumberOfCharsToWrite, DWORD* lpNumberOfCharsWritten, LPVOID lpReserved);
-__declspec(dllimport) BOOL     __stdcall FlushFileBuffers(HANDLE hFile);
-__declspec(dllimport) void     __stdcall Sleep(DWORD dwMilliseconds);
-
-
-#define TRUE  1
-#define FALSE 0
-#define INVALID_HANDLE_VALUE ((HANDLE)-1)
-#define MAXIMUM_WAIT_OBJECTS 64
-#define INFINITE 0xFFFFFFFF
-#define WAIT_OBJECT_0 0x00000000
-#define WAIT_TIMEOUT  0x00000102
-#define WAIT_FAILED   0xFFFFFFFF
-#define CP_UTF8 65001
-#define STD_OUTPUT_HANDLE ((DWORD)-11)
-#define FILE_TYPE_CHAR 0x0002
-
-
-// Console input modes
-#define ENABLE_PROCESSED_INPUT     0x0001
-#define ENABLE_LINE_INPUT          0x0002
-#define ENABLE_ECHO_INPUT          0x0004
-#define ENABLE_WINDOW_INPUT        0x0008
-#define ENABLE_MOUSE_INPUT         0x0010
-#define ENABLE_INSERT_MODE         0x0020
-#define ENABLE_QUICK_EDIT_MODE     0x0040
-#define ENABLE_EXTENDED_FLAGS      0x0080
-#define ENABLE_AUTO_POSITION       0x0100
-#define ENABLE_VIRTUAL_TERMINAL_INPUT 0x0200
-
-// Console output modes
-#define ENABLE_PROCESSED_OUTPUT            0x0001
-#define ENABLE_WRAP_AT_EOL_OUTPUT          0x0002
-#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
-#define DISABLE_NEWLINE_AUTO_RETURN        0x0008
-#define ENABLE_LVB_GRID_WORLDWIDE          0x0010
-
-//system integrations
-
 #if !defined(_WIN32) && !defined(EMSCRIPTEN) && !defined(__wasi__)
 #include <errno.h>
 #include <pthread.h>
@@ -686,7 +586,7 @@ static inline size_t js__malloc_usable_size(const void *ptr)
     return malloc_size(ptr);
 #elif defined(_WIN32)
     return _msize((void *)ptr);
-#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__FreeBSD__)
+#elif defined(__linux__) || defined(__ANDROID__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__GLIBC__)
     return malloc_usable_size((void *)ptr);
 #else
     return 0;

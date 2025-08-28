@@ -3,10 +3,11 @@ globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','
 globalThis.extrainfo={};
 const rayjs_header = (await import("./raylib-header.js")).RayJsHeader;
 
-let source_parser,simpleregex;
+let source_parser,simpleregex,defaultTypeParts;
 {
     let sp = (await import("./source_parser.js"));
     source_parser=sp.source_parser;
+    defaultTypeParts=sp.defaultTypeParts;
     simpleregex=sp.simpleregex;
 }
 const QuickJsGenerator = (await import("./quickjs.js")).QuickJsGenerator;
@@ -193,7 +194,7 @@ function main() {
         "stdbool.h":false,"stdio.h":false,"stdint.h":false,"string.h":false,"math.h":false,"sal.h":false,"stdarg.h":false,"stdlib.h":false,"inttypes.h":false,"assert.h":false,"time.h":false,"sys/time.h":false,
         "timezoneapi.h":false,"intrin.h":false,"fenv.h":false,"cutils.h":"src/cutils.h","libregexp.h":false,"quickjs-c-atomics.h":false,"builtin-array-fromasync.h":false,"mimalloc.h":false,"raymath.h":false,"raylib.h":false,
         "ctype.h":false,"OpenGL/gl.h":false,"OpenGL/glext.h":false,"GL/gl.h":false,"external/glad.h":false,"GLES":false,"external/glad_gles":false,"rlgl.h":false,"lightmapper.h":false,"list.h":false,"xsum.h":false,
-        "quickjs-opcode.h":false,"winsock2.h":false,"malloc.h":false,"malloc/malloc.h":false,"malloc_np.h":false,"windows.h":false,"errno.h":false,"pthread.h":false,"limits.h":false,"unistd.h":false,"GLES3/gl3.h":false,
+        "quickjs-opcode.h":false,"winsock2.h":false,"malloc.h":false,"malloc/malloc.h":false,"malloc_np.h":false,"shadow_windows.h":false,"errno.h":false,"pthread.h":false,"limits.h":false,"unistd.h":false,"GLES3/gl3.h":false,
         "GLES2/gl2ext.h":false,"external/glad_gles2.h":false,"GLES2/gl2.h":false
     };
     let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"),sourcefiles);
@@ -353,10 +354,10 @@ function main() {
     for(let name in modules){
         //set access all fields by default
         for(let struct of modules[name].structs){
-            struct.binding={createConstructor: true,properties:{}};
+            struct.binding={createConstructor: true};
             const binding=struct.binding;
             for(let field of struct.fields){
-                binding.properties[field.name]={get: true, set: true};
+                field.binding={get: true, set: true};
             }
         }
         if(name=='raylib')continue;
@@ -365,278 +366,93 @@ function main() {
         removeDuplicates(modules[name],'enums',dedup);
         removeDuplicates(modules[name],'aliases',dedup);
     }
-    modules['rlights'].getStruct('Light').binding = {
-        properties: {
-            type: { get: true, set: true },
-            enabled: { get: true, set: true },
-            position: { get: true, set: true },
-            target: { get: true, set: true },
-            color: { get: true, set: true },
-            attenuation: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['rlightmapper'].getStruct('Lightmapper').binding.properties.data.sizeVars=['ptr.w * ptr.h * 4'];
-    modules['rlightmapper'].getStruct('Lightmapper');
-    modules['rlightmapper'].getStruct('Lightmapper').binding.properties['lm_handle']={};//Internal lightmapper context, no reason to bind this
-    modules['rlightmapper'].getStruct('LightmapperConfig').binding = {
-        properties: {
-            hemisphereSize: { get: true, set: true },
-            zNear: { get: true, set: true },
-            zFar: { get: true, set: true },
-            backgroundColor: { get: true, set: true },
-            interpolationPasses: { get: true, set: true },
-            interpolationThreshold: { get: true, set: true },
-            cameraToSurfaceDistanceModifier: { get: true, set: true },
-        },
-        createConstructor: true
-    };
+    att = modules['rlightmapper'].getStruct('Lightmapper');
+    att.fields.find(a=>a.name=='data').binding.sizeVars=['ptr.w * ptr.h * 4'];
+    att = modules['rlightmapper'].getStruct('Lightmapper');
+    att.fields.find(a=>a.name=='lm_handle').binding={};//Internal lightmapper context, no reason to bind this
+    att = modules['raylib'].getStruct("Image");//destructor: "UnloadImage"
+    att = att.fields.find(a=>a.name=='data').binding;
+    att.sizeVars=['GetPixelDataSize(ptr.width,ptr.height,ptr.format)'];
+    att.typeCast="unsigned char *";
+    //Warning! size,typeCast depends on:
+    //Image Frames, see LoadImageAnim (how can we store additional frameCount data?)
+    //From ImageFormat@rtextures.c:1256
+    //format==PIXELFORMAT_UNCOMPRESSED_GRAYSCALE ?      image->width*image->height*sizeof(unsigned char)
+    //format==PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA ?     image->width*image->height*2*sizeof(unsigned char)
+    //format==PIXELFORMAT_UNCOMPRESSED_R5G6B5 ?         image->width*image->height*sizeof(unsigned short)
+    //format==PIXELFORMAT_UNCOMPRESSED_R8G8B8 ?         image->width*image->height*3*sizeof(unsigned char)
+    //format==PIXELFORMAT_UNCOMPRESSED_R5G5B5A1 ?       image->width*image->height*sizeof(unsigned short)
+    //format==PIXELFORMAT_UNCOMPRESSED_R4G4B4A4 ?       image->width*image->height*sizeof(unsigned short)
+    //format==PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 ?       image->width*image->height*4*sizeof(unsigned char)
+    //format==PIXELFORMAT_UNCOMPRESSED_R32 ?            image->width*image->height*sizeof(float)
+    //format==PIXELFORMAT_UNCOMPRESSED_R32G32B32 ?      image->width*image->height*3*sizeof(float)
+    //format==PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 ?   image->width*image->height*4*sizeof(float)
+    //format==PIXELFORMAT_UNCOMPRESSED_R16 ?            image->width*image->height*sizeof(unsigned short)
+    //format==PIXELFORMAT_UNCOMPRESSED_R16G16B16 ?      image->width*image->height*3*sizeof(unsigned short)
+    //format==PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 ?   image->width*image->height*4*sizeof(unsigned short)
 
-    modules['raylib'].getStruct("Color").binding = {
-        properties: {
-            r: { get: true, set: true },
-            g: { get: true, set: true },
-            b: { get: true, set: true },
-            a: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Rectangle").binding = {
-        properties: {
-            x: { get: true, set: true },
-            y: { get: true, set: true },
-            width: { get: true, set: true },
-            height: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Vector2").binding = {
-        properties: {
-            x: { get: true, set: true },
-            y: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Vector3").binding = {
-        properties: {
-            x: { get: true, set: true },
-            y: { get: true, set: true },
-            z: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Vector4").binding = {
-        properties: {
-            x: { get: true, set: true },
-            y: { get: true, set: true },
-            z: { get: true, set: true },
-            w: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Ray").binding = {
-        properties: {
-            position: { get: false, set: true },
-            direction: { get: false, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Camera2D").binding = {
-        properties: {
-            offset: { get: true, set: true },
-            target: { get: true, set: true },
-            rotation: { get: true, set: true },
-            zoom: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Camera3D").binding = {
-        properties: {
-            position: { get: true, set: true },
-            target: { get: true, set: true },
-            up: { get: false, set: true },
-            fovy: { get: true, set: true },
-            projection: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("BoundingBox").binding = {
-        properties: {
-            min: { get: true, set: true },
-            max: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Matrix").binding = {
-        properties: {},
-        createConstructor: false
-    };
-    modules['raylib'].getStruct("NPatchInfo").binding = {
-        properties: {
-            source: { get: true, set: true },
-            left: { get: true, set: true },
-            top: { get: true, set: true },
-            right: { get: true, set: true },
-            bottom: { get: true, set: true },
-            layout: { get: true, set: true },
-        },
-        createConstructor: true
-    };
-    modules['raylib'].getStruct("Image").binding = {
-        properties: {
-            data: { set: true },
-            width: { get: true, set: true },
-            height: { get: true, set: true },
-            mipmaps: { get: true, set: true },
-            format: { get: true, set: true }
-        },
-        createConstructor: true
-        //destructor: "UnloadImage"
-    };
-    modules['raylib'].getStruct("Wave").binding = {
-        properties: {
-            frameCount: { get: true },
-            sampleRate: { get: true },
-            sampleSize: { get: true },
-            channels: { get: true }
-        },
-        createConstructor: true
-        //destructor: "UnloadWave"
-    };
-    modules['raylib'].getStruct("Sound").binding = {
-        properties: {
-            frameCount: { get: true }
-        },
-        createConstructor: true
-        //destructor: "UnloadSound"
-    };
-    modules['raylib'].getStruct("Music").binding = {
-        properties: {
-            stream: { get: true },
-            frameCount: { get: true },
-            looping: { get: true, set: true },
-            ctxType: { get: true },
-        },
-        createConstructor: true
-        //destructor: "UnloadMusicStream"
-    };
-    modules['raylib'].getStruct("Model").binding = {
-        properties: {
-            transform: { get: true, set: true },
-            meshCount: { get: true },
-            materialCount: { get: true },
-            meshes: { get: true, set: true, sizeVars:['ptr.meshCount']},
-            materials: { get: true, set: true, sizeVars:['ptr.materialCount'] },
-            meshMaterial: { get: true, sizeVars:['ptr.meshCount'] },
-            boneCount: { get: true },
-            bones: { get: true, sizeVars:['ptr.boneCount'] },//TODO: check if there is a valid reason why we are disallowing set bones
-            bindPose: { get: true, sizeVars:['ptr.boneCount'] }
-        },
-        createConstructor: true
-        //destructor: "UnloadModel"
-    };
-    modules['raylib'].getStruct("ModelAnimation").binding.properties.bones.sizeVars=['ptr.boneCount'];
-    modules['raylib'].getStruct("ModelAnimation").binding.properties.framePoses.sizeVars=['ptr.frameCount','ptr.boneCount'];
-    modules['raylib'].getStruct("Mesh").binding = {
-        properties: {
-            vertexCount: { get: true, set: true },
-            triangleCount: { get: true, set: true },
-            vertices: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
-            texcoords: { get:true, set: true, sizeVars:['ptr.vertexCount*2'] },
-            texcoords2: { set: true, sizeVars:['ptr.vertexCount*2'] },
-            normals: { get:true, set: true, sizeVars:['ptr.vertexCount*3'] },
-            tangents: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
-            colors: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
-            indices: { get: true, set: true, sizeVars:['ptr.vertexCount'] },
-            animVertices: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
-            animNormals: { get: true, set: true, sizeVars:['ptr.vertexCount*3'] },
-            boneIds: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
-            boneWeights: { get: true, set: true, sizeVars:['ptr.vertexCount*4'] },
-        },
-        createConstructor: true
-        //destructor: "UnloadMesh"
-    };
-    modules['raylib'].getStruct("Shader").binding = {
-        properties: {
-            id: { get: true }
-        },
-        createConstructor: true
-        //destructor: "UnloadShader"
-    };
-    modules['raylib'].getStruct("Texture").binding = {
-        properties: {
-            width: { get: true },
-            height: { get: true },
-            mipmaps: { get: true },
-            format: { get: true },
-        },
-        createConstructor: true
-        //destructor: "UnloadTexture"
-    };
-    modules['raylib'].getStruct("Font").binding = {
-        properties: {
-            baseSize: { get: true },
-            glyphCount: { get: true },
-            glyphPadding: { get: true },
-			texture: { get: true },
-            recs: { get: true, sizeVars:['ptr.glyphCount'] },
-            glyphs: { get: true, sizeVars:['ptr.glyphCount'] },
-        },
-        createConstructor: true
-        //destructor: "UnloadFont"
-    };
-    modules['raylib'].getStruct("RenderTexture").binding = {
-        properties: {
-            id: { get: true },
-            texture: { get: true },
-            depth: { get: true },
-        },
-        createConstructor: true
-        //destructor: "UnloadRenderTexture"
-    };
-    modules['raylib'].getStruct("MaterialMap").binding = {
-        properties: {
-            texture: { set: true },
-            color: { set: true, get: true },
-            value: { get: true, set: true }
-        },
-        createConstructor: true
-        //destructor: "UnloadMaterialMap"
-    };
-    modules['raylib'].getStruct("Material").binding = {
-        properties: {
-            shader: { get: true, set: true },
-            maps: { get: true, sizeVars:[config.defined['MAX_MATERIAL_MAPS'].content.body] }
-        },
-        createConstructor: true
-        //destructor: "UnloadMaterial"
-    };
-    modules['raylib'].getStruct("FilePathList").binding.properties.paths.sizeVars=["ptr.count"];
-    modules['raylib'].getStruct("AutomationEventList").binding.properties.events.sizeVars=["ptr.count"];
-    att = modules['rlgl'].getStruct("rlVertexBuffer").binding.properties;
-    att.vertices.sizeVars=["ptr.elementCount*3*4"];
-    att.texcoords.sizeVars=["ptr.elementCount*2*4"];
-    att.normals.sizeVars=["ptr.elementCount*3*4"];
-    att.colors.sizeVars=["ptr.elementCount*4*4"];
-    if(att.indices!==undefined)att.indices.sizeVars=["ptr.elementCount*6"];
-    att = modules['rlgl'].getStruct("rlRenderBatch").binding.properties;
-    att.vertexBuffer.sizeVars=["ptr.bufferCount"];
-    att.draws.sizeVars=["RL_DEFAULT_BATCH_DRAWCALLS"];
-    const structDI = modules['raylib'].getStruct("VrDeviceInfo");
-    structDI.binding = {
-        properties: {
-            hResolution: { set: true, get: true },
-            vResolution: { set: true, get: true },
-            hScreenSize: { set: true, get: true },
-            vScreenSize: { set: true, get: true },
-            eyeToScreenDistance: { set: true, get: true },
-            lensSeparationDistance: { set: true, get: true },
-            interpupillaryDistance: { set: true, get: true },
-            lensDistortionValues: { set: true, get: true },
-			chromaAbCorrection : { set: true, get: true }
-        },
-        createConstructor: true
-    };
+    att = modules['raylib'].getStruct("Wave");//destructor: "UnloadWave"
+    att = att.fields.find(a=>a.name=='data').binding;
+    att.sizeVars=['ptr.frameCount*ptr.channels'];
+    att.typeCast='short *';
+    //modules['raylib'].getStruct("Sound");//destructor: "UnloadSound"
+    att = modules['raylib'].getStruct("Music");//destructor: "UnloadMusicStream"
+    att = att.fields.find(a=>a.name=='ctxData');att.binding.get=false;att.binding.set=false;//internal use only
+    att = modules['raylib'].getStruct("Model");//destructor: "UnloadModel"
+    att.fields.find(a=>a.name=='meshes').binding.sizeVars=['ptr.meshCount'];
+    att.fields.find(a=>a.name=='meshMaterial').binding.sizeVars=['ptr.meshCount'];
+    att.fields.find(a=>a.name=='materials').binding.sizeVars=['ptr.materialCount'];
+    att.fields.find(a=>a.name=='bones').binding.sizeVars=['ptr.boneCount'];
+    att.fields.find(a=>a.name=='bindPose').binding.sizeVars=['ptr.boneCount'];
+    att = modules['raylib'].getStruct("ModelAnimation");
+    att.fields.find(a=>a.name=='bones').binding.sizeVars=['ptr.boneCount'];
+    att.fields.find(a=>a.name=='framePoses').binding.sizeVars=['ptr.frameCount','ptr.boneCount'];
+    att = modules['raylib'].getStruct("Mesh");//destructor: "UnloadMesh"
+    att.fields.find(a=>a.name=='vertices').binding.sizeVars=['ptr.vertexCount*3'];
+    att.fields.find(a=>a.name=='texcoords').binding.sizeVars=['ptr.vertexCount*2'];
+    att.fields.find(a=>a.name=='texcoords2').binding.sizeVars=['ptr.vertexCount*2'];
+    att.fields.find(a=>a.name=='normals').binding.sizeVars=['ptr.vertexCount*3'];
+    att.fields.find(a=>a.name=='tangents').binding.sizeVars=['ptr.vertexCount*4'];
+    att.fields.find(a=>a.name=='colors').binding.sizeVars=['ptr.vertexCount*4'];
+    att.fields.find(a=>a.name=='indices').binding.sizeVars=['ptr.vertexCount'];
+    att.fields.find(a=>a.name=='animVertices').binding.sizeVars=['ptr.vertexCount*3'];
+    att.fields.find(a=>a.name=='animNormals').binding.sizeVars=['ptr.vertexCount*3'];
+    att.fields.find(a=>a.name=='boneIds').binding.sizeVars=['ptr.vertexCount*4'];
+    att.fields.find(a=>a.name=='boneWeights').binding.sizeVars=['ptr.vertexCount*4'];
+    att.fields.find(a=>a.name=='boneMatrices').binding.sizeVars=['ptr.boneCount'];
+    att.fields.find(a=>a.name=='vboId').binding.sizeVars=['MAX_MESH_VERTEX_BUFFERS'];
+    att = modules['raylib'].getStruct("Shader");//destructor: "UnloadShader"
+    att.fields.find(a=>a.name=='locs').binding.sizeVars=['RL_MAX_SHADER_LOCATIONS'];
+    //att = modules['raylib'].getStruct("Texture");//destructor: "UnloadTexture"
+    att = modules['raylib'].getStruct("Font");//destructor: "UnloadFont"
+    att.fields.find(a=>a.name=='recs').binding.sizeVars=['ptr.glyphCount'];
+    att.fields.find(a=>a.name=='glyphs').binding.sizeVars=['ptr.glyphCount'];
+    //modules['raylib'].getStruct("RenderTexture");//destructor: "UnloadRenderTexture"
+    //modules['raylib'].getStruct("MaterialMap");//destructor: "UnloadMaterialMap"
+    att = modules['raylib'].getStruct("Material");
+    att.fields.find(a=>a.name=='maps').binding.sizeVars=[config.defined['MAX_MATERIAL_MAPS'].content.body];
+    att = modules['raylib'].getStruct("FilePathList");
+    att.fields.find(a=>a.name=='paths').binding.sizeVars=["ptr.count"];
+    att = modules['raylib'].getStruct("AutomationEventList");
+    att.fields.find(a=>a.name=='events').binding.sizeVars=["ptr.count"];
+    att = modules['raylib'].getFunction('GenImageFontAtlas');
+    att = att.params.find(a=>a.name=='glyphRecs');
+    att.type='Rectangle * &';
+    att.binding.allowNull=true;//?? on apiCall writeback but never
+    att.binding.typeCast='void &';//?? on apiCall writeback but never
+    att = modules['rlgl'].getStruct("rlVertexBuffer");
+    att.fields.find(a=>a.name=='vertices').binding.sizeVars=["ptr.elementCount*3*4"];
+    att.fields.find(a=>a.name=='texcoords').binding.sizeVars=["ptr.elementCount*2*4"];
+    att.fields.find(a=>a.name=='normals').binding.sizeVars=["ptr.elementCount*3*4"];
+    att.fields.find(a=>a.name=='colors').binding.sizeVars=["ptr.elementCount*4*4"];
+    cb = att.fields.find(a=>a.name=='indices');
+    if(cb!=undefined){
+        cb.binding.sizeVars=["ptr.elementCount*6"];
+    }
+    att = modules['rlgl'].getStruct("rlRenderBatch");
+    att.fields.find(a=>a.name=='vertexBuffer').binding.sizeVars=["ptr.bufferCount"];
+    att.fields.find(a=>a.name=='draws').binding.sizeVars=["RL_DEFAULT_BATCH_DRAWCALLS"];
+
     modules['raylib'].getFunction("EndDrawing").binding = { after: gen => gen.call("app_update_quickjs", ['ctx']) };
     // Custom frame control functions
     // NOT SUPPORTED BECAUSE NEEDS COMPILER FLAG
@@ -1046,6 +862,7 @@ function main() {
     modules['rlgl'].ignore("rlLoadExtensions");
     modules['rlgl'].ignore("rlSetVertexAttributeDefault");
     modules['rlgl'].ignore("rlSetUniform");
+    modules['rlgl'].ignore("rlGetProcAddress");
     att = modules['raylib'].getFunction("LoadRandomSequence");
     att.returnSizeVars = ['count'];
     att.binding = { after: gen => gen.call("UnloadRandomSequence", ['returnVal']) };
@@ -1062,7 +879,7 @@ function main() {
                 const name=parm.name.toLowerCase();
                 const subtype=parm.type.toLowerCase().substring(0,parm.type.length-2);
                 //common names
-                if(name==subtype || ['dst','texture','view','active','alpha','filesize','datasize','count','position','value','frames','lm','checked','scrollindex'].includes(name)){
+                if(name==subtype || ['dst','texture','view','active','alpha','filesize','datasize','count','position','value','frames','lm','checked','scrollindex','codepointsize'].includes(name)){
                     parm.type=parm.type.replaceAt(parm.type.length-1,'&');
                 }else
                 if(name.endsWith('s')){
@@ -1089,11 +906,15 @@ function main() {
     att = cb.find(field=>field.name=='processor');
     att.type = att.type.replace(" *"," &");
     //Dont allow using buffer (searching for typedef source is not supported yet)
-    modules['raylib'].getStruct('AudioStream').binding.properties.buffer={};
-    modules['raylib'].getStruct('AudioStream').binding.properties.processor={};
+    att = modules['raylib'].getStruct('AudioStream');
+    att.fields.find(a=>a.name=='buffer').binding = {};
+    att.fields.find(a=>a.name=='processor').binding = {};
     modules['raylib'].getStruct('rAudioBuffer').binding.createConstructor=false;
     modules['raylib'].getStruct('rAudioProcessor').binding.createConstructor=false;
 
+    att = modules['raylib'].getFunction('LoadFontData');
+    att.params[3].binding.allowNull=true;
+    att.returnSizeVars=['codepointCount'];
     modules['raylib'].getFunction('LoadShader').params[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiValueBox').params[1].binding.allowNull=true;
@@ -1123,18 +944,24 @@ function main() {
         let checks={};
         for(let fn of module.functions){
             for(let param of fn.params){
-                for(let type of param.type.split(' '))checks[type]=true;
+                for(let type of param.type.split(' ')){
+                    checks[type]=true;
+                }
             }
         }
         for(let alias of module.aliases){
-            for(let type of alias.type.split(' '))checks[type]=true;
+            for(let type of alias.type.split(' ')){
+                checks[type]=true;
+            }
         }
         for(let callback of module.callbacks){
             for(let param of callback.params){
-                for(let type of param.type.split(' '))checks[type]=true;
+                for(let type of param.type.split(' ')){
+                    checks[type]=true;
+                }
             }
         }
-        checks=Object.keys(checks);
+        checks=Object.keys(checks).filter(type=>!defaultTypeParts.includes(type));
         for(let modulekey in modules){
             if(modulekey==key){
                 includeDictionary[key](modules[key].gen,namemap_val[modulekey]);
@@ -1142,7 +969,7 @@ function main() {
             }
             const namemap_module=namemap[modulekey]
             for(let check of checks){
-                if(namemap_module[check]){
+                if(namemap_module[check] && !namemap[key][check]){
                     includeDictionary[modulekey](modules[key].gen,namemap_val[modulekey]);
                     break;
                 }

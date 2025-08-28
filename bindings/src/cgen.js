@@ -222,9 +222,9 @@ export function getVariableParts(input,variables){
     let pos= 0;
     let parts= [];
     while(pos<input.length){
-        let capture=[];
+        let capture;
         while(input[pos]=='('){
-            pos=simpleregex(input,["nr*",")"],pos+1,capture);
+            pos=simpleregex(input,["nr*",")"],pos+1,capture=[]);
             if(capture[0]!=''){
                 //First, check if last token was a function, actually
                 let lastpart=parts[parts.length-1];
@@ -500,6 +500,7 @@ export function resolveVariable(variableParts,targetType,variableList){
             subtype=getsubtype(type);
             if(subtype==''){
                 //got to the end of type def, try resolving type before crashing
+                if(type=='')debugger;
                 let subresolve=resolvetype(type,variableList);
                 type=subresolve[0];
                 fields=subresolve[1];

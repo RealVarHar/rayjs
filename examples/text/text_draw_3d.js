@@ -42,7 +42,7 @@ import {BLACK, BLUE, BeginDrawing, BeginMode3D,
     GetFrameTime, GetGlyphIndex,
     GetMousePosition, GetRandomValue,
     GetRayCollisionBox,
-    GetScreenToWorldRay, InitWindow,
+    GetScreenToWorldRay, InitWindow, EnableCursor,
     IsFileDropped,
     IsFileExtension,
     IsKeyDown,
@@ -68,7 +68,7 @@ import {BLACK, BLUE, BeginDrawing, BeginMode3D,
     LoadFont,
     LoadFontEx,
     LoadShader, MAROON,
-    MOUSE_BUTTON_LEFT, MeasureText, RAYWHITE, RED, Rectangle,
+    MOUSE_BUTTON_LEFT, MeasureText, MeasureTextEx, RAYWHITE, RED, Rectangle,
     SetConfigFlags, SetTargetFPS, TextFormat, TextLength, UnloadFont, UpdateCamera, VIOLET, Vector3, WindowShouldClose } from 'rayjs:raylib';
 import * as rg from 'rayjs:rlgl';
 
@@ -180,69 +180,19 @@ function DrawText3D(font, text, position, fontSize, fontSpacing, lineSpacing, ba
         if (codepoint == '\n'.codePointAt(0)) {
             // NOTE: Fixed line spacing of 1.5 line-height
             // TODO: Support custom line spacing defined by user
-            textOffsetY += scale + lineSpacing/font.baseSize*scale;
+            textOffsetY += fontSize + lineSpacing;
             textOffsetX = 0;
         } else {
             if ((codepoint != ' '.codePointAt(0)) && (codepoint != '\t'.codePointAt(0))) {
                 DrawTextCodepoint3D(font, codepoint, new Vector3( position.x + textOffsetX, position.y, position.z + textOffsetY ), fontSize, backface, tint);
             }
-
-            if (font.glyphs[index].advanceX == 0) textOffsetX += (font.recs[index].width + fontSpacing)/font.baseSize*scale;
-            else textOffsetX += (font.glyphs[index].advanceX + fontSpacing)/font.baseSize*scale;
+            const offset=(font.glyphs[index].advanceX == 0)?font.recs[index].width*0.1*scale + fontSpacing:
+            font.glyphs[index].advanceX*scale + fontSpacing;
+            textOffsetX +=offset;
         }
 
         i += codepointByteCount[0];   // Move text bytes counter to next codepoint
     }
-}
-
-// Measure a text in 3D. For some reason `MeasureTextEx()` just doesn't seem to work so i had to use this instead.
-function MeasureText3D(font, text, fontSize, fontSpacing, lineSpacing) {
-    let len = TextLength(text);
-    let tempLen = 0;                // Used to count longer text line num chars
-    let lenCounter = 0;
-
-    let tempTextWidth = 0;     // Used to count longer text line width
-
-    let scale = fontSize/font.baseSize;
-    let textHeight = scale;
-    let textWidth = 0;
-
-    let letter = 0;                 // Current character
-    let index = 0;                  // Index position in sprite font
-
-    for (let i = 0; i < len; i++) {
-        lenCounter++;
-
-        let next = [0];
-        letter = GetCodepoint(text.substring(i), next);
-        index = GetGlyphIndex(font, letter);
-
-        // NOTE: normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
-        // but we need to draw all of the bad bytes using the '?' symbol so to not skip any we set next = 1
-        if (letter == 0x3f) next[0] = 1;
-        i += next[0] - 1;
-
-        if (letter != '\n'.codePointAt(0)) {
-            if (font.glyphs[index].advanceX != 0) textWidth += (font.glyphs[index].advanceX+fontSpacing)/font.baseSize*scale;
-            else textWidth += (font.recs[index].width + font.glyphs[index].offsetX)/font.baseSize*scale;
-        } else {
-            if (tempTextWidth < textWidth) tempTextWidth = textWidth;
-            lenCounter = 0;
-            textWidth = 0;
-            textHeight += scale + lineSpacing/font.baseSize*scale;
-        }
-
-        if (tempLen < lenCounter) tempLen = lenCounter;
-    }
-
-    if (tempTextWidth < textWidth) tempTextWidth = textWidth;
-
-    let vec = new Vector3();
-    vec.x = tempTextWidth + ((tempLen - 1)*fontSpacing/font.baseSize*scale); // Adds chars spacing to measure
-    vec.y = 0.25;
-    vec.z = textHeight;
-
-    return vec;
 }
 
 // Draw a 2D text in 3D space and wave the parts that start with `~~` and end with `~~`.
@@ -270,7 +220,7 @@ function DrawTextWave3D(font, text, position, fontSize, fontSpacing, lineSpacing
         if (codepoint == '\n'.codePointAt(0)) {
             // NOTE: Fixed line spacing of 1.5 line-height
             // TODO: Support custom line spacing defined by user
-            textOffsetY += scale + lineSpacing/font.baseSize*scale;
+            textOffsetY += fontSize + lineSpacing;
             textOffsetX = 0;
             k = 0;
         } else if (codepoint == '~'.codePointAt(0)) {
@@ -280,18 +230,21 @@ function DrawTextWave3D(font, text, position, fontSize, fontSpacing, lineSpacing
             }
         } else {
             if ((codepoint != ' '.codePointAt(0)) && (codepoint != '\t'.codePointAt(0))) {
-                let pos = position;
+                let [x,y,z] = [position.x,position.y,position.z];
                 if (wave) { // Apply the wave effect
-                    pos.x += Math.sin(time*config.waveSpeed.x-k*config.waveOffset.x)*config.waveRange.x;
-                    pos.y += Math.sin(time*config.waveSpeed.y-k*config.waveOffset.y)*config.waveRange.y;
-                    pos.z += Math.sin(time*config.waveSpeed.z-k*config.waveOffset.z)*config.waveRange.z;
+                    x += Math.sin(time*config.waveSpeed.x-k*config.waveOffset.x)*config.waveRange.x;
+                    y += Math.sin(time*config.waveSpeed.y-k*config.waveOffset.y)*config.waveRange.y;
+                    z += Math.sin(time*config.waveSpeed.z-k*config.waveOffset.z)*config.waveRange.z;
                 }
 
-                DrawTextCodepoint3D(font, codepoint, new Vector3( pos.x + textOffsetX, pos.y, pos.z + textOffsetY ), fontSize, backface, tint);
+                DrawTextCodepoint3D(font, codepoint, new Vector3( x + textOffsetX, y, z + textOffsetY ), fontSize, backface, tint);
             }
 
-            if (font.glyphs[index].advanceX == 0) textOffsetX += (font.recs[index].width + fontSpacing)/font.baseSize*scale;
-            else textOffsetX += (font.glyphs[index].advanceX + fontSpacing)/font.baseSize*scale;
+            if (font.glyphs[index].advanceX == 0) {
+                textOffsetX += font.recs[index].width*0.1*scale + fontSpacing;
+            } else {
+                textOffsetX += font.glyphs[index].advanceX*0.1*scale + fontSpacing;
+            }
         }
 
         i += codepointByteCount[0];   // Move text bytes counter to next codepoint
@@ -312,7 +265,6 @@ function MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing) {
 
     let letter = 0;                 // Current character
     let index = 0;                  // Index position in sprite font
-
     for (let i = 0; i < len; i++) {
         lenCounter++;
         let next = [0];
@@ -327,14 +279,18 @@ function MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing) {
             if (letter == '~'.codePointAt(0) && GetCodepoint(text.substring(i+1), next) == '~'.codePointAt(0)) {
                 i++;
             } else {
-                if (font.glyphs[index].advanceX != 0) textWidth += (font.glyphs[index].advanceX+fontSpacing)/font.baseSize*scale;
-                else textWidth += (font.recs[index].width + font.glyphs[index].offsetX)/font.baseSize*scale;
+
+                if (font.glyphs[index].advanceX != 0) {
+                    textWidth += font.glyphs[index].advanceX*0.1*scale + fontSpacing;
+                } else {
+                    textWidth += font.recs[index].width*0.1*scale + fontSpacing;
+                }
             }
         } else {
             if (tempTextWidth < textWidth) tempTextWidth = textWidth;
             lenCounter = 0;
             textWidth = 0;
-            textHeight += scale + lineSpacing/font.baseSize*scale;
+            textHeight += fontSize + lineSpacing;
         }
 
         if (tempLen < lenCounter) tempLen = lenCounter;
@@ -342,7 +298,7 @@ function MeasureTextWave3D(font, text, fontSize, fontSpacing, lineSpacing) {
     if (tempTextWidth < textWidth) tempTextWidth = textWidth;
 
     let vec = new Vector3();
-    vec.x = tempTextWidth + ((tempLen - 1)*fontSpacing/font.baseSize*scale); // Adds chars spacing to measure
+    vec.x = tempTextWidth; // Adds chars spacing to measure
     vec.y = 0.25;
     vec.z = textHeight;
 
@@ -390,8 +346,8 @@ function GenerateRandomColor(s, v) {
     // Use the default font
     let font = GetFontDefault();
     let fontSize = 8;
-    let fontSpacing = 0.5;
-    let lineSpacing = -1;
+    let fontSpacing = 0.05;
+    let lineSpacing = -0.1;
 
     // Set the text (using markdown!)
     let text = "Hello ~~World~~ in 3D!";
@@ -417,8 +373,6 @@ function GenerateRandomColor(s, v) {
     // Array filled with multiple random colors (when multicolor mode is set)
     let multi = new Array(TEXT_MAX_LAYERS);
 
-    DisableCursor();                    // Limit cursor to relative movement inside the window
-
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
     // Main game loop
@@ -439,6 +393,8 @@ function GenerateRandomColor(s, v) {
                 font = LoadFont(droppedFiles[0]);
                 fontSize = font.baseSize;
             }
+
+            //UnloadDroppedFiles(droppedFiles);//Called automatically
         }
         // Handle Events
         if (IsKeyPressed(KEY_F1)) SHOW_LETTER_BOUNDRY = !SHOW_LETTER_BOUNDRY;
@@ -454,9 +410,11 @@ function GenerateRandomColor(s, v) {
             camera.projection = CAMERA_PERSPECTIVE;                 // Camera mode type
 
             if (spin) {
+                EnableCursor();                    // Limit cursor to relative movement inside the window
                 camera.position = new Vector3( -10, 15, -10 );   // Camera position
                 camera_mode = CAMERA_ORBITAL;
             } else {
+                DisableCursor();                    // Limit cursor to relative movement inside the window
                 camera.position = new Vector3( 10, 10, -10 );   // Camera position
                 camera_mode = CAMERA_FREE;
             }
@@ -484,8 +442,8 @@ function GenerateRandomColor(s, v) {
         // Handle text changes
         if (IsKeyPressed(KEY_LEFT)) fontSize -= 0.5;
         else if (IsKeyPressed(KEY_RIGHT)) fontSize += 0.5;
-        else if (IsKeyPressed(KEY_UP)) fontSpacing -= 0.1;
-        else if (IsKeyPressed(KEY_DOWN)) fontSpacing += 0.1;
+        else if (IsKeyPressed(KEY_UP)) fontSpacing -= 0.01;
+        else if (IsKeyPressed(KEY_DOWN)) fontSpacing += 0.01;
         else if (IsKeyPressed(KEY_PAGE_UP)) lineSpacing -= 0.1;
         else if (IsKeyPressed(KEY_PAGE_DOWN)) lineSpacing += 0.1;
         else if (IsKeyDown(KEY_INSERT)) layerDistance -= 0.001;
@@ -510,9 +468,9 @@ function GenerateRandomColor(s, v) {
         } else if (IsKeyPressed(KEY_ENTER)) {
             // handle newline
             text=text+'\n';
-        } else {
+        } else if(ch!=0){
             // append only printable chars
-            text=text+ch;
+            text=text+String.fromCharCode(ch);
         }
 
         // Measure 3D text so we can center it
@@ -535,7 +493,6 @@ function GenerateRandomColor(s, v) {
                 // Use a shader to handle the depth buffer issue with transparent textures
                 // NOTE: more info at https://bedroomcoders.co.uk/posts/198
                 BeginShaderMode(alphaDiscard);
-
                     // Draw the 3D text above the red cube
                     rg.rlPushMatrix();
                         rg.rlRotatef(90, 1, 0, 0);
@@ -554,50 +511,51 @@ function GenerateRandomColor(s, v) {
                     // Don't draw the letter boundries for the 3D text below
                     let slb = SHOW_LETTER_BOUNDRY;
                     SHOW_LETTER_BOUNDRY = false;
+
                     // Draw 3D options (use default font)
                     //-------------------------------------------------------------------------
                     rg.rlPushMatrix();
                         rg.rlRotatef(180, 0, 1, 0);
                         let opt = TextFormat("< SIZE: %2.1f >", fontSize);
                         quads += TextLength(opt);
-                        let m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        let m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         let pos = new Vector3( -m.x/2, 0.01, 2);
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, BLUE);
-                        pos.z += 0.5 + m.z;
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, BLUE);
+                        pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< SPACING: %2.1f >", fontSpacing);
                         quads += TextLength(opt);
-                        m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         pos.x = -m.x/2;
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, BLUE);
-                        pos.z += 0.5 + m.z;
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, BLUE);
+                        pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< LINE: %2.1f >", lineSpacing);
                         quads += TextLength(opt);
-                        m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         pos.x = -m.x/2;
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, BLUE);
-                        pos.z += 1 + m.z;
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, BLUE);
+                        pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< LBOX: %3s >", slb? "ON" : "OFF");
                         quads += TextLength(opt);
-                        m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         pos.x = -m.x/2;
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, RED);
-                        pos.z += 0.5 + m.z;
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, RED);
+                        pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< TBOX: %3s >", SHOW_TEXT_BOUNDRY? "ON" : "OFF");
                         quads += TextLength(opt);
-                        m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         pos.x = -m.x/2;
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, RED);
-                        pos.z += 0.5 + m.z;
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, RED);
+                        pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< LAYER DISTANCE: %.3f >", layerDistance);
                         quads += TextLength(opt);
-                        m = MeasureText3D(GetFontDefault(), opt, 8, 1, 0);
+                        m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
                         pos.x = -m.x/2;
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 1, 0, false, DARKPURPLE);
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, DARKPURPLE);
                     rg.rlPopMatrix();
                     //-------------------------------------------------------------------------
 
@@ -605,45 +563,45 @@ function GenerateRandomColor(s, v) {
                     //-------------------------------------------------------------------------
                     opt = "All the text displayed here is in 3D";
                     quads += 36;
-                    m = MeasureText3D(GetFontDefault(), opt, 10, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 1, 0.05);
                     pos = new Vector3(-m.x/2, 0.01, 2);
-                    DrawText3D(GetFontDefault(), opt, pos, 10, 0.5, 0, false, DARKBLUE);
-                    pos.z += 1.5 + m.z;
+                    DrawText3D(GetFontDefault(), opt, pos, 10, 0.05, 0, false, DARKBLUE);
+                    pos.z += 1.5 + m.y;
 
                     opt = "press [Left]/[Right] to change the font size";
                     quads += 44;
-                    m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 0.6, 0.05);
                     pos.x = -m.x/2;
-                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
-                    pos.z += 0.5 + m.z;
+                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.05, 0, false, DARKBLUE);
+                    pos.z += 0.5 + m.y;
 
                     opt = "press [Up]/[Down] to change the font spacing";
                     quads += 44;
-                    m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 0.6, 0.05);
                     pos.x = -m.x/2;
-                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
-                    pos.z += 0.5 + m.z;
+                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.05, 0, false, DARKBLUE);
+                    pos.z += 0.5 + m.y;
                     opt = "press [PgUp]/[PgDown] to change the line spacing";
+
                     quads += 48;
-                    m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 0.6, 0.05);
                     pos.x = -m.x/2;
-                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
+                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.05, 0, false, DARKBLUE);
                     pos.z += 0.5 + m.z;
 
                     opt = "press [F1] to toggle the letter boundry";
                     quads += 39;
-                    m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 0.6, 0.05);
                     pos.x = -m.x/2;
-                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
-                    pos.z += 0.5 + m.z;
+                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.05, 0, false, DARKBLUE);
+                    pos.z += 0.5 + m.y;
 
                     opt = "press [F2] to toggle the text boundry";
                     quads += 37;
-                    m = MeasureText3D(GetFontDefault(), opt, 6, 0.5, 0);
+                    m = MeasureTextEx(GetFontDefault(), opt, 0.6, 0.05);
                     pos.x = -m.x/2;
-                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.5, 0, false, DARKBLUE);
+                    DrawText3D(GetFontDefault(), opt, pos, 6, 0.05, 0, false, DARKBLUE);
                     //-------------------------------------------------------------------------
-
                     SHOW_LETTER_BOUNDRY = slb;
                 EndShaderMode();
 
@@ -657,7 +615,6 @@ function GenerateRandomColor(s, v) {
             let tmp = TextFormat("%2i layer(s) | %s camera | %4i quads (%4i verts)", layers, spin? "ORBITAL" : "FREE", quads, quads*4);
             let width = MeasureText(tmp, 10);
             DrawText(tmp, screenWidth - 20 - width, 10, 10, DARKGREEN);
-
             tmp = "[Home]/[End] to add/remove 3D text layers";
             width = MeasureText(tmp, 10);
             DrawText(tmp, screenWidth - 20 - width, 25, 10, DARKGRAY);

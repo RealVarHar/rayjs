@@ -141,6 +141,126 @@
 		ptr[0].attenuation=value;
 		return JS_UNDEFINED;
 	}
+	
+	static JSValue js_Light_get_enabledLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int enabledLoc=ptr[0].enabledLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)enabledLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_enabledLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].enabledLoc=value;
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_Light_get_typeLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int typeLoc=ptr[0].typeLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)typeLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_typeLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].typeLoc=value;
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_Light_get_positionLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int positionLoc=ptr[0].positionLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)positionLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_positionLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].positionLoc=value;
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_Light_get_targetLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int targetLoc=ptr[0].targetLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)targetLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_targetLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].targetLoc=value;
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_Light_get_colorLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int colorLoc=ptr[0].colorLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)colorLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_colorLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].colorLoc=value;
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_Light_get_attenuationLoc(JSContext * ctx,JSValue this_val){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int attenuationLoc=ptr[0].attenuationLoc;
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)attenuationLoc));
+		return ret;
+	}
+	
+	static JSValue js_Light_set_attenuationLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
+		int32_t long_value;
+		int err_value=JS_ToInt32(ctx,&long_value,v);
+		if(err_value<0){
+			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
+			return JS_EXCEPTION;
+		}
+		int value=((int)long_value);
+		ptr[0].attenuationLoc=value;
+		return JS_UNDEFINED;
+	}
 	static const JSCFunctionListEntry js_Light_proto_funcs[]={
 		JS_PROP_STRING_DEF("[Symbol.toStringTag]","Light", JS_PROP_CONFIGURABLE),
 		JS_CGETSET_DEF("type",js_Light_get_type,js_Light_set_type),
@@ -148,7 +268,13 @@
 		JS_CGETSET_DEF("position",js_Light_get_position,js_Light_set_position),
 		JS_CGETSET_DEF("target",js_Light_get_target,js_Light_set_target),
 		JS_CGETSET_DEF("color",js_Light_get_color,js_Light_set_color),
-		JS_CGETSET_DEF("attenuation",js_Light_get_attenuation,js_Light_set_attenuation)
+		JS_CGETSET_DEF("attenuation",js_Light_get_attenuation,js_Light_set_attenuation),
+		JS_CGETSET_DEF("enabledLoc",js_Light_get_enabledLoc,js_Light_set_enabledLoc),
+		JS_CGETSET_DEF("typeLoc",js_Light_get_typeLoc,js_Light_set_typeLoc),
+		JS_CGETSET_DEF("positionLoc",js_Light_get_positionLoc,js_Light_set_positionLoc),
+		JS_CGETSET_DEF("targetLoc",js_Light_get_targetLoc,js_Light_set_targetLoc),
+		JS_CGETSET_DEF("colorLoc",js_Light_get_colorLoc,js_Light_set_colorLoc),
+		JS_CGETSET_DEF("attenuationLoc",js_Light_get_attenuationLoc,js_Light_set_attenuationLoc)
 	};
 	
 	static int js_declare_Light(JSContext * ctx,JSModuleDef * m){

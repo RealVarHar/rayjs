@@ -74,7 +74,8 @@ const MIN_FRAME_DELAY =  1;
             // Update GPU texture data with next frame image data
             // WARNING: Data size (frame size) and pixel format must match already created texture
             // WARNING: imScarfyAnim.data will in the future contain appropirate typed array instead of ArrayBuffer and this will change syntax for offsets
-            UpdateTexture(texScarfyAnim, (new Uint8Array(imScarfyAnim.data, nextFrameDataOffset)).buffer);
+            let buffer=(new Uint8Array(new Uint8Array(imScarfyAnim.data, nextFrameDataOffset))).buffer;
+            UpdateTexture(texScarfyAnim, buffer);
 
             frameCounter = 0;
         }

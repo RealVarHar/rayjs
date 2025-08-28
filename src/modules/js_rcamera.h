@@ -6,43 +6,13 @@
 	#include <rayjs_base.h>
 	#include <config.h>
 	#include <rayjs_generated.h>
-	#include <raylib.h>
 	#include <rcamera.h>
 	
 	static JSValue js_GetCameraForward(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		Vector3 returnVal=GetCameraForward(camera);
 		JS_SetOpaque(argv[0],(void *)camera);
@@ -54,39 +24,10 @@
 	}
 	
 	static JSValue js_GetCameraUp(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		Vector3 returnVal=GetCameraUp(camera);
 		JS_SetOpaque(argv[0],(void *)camera);
@@ -98,39 +39,10 @@
 	}
 	
 	static JSValue js_GetCameraRight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		Vector3 returnVal=GetCameraRight(camera);
 		JS_SetOpaque(argv[0],(void *)camera);
@@ -142,39 +54,10 @@
 	}
 	
 	static JSValue js_CameraMoveForward(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_distance;
 		int err_distance=JS_ToFloat64(ctx,&double_distance,argv[1]);
@@ -195,39 +78,10 @@
 	}
 	
 	static JSValue js_CameraMoveUp(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_distance;
 		int err_distance=JS_ToFloat64(ctx,&double_distance,argv[1]);
@@ -242,39 +96,10 @@
 	}
 	
 	static JSValue js_CameraMoveRight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_distance;
 		int err_distance=JS_ToFloat64(ctx,&double_distance,argv[1]);
@@ -295,39 +120,10 @@
 	}
 	
 	static JSValue js_CameraMoveToTarget(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_delta;
 		int err_delta=JS_ToFloat64(ctx,&double_delta,argv[1]);
@@ -342,39 +138,10 @@
 	}
 	
 	static JSValue js_CameraYaw(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_angle;
 		int err_angle=JS_ToFloat64(ctx,&double_angle,argv[1]);
@@ -395,39 +162,10 @@
 	}
 	
 	static JSValue js_CameraPitch(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_angle;
 		int err_angle=JS_ToFloat64(ctx,&double_angle,argv[1]);
@@ -460,39 +198,10 @@
 	}
 	
 	static JSValue js_CameraRoll(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_angle;
 		int err_angle=JS_ToFloat64(ctx,&double_angle,argv[1]);
@@ -507,39 +216,10 @@
 	}
 	
 	static JSValue js_GetCameraViewMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		Matrix returnVal=GetCameraViewMatrix(camera);
 		JS_SetOpaque(argv[0],(void *)camera);
@@ -551,39 +231,10 @@
 	}
 	
 	static JSValue js_GetCameraProjectionMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Camera * camera;
-		bool freesrc_camera=(bool)false;
-		int64_t size_camera;
-		JSClassID camera_class=JS_GetClassID(argv[0]);
-		if(camera_class==js_ArrayProxy_class_id){
-			void * opaque_camera=JS_GetOpaque(argv[0],js_ArrayProxy_class_id);
-			ArrayProxy_class AP_camera=((ArrayProxy_class *)opaque_camera)[0];
-			argv[0] =AP_camera.values(ctx,AP_camera.opaque,(int)0,(bool)false);
-			freesrc_camera =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
-			if(JS_GetLength(ctx,argv[0],&size_camera)==-1){
-				return JS_EXCEPTION;
-			}
-			camera =(Camera *)js_malloc(ctx,size_camera*sizeof(Camera));
-			int i;
-			for(i=0;i<size_camera;i++){
-				JSValue js_camera=JS_GetPropertyUint32(ctx,argv[0],(uint32_t)i);
-				Camera * ptr_camerai=(Camera *)JS_GetOpaque(js_camera,js_Camera3D_class_id);
-				if(ptr_camerai==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_camera does not allow null");
-					return JS_EXCEPTION;
-				}
-				camera[i] =*ptr_camerai;
-				JS_FreeValue(ctx,js_camera);
-			}
-		}else{
-			Camera * ptr_js_camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
-			if(ptr_js_camera==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-				return JS_EXCEPTION;
-			}
-			Camera js_camera=*ptr_js_camera;
-			camera =&js_camera;
+		Camera * camera=(Camera *)JS_GetOpaque(argv[0],js_Camera3D_class_id);
+		if(camera==NULL){
+			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type Camera");
+			return JS_EXCEPTION;
 		}
 		double double_aspect;
 		int err_aspect=JS_ToFloat64(ctx,&double_aspect,argv[1]);

@@ -36,12 +36,13 @@
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlVertexBuffer *)ptr)[0].elementCount*3*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)((rlVertexBuffer *)ptr)[0].vertices[i]));
+		for(i=0;i<ptr[0].elementCount*3*4;i++){
+			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].vertices[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -50,8 +51,9 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_vertices_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((rlVertexBuffer *)ptr)[0].elementCount*3*4;
+	static int js_rlVertexBuffer_vertices_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		int length=(int)ptr[0].elementCount*3*4;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -61,17 +63,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((rlVertexBuffer *)ptr)[0].elementCount*3*((long)4));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*3*((long)4));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*3*4){
-				float src=((rlVertexBuffer *)ptr)[0].vertices[property];
+			if(property>=0&&property<ptr[0].elementCount*3*4){
+				float src=ptr[0].vertices[property];
 				JSValue ret=JS_NewFloat64(ctx,((double)src));
 				return ret;
 			}else{
@@ -80,7 +83,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_vertices_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_vertices_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -91,12 +95,13 @@
 				return -1;
 			}
 			float ret=((float)double_ret);
-			((rlVertexBuffer *)ptr)[0].vertices[property] =ret;
+			ptr[0].vertices[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_vertices_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_vertices_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -104,7 +109,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*3*4){
+			if(property>=0&&property<ptr[0].elementCount*3*4){
 				return true;
 			}else{
 				return false;
@@ -130,7 +135,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -173,16 +179,17 @@
 		if(ptr[0].vertices!=NULL){
 			jsc_free(ctx,(void *)ptr[0].vertices);
 		}
-		ptr[0].vertices=value;
+		ptr[0].vertices =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlVertexBuffer *)ptr)[0].elementCount*2*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)((rlVertexBuffer *)ptr)[0].texcoords[i]));
+		for(i=0;i<ptr[0].elementCount*2*4;i++){
+			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].texcoords[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -191,8 +198,9 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_texcoords_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((rlVertexBuffer *)ptr)[0].elementCount*2*4;
+	static int js_rlVertexBuffer_texcoords_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		int length=(int)ptr[0].elementCount*2*4;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -202,17 +210,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((rlVertexBuffer *)ptr)[0].elementCount*2*((long)4));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*2*((long)4));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*2*4){
-				float src=((rlVertexBuffer *)ptr)[0].texcoords[property];
+			if(property>=0&&property<ptr[0].elementCount*2*4){
+				float src=ptr[0].texcoords[property];
 				JSValue ret=JS_NewFloat64(ctx,((double)src));
 				return ret;
 			}else{
@@ -221,7 +230,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_texcoords_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_texcoords_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -232,12 +242,13 @@
 				return -1;
 			}
 			float ret=((float)double_ret);
-			((rlVertexBuffer *)ptr)[0].texcoords[property] =ret;
+			ptr[0].texcoords[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_texcoords_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_texcoords_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -245,7 +256,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*2*4){
+			if(property>=0&&property<ptr[0].elementCount*2*4){
 				return true;
 			}else{
 				return false;
@@ -271,7 +282,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -314,16 +326,17 @@
 		if(ptr[0].texcoords!=NULL){
 			jsc_free(ctx,(void *)ptr[0].texcoords);
 		}
-		ptr[0].texcoords=value;
+		ptr[0].texcoords =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlVertexBuffer *)ptr)[0].elementCount*3*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)((rlVertexBuffer *)ptr)[0].normals[i]));
+		for(i=0;i<ptr[0].elementCount*3*4;i++){
+			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].normals[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -332,8 +345,9 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_normals_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((rlVertexBuffer *)ptr)[0].elementCount*3*4;
+	static int js_rlVertexBuffer_normals_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		int length=(int)ptr[0].elementCount*3*4;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -343,17 +357,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((rlVertexBuffer *)ptr)[0].elementCount*3*((long)4));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*3*((long)4));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*3*4){
-				float src=((rlVertexBuffer *)ptr)[0].normals[property];
+			if(property>=0&&property<ptr[0].elementCount*3*4){
+				float src=ptr[0].normals[property];
 				JSValue ret=JS_NewFloat64(ctx,((double)src));
 				return ret;
 			}else{
@@ -362,7 +377,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_normals_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_normals_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -373,12 +389,13 @@
 				return -1;
 			}
 			float ret=((float)double_ret);
-			((rlVertexBuffer *)ptr)[0].normals[property] =ret;
+			ptr[0].normals[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_normals_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_normals_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -386,7 +403,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*3*4){
+			if(property>=0&&property<ptr[0].elementCount*3*4){
 				return true;
 			}else{
 				return false;
@@ -412,7 +429,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -455,16 +473,17 @@
 		if(ptr[0].normals!=NULL){
 			jsc_free(ctx,(void *)ptr[0].normals);
 		}
-		ptr[0].normals=value;
+		ptr[0].normals =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlVertexBuffer *)ptr)[0].elementCount*4*4;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)((rlVertexBuffer *)ptr)[0].colors[i]));
+		for(i=0;i<ptr[0].elementCount*4*4;i++){
+			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].colors[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -473,8 +492,9 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_colors_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((rlVertexBuffer *)ptr)[0].elementCount*4*4;
+	static int js_rlVertexBuffer_colors_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		int length=(int)ptr[0].elementCount*4*4;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -484,17 +504,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((rlVertexBuffer *)ptr)[0].elementCount*4*((long)4));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*4*((long)4));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*4*4){
-				unsigned char src=((rlVertexBuffer *)ptr)[0].colors[property];
+			if(property>=0&&property<ptr[0].elementCount*4*4){
+				unsigned char src=ptr[0].colors[property];
 				JSValue ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)src));
 				return ret;
 			}else{
@@ -503,7 +524,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_colors_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_colors_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -514,12 +536,13 @@
 				return -1;
 			}
 			unsigned char ret=((unsigned char)long_ret);
-			((rlVertexBuffer *)ptr)[0].colors[property] =ret;
+			ptr[0].colors[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_colors_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_colors_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -527,7 +550,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*4*4){
+			if(property>=0&&property<ptr[0].elementCount*4*4){
 				return true;
 			}else{
 				return false;
@@ -553,7 +576,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -596,16 +620,17 @@
 		if(ptr[0].colors!=NULL){
 			jsc_free(ctx,(void *)ptr[0].colors);
 		}
-		ptr[0].colors=value;
+		ptr[0].colors =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlVertexBuffer *)ptr)[0].elementCount*6;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)((rlVertexBuffer *)ptr)[0].indices[i]));
+		for(i=0;i<ptr[0].elementCount*6;i++){
+			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].indices[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -614,8 +639,9 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_indices_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((rlVertexBuffer *)ptr)[0].elementCount*6;
+	static int js_rlVertexBuffer_indices_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		int length=(int)ptr[0].elementCount*6;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -625,17 +651,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((rlVertexBuffer *)ptr)[0].elementCount*((long)6));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*((long)6));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*6){
-				unsigned int src=((rlVertexBuffer *)ptr)[0].indices[property];
+			if(property>=0&&property<ptr[0].elementCount*6){
+				unsigned int src=ptr[0].indices[property];
 				JSValue ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)src));
 				return ret;
 			}else{
@@ -644,7 +671,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_indices_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_indices_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -655,12 +683,13 @@
 				return -1;
 			}
 			unsigned int ret=((unsigned int)long_ret);
-			((rlVertexBuffer *)ptr)[0].indices[property] =ret;
+			ptr[0].indices[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_indices_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_indices_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -668,7 +697,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlVertexBuffer *)ptr)[0].elementCount*6){
+			if(property>=0&&property<ptr[0].elementCount*6){
 				return true;
 			}else{
 				return false;
@@ -694,7 +723,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -737,7 +767,7 @@
 		if(ptr[0].indices!=NULL){
 			jsc_free(ctx,(void *)ptr[0].indices);
 		}
-		ptr[0].indices=value;
+		ptr[0].indices =value;
 		return JS_UNDEFINED;
 	}
 	
@@ -761,12 +791,13 @@
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_vboId_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_vboId_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
 		for(i=0;i<5;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)((rlVertexBuffer *)ptr)[0].vboId[i]));
+			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].vboId[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -775,7 +806,8 @@
 		return ret;
 	}
 	
-	static int js_rlVertexBuffer_vboId_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
+	static int js_rlVertexBuffer_vboId_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		int length=(int)5;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
@@ -786,7 +818,8 @@
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_vboId_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlVertexBuffer_vboId_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)5));
@@ -796,7 +829,7 @@
 			}
 		}else{
 			if(property>=0&&property<5){
-				unsigned int src=((rlVertexBuffer *)ptr)[0].vboId[property];
+				unsigned int src=ptr[0].vboId[property];
 				JSValue ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)src));
 				return ret;
 			}else{
@@ -805,7 +838,8 @@
 		}
 	}
 	
-	static int js_rlVertexBuffer_vboId_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlVertexBuffer_vboId_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -816,12 +850,13 @@
 				return -1;
 			}
 			unsigned int ret=((unsigned int)long_ret);
-			((rlVertexBuffer *)ptr)[0].vboId[property] =ret;
+			ptr[0].vboId[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlVertexBuffer_vboId_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlVertexBuffer_vboId_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -855,7 +890,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			value =(unsigned int *)jsc_malloc(ctx,5*sizeof(unsigned int));
 			int i;
 			for(i=0;i<5;i++){
@@ -1070,13 +1106,14 @@
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((rlRenderBatch *)ptr)[0].bufferCount;i++){
+		for(i=0;i<ptr[0].bufferCount;i++){
 			rlVertexBuffer * ptr_js_ret=(rlVertexBuffer *)js_malloc(ctx,sizeof(rlVertexBuffer));
-			ptr_js_ret[0]=((rlRenderBatch *)ptr)[0].vertexBuffer[i];
+			ptr_js_ret[0]=ptr[0].vertexBuffer[i];
 			JSValue js_ret=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
 			JS_SetOpaque(js_ret,(void *)ptr_js_ret);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
@@ -1087,8 +1124,9 @@
 		return ret;
 	}
 	
-	static int js_rlRenderBatch_vertexBuffer_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=((rlRenderBatch *)ptr)[0].bufferCount;
+	static int js_rlRenderBatch_vertexBuffer_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		int length=ptr[0].bufferCount;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -1098,17 +1136,18 @@
 		return true;
 	}
 	
-	static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)((rlRenderBatch *)ptr)[0].bufferCount));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)ptr[0].bufferCount));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((rlRenderBatch *)ptr)[0].bufferCount){
-				rlVertexBuffer src=((rlRenderBatch *)ptr)[0].vertexBuffer[property];
+			if(property>=0&&property<ptr[0].bufferCount){
+				rlVertexBuffer src=ptr[0].vertexBuffer[property];
 				rlVertexBuffer * ptr_ret=(rlVertexBuffer *)js_malloc(ctx,sizeof(rlVertexBuffer));
 				ptr_ret[0]=src;
 				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
@@ -1120,7 +1159,8 @@
 		}
 	}
 	
-	static int js_rlRenderBatch_vertexBuffer_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlRenderBatch_vertexBuffer_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -1130,12 +1170,13 @@
 				return -1;
 			}
 			rlVertexBuffer ret=*ptr_ret;
-			((rlRenderBatch *)ptr)[0].vertexBuffer[property] =ret;
+			ptr[0].vertexBuffer[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlRenderBatch_vertexBuffer_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlRenderBatch_vertexBuffer_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -1143,7 +1184,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((rlRenderBatch *)ptr)[0].bufferCount){
+			if(property>=0&&property<ptr[0].bufferCount){
 				return true;
 			}else{
 				return false;
@@ -1168,7 +1209,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1198,17 +1240,18 @@
 		if(ptr[0].vertexBuffer!=NULL){
 			jsc_free(ctx,(void *)ptr[0].vertexBuffer);
 		}
-		ptr[0].vertexBuffer=value;
+		ptr[0].vertexBuffer =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlRenderBatch_draws_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlRenderBatch_draws_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
 		for(i=0;i<RL_DEFAULT_BATCH_DRAWCALLS;i++){
 			rlDrawCall * ptr_js_ret=(rlDrawCall *)js_malloc(ctx,sizeof(rlDrawCall));
-			ptr_js_ret[0]=((rlRenderBatch *)ptr)[0].draws[i];
+			ptr_js_ret[0]=ptr[0].draws[i];
 			JSValue js_ret=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
 			JS_SetOpaque(js_ret,(void *)ptr_js_ret);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
@@ -1219,7 +1262,8 @@
 		return ret;
 	}
 	
-	static int js_rlRenderBatch_draws_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
+	static int js_rlRenderBatch_draws_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		int length=RL_DEFAULT_BATCH_DRAWCALLS;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
@@ -1230,7 +1274,8 @@
 		return true;
 	}
 	
-	static JSValue js_rlRenderBatch_draws_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_rlRenderBatch_draws_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)RL_DEFAULT_BATCH_DRAWCALLS));
@@ -1240,7 +1285,7 @@
 			}
 		}else{
 			if(property>=0&&property<RL_DEFAULT_BATCH_DRAWCALLS){
-				rlDrawCall src=((rlRenderBatch *)ptr)[0].draws[property];
+				rlDrawCall src=ptr[0].draws[property];
 				rlDrawCall * ptr_ret=(rlDrawCall *)js_malloc(ctx,sizeof(rlDrawCall));
 				ptr_ret[0]=src;
 				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
@@ -1252,7 +1297,8 @@
 		}
 	}
 	
-	static int js_rlRenderBatch_draws_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_rlRenderBatch_draws_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -1262,12 +1308,13 @@
 				return -1;
 			}
 			rlDrawCall ret=*ptr_ret;
-			((rlRenderBatch *)ptr)[0].draws[property] =ret;
+			ptr[0].draws[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_rlRenderBatch_draws_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_rlRenderBatch_draws_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -1300,7 +1347,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1330,7 +1378,7 @@
 		if(ptr[0].draws!=NULL){
 			jsc_free(ctx,(void *)ptr[0].draws);
 		}
-		ptr[0].draws=value;
+		ptr[0].draws =value;
 		return JS_UNDEFINED;
 	}
 	
@@ -1418,7 +1466,8 @@
 			ArrayProxy_class AP_vertices=((ArrayProxy_class *)opaque_vertices)[0];
 			argv[1] =AP_vertices.values(ctx,AP_vertices.opaque,(int)0,(bool)false);
 			freesrc_vertices =(bool)true;
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_vertices)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1463,7 +1512,8 @@
 			ArrayProxy_class AP_texcoords=((ArrayProxy_class *)opaque_texcoords)[0];
 			argv[2] =AP_texcoords.values(ctx,AP_texcoords.opaque,(int)0,(bool)false);
 			freesrc_texcoords =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_texcoords)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1508,7 +1558,8 @@
 			ArrayProxy_class AP_normals=((ArrayProxy_class *)opaque_normals)[0];
 			argv[3] =AP_normals.values(ctx,AP_normals.opaque,(int)0,(bool)false);
 			freesrc_normals =(bool)true;
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_normals)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1553,7 +1604,8 @@
 			ArrayProxy_class AP_colors=((ArrayProxy_class *)opaque_colors)[0];
 			argv[4] =AP_colors.values(ctx,AP_colors.opaque,(int)0,(bool)false);
 			freesrc_colors =(bool)true;
-		}else if(JS_IsArray(argv[4])==1){
+		}
+		if(JS_IsArray(argv[4])==1){
 			if(JS_GetLength(ctx,argv[4],&size_colors)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1598,7 +1650,8 @@
 			ArrayProxy_class AP_indices=((ArrayProxy_class *)opaque_indices)[0];
 			argv[5] =AP_indices.values(ctx,AP_indices.opaque,(int)0,(bool)false);
 			freesrc_indices =(bool)true;
-		}else if(JS_IsArray(argv[5])==1){
+		}
+		if(JS_IsArray(argv[5])==1){
 			if(JS_GetLength(ctx,argv[5],&size_indices)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1650,7 +1703,8 @@
 			ArrayProxy_class AP_vboId=((ArrayProxy_class *)opaque_vboId)[0];
 			argv[7] =AP_vboId.values(ctx,AP_vboId.opaque,(int)0,(bool)false);
 			freesrc_vboId =(bool)true;
-		}else if(JS_IsArray(argv[7])==1){
+		}
+		if(JS_IsArray(argv[7])==1){
 			vboId =(unsigned int *)js_malloc(ctx,5*sizeof(unsigned int));
 			int i;
 			for(i=0;i<5;i++){
@@ -1777,7 +1831,8 @@
 			ArrayProxy_class AP_vertexBuffer=((ArrayProxy_class *)opaque_vertexBuffer)[0];
 			argv[2] =AP_vertexBuffer.values(ctx,AP_vertexBuffer.opaque,(int)0,(bool)false);
 			freesrc_vertexBuffer =(bool)true;
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_vertexBuffer)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1811,7 +1866,8 @@
 			ArrayProxy_class AP_draws=((ArrayProxy_class *)opaque_draws)[0];
 			argv[3] =AP_draws.values(ctx,AP_draws.opaque,(int)0,(bool)false);
 			freesrc_draws =(bool)true;
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_draws)==-1){
 				return JS_EXCEPTION;
 			}
@@ -1987,7 +2043,8 @@
 			ArrayProxy_class AP_matf=((ArrayProxy_class *)opaque_matf)[0];
 			argv[0] =AP_matf.values(ctx,AP_matf.opaque,(int)0,(bool)false);
 			freesrc_matf =(bool)true;
-		}else if(JS_IsArray(argv[0])==1){
+		}
+		if(JS_IsArray(argv[0])==1){
 			if(JS_GetLength(ctx,argv[0],&size_matf)==-1){
 				return JS_EXCEPTION;
 			}
@@ -3688,7 +3745,8 @@
 			ArrayProxy_class AP_glInternalFormat=((ArrayProxy_class *)opaque_glInternalFormat)[0];
 			argv[1] =AP_glInternalFormat.values(ctx,AP_glInternalFormat.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[1]);
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_glInternalFormat)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3709,7 +3767,6 @@
 			}
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			glInternalFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glInternalFormat,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)glInternalFormat);
 		}else{
 			JSClassID classid_glInternalFormat=JS_GetClassID(argv[1]);
 			if(classid_glInternalFormat==JS_CLASS_UINT16_ARRAY){
@@ -3733,7 +3790,8 @@
 			ArrayProxy_class AP_glFormat=((ArrayProxy_class *)opaque_glFormat)[0];
 			argv[2] =AP_glFormat.values(ctx,AP_glFormat.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[2]);
-		}else if(JS_IsArray(argv[2])==1){
+		}
+		if(JS_IsArray(argv[2])==1){
 			if(JS_GetLength(ctx,argv[2],&size_glFormat)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3754,7 +3812,6 @@
 			}
 		}else if(JS_IsArrayBuffer(argv[2])==1){
 			glFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glFormat,argv[2]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)glFormat);
 		}else{
 			JSClassID classid_glFormat=JS_GetClassID(argv[2]);
 			if(classid_glFormat==JS_CLASS_UINT16_ARRAY){
@@ -3778,7 +3835,8 @@
 			ArrayProxy_class AP_glType=((ArrayProxy_class *)opaque_glType)[0];
 			argv[3] =AP_glType.values(ctx,AP_glType.opaque,(int)0,(bool)false);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
-		}else if(JS_IsArray(argv[3])==1){
+		}
+		if(JS_IsArray(argv[3])==1){
 			if(JS_GetLength(ctx,argv[3],&size_glType)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
@@ -3799,7 +3857,6 @@
 			}
 		}else if(JS_IsArrayBuffer(argv[3])==1){
 			glType =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glType,argv[3]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)glType);
 		}else{
 			JSClassID classid_glType=JS_GetClassID(argv[3]);
 			if(classid_glType==JS_CLASS_UINT16_ARRAY){
@@ -3885,7 +3942,8 @@
 			ArrayProxy_class AP_mipmaps=((ArrayProxy_class *)opaque_mipmaps)[0];
 			argv[4] =AP_mipmaps.values(ctx,AP_mipmaps.opaque,(int)0,(bool)false);
 			freesrc_mipmaps =(bool)true;
-		}else if(JS_IsArray(argv[4])==1){
+		}
+		if(JS_IsArray(argv[4])==1){
 			if(JS_GetLength(ctx,argv[4],&size_mipmaps)==-1){
 				return JS_EXCEPTION;
 			}
@@ -4069,7 +4127,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)vsCode);
 		}else if(JS_IsArrayBuffer(argv[0])==1){
 			vsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_vsCode,argv[0]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)vsCode);
 		}else{
 			JSClassID classid_vsCode=JS_GetClassID(argv[0]);
 			if(classid_vsCode==JS_CLASS_INT8_ARRAY){
@@ -4092,7 +4149,6 @@
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)fsCode);
 		}else if(JS_IsArrayBuffer(argv[1])==1){
 			fsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fsCode,argv[1]);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)fsCode);
 		}else{
 			JSClassID classid_fsCode=JS_GetClassID(argv[1]);
 			if(classid_fsCode==JS_CLASS_INT8_ARRAY){
@@ -4109,8 +4165,8 @@
 			}
 		}
 		int returnVal=rlLoadShaderCode((const char *)vsCode,(const char *)fsCode);
-		memoryClear(ctx,memoryHead);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -4153,6 +4209,7 @@
 		}
 		int type=((int)long_type);
 		int returnVal=rlCompileShader((const char *)shaderCode,type);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[0])==1){
 			js_free(ctx,(void *)shaderCode);
 		}else if(JS_IsString(argv[0])==1){
@@ -4163,7 +4220,6 @@
 				js_free(ctx,(void *)&da_shaderCode);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -4228,6 +4284,7 @@
 			}
 		}
 		int returnVal=rlGetLocationUniform(shaderId,(const char *)uniformName);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)uniformName);
 		}else if(JS_IsString(argv[1])==1){
@@ -4238,7 +4295,6 @@
 				js_free(ctx,(void *)&da_uniformName);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -4271,6 +4327,7 @@
 			}
 		}
 		int returnVal=rlGetLocationAttrib(shaderId,(const char *)attribName);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)attribName);
 		}else if(JS_IsString(argv[1])==1){
@@ -4281,7 +4338,6 @@
 				js_free(ctx,(void *)&da_attribName);
 			}
 		}
-		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
@@ -4320,7 +4376,8 @@
 			ArrayProxy_class AP_mat=((ArrayProxy_class *)opaque_mat)[0];
 			argv[1] =AP_mat.values(ctx,AP_mat.opaque,(int)0,(bool)false);
 			freesrc_mat =(bool)true;
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_mat)==-1){
 				return JS_EXCEPTION;
 			}
@@ -4399,7 +4456,8 @@
 			ArrayProxy_class AP_locs=((ArrayProxy_class *)opaque_locs)[0];
 			argv[1] =AP_locs.values(ctx,AP_locs.opaque,(int)0,(bool)false);
 			freesrc_locs =(bool)true;
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_locs)==-1){
 				return JS_EXCEPTION;
 			}

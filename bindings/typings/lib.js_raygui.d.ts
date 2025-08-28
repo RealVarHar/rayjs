@@ -1,11 +1,8 @@
 declare module "rayjs:raygui" {
 import type {Font,Color,Rectangle,Vector2,Vector3} from '[object Object]'interface GuiStyleProp {
-controlId: number,
-propertyId: number,
-propertyValue: number,
 }
 var GuiStyleProp: {
-prototype: GuiStylePropnew(controlId?: number, propertyId?: number, propertyValue?: number): GuiStyleProp}
+prototype: GuiStylePropnew(): GuiStyleProp}
 /** undefined */
 function GuiEnable(): void/** undefined */
 function GuiDisable(): void/** undefined */
@@ -29,6 +26,7 @@ function GuiSetIconScale(scale: number): void/** undefined */
 function GuiGetIcons(): number[]/** undefined */
 function GuiLoadIcons(fileName: string, loadIconsName: boolean): string[]/** undefined */
 function GuiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void/** undefined */
+function GuiGetTextWidth(text: string): number/** undefined */
 function GuiWindowBox(bounds: Rectangle, title: string): number/** undefined */
 function GuiGroupBox(bounds: Rectangle, text: string): number/** undefined */
 function GuiLine(bounds: Rectangle, text: string): number/** undefined */

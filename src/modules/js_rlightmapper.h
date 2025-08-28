@@ -17,12 +17,13 @@
 		}
 	}
 	
-	static JSValue js_Lightmapper_data_values(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_Lightmapper_data_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper *)ptr_u;
 		JSValue ret;
 		ret =JS_NewArray(ctx);
 		int i;
-		for(i=0;i<((Lightmapper *)ptr)[0].w*((Lightmapper *)ptr)[0].h*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)((Lightmapper *)ptr)[0].data[i]));
+		for(i=0;i<ptr[0].w*ptr[0].h*4;i++){
+			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].data[i]));
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
@@ -31,8 +32,9 @@
 		return ret;
 	}
 	
-	static int js_Lightmapper_data_keys(JSContext * ctx,void * ptr,JSPropertyEnum * * keys){
-		int length=(int)((Lightmapper *)ptr)[0].w*((Lightmapper *)ptr)[0].h*4;
+	static int js_Lightmapper_data_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
+		Lightmapper * ptr=(Lightmapper *)ptr_u;
+		int length=(int)ptr[0].w*ptr[0].h*4;
 		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
 		int i;
 		for(i=0;i<length;i++){
@@ -42,17 +44,18 @@
 		return true;
 	}
 	
-	static JSValue js_Lightmapper_data_get(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static JSValue js_Lightmapper_data_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
-				JSValue ret=JS_NewInt32(ctx,(int32_t)((Lightmapper *)ptr)[0].w*((Lightmapper *)ptr)[0].h*((long)4));
+				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].w*ptr[0].h*((long)4));
 				return ret;
 			}else{
 				return JS_UNDEFINED;
 			}
 		}else{
-			if(property>=0&&property<((Lightmapper *)ptr)[0].w*((Lightmapper *)ptr)[0].h*4){
-				float src=((Lightmapper *)ptr)[0].data[property];
+			if(property>=0&&property<ptr[0].w*ptr[0].h*4){
+				float src=ptr[0].data[property];
 				JSValue ret=JS_NewFloat64(ctx,((double)src));
 				return ret;
 			}else{
@@ -61,7 +64,8 @@
 		}
 	}
 	
-	static int js_Lightmapper_data_set(JSContext * ctx,void * ptr,JSValue set_to,int property,bool as_sting){
+	static int js_Lightmapper_data_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
@@ -72,12 +76,13 @@
 				return -1;
 			}
 			float ret=((float)double_ret);
-			((Lightmapper *)ptr)[0].data[property] =ret;
+			ptr[0].data[property] =ret;
 		}
 		return true;
 	}
 	
-	static int js_Lightmapper_data_has(JSContext * ctx,void * ptr,int property,bool as_sting){
+	static int js_Lightmapper_data_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -85,7 +90,7 @@
 				return false;
 			}
 		}else{
-			if(property>=0&&property<((Lightmapper *)ptr)[0].w*((Lightmapper *)ptr)[0].h*4){
+			if(property>=0&&property<ptr[0].w*ptr[0].h*4){
 				return true;
 			}else{
 				return false;
@@ -111,7 +116,8 @@
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
 			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
-		}else if(JS_IsArray(v)==1){
+		}
+		if(JS_IsArray(v)==1){
 			if(JS_GetLength(ctx,v,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
@@ -154,7 +160,7 @@
 		if(ptr[0].data!=NULL){
 			jsc_free(ctx,(void *)ptr[0].data);
 		}
-		ptr[0].data=value;
+		ptr[0].data =value;
 		return JS_UNDEFINED;
 	}
 	
@@ -432,7 +438,8 @@
 			ArrayProxy_class AP_data=((ArrayProxy_class *)opaque_data)[0];
 			argv[1] =AP_data.values(ctx,AP_data.opaque,(int)0,(bool)false);
 			freesrc_data =(bool)true;
-		}else if(JS_IsArray(argv[1])==1){
+		}
+		if(JS_IsArray(argv[1])==1){
 			if(JS_GetLength(ctx,argv[1],&size_data)==-1){
 				return JS_EXCEPTION;
 			}

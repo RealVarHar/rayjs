@@ -31,11 +31,12 @@ var showCurve = false;
 var curveWidth = 50;
 var curveSegments = 24;
 
-var curveStartPosition = new Vector2();
-var curveStartPositionTangent = new Vector2();
-
-var curveEndPosition = new Vector2();
-var curveEndPositionTangent = new Vector2();
+let curvePosition={
+    Start: new Vector2(),
+    StartTangent: new Vector2(),
+    End: new Vector2(),
+    EndTangent: new Vector2(),
+};
 
 var curveSelectedPoint = null;
 
@@ -46,7 +47,7 @@ var curveSelectedPoint = null;
 function DrawTexturedCurve() {
     const step = 1/curveSegments;
 
-    let previous = curveStartPosition;
+    let previous = curvePosition.Start;
     let previousTangent = new Vector2();
     let previousV = 0;
 
@@ -65,8 +66,8 @@ function DrawTexturedCurve() {
         let d = Math.pow(t, 3);
 
         // Compute the endpoint for this segment
-        current.y = a*curveStartPosition.y + b*curveStartPositionTangent.y + c*curveEndPositionTangent.y + d*curveEndPosition.y;
-        current.x = a*curveStartPosition.x + b*curveStartPositionTangent.x + c*curveEndPositionTangent.x + d*curveEndPosition.x;
+        current.y = a*curvePosition.Start.y + b*curvePosition.StartTangent.y + c*curvePosition.EndTangent.y + d*curvePosition.End.y;
+        current.x = a*curvePosition.Start.x + b*curvePosition.StartTangent.x + c*curvePosition.EndTangent.x + d*curvePosition.End.x;
 
         // Vector from previous to current
         let delta = new Vector2( current.x - previous.x, current.y - previous.y );
@@ -92,28 +93,29 @@ function DrawTexturedCurve() {
 
         // Draw the segment as a quad
         rlSetTexture(texRoad.id);
-        rlBegin(RL_QUADS);
-        rlColor4ub(255,255,255,255);
-        rlNormal3f(0, 0, 1);
+            rlBegin(RL_QUADS);
+            rlColor4ub(255,255,255,255);
+            rlNormal3f(0, 0, 1);
 
-        rlTexCoord2f(0, previousV);
-        rlVertex2f(prevNegNormal.x, prevNegNormal.y);
+            rlTexCoord2f(0, previousV);
+            rlVertex2f(prevNegNormal.x, prevNegNormal.y);
 
-        rlTexCoord2f(1, previousV);
-        rlVertex2f(prevPosNormal.x, prevPosNormal.y);
+            rlTexCoord2f(1, previousV);
+            rlVertex2f(prevPosNormal.x, prevPosNormal.y);
 
-        rlTexCoord2f(1, v);
-        rlVertex2f(currentPosNormal.x, currentPosNormal.y);
+            rlTexCoord2f(1, v);
+            rlVertex2f(currentPosNormal.x, currentPosNormal.y);
 
-        rlTexCoord2f(0, v);
-        rlVertex2f(currentNegNormal.x, currentNegNormal.y);
+            rlTexCoord2f(0, v);
+            rlVertex2f(currentNegNormal.x, currentNegNormal.y);
         rlEnd();
 
         // The current step is the start of the next step
-        previous = current;
+        previous = new Vector2(current.x,current.y);
         previousTangent = normal;
         previousV = v;
     }
+    //console.log(JSON.stringify(normals));
 }
 
 //------------------------------------------------------------------------------------
@@ -133,11 +135,11 @@ function DrawTexturedCurve() {
     SetTextureFilter(texRoad, TEXTURE_FILTER_BILINEAR);
 
     // Setup the curve
-    curveStartPosition = new Vector2( 80, 100 );
-    curveStartPositionTangent = new Vector2( 100, 300 );
+    curvePosition.Start = new Vector2( 80, 100 );
+    curvePosition.StartTangent = new Vector2( 100, 300 );
 
-    curveEndPosition = new Vector2( 700, 350 );
-    curveEndPositionTangent = new Vector2( 600, 100 );
+    curvePosition.End = new Vector2( 700, 350 );
+    curvePosition.EndTangent = new Vector2( 600, 100 );
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -163,14 +165,14 @@ function DrawTexturedCurve() {
         if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON))  curveSelectedPoint = null;
 
         // If a point was selected, move it
-        if (curveSelectedPoint) curveSelectedPoint = Vector2Add(curveSelectedPoint, GetMouseDelta());
+        if (curveSelectedPoint) curvePosition[curveSelectedPoint] = Vector2Add(curvePosition[curveSelectedPoint], GetMouseDelta());
 
         // The mouse is down, and nothing was selected, so see if anything was picked
         let mouse = GetMousePosition();
-        if (CheckCollisionPointCircle(mouse, curveStartPosition, 6)) curveSelectedPoint = curveStartPosition;
-        else if (CheckCollisionPointCircle(mouse, curveStartPositionTangent, 6)) curveSelectedPoint = curveStartPositionTangent;
-        else if (CheckCollisionPointCircle(mouse, curveEndPosition, 6)) curveSelectedPoint = curveEndPosition;
-        else if (CheckCollisionPointCircle(mouse, curveEndPositionTangent, 6)) curveSelectedPoint = curveEndPositionTangent;
+        if      (CheckCollisionPointCircle(mouse, curvePosition.Start, 6)) curveSelectedPoint = 'Start';
+        else if (CheckCollisionPointCircle(mouse, curvePosition.StartTangent, 6)) curveSelectedPoint = 'StartTangent';
+        else if (CheckCollisionPointCircle(mouse, curvePosition.End, 6)) curveSelectedPoint = 'End';
+        else if (CheckCollisionPointCircle(mouse, curvePosition.EndTangent, 6)) curveSelectedPoint = 'EndTangent';
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -182,24 +184,24 @@ function DrawTexturedCurve() {
             DrawTexturedCurve();    // Draw a textured Spline Cubic Bezier
             
             // Draw spline for reference
-            if (showCurve) DrawSplineSegmentBezierCubic(curveStartPosition, curveEndPosition, curveStartPositionTangent, curveEndPositionTangent, 2, BLUE);
+            if (showCurve) DrawSplineSegmentBezierCubic(curvePosition.Start, curvePosition.StartTangent, curvePosition.EndTangent, curvePosition.End, 2, BLUE);
 
             // Draw the various control points and highlight where the mouse is
-            DrawLineV(curveStartPosition, curveStartPositionTangent, SKYBLUE);
-            DrawLineV(curveStartPositionTangent, curveEndPositionTangent, Fade(LIGHTGRAY, 0.4));
-            DrawLineV(curveEndPosition, curveEndPositionTangent, PURPLE);
+            DrawLineV(curvePosition.Start, curvePosition.StartTangent, SKYBLUE);
+            DrawLineV(curvePosition.StartTangent, curvePosition.EndTangent, Fade(LIGHTGRAY, 0.4));
+            DrawLineV(curvePosition.End, curvePosition.EndTangent, PURPLE);
             
-            if (CheckCollisionPointCircle(mouse, curveStartPosition, 6)) DrawCircleV(curveStartPosition, 7, YELLOW);
-            DrawCircleV(curveStartPosition, 5, RED);
+            if (CheckCollisionPointCircle(mouse, curvePosition.Start, 6)) DrawCircleV(curvePosition.Start, 7, YELLOW);
+            DrawCircleV(curvePosition.Start, 5, RED);
 
-            if (CheckCollisionPointCircle(mouse, curveStartPositionTangent, 6)) DrawCircleV(curveStartPositionTangent, 7, YELLOW);
-            DrawCircleV(curveStartPositionTangent, 5, MAROON);
+            if (CheckCollisionPointCircle(mouse, curvePosition.StartTangent, 6)) DrawCircleV(curvePosition.StartTangent, 7, YELLOW);
+            DrawCircleV(curvePosition.StartTangent, 5, MAROON);
 
-            if (CheckCollisionPointCircle(mouse, curveEndPosition, 6)) DrawCircleV(curveEndPosition, 7, YELLOW);
-            DrawCircleV(curveEndPosition, 5, GREEN);
+            if (CheckCollisionPointCircle(mouse, curvePosition.End, 6)) DrawCircleV(curvePosition.End, 7, YELLOW);
+            DrawCircleV(curvePosition.End, 5, GREEN);
 
-            if (CheckCollisionPointCircle(mouse, curveEndPositionTangent, 6)) DrawCircleV(curveEndPositionTangent, 7, YELLOW);
-            DrawCircleV(curveEndPositionTangent, 5, DARKGREEN);
+            if (CheckCollisionPointCircle(mouse, curvePosition.EndTangent, 6)) DrawCircleV(curvePosition.EndTangent, 7, YELLOW);
+            DrawCircleV(curvePosition.EndTangent, 5, DARKGREEN);
 
             // Draw usage info
             DrawText("Drag points to move curve, press SPACE to show/hide base curve", 10, 10, 10, DARKGRAY);

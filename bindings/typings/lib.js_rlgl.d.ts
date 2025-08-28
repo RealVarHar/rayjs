@@ -1,34 +1,16 @@
 declare module "rayjs:rlgl" {
 import type {rlRenderBatch,Matrix} from '[object Object]'interface rlVertexBuffer {
-elementCount: number,
-vertices: number[],
-texcoords: number[],
-normals: number[],
-colors: number[],
-indices: number[],
-vaoId: number,
-vboId: [number,number,number,number,number],
 }
 var rlVertexBuffer: {
-prototype: rlVertexBuffernew(elementCount?: number, vertices?: number[], texcoords?: number[], normals?: number[], colors?: number[], indices?: number[], vaoId?: number, vboId?: [number,number,number,number,number]): rlVertexBuffer}
+prototype: rlVertexBuffernew(): rlVertexBuffer}
 interface rlDrawCall {
-mode: number,
-vertexCount: number,
-vertexAlignment: number,
-textureId: number,
 }
 var rlDrawCall: {
-prototype: rlDrawCallnew(mode?: number, vertexCount?: number, vertexAlignment?: number, textureId?: number): rlDrawCall}
+prototype: rlDrawCallnew(): rlDrawCall}
 interface rlRenderBatch {
-bufferCount: number,
-currentBuffer: number,
-vertexBuffer: rlVertexBuffer[],
-draws: rlDrawCall[],
-drawCounter: number,
-currentDepth: number,
 }
 var rlRenderBatch: {
-prototype: rlRenderBatchnew(bufferCount?: number, currentBuffer?: number, vertexBuffer?: rlVertexBuffer[], draws?: rlDrawCall[], drawCounter?: number, currentDepth?: number): rlRenderBatch}
+prototype: rlRenderBatchnew(): rlRenderBatch}
 /** undefined */
 function rlMatrixMode(mode: number): void/** undefined */
 function rlPushMatrix(): void/** undefined */
