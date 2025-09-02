@@ -1,5 +1,6 @@
 declare module "rayjs:rcamera" {
-import type {Camera,Vector3,Matrix} from '[object Object]'/** undefined */
+import type {Camera,Vector3,Matrix} from 'rayjs:raylib';
+/** undefined */
 function GetCameraForward(camera: Camera): Vector3/** undefined */
 function GetCameraUp(camera: Camera): Vector3/** undefined */
 function GetCameraRight(camera: Camera): Vector3/** undefined */

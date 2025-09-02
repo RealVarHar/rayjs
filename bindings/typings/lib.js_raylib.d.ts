@@ -1,149 +1,395 @@
 declare module "rayjs:raylib" {
-import type {Image,Vector2,Color,Camera2D,Camera3D,RenderTexture2D,Shader,VrStereoConfig,VrDeviceInfo,Matrix,Texture2D,Camera,Ray,Vector3,LoadFileDataCallback,SaveFileDataCallback,LoadFileTextCallback,SaveFileTextCallback,AutomationEventList,AutomationEvent,Rectangle,Font,TextureCubemap,NPatchInfo,Vector4,GlyphInfo,Model,Mesh,BoundingBox,Material,ModelAnimation,RayCollision,Wave,Sound,Music,AudioStream,AudioMixedProcessor,AudioCallback} from '[object Object]'type Quaternion = Vector4type Texture2D = Texturetype TextureCubemap = Texturetype RenderTexture2D = RenderTexturetype Camera = Camera3Dinterface Vector2 {
+interface Vector2 {
+x: number,
+y: number,
 }
 var Vector2: {
-prototype: Vector2new(): Vector2}
+prototype: Vector2
+new(x?: number, y?: number): Vector2
+}
 interface Vector3 {
+x: number,
+y: number,
+z: number,
 }
 var Vector3: {
-prototype: Vector3new(): Vector3}
+prototype: Vector3
+new(x?: number, y?: number, z?: number): Vector3
+}
 interface Vector4 {
+x: number,
+y: number,
+z: number,
+w: number,
 }
 var Vector4: {
-prototype: Vector4new(): Vector4}
+prototype: Vector4
+new(x?: number, y?: number, z?: number, w?: number): Vector4
+}
 interface Matrix {
+m0: number,
+m4: number,
+m8: number,
+m12: number,
+m1: number,
+m5: number,
+m9: number,
+m13: number,
+m2: number,
+m6: number,
+m10: number,
+m14: number,
+m3: number,
+m7: number,
+m11: number,
+m15: number,
 }
 var Matrix: {
-prototype: Matrixnew(): Matrix}
+prototype: Matrix
+new(m0?: number, m4?: number, m8?: number, m12?: number, m1?: number, m5?: number, m9?: number, m13?: number, m2?: number, m6?: number, m10?: number, m14?: number, m3?: number, m7?: number, m11?: number, m15?: number): Matrix
+}
 interface Color {
+r: number,
+g: number,
+b: number,
+a: number,
 }
 var Color: {
-prototype: Colornew(): Color}
+prototype: Color
+new(r?: number, g?: number, b?: number, a?: number): Color
+}
 interface Rectangle {
+x: number,
+y: number,
+width: number,
+height: number,
 }
 var Rectangle: {
-prototype: Rectanglenew(): Rectangle}
+prototype: Rectangle
+new(x?: number, y?: number, width?: number, height?: number): Rectangle
+}
 interface Image {
+data: ArrayBuffer,
+width: number,
+height: number,
+mipmaps: number,
+format: number,
 }
 var Image: {
-prototype: Imagenew(): Image}
+prototype: Image
+new(data?: ArrayBuffer, width?: number, height?: number, mipmaps?: number, format?: number): Image
+}
 interface Texture {
+id: number,
+width: number,
+height: number,
+mipmaps: number,
+format: number,
 }
 var Texture: {
-prototype: Texturenew(): Texture}
+prototype: Texture
+new(id?: number, width?: number, height?: number, mipmaps?: number, format?: number): Texture
+}
 interface RenderTexture {
+id: number,
+texture: Texture,
+depth: Texture,
 }
 var RenderTexture: {
-prototype: RenderTexturenew(): RenderTexture}
+prototype: RenderTexture
+new(id?: number, texture?: Texture, depth?: Texture): RenderTexture
+}
 interface NPatchInfo {
+source: Rectangle,
+left: number,
+top: number,
+right: number,
+bottom: number,
+layout: number,
 }
 var NPatchInfo: {
-prototype: NPatchInfonew(): NPatchInfo}
+prototype: NPatchInfo
+new(source?: Rectangle, left?: number, top?: number, right?: number, bottom?: number, layout?: number): NPatchInfo
+}
 interface GlyphInfo {
+value: number,
+offsetX: number,
+offsetY: number,
+advanceX: number,
+image: Image,
 }
 var GlyphInfo: {
-prototype: GlyphInfonew(): GlyphInfo}
+prototype: GlyphInfo
+new(value?: number, offsetX?: number, offsetY?: number, advanceX?: number, image?: Image): GlyphInfo
+}
 interface Font {
+baseSize: number,
+glyphCount: number,
+glyphPadding: number,
+texture: Texture2D,
+recs: Rectangle[],
+glyphs: GlyphInfo[],
 }
 var Font: {
-prototype: Fontnew(): Font}
+prototype: Font
+new(baseSize?: number, glyphCount?: number, glyphPadding?: number, texture?: Texture2D, recs?: Rectangle[], glyphs?: GlyphInfo[]): Font
+}
 interface Camera3D {
+position: Vector3,
+target: Vector3,
+up: Vector3,
+fovy: number,
+projection: number,
 }
 var Camera3D: {
-prototype: Camera3Dnew(): Camera3D}
+prototype: Camera3D
+new(position?: Vector3, target?: Vector3, up?: Vector3, fovy?: number, projection?: number): Camera3D
+}
 interface Camera2D {
+offset: Vector2,
+target: Vector2,
+rotation: number,
+zoom: number,
 }
 var Camera2D: {
-prototype: Camera2Dnew(): Camera2D}
+prototype: Camera2D
+new(offset?: Vector2, target?: Vector2, rotation?: number, zoom?: number): Camera2D
+}
 interface Mesh {
+vertexCount: number,
+triangleCount: number,
+vertices: number[],
+texcoords: number[],
+texcoords2: number[],
+normals: number[],
+tangents: number[],
+colors: number[],
+indices: number[],
+animVertices: number[],
+animNormals: number[],
+boneIds: number[],
+boneWeights: number[],
+boneMatrices: Matrix[],
+boneCount: number,
+vaoId: number,
+vboId: number[],
 }
 var Mesh: {
-prototype: Meshnew(): Mesh}
+prototype: Mesh
+new(vertexCount?: number, triangleCount?: number, vertices?: number[], texcoords?: number[], texcoords2?: number[], normals?: number[], tangents?: number[], colors?: number[], indices?: number[], animVertices?: number[], animNormals?: number[], boneIds?: number[], boneWeights?: number[], boneMatrices?: Matrix[], boneCount?: number, vaoId?: number, vboId?: number[]): Mesh
+}
 interface Shader {
+id: number,
+locs: number[],
 }
 var Shader: {
-prototype: Shadernew(): Shader}
+prototype: Shader
+new(id?: number, locs?: number[]): Shader
+}
 interface MaterialMap {
+texture: Texture2D,
+color: Color,
+value: number,
 }
 var MaterialMap: {
-prototype: MaterialMapnew(): MaterialMap}
+prototype: MaterialMap
+new(texture?: Texture2D, color?: Color, value?: number): MaterialMap
+}
 interface Material {
+shader: Shader,
+maps: MaterialMap[],
+params: [number,number,number,number],
 }
 var Material: {
-prototype: Materialnew(): Material}
+prototype: Material
+new(shader?: Shader, maps?: MaterialMap[], params?: [number,number,number,number]): Material
+}
 interface Transform {
+translation: Vector3,
+rotation: Quaternion,
+scale: Vector3,
 }
 var Transform: {
-prototype: Transformnew(): Transform}
+prototype: Transform
+new(translation?: Vector3, rotation?: Quaternion, scale?: Vector3): Transform
+}
 interface BoneInfo {
+name: string,
+parent: number,
 }
 var BoneInfo: {
-prototype: BoneInfonew(): BoneInfo}
+prototype: BoneInfo
+new(name?: string, parent?: number): BoneInfo
+}
 interface Model {
+transform: Matrix,
+meshCount: number,
+materialCount: number,
+meshes: Mesh[],
+materials: Material[],
+meshMaterial: number[],
+boneCount: number,
+bones: BoneInfo[],
+bindPose: Transform[],
 }
 var Model: {
-prototype: Modelnew(): Model}
+prototype: Model
+new(transform?: Matrix, meshCount?: number, materialCount?: number, meshes?: Mesh[], materials?: Material[], meshMaterial?: number[], boneCount?: number, bones?: BoneInfo[], bindPose?: Transform[]): Model
+}
 interface ModelAnimation {
+boneCount: number,
+frameCount: number,
+bones: BoneInfo[],
+framePoses: Transform[][],
+name: string,
 }
 var ModelAnimation: {
-prototype: ModelAnimationnew(): ModelAnimation}
+prototype: ModelAnimation
+new(boneCount?: number, frameCount?: number, bones?: BoneInfo[], framePoses?: Transform[][], name?: string): ModelAnimation
+}
 interface Ray {
+position: Vector3,
+direction: Vector3,
 }
 var Ray: {
-prototype: Raynew(): Ray}
+prototype: Ray
+new(position?: Vector3, direction?: Vector3): Ray
+}
 interface RayCollision {
+hit: boolean,
+distance: number,
+point: Vector3,
+normal: Vector3,
 }
 var RayCollision: {
-prototype: RayCollisionnew(): RayCollision}
+prototype: RayCollision
+new(hit?: boolean, distance?: number, point?: Vector3, normal?: Vector3): RayCollision
+}
 interface BoundingBox {
+min: Vector3,
+max: Vector3,
 }
 var BoundingBox: {
-prototype: BoundingBoxnew(): BoundingBox}
+prototype: BoundingBox
+new(min?: Vector3, max?: Vector3): BoundingBox
+}
 interface Wave {
+frameCount: number,
+sampleRate: number,
+sampleSize: number,
+channels: number,
+data: ArrayBuffer,
 }
 var Wave: {
-prototype: Wavenew(): Wave}
+prototype: Wave
+new(frameCount?: number, sampleRate?: number, sampleSize?: number, channels?: number, data?: ArrayBuffer): Wave
+}
 interface rAudioBuffer {
 }
 var rAudioBuffer: {
-prototype: rAudioBuffer}
+prototype: rAudioBuffer
+}
 interface rAudioProcessor {
 }
 var rAudioProcessor: {
-prototype: rAudioProcessor}
+prototype: rAudioProcessor
+}
 interface AudioStream {
+sampleRate: number,
+sampleSize: number,
+channels: number,
 }
 var AudioStream: {
-prototype: AudioStreamnew(): AudioStream}
+prototype: AudioStream
+new(sampleRate?: number, sampleSize?: number, channels?: number): AudioStream
+}
 interface Sound {
+stream: AudioStream,
+frameCount: number,
 }
 var Sound: {
-prototype: Soundnew(): Sound}
+prototype: Sound
+new(stream?: AudioStream, frameCount?: number): Sound
+}
 interface Music {
+stream: AudioStream,
+frameCount: number,
+looping: boolean,
+ctxType: number,
 }
 var Music: {
-prototype: Musicnew(): Music}
+prototype: Music
+new(stream?: AudioStream, frameCount?: number, looping?: boolean, ctxType?: number): Music
+}
 interface VrDeviceInfo {
+hResolution: number,
+vResolution: number,
+hScreenSize: number,
+vScreenSize: number,
+eyeToScreenDistance: number,
+lensSeparationDistance: number,
+interpupillaryDistance: number,
+lensDistortionValues: [number,number,number,number],
+chromaAbCorrection: [number,number,number,number],
 }
 var VrDeviceInfo: {
-prototype: VrDeviceInfonew(): VrDeviceInfo}
+prototype: VrDeviceInfo
+new(hResolution?: number, vResolution?: number, hScreenSize?: number, vScreenSize?: number, eyeToScreenDistance?: number, lensSeparationDistance?: number, interpupillaryDistance?: number, lensDistortionValues?: [number,number,number,number], chromaAbCorrection?: [number,number,number,number]): VrDeviceInfo
+}
 interface VrStereoConfig {
+projection: [Matrix,Matrix],
+viewOffset: [Matrix,Matrix],
+leftLensCenter: [number,number],
+rightLensCenter: [number,number],
+leftScreenCenter: [number,number],
+rightScreenCenter: [number,number],
+scale: [number,number],
+scaleIn: [number,number],
 }
 var VrStereoConfig: {
-prototype: VrStereoConfignew(): VrStereoConfig}
+prototype: VrStereoConfig
+new(projection?: [Matrix,Matrix], viewOffset?: [Matrix,Matrix], leftLensCenter?: [number,number], rightLensCenter?: [number,number], leftScreenCenter?: [number,number], rightScreenCenter?: [number,number], scale?: [number,number], scaleIn?: [number,number]): VrStereoConfig
+}
 interface FilePathList {
+capacity: number,
+count: number,
+paths: string[],
 }
 var FilePathList: {
-prototype: FilePathListnew(): FilePathList}
+prototype: FilePathList
+new(capacity?: number, count?: number, paths?: string[]): FilePathList
+}
 interface AutomationEvent {
+frame: number,
+type: number,
+params: [number,number,number,number],
 }
 var AutomationEvent: {
-prototype: AutomationEventnew(): AutomationEvent}
+prototype: AutomationEvent
+new(frame?: number, type?: number, params?: [number,number,number,number]): AutomationEvent
+}
 interface AutomationEventList {
+capacity: number,
+count: number,
+events: AutomationEvent[],
 }
 var AutomationEventList: {
-prototype: AutomationEventListnew(): AutomationEventList}
-type LoadFileDataCallback = (arg_fileName:string,arg_dataSize:number[])=>number[]type SaveFileDataCallback = (arg_fileName:string,arg_data:number[],arg_dataSize:number)=>booleantype LoadFileTextCallback = (arg_fileName:string)=>stringtype SaveFileTextCallback = (arg_fileName:string,arg_text:string)=>booleantype AudioStreamCallback = (arg_bufferData:number[],arg_frames:number)=>voidtype AudioCallback = (arg_bufferData:number[],arg_frames:number)=>voidtype AudioMixedProcessor = (arg_bufferData:number[],arg_frames:number)=>void/** undefined */
+prototype: AutomationEventList
+new(capacity?: number, count?: number, events?: AutomationEvent[]): AutomationEventList
+}
+type LoadFileDataCallback = (arg_fileName:string,arg_dataSize:number[])=>number[];
+type SaveFileDataCallback = (arg_fileName:string,arg_data:number[],arg_dataSize:number)=>boolean;
+type LoadFileTextCallback = (arg_fileName:string)=>string;
+type SaveFileTextCallback = (arg_fileName:string,arg_text:string)=>boolean;
+type AudioStreamCallback = (arg_bufferData:number[],arg_frames:number)=>void;
+type AudioCallback = (arg_bufferData:number[],arg_frames:number)=>void;
+type AudioMixedProcessor = (arg_bufferData:number[],arg_frames:number)=>void;
+type Quaternion = Vector4;
+type Texture2D = Texture;
+type TextureCubemap = Texture;
+type RenderTexture2D = RenderTexture;
+type Camera = Camera3D;
+/** undefined */
 function InitWindow(width: number, height: number, title: string): void/** undefined */
 function CloseWindow(): void/** undefined */
 function WindowShouldClose(): boolean/** undefined */
@@ -246,13 +492,13 @@ function UnloadRandomSequence(sequence: number | number[]): void/** undefined */
 function TakeScreenshot(fileName: string): void/** undefined */
 function SetConfigFlags(flags: number): void/** undefined */
 function OpenURL(url: string): void/** undefined */
-function TraceLog(logLevel: number, text: string): void/** undefined */
+function TraceLog(logLevel: number, text: string, ...args: any): void/** undefined */
 function SetTraceLogLevel(logLevel: number): void/** undefined */
 function SetLoadFileDataCallback(callback: LoadFileDataCallback): void/** undefined */
 function SetSaveFileDataCallback(callback: SaveFileDataCallback): void/** undefined */
 function SetLoadFileTextCallback(callback: LoadFileTextCallback): void/** undefined */
 function SetSaveFileTextCallback(callback: SaveFileTextCallback): void/** undefined */
-function LoadFileData(fileName: string, dataSize: number | number[]): ArrayBuffer/** undefined */
+function LoadFileData(fileName: string, dataSize: number | number[]): number[]/** undefined */
 function SaveFileData(fileName: string, data: ArrayBuffer, dataSize: number): boolean/** undefined */
 function ExportDataAsCode(data: number[], dataSize: number, fileName: string): boolean/** undefined */
 function LoadFileText(fileName: string): string/** undefined */

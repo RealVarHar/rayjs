@@ -119,10 +119,10 @@ function fixModuleRedefs(source){
 function sourceToVars(source){
     let varsMap={};
     for(let fn of source.functions){
-        varsMap[fn.name] = {type:'function',name:fn.name,args:fn.params.map(a=>{return {type:a.type,name:a.name};}),returnType:(fn.props.const?'const ':'')+fn.returnType};
+        varsMap[fn.name] = {type:'function',name:fn.name,args:fn.args.map(a=>{return {type:a.type,name:a.name};}),returnType:(fn.props.const?'const ':'')+fn.returnType};
     }
     for(let fn of source.callbacks){
-        varsMap[fn.name] = {type:'type',subtype:'function',ptrtype:fn.type,name:fn.name,args:fn.params.map(a=>{return {type:a.type,name:a.name};}),returnType:fn.returnType};
+        varsMap[fn.name] = {type:'type',subtype:'function',ptrtype:fn.type,name:fn.name,args:fn.args.map(a=>{return {type:a.type,name:a.name};}),returnType:fn.returnType};
     }
     for(let en of source.enums){
         for(let value of en.values){
@@ -220,18 +220,18 @@ function main() {
     attachGetters(modules['raylib']);
 
     att = modules['raylib'].getCallback("AudioCallback");
-    att.params[0].type='float *';
+    att.args[0].type='float *';
     att.binding.threaded = true;
     //audioCallback has different sizes depending on what called it
     cb = structuredClone(att);
     cb.name='AudioStreamCallback';
-    cb.params[0].sizeVars = ['frames*2'];
+    cb.args[0].sizeVars = ['frames*2'];
     modules['raylib'].callbacks.push(cb);
-    modules['raylib'].getFunction('SetAudioStreamCallback').params[1].type='AudioStreamCallback';
+    modules['raylib'].getFunction('SetAudioStreamCallback').args[1].type='AudioStreamCallback';
     cb = structuredClone(att);
     cb.name='AudioMixedProcessor';
-    //cb.params[0].type += ' &';
-    cb.params[0].sizeVars = [`frames*${config.defined['AUDIO_DEVICE_CHANNELS'].content.body}`];
+    //cb.args[0].type += ' &';
+    cb.args[0].sizeVars = [`frames*${config.defined['AUDIO_DEVICE_CHANNELS'].content.body}`];
     modules['raylib'].callbacks.push(cb);
     modules['raymath']=new source_parser(fs.readFileSync("thirdparty/raylib/src/raymath.h", "utf8"),sourcefiles);
     modules['rcamera']=new source_parser(fs.readFileSync("thirdparty/raylib/src/rcamera.h", "utf8"),sourcefiles);
@@ -267,6 +267,7 @@ function main() {
         modules_generated.gen.jsClassId(struct.props.bound_name);
         modules_generated.staticData.push({type:"JSClassID",name:struct.props.bound_name});
     }
+    modules_generated.structs=[];
     for(let en of modules_generated.enums){
         // Register enum
 
@@ -283,15 +284,15 @@ function main() {
     includeDictionary["raylib"]=(gen,vars)=>{
         gen.includeGen.include("raylib.h",vars);
     };
-    modules['raylib'].gen = new rayjs_header("raylib");
+    modules['raylib'].gen = new rayjs_header("raylib",'raylib.h');
     includeDictionary["raymath"]=(gen,vars)=>{
         gen.includeGen.include("raymath.h",vars);
     };
-    modules['raymath'].gen = new rayjs_header("raymath");
+    modules['raymath'].gen = new rayjs_header("raymath",'raymath.h');
     includeDictionary["rcamera"]=(gen,vars)=>{
         gen.includeGen.include("rcamera.h",vars);
     };
-    modules['rcamera'].gen = new rayjs_header("rcamera");
+    modules['rcamera'].gen = new rayjs_header("rcamera",'rcamera.h');
     includeDictionary["raygui"]=(gen,vars)=>{
         let defines=[];
         if(!once['raygui']){
@@ -300,7 +301,7 @@ function main() {
         }
         gen.includeGen.include("raygui.h",vars,defines);
     };
-    modules['raygui'].gen = new rayjs_header("raygui");
+    modules['raygui'].gen = new rayjs_header("raygui",'raygui.h');
     includeDictionary["rlights"]=(gen,vars)=>{
         let defines=[];
         if(!once['rlights']){
@@ -309,15 +310,15 @@ function main() {
         }
         gen.includeGen.include("rlights.h",vars,defines);
     };
-    modules['rlights'].gen = new rayjs_header("rlights");
+    modules['rlights'].gen = new rayjs_header("rlights",'rlights.h');
     includeDictionary["reasings"]=(gen,vars)=>{
         gen.includeGen.include("reasings.h",vars );
     };
-    modules['reasings'].gen = new rayjs_header("reasings");
+    modules['reasings'].gen = new rayjs_header("reasings",'reasings.h');
     includeDictionary["rlgl"]=(gen,vars)=>{
         gen.includeGen.include("rlgl.h",vars );
     };
-    modules['rlgl'].gen = new rayjs_header("rlgl");
+    modules['rlgl'].gen = new rayjs_header("rlgl",'rlgl.h');
     includeDictionary['rlightmapper']=(gen,vars)=>{
         let defines=[];
         if(!once['rlightmapper']){
@@ -326,7 +327,7 @@ function main() {
         }
         gen.includeGen.include("rlightmapper.h",vars,defines);
     };
-    modules['rlightmapper'].gen = new rayjs_header("rlightmapper");
+    modules['rlightmapper'].gen = new rayjs_header("rlightmapper",'rlightmapper.h');
     for(let key in modules)attachGetters(modules[key]);
 
     //generate hashmap of names to detect dependencies
@@ -436,9 +437,9 @@ function main() {
     att = modules['raylib'].getStruct("AutomationEventList");
     att.fields.find(a=>a.name=='events').binding.sizeVars=["ptr.count"];
     att = modules['raylib'].getFunction('GenImageFontAtlas');
-    att = att.params.find(a=>a.name=='glyphRecs');
+    att = att.args.find(a=>a.name=='glyphRecs');
     att.type='Rectangle * &';
-    att.binding.allowNull=true;//?? on apiCall writeback but never
+    att.binding.sizeVars=['glyphCount'];//?? on apiCall writeback but never
     att.binding.typeCast='void &';//?? on apiCall writeback but never
     att = modules['rlgl'].getStruct("rlVertexBuffer");
     att.fields.find(a=>a.name=='vertices').binding.sizeVars=["ptr.elementCount*3*4"];
@@ -522,7 +523,7 @@ function main() {
         qjs.jsCleanUpParameter("void *", 'value', "argv[2]");
         gen.return("JS_UNDEFINED");
     };
-    modules['raylib'].getFunction("SetShaderValueV").params.find(a=>a.name=='value').name='values';
+    modules['raylib'].getFunction("SetShaderValueV").args.find(a=>a.name=='value').name='values';
 
 
     /*******OPINION*********/
@@ -544,9 +545,9 @@ function main() {
     modules['raylib'].ignore("SetTraceLogCallback");
     // Files management functions
     att = modules['raylib'].getFunction("LoadFileData");
-    //att.params.find(a=>a.name=='dataSize').type='int &';
+    att.args.find(a=>a.name=='dataSize').type='int &';
     att.returnSizeVars = ['dataSize[0]'];
-    att.returnType = "void *";//casting to void* is an estetic choice to use buffer like SaveFileData
+    att.returnType = "unsigned char *";//casting to void* is an estetic choice to use buffer like SaveFileData
     att.binding.after = gen => gen.call("UnloadFileData", ["returnVal"]);
     modules['raylib'].ignore("UnloadFileData");
     att = modules['raylib'].getFunction("ExportImageToMemory");
@@ -610,13 +611,7 @@ function main() {
     };
     let applyffix=false;
     const lfx = modules['raylib'].getFunction("LoadFontEx");
-    if(applyffix){
-        lfx.params[2].binding = { ignore: true };
-        lfx.params[3].binding = { ignore: true };
-        lfx.binding = { customizeCall: "Font returnVal = LoadFontEx(fileName, fontSize, NULL, 0);" };
-    }else{
-        lfx.params[2].binding = { allowNull: true };
-    }
+    lfx.args[2].binding = { allowNull: true };
     if(!config.bindText){
         //Text functions are enabled for compatibility
         modules['raylib'].functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['raylib'].ignore(x.name));
@@ -625,7 +620,7 @@ function main() {
         //Using textCopy is more cumbersome than doing it natively, due to not supporting C string offsets
         modules['raylib'].ignore("TextCopy");
         /*******OPINION*********/
-        //modules['raylib'].getFunction("TextCopy").params.find(parm => parm.name === 'dst').type='char * &';
+        //modules['raylib'].getFunction("TextCopy").args.find(parm => parm.name === 'dst').type='char * &';
         modules['raylib'].getFunction("TextFormat").binding.body=(gen)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
@@ -657,13 +652,13 @@ function main() {
             gen.declare('int','c',1);
             gen.declare('int','ilen',0);
             gen.for(0, 'formatlen',(ctx)=>{
-                ctx.declare('int','n',2);
-                ctx.declare('int','w',0);
-                ctx.declare('int','p',0);
                 ctx.if(["format[i]!='%'",''],(ctx)=>{
                     ctx.assign('buffer[l]','format[i]');
                     ctx.add('int','l',1);
                 },(ctx)=>{
+                    ctx.declare('int','n',2);
+                    ctx.declare('int','w',0);
+                    ctx.declare('int','p',0);
                     ctx.declare('int','firsth','i+1');
                     ctx.declare('char','har','format[firsth]');
                     ctx.if('har==0',(ctx)=>{
@@ -854,10 +849,10 @@ function main() {
     modules['raylib'].ignore("SetAudioStreamCallback");
     modules['raylib'].ignore("AttachAudioStreamProcessor");
     modules['raylib'].ignore("DetachAudioStreamProcessor");
-    modules['raylib'].getFunction('AttachAudioMixedProcessor').params[0].type='AudioMixedProcessor';
+    modules['raylib'].getFunction('AttachAudioMixedProcessor').args[0].type='AudioMixedProcessor';
     att = modules['raylib'].getCallback("SaveFileDataCallback");
-    att.params[1].type='unsigned char *';
-    att.params[1].sizeVars=['dataSize'];
+    att.args[1].type='unsigned char *';
+    att.args[1].sizeVars=['dataSize'];
     // Requires fixes to void* parameters
     modules['rlgl'].ignore("rlLoadExtensions");
     modules['rlgl'].ignore("rlSetVertexAttributeDefault");
@@ -869,10 +864,10 @@ function main() {
     att = modules['rlgl'].getFunction("rlReadScreenPixels");
     att.returnSizeVars = ['width*height*4'];
     function detectPointer(fn){//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
-        for(let i=0;i<fn.params.length;i++){
-            const parm=fn.params[i];
+        for(let i=0;i<fn.args.length;i++){
+            const parm=fn.args[i];
             if(parm.type.endsWith(' *')>0){
-                if(fn.params.length==1 && !parm.type.endsWith('char *')){//Arrays tend to require length int but strings not
+                if(fn.args.length==1 && !parm.type.endsWith('char *')){//Arrays tend to require length int but strings not
                     parm.type=parm.type.replaceAt(parm.type.length-1,'&');
                     continue;
                 }
@@ -892,13 +887,13 @@ function main() {
         }
     }
     //manual reference assignment
-    att = modules['raygui'].getFunction('GuiColorPicker').params[2];
+    att = modules['raygui'].getFunction('GuiColorPicker').args[2];
     att.type = att.type.replaceAt(att.type.length-1,'&');
     for(let key in modules){
         modules[key].functions.forEach(detectPointer);
         modules[key].callbacks.forEach(detectPointer);
     }
-    att = modules['raygui'].getFunction('GuiTextBox').params[1];
+    att = modules['raygui'].getFunction('GuiTextBox').args[1];
     att.type = att.type + ' &';
     cb = modules['raylib'].getStruct('AudioStream').fields;
     att = cb.find(field=>field.name=='buffer');
@@ -913,20 +908,22 @@ function main() {
     modules['raylib'].getStruct('rAudioProcessor').binding.createConstructor=false;
 
     att = modules['raylib'].getFunction('LoadFontData');
-    att.params[3].binding.allowNull=true;
-    att.returnSizeVars=['codepointCount'];
-    modules['raylib'].getFunction('LoadShader').params[0].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiSpinner').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiValueBox').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiColorPicker').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiSlider').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiSliderBar').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiProgressBar').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiScrollPanel').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiGrid').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiColorBarAlpha').params[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiTextInputBox').params[6].binding.allowNull=true;
-    modules['raylib'].getFunction('LoadAutomationEventList').params[0].binding.allowNull=true;
+    att.args[3].binding.allowNull=true;
+    att.returnSizeVars=[['codepointCount > 0','codepointCount','','95']];//New functionality, sizevars need to accept (nested) conditionals
+    modules['raylib'].getFunction('LoadShader').args[0].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiSpinner').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiValueBox').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiColorPicker').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiSlider').args[1].binding.allowNull=true;
+    att = modules['raygui'].getFunction('GuiSliderBar');
+    att.args[1].binding.allowNull=true;
+    att.args[2].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiProgressBar').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiScrollPanel').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiGrid').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiColorBarAlpha').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiTextInputBox').args[6].binding.allowNull=true;
+    modules['raylib'].getFunction('LoadAutomationEventList').args[0].binding.allowNull=true;
 
     modules['raylib'].ignore('bool');
     for(let key in modules){
@@ -943,7 +940,7 @@ function main() {
         //need to figure out if module requires other modules
         let checks={};
         for(let fn of module.functions){
-            for(let param of fn.params){
+            for(let param of fn.args){
                 for(let type of param.type.split(' ')){
                     checks[type]=true;
                 }
@@ -955,7 +952,7 @@ function main() {
             }
         }
         for(let callback of module.callbacks){
-            for(let param of callback.params){
+            for(let param of callback.args){
                 for(let type of param.type.split(' ')){
                     checks[type]=true;
                 }
@@ -969,6 +966,9 @@ function main() {
             }
             const namemap_module=namemap[modulekey]
             for(let check of checks){
+                while(namemap[key][check] && namemap[key][check].type=='alias'){
+                    check=namemap[key][check].aliasof;
+                }
                 if(namemap_module[check] && !namemap[key][check]){
                     includeDictionary[modulekey](modules[key].gen,namemap_val[modulekey]);
                     break;
@@ -979,7 +979,7 @@ function main() {
         //On top level, before assigning functions, check for callbacks, if present in a function, add callback first
         const callbacks=module.callbacks.map(c=>c.name);
         module.functions.forEach(fn => {
-            let param=fn.params.find(param=>callbacks.includes(param.type));
+            let param=fn.args.find(param=>callbacks.includes(param.type));
             if(param!==undefined){
                 let callback=module.callbacks.find(a=>a.name==param.type);
                 let capture=[];
@@ -1016,8 +1016,8 @@ function main() {
     for(let key in modules){
         const module=modules[key];
         console.log("Writing module "+module.gen.name);
-        module.gen.writeTo(`src/modules/${module.gen.name}.h`);
-        module.gen.typings.writeTo(`bindings/typings/lib.${module.gen.name}.d.ts`);
+        module.gen.writeTo(`src/modules/js_${module.gen.name}.h`);
+        module.gen.typings.writeTo(`bindings/typings/lib.js_${module.gen.name}.d.ts`,{variables:module.gen.definitions.cgen.getVariables(),includegen:module.gen.includeGen,modules});
     }
     const ignored = modules['raylib'].functions.filter(x => x.binding.ignore).length;
     console.log(`Converted ${modules['raylib'].functions.length+modules['raylib'].structs.length+modules['raylib'].callbacks.length - ignored}, ${ignored} ignored.`);

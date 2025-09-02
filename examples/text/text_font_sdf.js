@@ -60,43 +60,37 @@ if(['Andriod','iOS'].includes(os.platform)){
     let fontDefault = new Font();
     fontDefault.baseSize = 16;
     fontDefault.glyphCount = 95;
-
     // Loading font data from memory data
     // Parameters > font size: 16, no glyphs array provided (0), glyphs count: 95 (autogenerate chars array)
     fontDefault.glyphs = LoadFontData(fileData, fileSize[0], 16, null, 95, FONT_DEFAULT);
     // Parameters > glyphs count: 95, font size: 16, glyphs padding in image: 4 px, pack method: 0 (default)
-    console.log(-2);
-    let recs=[];
+    let recs=[0];
     let atlas = GenImageFontAtlas(fontDefault.glyphs, recs, 95, 16, 4, 0);
-    fontDefault.recs=recs[0];
-    console.log(-1);
+    fontDefault.recs=recs;
     fontDefault.texture = LoadTextureFromImage(atlas);
-    console.log(0);
     UnloadImage(atlas);
-    console.log(1);
-
     // SDF font generation from TTF font
     let fontSDF = new Font();
     fontSDF.baseSize = 16;
     fontSDF.glyphCount = 95;
     // Parameters > font size: 16, no glyphs array provided (0), glyphs count: 0 (defaults to 95)
-    fontSDF.glyphs = LoadFontData(fileData, fileSize[0], 16, 0, 0, FONT_SDF);
+    fontSDF.glyphs = LoadFontData(fileData, fileSize[0], 16, null, 0, FONT_SDF);
     // Parameters > glyphs count: 95, font size: 16, glyphs padding in image: 0 px, pack method: 1 (Skyline algorythm)
-    atlas = GenImageFontAtlas(fontSDF.glyphs, fontSDF.recs, 95, 16, 0, 1);
+    recs=[0];
+    atlas = GenImageFontAtlas(fontSDF.glyphs, recs, 95, 16, 0, 1);
+    fontSDF.recs=recs;
     fontSDF.texture = LoadTextureFromImage(atlas);
     UnloadImage(atlas);
-
     //UnloadFileData(fileData);    // autofreed
 
     // Load SDF required shader (we use default vertex shader)
-    let shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/sdf.fs", GLSL_VERSION));
+    let shader = LoadShader(null, TextFormat("resources/shaders/glsl%i/sdf.fs", GLSL_VERSION));
     SetTextureFilter(fontSDF.texture, TEXTURE_FILTER_BILINEAR);    // Required for SDF font
 
     let fontPosition = new Vector2( 40, screenHeight/2 - 50 );
     let textSize = new Vector2( 0, 0 );
     let fontSize = 16;
     let currentFont = 0;            // 0 - fontDefault, 1 - fontSDF
-
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -110,7 +104,6 @@ if(['Andriod','iOS'].includes(os.platform)){
 
         if (IsKeyDown(KEY_SPACE)) currentFont = 1;
         else currentFont = 0;
-
         if (currentFont == 0) textSize = MeasureTextEx(fontDefault, msg, fontSize, 0);
         else textSize = MeasureTextEx(fontSDF, msg, fontSize, 0);
 

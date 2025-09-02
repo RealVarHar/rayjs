@@ -1,8 +1,14 @@
 declare module "rayjs:raygui" {
-import type {Font,Color,Rectangle,Vector2,Vector3} from '[object Object]'interface GuiStyleProp {
+import type {Font,Color,Rectangle,Vector2,Vector3} from 'rayjs:raylib';
+interface GuiStyleProp {
+controlId: number,
+propertyId: number,
+propertyValue: number,
 }
 var GuiStyleProp: {
-prototype: GuiStylePropnew(): GuiStyleProp}
+prototype: GuiStyleProp
+new(controlId?: number, propertyId?: number, propertyValue?: number): GuiStyleProp
+}
 /** undefined */
 function GuiEnable(): void/** undefined */
 function GuiDisable(): void/** undefined */

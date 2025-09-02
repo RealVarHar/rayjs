@@ -15,10 +15,11 @@ export class RayJsHeader {
     moduleFunctionList;
     moduleInit;
     moduleEntry;
-    constructor(name) {
+    constructor(name,c_source) {
         const thiz=this;
         this.typings = new TypeScriptDeclaration('rayjs:'+name);
-        this.name = 'js_'+name;
+        this.name = name;
+        this.c_source = c_source;
         this.root = new QuickJsGenerator();
         this.body = this.root.cgen.header("JS_" + this.name + "_GUARD");
         this.includeGen = this.body.section();
@@ -66,7 +67,6 @@ export class RayJsHeader {
         let match= param.type.match(/\*/g);
         if(match==null)return 0;
         let len=match.length;
-        if(param.spread=='...')len++;
         //Do not remove length for opaque, pointers need to be re-evaluated manually
         return len;
     };
@@ -82,26 +82,26 @@ export class RayJsHeader {
             sub.declare('trampolineContext','tctx',arr);
             sub.declare('JSContext *','ctx',threaded?`${callbackName}_ctx`:'tctx.ctx');
             //init parameters
-            for(let i=0;i<callback.params.length;i++){
-                let type=callback.params[i].type;
+            for(let i=0;i<callback.args.length;i++){
+                let type=callback.args[i].type;
                 let arrtype=type.replace(/[^*&]/g,'');
                 if(arrtype.length>0){
                     if(arrtype=='&'){
                         type = type.replaceAll('&','*');
-                        callback.params[i].sizeVars.push(1);
+                        callback.args[i].sizeVars.push(1);
                     }else{
                         type = type.replaceAll(' &','');
                     }
                 }
-                if(callback.params[i].type.endsWith('&') && attachMultiple){//reuse js params if passed by reference
+                if(callback.args[i].type.endsWith('&') && attachMultiple){//reuse js args if passed by reference
                     sub.if(`i==0`,(ctx)=>{
-                        (new QuickJsGenerator(ctx)).cToJs(type,'js'+i,callback.params[i].name,{dynamicAlloc,altReturn:getDefaultReturn(callback.returnType),supressDeclaration:true},0,structuredClone(callback.params[i].sizeVars));
+                        (new QuickJsGenerator(ctx)).cToJs(type,'js'+i,callback.args[i].name,{dynamicAlloc,altReturn:getDefaultReturn(callback.returnType),supressDeclaration:true},0,structuredClone(callback.args[i].sizeVars));
                     })
                 }else{
-                    (new QuickJsGenerator(sub)).cToJs(type,'js'+i,callback.params[i].name,{dynamicAlloc,altReturn:getDefaultReturn(callback.returnType)},0,structuredClone(callback.params[i].sizeVars));
+                    (new QuickJsGenerator(sub)).cToJs(type,'js'+i,callback.args[i].name,{dynamicAlloc,altReturn:getDefaultReturn(callback.returnType)},0,structuredClone(callback.args[i].sizeVars));
                 }
             }
-            let argv=callback.params.map((el,i)=>'js'+i);
+            let argv=callback.args.map((el,i)=>'js'+i);
             if(threaded){
                 sub.declare('JSValue ['+(argv.length+1)+']','argv',['tctx.func_obj'].concat(argv));
                 sub.call('js_postMessage',['ctx', 'tctx.thread_id', `${argv.length+1}`,'argv'],{type:'JSValue',name:'js_ret'});
@@ -124,19 +124,19 @@ export class RayJsHeader {
                 }
             }
             //cleanup
-            for (let i = 0; i < callback.params.length; i++) {
+            for (let i = 0; i < callback.args.length; i++) {
                 let j=i;
                 if(threaded)j++;
-                if(!callback.params[i].type.endsWith('&')){
+                if(!callback.args[i].type.endsWith('&')){
                     sub.call('JS_FreeValue',['ctx',`argv[${j}]`]);
                 }else{
                     cleanupList.push(`argv[${j}]`);
                 }
             }
             function saveReferences(ctx){
-                for (let i = 0; i < callback.params.length; i++) {
-                    if(callback.params[i].type.endsWith('&')){
-                        (new QuickJsGenerator(ctx)).jsToC(callback.params[i].type,callback.params[i].name,'js'+i,{allowNull:false,supressDeclaration:true,supressAllocation:true,jsType:'array',altReturn:getDefaultReturn(callback.returnType)},0,errorCleanupFn,structuredClone(callback.params[i].sizeVars));
+                for (let i = 0; i < callback.args.length; i++) {
+                    if(callback.args[i].type.endsWith('&')){
+                        (new QuickJsGenerator(ctx)).jsToC(callback.args[i].type,callback.args[i].name,'js'+i,{allowNull:false,supressDeclaration:true,supressAllocation:true,jsType:'array',altReturn:getDefaultReturn(callback.returnType)},0,errorCleanupFn,structuredClone(callback.args[i].sizeVars));
                     }
                 }
                 if(callback.returnType!=='void'){
@@ -159,14 +159,14 @@ export class RayJsHeader {
             debugger;return;
         }
         variables[callbackName].callback=apiName;//save information about the bound callback
-        const params=[];
-        for(let param of callback.params){
-            params.push({name:param.name,type:param.type.replace('&','[1]')});
+        let args=[];
+        for(let arg of callback.args){
+            args.push({name:arg.name,type:arg.type.replace('&','[1]')});
         };
-        const sub = this.callbackGen.cgen.function(callback.returnType, apiName, params, true, (sub)=>{
+        const sub = this.callbackGen.cgen.function(callback.returnType, apiName, args, true, (sub)=>{
             let allocLen=0;
-            for(let i=0;i<callback.params.length;i++){
-                allocLen=Math.max(allocLen , this.paramAllocLen(callback.params[i]));
+            for(let i=0;i<callback.args.length;i++){
+                allocLen=Math.max(allocLen , this.paramAllocLen(callback.args[i]));
             }
             if(allocLen>=2){
                 dynamicAlloc=true;
@@ -174,8 +174,8 @@ export class RayJsHeader {
                 sub.declare('memoryNode *', 'memoryCurrent','memoryHead');
             }
             //declare js variables so re-use is possible
-            for(let i=0;i<callback.params.length;i++){
-                if(callback.params[i].type.endsWith('&') && attachMultiple){
+            for(let i=0;i<callback.args.length;i++){
+                if(callback.args[i].type.endsWith('&') && attachMultiple){
                     sub.declare('JSValue','js'+i);
                 }
             }
@@ -190,13 +190,13 @@ export class RayJsHeader {
             }
         });
         //Add to typings
-        let args=[];
+        args=[];
         args.returnType=callback.returnType;
-        for(let i=0;i<callback.params.length;i++){
-            let arg={ type: callback.params[i].type, name: "arg_"+callback.params[i].name, sizeVars:callback.params[i].sizeVars||[] };
+        for(let i=0;i<callback.args.length;i++){
+            let arg={ type: callback.args[i].type, name: "arg_"+callback.args[i].name, sizeVars:callback.args[i].sizeVars||[] };
             args.push(arg);
         }
-        this.typings.addCallback(callback.name, args, {variables:this.definitions.cgen.getVariables(),callbackArgs:this.callbackArgs});
+        this.typings.addCallback(callback.name, args);
     }
     addApiFunction(api) {
         const options = api.binding || {};
@@ -210,92 +210,100 @@ export class RayJsHeader {
                 if (options.before)
                     options.before(fun);
                 // read parameters
-                api.params = api.params || [];
-                const activeParams = api.params.filter(x => !x.binding.ignore);
-                let len = activeParams.length;
-                for(let param of api.params){
-                    param.spread='';
-                }
-                let hasspread=false;
-                if (len>0 && activeParams[len - 1].type == '...') {
-                    //if using spread operator, adnotate it correctly
-                    hasspread=true;
-                    const last = activeParams[len - 2];
-                    last.spread = '...';
-                    api.params.pop();
-                    len--;
-                }
+                api.args = api.args || [];
+                const activeArgs = api.args.filter(x => !x.binding.ignore);
                 //Enable dynamic de-allocation if we need to allocate more than one object:
                 //Arrays in arrays require inefficient type test code in cleanup
-                let dynamicAlloc=false;
+                let hasSpread= activeArgs.length>0&&activeArgs[activeArgs.length-1].type == '...';
+                let dynamicAlloc=hasSpread;
                 let allocLen=0;
-                for(let i=0;i<len;i++){
-                    allocLen+=this.paramAllocLen(activeParams[i]);
+                for(let i=0;i<activeArgs.length;i++){
+                    allocLen+=this.paramAllocLen(activeArgs[i]);
                 }
                 if(allocLen>=2){
                     dynamicAlloc=true;
+                }
+                if(dynamicAlloc){
                     fun.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
                     fun.declare('memoryNode *', 'memoryCurrent','memoryHead');
                 }
                 allocLen=0;//re-use allocation length, now used to count the current state
-                const errorCleanupFn =(ctx,maxparam=activeParams.length)=>{
+                const errorCleanupFn =(ctx,maxparam=activeArgs.length)=>{
+                    if(dynamicAlloc){
+                        ctx.call('memoryClear',['ctx','memoryHead']);
+                        return;
+                    }
                     if(allocLen==0){
                         return;
                     }
                     for (let j = 0; j < maxparam; j++) {
-                        const param = activeParams[j];
+                        const param = activeArgs[j];
                         if (param.binding.customCleanup){
                             param.binding.customCleanup(ctx, "argv[" + j + "]");
                         }
                         if (!dynamicAlloc && !param.binding.customCleanup){
-                            (new QuickJsGenerator(ctx)).jsCleanUpParameter(param.spread+param.type, param.name, "argv[" + j + "]",{allowNull:param.binding.allowNull});
+                            (new QuickJsGenerator(ctx)).jsCleanUpParameter(param.type, param.name, "argv[" + j + "]",{allowNull:param.binding.allowNull});
                         }
                     }
-                    if(dynamicAlloc){
-                        ctx.call('memoryClear',['ctx','memoryHead']);
-                    }
                 };
+                let len=activeArgs.length;
+                if(hasSpread){
+                    len-=2;
+                }
                 for (let i = 0; i < len; i++) {
-                    const param = activeParams[i];
+                    const param = activeArgs[i];
                     allocLen+=this.paramAllocLen(param);
                     //cleans parameters initialized before an error
                     //TODO: reorder parameters to limit amount of code generated in cleanup
                     if(param.binding.typeCast!=undefined){
-                        fun.declare(param.spread+param.type.replaceAll('&','*'),param.name);
+                        fun.declare(param.type.replaceAll('&','*'),param.name);
                     }
-                    (new QuickJsGenerator(fun)).jsToC(param.binding.typeCast||(param.spread+param.type), param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
+                    (new QuickJsGenerator(fun)).jsToC(param.binding.typeCast||param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
                 }
+                //if(api.name=='GenImageFontAtlas')debugger;
                 // call c function
-                if (options.customizeCall){
-                    fun.line(options.customizeCall);
+                let args=api.args.map(x => x.name);
+                this.functionArgs[api.name]=args;
+                if(hasSpread){
+                    //functions with bigger spread use more memory, but are less likely that user will run into limitations
+                    //spreadSize Min 2, Max 127
+                    //getSize based on argc-arg[i]
+                    args.pop();args.pop();
+                    let last=api.args[api.args.length-2];
+                    let tmpname=last.name.replace(/[^\w]/g,'');
+                    fun.declare("size_t", `size_${tmpname}`,'argc-'+len);
+                    fun.if(`size_${tmpname}>${globalThis.config.spreadSize}`,(ctx)=>{
+                        ctx.assign(`size_${tmpname}`,globalThis.config.spreadSize);
+                    });
+                    //[]=[].map()
+                    fun.call('js_malloc',['ctx',`size_${tmpname} * sizeof(${last.type})`],{type:last.type+' *',name:last.name});
+                    fun.call('memoryStore',['memoryCurrent','js_free',last.name],{type:'memoryNode *',name:'memoryCurrent'});
+                    //main spread allways skips dynamicAlloc
+                    fun.for('0','size_' + tmpname,(ctx,i)=>{
+                        const plusstr=len>0?`+${len}`:'';
+                        //subitems use dynamicAlloc, since we can not define names statically
+                        (new QuickJsGenerator(ctx)).jsToC(last.type,`${last.name}[${i}]`,`argv[${i}${plusstr}]`,{supressDeclaration:true,dynamicAlloc:true,allowNull:last.binding.allowNull});
+                    });
+
+                    if(api.returnType!=='void')fun.declare(api.returnType, "returnVal");
+                    fun.switch('size_'+last.name,(new Array(globalThis.config.spreadSize)).fill().map((a,i)=>{return i;}),(ctx,i)=>{
+                        if(i==0){
+                            //0 Arguments will not compile
+                            ctx.return(`JS_EXCEPTION`);
+                        }else{
+                            args[args.length]=last.name+'['+(i-1)+']';
+                            ctx.call(api.name, structuredClone(args), api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
+                        }
+                    });
                 }else{
-                    let params=api.params.map(x => x.name);
-                    this.functionArgs[api.name]=params;
-                    if(hasspread){
-                        //functions with bigger spread use more memory, but are less likely that user will run into limitations
-                        //spreadSize Min 2, Max 127
-                        if(api.returnType!=='void')fun.declare(api.returnType, "returnVal");
-                        let last=api.params[api.params.length-1];
-                        params.pop();
-                        fun.switch('size_'+last.name,(new Array(globalThis.config.spreadSize)).fill().map((a,i)=>{return i;}),(ctx,i)=>{
-                            if(i==0){
-                                //0 Arguments will not compile
-                                ctx.return(`JS_EXCEPTION`);
-                            }else{
-                                params[params.length]=last.name+'['+i+']';
-                                ctx.call(api.name, params, api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
-                            }
-                        })
-                    }else{
-                        fun.call(api.name, params, api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
-                    }
+                    fun.call(api.name, args, api.returnType === "void" ? null : { type: api.returnType, name: "returnVal" });
                 }
 
                 // save references
                 for (let i = 0; i < len; i++) {
-                    const param = activeParams[i];
-                    if(param.type.endsWith('&')){
-                        (new QuickJsGenerator(fun)).cToJs(param.type,"argv[" + i + "]",param.name,{allowNull:param.binding.allowNull,supressDeclaration:true});
+                    const arg = activeArgs[i];
+                    if(arg.type.endsWith('&')){
+                        (new QuickJsGenerator(fun)).cToJs(arg.type,"argv[" + i + "]",arg.name,{allowNull:arg.binding.allowNull,supressDeclaration:true},0,arg.binding.sizeVars);
                     }
                 }
                 // return result
@@ -312,8 +320,8 @@ export class RayJsHeader {
                 }
             }
             // add binding to function declaration
-            this.moduleFunctionList.text.initial.push((new QuickJsGenerator(fun)).jsFuncDef(jName, (api.params || []).filter(x => !x.binding.ignore).length, fun.previous().text.name));
-            this.typings.addFunction(jName, api,{variables:this.definitions.cgen.getVariables(),includegen:this.includeGen});
+            this.moduleFunctionList.text.initial.push((new QuickJsGenerator(fun)).jsFuncDef(jName, (api.args || []).filter(x => !x.binding.ignore).length, fun.previous().text.name));
+            this.typings.addFunction(api);
         });
     }
     addEnum(renum) {
@@ -323,7 +331,7 @@ export class RayJsHeader {
         renum.values.forEach(x => this.exportGlobalInt(x.name, x.description));
     }
     registerAlias(alias){
-        this.typings.addAlias(alias.name, alias.type, {variables:this.definitions.cgen.getVariables(),includegen:this.includeGen});
+        this.typings.addAlias(alias.name, alias.type);
         //TODO: actually register them in cgen!
 
     }
@@ -576,19 +584,19 @@ export class RayJsHeader {
         (new QuickJsGenerator(this.moduleInit)).jsStructToOpq(structName, exportName + "_js", exportName + "_struct", classId);
         this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${exportName}"`, exportName + "_js"]);
         this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", `"${exportName}"`]);
-        this.typings.constants.tsDeclareConstant(exportName, structName, description);
+        this.typings.addConstant(exportName, structName, description);
         this.exported[structName]='struct';
     }
     exportGlobalInt(name, description='') {
         this.moduleInit.call('JS_SetModuleExport',['ctx', 'm',`"${name}"`, `JS_NewInt32(ctx,${name})`]);
         this.moduleEntry.call('JS_AddModuleExport',['ctx','m',`"${name}"`]);
-        this.typings.constants.tsDeclareConstant(name, "number", description);
+        this.typings.addConstant(name, "number", description);
         this.exported[name]='int';
     }
     exportGlobalDouble(name, description='') {
         this.moduleInit.call('JS_SetModuleExport',['ctx','m',`"${name}"`, `JS_NewFloat64(ctx,${name})`]);
         this.moduleEntry.call('JS_AddModuleExport',['ctx','m',`"${name}"`]);
-        this.typings.constants.tsDeclareConstant(name, "number", description);
+        this.typings.addConstant(name, "number", description);
         this.exported[name]='float';
     }
 }

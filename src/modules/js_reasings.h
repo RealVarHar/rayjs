@@ -1,5 +1,5 @@
-#ifndef JS_js_reasings_GUARD
-	#define JS_js_reasings_GUARD
+#ifndef JS_reasings_GUARD
+	#define JS_reasings_GUARD
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -990,14 +990,14 @@
 		JS_CFUNC_DEF("EaseElasticInOut",4,js_EaseElasticInOut)
 	};
 	
-	static int js_js_reasings_init(JSContext * ctx,JSModuleDef * m){
+	static int js_reasings_init(JSContext * ctx,JSModuleDef * m){
 		size_t listcount=countof(jsreasings_funcs);
 		JS_SetModuleExportList(ctx,m,jsreasings_funcs,(int)listcount);
 		return 0;
 	}
 	
-	JSModuleDef * js_init_module_js_reasings(JSContext * ctx,const char * module_name){
-		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_js_reasings_init);
+	JSModuleDef * js_init_module_reasings(JSContext * ctx,const char * module_name){
+		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_reasings_init);
 		if(!m){
 			return NULL;
 		}
@@ -1006,4 +1006,4 @@
 		return m;
 	}
 
-#endif //JS_js_reasings_GUARD
+#endif //JS_reasings_GUARD

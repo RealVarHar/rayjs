@@ -17,7 +17,7 @@
 
 import {BLACK, BLUE, BeginDrawing, ClearBackground, CloseWindow, Color, DrawRectangleGradientEx,
     EndDrawing,
-    GetScreenHeight,
+    GetScreenHeight, Texture as Texture2D,
     GetScreenWidth, GetShapesTexture, GetShapesTextureRectangle, InitWindow,
     PINK,
     RAYWHITE,
@@ -25,6 +25,8 @@ import {BLACK, BLUE, BeginDrawing, ClearBackground, CloseWindow, Color, DrawRect
     Rectangle, SetTargetFPS, Vector2, WindowShouldClose } from 'rayjs:raylib';
 import * as rg from 'rayjs:rlgl';
 const DEG2RAD = Math.PI/180;
+//@texShapes since this is an indirectly exposed (in .c) static texture it is outside of rayjs design to expose this as export
+const texShapes = new Texture2D(1,1,1,1,7);
 
 // Draw rectangle with rounded edges and horizontal gradient, with options to choose side of roundness
 // NOTE: Adapted from both 'DrawRectangleRounded()' and 'DrawRectangleGradientH()' raylib [rshapes] implementations

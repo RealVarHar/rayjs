@@ -59,10 +59,12 @@ message("=== Configure QuickJS ===")
 # add quickjs
 set(quickjs_version 2024-09-28)
 set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/quickjs)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/quickjs/quickjs.h ${quickjs_sources_root}/quickjs.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/quickjs/quickjs.c ${quickjs_sources_root}/quickjs.c @ONLY)
 set(quickjs_sources
 	${quickjs_sources_root}/quickjs.h
-	${quickjs_sources_root}/quickjs-atom.h
 	${quickjs_sources_root}/quickjs.c
+	${quickjs_sources_root}/quickjs-atom.h
 	${quickjs_sources_root}/libregexp.c
 	${quickjs_sources_root}/libunicode.c
 	${quickjs_sources_root}/xsum.c

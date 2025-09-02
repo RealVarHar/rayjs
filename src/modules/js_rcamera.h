@@ -1,11 +1,12 @@
-#ifndef JS_js_rcamera_GUARD
-	#define JS_js_rcamera_GUARD
+#ifndef JS_rcamera_GUARD
+	#define JS_rcamera_GUARD
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
 	#include <rayjs_base.h>
 	#include <config.h>
 	#include <rayjs_generated.h>
+	#include <raylib.h>
 	#include <rcamera.h>
 	
 	static JSValue js_GetCameraForward(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
@@ -266,14 +267,14 @@
 		JS_CFUNC_DEF("GetCameraProjectionMatrix",2,js_GetCameraProjectionMatrix)
 	};
 	
-	static int js_js_rcamera_init(JSContext * ctx,JSModuleDef * m){
+	static int js_rcamera_init(JSContext * ctx,JSModuleDef * m){
 		size_t listcount=countof(jsrcamera_funcs);
 		JS_SetModuleExportList(ctx,m,jsrcamera_funcs,(int)listcount);
 		return 0;
 	}
 	
-	JSModuleDef * js_init_module_js_rcamera(JSContext * ctx,const char * module_name){
-		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_js_rcamera_init);
+	JSModuleDef * js_init_module_rcamera(JSContext * ctx,const char * module_name){
+		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_rcamera_init);
 		if(!m){
 			return NULL;
 		}
@@ -282,4 +283,4 @@
 		return m;
 	}
 
-#endif //JS_js_rcamera_GUARD
+#endif //JS_rcamera_GUARD

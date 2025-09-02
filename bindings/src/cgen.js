@@ -248,7 +248,7 @@ export function getVariableParts(input,variables){
             if(input[pos]==')')pos++;
         }
         capture=[];
-        pos=simpleregex(input,["nr*","*/+-([{.'\""],pos,capture);
+        pos=simpleregex(input,["nr*","*/+-&([{.'\""],pos,capture);
         let str=capture[0].trim();
         if(str!=''){
             if(isNaN(str)){
@@ -304,6 +304,9 @@ export function getVariableParts(input,variables){
                 }
                 pos++;
             }
+        }else if(input[pos]=='&'){
+            parts.push({type:'ref'});
+            pos++;
         }else if(input[pos]=='.'){
             pos++;
         }else if('*/+-'.includes(input[pos])){
@@ -591,6 +594,13 @@ export function resolveVariable(variableParts,targetType,variableList){
                     throw new Error("assignment can not end on "+part.name);
                 }
                 init();
+            }break;
+            case "ref":{
+                resolved='&'+resolved;
+                if(fields.length>0){
+                    fields=[];
+                }
+                type+=' *';
             }break;
         }
     }

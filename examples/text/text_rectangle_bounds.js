@@ -16,9 +16,33 @@
 *
 ********************************************************************************************/
 
-import {DrawRectangleRec, DrawTextCodepoint, GetCodepoint, GetFontDefault, GetGlyphIndex,
+import {
+    DrawRectangleRec,
+    DrawTextCodepoint,
+    GetCodepoint,
+    GetFontDefault,
+    GetGlyphIndex,
     GetMousePosition,
-    InitWindow, IsKeyPressed, KEY_SPACE, MAROON, Rectangle, SetTargetFPS, TextLength, Vector2, WHITE, WindowShouldClose } from "rayjs:raylib";
+    CheckCollisionPointRec,
+    IsMouseButtonDown,
+    MOUSE_BUTTON_LEFT,
+    BeginDrawing,
+    ClearBackground,
+    DrawRectangleLinesEx,
+    GRAY,
+    InitWindow,
+    IsKeyPressed,
+    KEY_SPACE,
+    MAROON,
+    Rectangle,
+    SetTargetFPS,
+    TextLength,
+    Vector2,
+    RAYWHITE,
+    WHITE,
+    WindowShouldClose,
+    IsMouseButtonReleased, Fade, DrawRectangle, DrawText, BLACK, RED, EndDrawing, CloseWindow
+} from "rayjs:raylib";
 
 // Draw text using font inside rectangle limits
 function DrawTextBoxed(font, text, rec, fontSize, spacing, wordWrap, tint) {

@@ -1,6 +1,7 @@
 import { CodeScope, getsubtype, resolveVariable, getVariableParts } from "./cgen.js";
 import * as fs from "./fs.js";
 import { source_parser } from "./source_parser.js";
+
 function getBoundName(variable){
     let bound_name=variable.props.bound_name;
     if(!variable.aliased_types)return bound_name;
@@ -9,6 +10,25 @@ function getBoundName(variable){
         bound_name=variable.props.bound_name;
     }
     return bound_name;
+}
+function compileSrcLen(ctx0,srcLen0,writeto){
+    //We get ['condition','variable'|object]
+    ctx0.declare('int',writeto);
+    let tasks=[[ctx0,srcLen0]];
+    while(tasks.length>0){
+        const [ctx1,srcLen1]=tasks.pop();
+        ctx1.if([]);
+        for(let i=0;i<srcLen1.length;i+=2){
+            ctx1.elsif(srcLen1[i],(ctx2)=>{
+                if(typeof(srcLen1[i+2])=="object"){
+                    tasks.push([nested,srcLen1[i+1]]);
+                }else{
+                    ctx2.declare('int',writeto,srcLen1[i+1]);
+                }
+            })
+        }
+    }
+
 }
 function subrepeat(fieldname,sizevars){
     //converts 'type',[2,3] to {{type[0][0],type[0][1],type[0][2]},{type[1][0],type[1][1],type[1][2]}}
@@ -211,6 +231,7 @@ export class QuickJsGenerator {
             if(addArray){
                 ctx.call('JS_GetClassID',[src],{type:'JSClassID',name:`${tmpname}_class`});
             }
+            ctx.declare('JSValue','src',src);
             ctx.if([]);
 
             //TODO: (out of spec) allow bidirectional auto casting of vec2,vec3,vec4
@@ -221,26 +242,28 @@ export class QuickJsGenerator {
                 //Is arrayProxy?
                 ctx.elsif(`${tmpname}_class == js_ArrayProxy_class_id`,(ctx)=>{
                     //void * opaque = JS_GetOpaque(val, js_ArrayProxy_class_id);
-                    ctx.call('JS_GetOpaque',[src, 'js_ArrayProxy_class_id'],{type:'void *',name:`opaque_${tmpname}`});
+                    ctx.call('JS_GetOpaque',['src', 'js_ArrayProxy_class_id'],{type:'void *',name:`opaque_${tmpname}`});
                     //ArrayProxy_class AP = *(ArrayProxy_class *)opaque;
                     ctx.declare('ArrayProxy_class',`AP_${tmpname}`,`opaque_${tmpname}(ArrayProxy_class *)[0]`);
                     //arr = AP.values(ctx,AP.opaque,JS_UNDEFINED,0,false);
-                    ctx.call(`AP_${tmpname}.values`,['ctx',`AP_${tmpname}.opaque`,0,false],{type:'JSValue',name:src});
+                    ctx.call(`AP_${tmpname}.values`,['ctx',`AP_${tmpname}.opaque`,0,false],{type:'JSValue',name:'src'});
                     if(!flags.dynamicAlloc){
                         ctx.declare('bool',`freesrc_${tmpname}`,'true');
                     }else{
-                        ctx.call('memoryStore',['memoryCurrent', 'JS_FreeValue', `${src}`],{type:'memoryNode *',name:'memoryCurrent'});
+                        ctx.call('memoryStore',['memoryCurrent', 'JS_FreeValue', 'src'],{type:'memoryNode *',name:'memoryCurrent'});
                     }
                 });
 
                 //TODO: allow dynamic binding of array properties
-                ctx.if(`JS_IsArray(${src}) == 1`,(ctx)=>{
+                ctx.if(`JS_IsArray(src) == 1`,(ctx)=>{
                     let srclen = sizeVars.pop();
                     let size=srclen;
                     //get length from existing jsArray
-                    if ( srclen == undefined || flags.supressAllocation  ) {
-                        ctx.if(`JS_GetLength(ctx,${src},size_${tmpname})==-1`,(ctx)=>{
-                            size=`size_${tmpname}`;
+                    if ( srclen == undefined ) {
+                        ctx.if(`JS_GetLength(ctx,src,size_${tmpname})==-1`,(ctx)=>{
+                            if(size==undefined){
+                                size=`size_${tmpname}`;
+                            }
                             errorCleanupFn(ctx);
                             ctx.return(flags.altReturn||"JS_EXCEPTION");
                         });
@@ -262,7 +285,7 @@ export class QuickJsGenerator {
                         }
                     }
                     if(size==1){
-                        ctx.call('JS_GetPropertyUint32',['ctx',src,0],{type:'JSValue',name:`js_${tmpname}`});
+                        ctx.call('JS_GetPropertyUint32',['ctx','src',0],{type:'JSValue',name:`js_${tmpname}`});
                         let gen=new QuickJsGenerator(ctx);
                         gen.jsToC(subtype, `${name}[0]`, `js_${tmpname}`, {
                             supressDeclaration: true, dynamicAlloc: true, altReturn:flags.altReturn
@@ -270,7 +293,7 @@ export class QuickJsGenerator {
                         ctx.call('JS_FreeValue',['ctx',`js_${tmpname}`]);
                     }else{
                         ctx.for(0,size,(ctx,iter)=>{
-                            ctx.call('JS_GetPropertyUint32',['ctx',src,iter],{type:'JSValue',name:`js_${tmpname}`});
+                            ctx.call('JS_GetPropertyUint32',['ctx','src',iter],{type:'JSValue',name:`js_${tmpname}`});
                             let gen=new QuickJsGenerator(ctx);
                             gen.jsToC(subtype, `${name}[${iter}]`, `js_${tmpname}`, {
                                 supressDeclaration: true, dynamicAlloc: true, altReturn:flags.altReturn
@@ -292,7 +315,7 @@ export class QuickJsGenerator {
             if(addString) {
                 ctx.elsif(`JS_IsString(${src}) == 1`,(ctx)=>{
                     if(flags.noContextAlloc){
-                        ctx.call('JS_ToCStringLen',['ctx', `size_${tmpname}`,src],{name:`js_${name}`,type:"char *"});
+                        ctx.call('JS_ToCStringLen',['ctx', `size_${tmpname}`,'src'],{name:`js_${name}`,type:"char *"});
                         ctx.call(jsc.malloc,['ctx', `size_${tmpname} * sizeof(char *)`],{type,name});
                         ctx.call(`memcpy`,[name,`js_${name}`,"size_" + tmpname]);
                         ctx.call('JS_FreeCString',['ctx',name]);
@@ -300,7 +323,7 @@ export class QuickJsGenerator {
                             ctx.call('memoryStore',['memoryCurrent', `${jsc.free}`, name],{type:'memoryNode *',name:'memoryCurrent'});
                         }
                     }else{
-                        ctx.call('JS_ToCStringLen',['ctx', `size_${tmpname}`, src],{type:"char *",name});
+                        ctx.call('JS_ToCStringLen',['ctx', `size_${tmpname}`, 'src'],{type:"char *",name});
                         if(flags.dynamicAlloc){
                             ctx.call('memoryStore',['memoryCurrent', 'JS_FreeCString', name],{type:'memoryNode *',name:'memoryCurrent'});
                         }
@@ -310,16 +333,16 @@ export class QuickJsGenerator {
 
             //Check if Buffer
             if(addBuffer) {//check for arrayBuffer only if [] but not [][]
-                ctx.elsif(`JS_IsArrayBuffer(${src}) == 1`,(ctx)=>{
+                ctx.elsif(`JS_IsArrayBuffer(src) == 1`,(ctx)=>{
                     ctx.declare("size_t","size_" + tmpname);
 
                     if(flags.noContextAlloc){
-                        ctx.call('JS_GetArrayBuffer',['ctx', `size_${tmpname}`, src],{type,name:'js_'+name});
+                        ctx.call('JS_GetArrayBuffer',['ctx', `size_${tmpname}`, 'src'],{type,name:'js_'+name});
                         ctx.call(jsc.malloc,['ctx', `size_${tmpname} * sizeof(${type})`],{type,name});
                         ctx.call(`memcpy`,[name,`js_${name}`,"size_" + tmpname]);
                     }else{
                         //arr.declare('JSValue',`da_${tmpname}`,false,`JS_DupValue(ctx,${src})`,!flags.dynamicAlloc);
-                        ctx.call('JS_GetArrayBuffer',['ctx',`size_${tmpname}`,src],{type,name});
+                        ctx.call('JS_GetArrayBuffer',['ctx',`size_${tmpname}`,'src'],{type,name});
                     }
                 });
             }
@@ -328,7 +351,7 @@ export class QuickJsGenerator {
                 errorCleanupFn(ctx);
                 if(!flags.dynamicAlloc && addArray){
                     ctx.if(`freesrc_${tmpname}`,(ctx)=>{
-                        ctx.call('JS_FreeValue',['ctx',src]);
+                        ctx.call('JS_FreeValue',['ctx','src']);
                     });
                 }
                 ctx.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${type}"`]);
@@ -338,11 +361,11 @@ export class QuickJsGenerator {
             //Check if typed array like int8Array
             if(addTypedArray){
                 ctx.elsif('',(ctx)=>{
-                    ctx.call('JS_GetClassID',[src],{type:'JSClassID',name:'classid_'+tmpname});
+                    ctx.call('JS_GetClassID',['src'],{type:'JSClassID',name:'classid_'+tmpname});
                     ctx.if(['classid_'+tmpname+'=='+typedClassIds.join(' || classid_'+tmpname+'=='),''],(ctx)=>{
                         ctx.declare('size_t','offset_'+tmpname);
                         ctx.declare('size_t','size_'+tmpname);
-                        ctx.call('JS_GetTypedArrayBuffer',['ctx',src,`offset_${tmpname}`,`size_${tmpname}`,'NULL'],{type:'JSValue',name:'da_'+tmpname});//calls js_dup, free this
+                        ctx.call('JS_GetTypedArrayBuffer',['ctx','src',`offset_${tmpname}`,`size_${tmpname}`,'NULL'],{type:'JSValue',name:'da_'+tmpname});//calls js_dup, free this
 
                         if(flags.noContextAlloc){
                             ctx.call('JS_GetArrayBuffer',['ctx',`size_${tmpname}`,`da_${tmpname}`],{type,name:`js_${name}`});
@@ -378,41 +401,7 @@ export class QuickJsGenerator {
         type=type.replace('const ','');
         let tmpname=name.replace(/[^\w]/g,'');
 
-        //spread
-        //TODO: spread should accept (any) instead of last type
-        if(type.startsWith('...')){
-            //getSize based on argc-arg[i]
-            let start=(new RegExp("\\[(\\d+)]$")).exec(src);
-            if(start==null){
-                start=0;
-            }else{
-                start=start[1];
-                src=src.substring(0,src.lastIndexOf('['));
-            }
-            type=type.substring(3);
-            let initValue='argc';
-            if(start>0){
-                initValue+='-'+String(start);
-            }
-            this.cgen.declare("size_t", `size_${tmpname}`,initValue);
-            this.cgen.if(`size_${tmpname}>${globalThis.config.spreadSize}`,(ctx)=>{
-                ctx.assign(`size_${tmpname}`,globalThis.config.spreadSize);
-            });
-            //[]=[].map()
-            this.cgen.call('js_malloc',['ctx',`size_${tmpname} * sizeof(${type})`],{type:type+' *',name});
-            if(flags.dynamicAlloc){
-                this.cgen.call('memoryStore',['memoryCurrent','js_free',name],{type:'memoryNode *',name:'memoryCurrent'});
-            }
-            //main spread allways skips dynamicAlloc
-            let iter='i'+depth;
-            const f=this.cgen.for('0','size_' + tmpname,(ctx,i)=>{
-                const plusstr=start>0?`+${start}`:'';
-                //subitems use dynamicAlloc, since we can not define names statically
-                (new QuickJsGenerator(ctx)).jsToC(type,`${name}[${i}]`,`${src}[${i}${plusstr}]`,{supressDeclaration:true,dynamicAlloc:true,allowNull:flags.allowNull,altReturn:flags.altReturn},depth+1);
-            });
-
-            //Arrays
-        }else if(type.endsWith(']')){
+        if(type.endsWith(']')){
             let arrayLen = getStaticArrayLen(type);
             sizeVars.push(...arrayLen.sizevars);
             getArray(this.cgen,arrayLen.type+" *".repeat(arrayLen.sizevars.length),name,src);
@@ -427,7 +416,10 @@ export class QuickJsGenerator {
             }
             //functions must be a pointer, don't check for them
             if(subtype=='void'){
-                this.cgen.declare('void *',`${name}[0]`,`NULL`);
+                let target=this.cgen.allocVariable('target');
+                this.cgen.declare('void *',`target`);
+                this.cgen.assign(name,`${target}&`);
+                //same as: this.cgen.call('js_malloc',['ctx','sizeof(void *)'],{name,type:'void *'});
             }else if (variable!=undefined && variable.type=='type' && variable.subtype=='struct'){
                 let bound_name=getBoundName(variable);
                 if(bound_name==undefined){
@@ -450,6 +442,7 @@ export class QuickJsGenerator {
                     if(flags.jsType===undefined){
                         //detect array
                         flags.jsType="array";
+                        //TODO: unnecesarly calls malloc
                         getArray(this.cgen,subtype+' *',name,src,(ctx)=>{
                             //or direct
                             let gen=new QuickJsGenerator(ctx);
@@ -457,6 +450,7 @@ export class QuickJsGenerator {
                             ctx.declare(subtype+' *', name,'js_'+tmpname);
                         });
                     }else if(flags.jsType==='array'){
+                        //TODO: unnecesarly calls malloc
                         getArray(this.cgen,subtype+' *',name,src);
                     }else{
                         //Or direct
@@ -784,7 +778,6 @@ export class QuickJsGenerator {
             if(srclen===undefined){
                 //TODO: remove sizeof() based length
                 console.log("WARNING: sizeof length is deprecated, at "+type+name);
-                ctx.call('JS_NewArray',['ctx'],{type:'JSValue',name});
                 ctx.declare(type,`sizeref_${name}`,src);
                 ctx.call('sizeof',[`sizeref_${name}`],{type:'size_t',name:'size_'+name});
                 ctx.call('sizeof',[subtype],{type:'size_t',name:'size1_'+name});
@@ -796,25 +789,16 @@ export class QuickJsGenerator {
 
 
             }else if(typeof(srclen)=="number"){
-                ctx.call('JS_NewArray',['ctx'],{type:'JSValue',name});
                 for(let i=0;i<srclen;i++){
                     (new QuickJsGenerator(ctx)).cToJs(subtype,'js_'+tmpname+i,src+'['+i+']',flags,depth+1,sizeVars);
                     ctx.call('JS_DefinePropertyValueUint32',['ctx',name,i,`js_${tmpname}${i}`,'JS_PROP_C_W_E']);
                 }
-            }else if(typeof(srclen)=="string"){
-                let child=ctx;
-                if(srclen==='1&'){
-                    (new QuickJsGenerator(ctx)).cToJs(subtype,'js_'+tmpname,`${src}[0]`,{},depth+1,sizeVars);
-                    ctx.call('JS_DefinePropertyValueUint32',['ctx',name,'0',`js_${tmpname}`,'JS_PROP_C_W_E']);
-                    return;
-                }else if(srclen==='&'){
-                    sizeVars.push('&');
-                    ctx.declare("size_t", "size_" + tmpname);
-                    ctx.call('JS_GetLength',['ctx',name,`size_${tmpname}`]);
-                    srclen="size_" + tmpname;
-                }else{
-                    ctx.call('JS_NewArray',['ctx'],{type:'JSValue',name});
+            }else if(typeof(srclen)=="object" || typeof(srclen)=="string"){
+                if(typeof(srclen)=="object"){
+                    compileSrcLen(ctx,srclen,'srclen');
+                    srclen='srclen';
                 }
+                let child=ctx;
                 ctx.for('0', srclen,(ctx,loopvar)=>{
                     let tmpflags=structuredClone(flags);
                     tmpflags.supressDeclaration=false;
@@ -835,13 +819,16 @@ export class QuickJsGenerator {
             const strpos=type.indexOf('[');
             let len=type.substring(strpos+1,type.length-1).trim();
             //define
-            this.cgen.declare('JSValue', name);
+            cgen.declare('JSValue', name);
             sizeVars.push(Number(len));
+            cgen.call('JS_NewArray',['ctx'],{type:'JSValue',name});
             setArray(this.cgen,getsubtype(type)+' *',name,src);
             //define name as (any)[] using setArray
         }else if(type.endsWith('*')){
             //define name as (any)[] using setArray
-            this.cgen.declare('JSValue', name);
+            if(type!=='char *') {
+                cgen.call('JS_NewArray',['ctx'],{type:'JSValue',name});
+            }
             setArray(this.cgen,type,name,src);
         }else if(type.endsWith('&')){
             // set flag supressDeclaration=true (we already have JSValue) in the function ABOVE, for readability
@@ -869,10 +856,11 @@ export class QuickJsGenerator {
             if(flags.allowNull){
                 arr.if(`${src} != NULL`,(fn=>{arr=fn;}));
             }
+            let subsrc=src;
             if(subtype.endsWith(' *')){
-                sizeVars.push("&");
+                subsrc+='[0]';
             }else{
-                sizeVars.push('1&');
+                sizeVars.push(1);
                 subtype+=' *';
             }
             //if defined as a direct value previously in code, it is good to check
@@ -886,11 +874,11 @@ export class QuickJsGenerator {
             if(var_exists){
                 //Check only supported if previously defined (AKA. returns by pointer)
                 arr.if(`JS_IsArray(${name}) == 1`,(arr)=>{
-                    setArray(arr,subtype,name,src);
+                    setArray(arr,subtype,name,subsrc);
                 });
             }else{
                 arr.call('JS_NewArray',['ctx'],{type:'JSValue', name});
-                setArray(arr,subtype,name,src);
+                setArray(arr,subtype,name,subsrc);
             }
         }else{
             //Normal type return

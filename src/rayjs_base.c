@@ -102,14 +102,14 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt){
     js_init_module_std(ctx, "qjs:std");
     js_init_module_os(ctx, "qjs:os");
     js_init_module_bjson(ctx, "qjs:bjson");
-    js_init_module_js_raylib(ctx, "rayjs:raylib");
-    js_init_module_js_raymath(ctx, "rayjs:raymath");
-    js_init_module_js_rcamera(ctx, "rayjs:rcamera");
-    js_init_module_js_raygui(ctx, "rayjs:raygui");
-    js_init_module_js_rlights(ctx, "rayjs:rlights");
-    js_init_module_js_reasings(ctx, "rayjs:reasings");
-    js_init_module_js_rlgl(ctx, "rayjs:rlgl");
-    js_init_module_js_rlightmapper(ctx, "rayjs:rlightmapper");
+    js_init_module_raylib(ctx, "rayjs:raylib");
+    js_init_module_raymath(ctx, "rayjs:raymath");
+    js_init_module_rcamera(ctx, "rayjs:rcamera");
+    js_init_module_raygui(ctx, "rayjs:raygui");
+    js_init_module_rlights(ctx, "rayjs:rlights");
+    js_init_module_reasings(ctx, "rayjs:reasings");
+    js_init_module_rlgl(ctx, "rayjs:rlgl");
+    js_init_module_rlightmapper(ctx, "rayjs:rlightmapper");
 
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyFunctionList(ctx, global, global_obj, countof(global_obj));
@@ -241,7 +241,7 @@ typedef struct JSArrayIteratorData {
     uint32_t idx;
 } JSArrayIteratorData;
 
-static JSValue js_create_ArrayProxy_iterator(JSContext * ctx, JSValue this_val,int argc, JSValue * argv, int magic){
+static JSValue js_create_ArrayProxy_iterator(JSContext * ctx, JSValueConst this_val,int argc, JSValue * argv, int magic){
     JSValue enum_obj, arr;
     JSArrayIteratorData *it;
     JSIteratorKindEnum kind;
@@ -269,7 +269,7 @@ static JSValue js_create_ArrayProxy_iterator(JSContext * ctx, JSValue this_val,i
     it->obj = arr;
     it->kind = kind;
     it->idx = 0;
-    JS_SetOpaque(enum_obj, it);
+    JS_ForceSetOpaque(enum_obj, it);
     return enum_obj;
  fail1:
     JS_FreeValue(ctx, enum_obj);
@@ -296,6 +296,9 @@ static JSValue js_ArrayProxy_get(JSContext *ctx, JSValue obj, JSAtom atom, JSVal
     if (JS_AtomIsTaggedInt(atom)) {
         return AP.get(ctx,AP.opaque,JS_AtomToUInt32(atom),false);
     }else{
+        if(atom==JS_ATOM_Symbol_iterator){
+            return JS_NewCFunctionMagic(ctx,js_create_ArrayProxy_iterator,"values",0,JS_CFUNC_generic_magic,JS_ITERATOR_KIND_VALUE);
+        }
         return AP.get(ctx,AP.opaque,(uint32_t)atom,true);
     }
 

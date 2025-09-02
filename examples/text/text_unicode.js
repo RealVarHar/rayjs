@@ -138,7 +138,7 @@ function RandomizeEmoji() {
 
     for (let i = 0; i < emoji.length; ++i) {
         // 0-179 emoji codepoints (from emoji char array) each 4bytes + null char
-        emoji[i].index = GetRandomValue(0, 179)*5;// Index inside `emojiCodepoints`
+        emoji[i].index = GetRandomValue(0, 179)*2;// Index inside `emojiCodepoints`
 
         // Generate a random color for this emoji
         emoji[i].color = Fade(ColorFromHSV((start*(i + 1))%360, 0.6, 0.85), 0.8);// Emoji color
@@ -321,7 +321,7 @@ function DrawTextBoxedSelectable(font, text, rec, fontSize, spacing, wordWrap, t
             // Draw random emojis in the background
             //------------------------------------------------------------------------------
             for (let i = 0; i < emoji.length; ++i) {
-                const txt = emojiCodepoints[emoji[i].index];
+                const txt = emojiCodepoints.substring(emoji[i].index,emoji[i].index+2);
                 let emojiRect = new Rectangle( position.x, position.y, fontEmoji.baseSize, fontEmoji.baseSize );
 
                 if (!CheckCollisionPointRec(mouse, emojiRect)) {
@@ -388,7 +388,7 @@ function DrawTextBoxedSelectable(font, text, rec, fontSize, spacing, wordWrap, t
 
                 // Draw the main text message
                 let textRect = new Rectangle( msgRect.x + horizontalPadding/2, msgRect.y + verticalPadding/2, msgRect.width - horizontalPadding, msgRect.height );
-                DrawTextBoxed(font, messages[message].text, textRect, font.baseSize, 1, true, WHITE);
+                DrawTextBoxed(font, messages[message].text, textRect, font.baseSize, 1, true, WHITE);//TODO: requres special handing from rayjs to display properly
 
                 // Draw the info text below the main message
                 let size = messages[message].text.length;

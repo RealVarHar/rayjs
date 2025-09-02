@@ -8,53 +8,34 @@ export class TypeScriptDeclaration {
             this.module = this.root.tsDeclareModule(modulename);
             this.module.name = modulename;
         }
-
-        this.includeList={};//{key=>{value:true}}
-        this.includes = this.module.child();
-        this.includes.tags.module=this.module.tags.module;
-        this.structs = this.module.child();
-        this.structs.tags.module=this.module.tags.module;
-        this.functions = this.module.child();
-        this.functions.tags.module=this.module.tags.module;
-        this.constants = this.module.child();
-        this.constants.tags.module=this.module.tags.module;
         this.defined={};
+        this.functions=[];
+        this.structs=[];
+        this.callbacks=[];
+        this.aliases=[];
+        this.constants=[];
     }
-    addFunction(name, api, lookups) {
-        const options = api.binding || {};
-        const para = (api.params || []).filter(x => !x.binding.ignore).map(x => ({ name: (x.type=='...'||x.binding.jsType=='...'?'...':'')+x.name, type: x.binding.jsType ?? this.toJsType(x.type,lookups) }));
-        const returnType = options.jsReturns ?? this.toJsType(api.returnType,lookups);
-        this.functions.tsDeclareFunction(name, para, returnType, api.description);
+    addConstant(name, type, description){
         this.defined[name]=true;
+        this.constants.push([name, type, description]);
+    }
+    addFunction(api) {
+        this.defined[api.name]=true;
+        this.functions.push(api);
     }
     addStruct(api) {
-        const options = api.binding || {};
-        var fields = api.fields.filter(x => !!(options.properties || {})[x.name]).map(x => ({ name: x.name, description: x.description, type: this.toJsType(x.type) }));
-        this.structs.tsDeclareInterface(api.name, fields);
-        this.structs.tsDeclareType(api.name, !!(options.createConstructor), fields);
         this.defined[api.name]=true;
+        if(api.fields==undefined)debugger;
+        this.structs.push(api);
     }
-    addCallback(name, parameters, lookups){
+    addCallback(name, parameters){
         if(this.defined[name])return;
-        let ret = parameters.returnType;
-        if(ret==undefined) {
-            ret=='void';
-        }else{
-            ret = this.toJsType(ret,lookups);
-        }
-        let inlinefn;
-        if(parameters.threaded){
-            //when inside of a worker, we pass the indentyfier that will be caught by onmessage
-            inlinefn = 'string | number';
-        }else{
-            inlinefn = `(${parameters.map(a=>`${a.name}:${this.toJsType(a.type.replaceAll('&', '*'),lookups)}`).join(',')})=>${ret}`;
-        }
-        this.structs.tsAliasType(name, inlinefn);
         this.defined[name]=true;
+        this.callbacks.push({name, parameters});
     }
-    addAlias(name, aliasof, lookups){
-        aliasof = this.toJsType(aliasof,lookups);
-        this.structs.tsAliasType(name, aliasof);
+    addAlias(name, aliasof){
+        this.defined[name]=true;
+        this.aliases.push({name, aliasof});
     }
     toJsType(type,lookups) {
         if(type.startsWith('const ')){
@@ -64,10 +45,18 @@ export class TypeScriptDeclaration {
             let variable=lookups.variables[type];
             if(variable){
                 //custom type
-                let sourceModule=lookups.includegen.tokenList.find(a=>a.type=='include'&&a.text.vars.find(b=>b.name==type)!=undefined);
-                if(sourceModule.text.name != this.module.name){
-                    if(this.includeList[sourceModule]==undefined)this.includeList[sourceModule]=[];
-                    this.includeList[sourceModule][type]=true;
+                let sourceModule=lookups.includegen.tokenList.find(a=>a.type=='include'&&a.text.vars.find(b=>b.name==type)!=undefined).text.name;
+                let moduletypingName;
+                for(let key in lookups.modules){
+                    const module=lookups.modules[key];
+                    if(module.gen.c_source==sourceModule){
+                        moduletypingName='rayjs:'+module.gen.name;
+                        break;
+                    }
+                }
+                if(moduletypingName != this.module.name){
+                    if(this.includeList[moduletypingName]==undefined)this.includeList[moduletypingName]={};
+                    this.includeList[moduletypingName][type]=true;
                 }
             }
         }
@@ -145,11 +134,62 @@ export class TypeScriptDeclaration {
                 return type.replace(" *", "").replace("const ", "");
         }
     }
-    writeTo(filename) {
+    writeTo(filename, lookups) {
         //reset includes
+        this.includeList={};//{key=>{value:true}}
+        this.includesGen = this.module.child();
+        this.includesGen.tags.module=this.module.tags.module;
+        this.structsGen = this.module.child();
+        this.structsGen.tags.module=this.module.tags.module;
+        this.functionsGen = this.module.child();
+        this.functionsGen.tags.module=this.module.tags.module;
+        this.constantsGen = this.module.child();
+        this.constantsGen.tags.module=this.module.tags.module;
+
+        //Structs
+        for(let struct of this.structs){
+            const options = struct.binding || {};
+            var fields = struct.fields.filter(x => x.binding.get).map(x => ({ name: x.name, description: x.description, type: this.toJsType(x.type) }));
+            this.structsGen.tsDeclareInterface(struct.name, fields);
+            this.structsGen.tsDeclareType(struct.name, !!(options.createConstructor), fields);
+        }
+        //Callbacks
+        for(let callback of this.callbacks){
+            let ret = callback.parameters.returnType;
+            if(ret==undefined) {
+                ret=='void';
+            }else{
+                ret = this.toJsType(ret,lookups);
+            }
+            let inlinefn;
+            if(callback.parameters.threaded){
+                //when inside of a worker, we pass the indentyfier that will be caught by onmessage
+                inlinefn = 'string | number';
+            }else{
+                inlinefn = `(${callback.parameters.map(a=>`${a.name}:${this.toJsType(a.type.replaceAll('&', '*'),lookups)}`).join(',')})=>${ret}`;
+            }
+            this.structsGen.tsAliasType(callback.name, inlinefn);
+        }
+        //Aliases
+        for(let alias of this.aliases){
+            const aliasof = this.toJsType(alias.aliasof,lookups);
+            this.structsGen.tsAliasType(alias.name, aliasof);
+        }
+        //Constants
+        for(let constant of this.constants){
+            this.constantsGen.tsDeclareConstant(...constant);
+        }
+        //Functions
+        for(let fn of this.functions){
+            const options = fn.binding || {};
+            const arg = fn.args.filter(x => !x.binding.ignore).map(x => ({ name: (x.type=='...'?'...':'')+x.name, type: x.binding.jsType ?? this.toJsType(x.type,lookups) }));
+            const returnType = options.jsReturns ?? this.toJsType(fn.returnType,lookups);
+            this.functionsGen.tsDeclareFunction(fn.name, arg, returnType, fn.description);
+        }
+
         for(let key in this.includeList){
             let toload = this.includeList[key];
-            this.includes.tsImportTypes(key,Object.keys(toload));
+            this.includesGen.tsImportTypes(key,Object.keys(toload));
         }
         //generate code
         writeFileSync(filename, this.root.toString());
@@ -200,9 +240,9 @@ class TypescriptGenerator {
         let declare =this.tags.module?'':'declare ';
         this.line(`${declare}var ${name}: {\n`);
         this.indent();
-        this.line("prototype: " + name);
+        this.line(`prototype: ${name}\n`);
         if (hasConstructor)
-            this.line(`new(${parameters.map(x => x.name + "?: " + x.type).join(', ')}): ${name}`);
+            this.line(`new(${parameters.map(x => x.name + "?: " + x.type).join(', ')}): ${name}\n`);
         this.unindent();
         this.line("}\n");
     }
@@ -223,7 +263,7 @@ class TypescriptGenerator {
         this.line("}\n");
     }
     tsImportTypes(module,types){
-        this.line(`import type {${types.join(',')}} from '${module}'`);
+        this.line(`import type {${types.join(',')}} from '${module}';\n`);
     }
     tsDeclareModule(name){
         this.line(`declare module "${name}" {\n`);
@@ -235,7 +275,7 @@ class TypescriptGenerator {
         return child;
     }
     tsAliasType(name, aliasof){
-        this.line(`type ${name} = ${aliasof}`);
+        this.line(`type ${name} = ${aliasof};\n`);
     }
     tsDocComment(comment) {
         this.line(`/** ${comment} */\n`);

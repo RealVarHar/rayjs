@@ -1,12 +1,19 @@
 declare module "rayjs:raymath" {
-import type {Vector2,Matrix,Vector3,Quaternion,float3,Vector4,float16} from '[object Object]'interface float3 {
+import type {Vector2,Matrix,Vector3,Quaternion,Vector4} from 'rayjs:raylib';
+interface float3 {
+v: [number,number,number],
 }
 var float3: {
-prototype: float3new(): float3}
+prototype: float3
+new(v?: [number,number,number]): float3
+}
 interface float16 {
+v: [number,number,number,number,number,number,number,number,number,number,number,number,number,number,number,number],
 }
 var float16: {
-prototype: float16new(): float16}
+prototype: float16
+new(v?: [number,number,number,number,number,number,number,number,number,number,number,number,number,number,number,number]): float16
+}
 /** undefined */
 function Clamp(value: number, min: number, max: number): number/** undefined */
 function Lerp(start: number, end: number, amount: number): number/** undefined */

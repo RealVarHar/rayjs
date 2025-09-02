@@ -48,14 +48,14 @@ typedef struct ArrayProxy_class {
 #include <stdarg.h>
 #include "modules/quickjs-libc.h"
 
-extern JSModuleDef * js_init_module_js_raylib(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_raymath(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_rcamera(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_raygui(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_rlights(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_reasings(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_rlgl(JSContext * ctx, const char * module_name);
-extern JSModuleDef * js_init_module_js_rlightmapper(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_raylib(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_raymath(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_rcamera(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_raygui(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_rlights(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_reasings(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_rlgl(JSContext * ctx, const char * module_name);
+extern JSModuleDef * js_init_module_rlightmapper(JSContext * ctx, const char * module_name);
 static JSCFunctionListEntry argv0;
 
 #ifndef countof

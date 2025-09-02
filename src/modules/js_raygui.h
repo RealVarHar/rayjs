@@ -1,5 +1,5 @@
-#ifndef JS_js_raygui_GUARD
-	#define JS_js_raygui_GUARD
+#ifndef JS_raygui_GUARD
+	#define JS_raygui_GUARD
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -260,15 +260,16 @@
 		char * fileName;
 		JSValue da_fileName;
 		int64_t size_fileName;
+		JSValue src=argv[0];
 		if(JS_IsString(argv[0])==1){
-			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,argv[0]);
-		}else if(JS_IsArrayBuffer(argv[0])==1){
-			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,argv[0]);
+			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,src);
 		}else{
-			JSClassID classid_fileName=JS_GetClassID(argv[0]);
+			JSClassID classid_fileName=JS_GetClassID(src);
 			if(classid_fileName==JS_CLASS_INT8_ARRAY){
 				size_t offset_fileName;
-				da_fileName =JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,(size_t *)&size_fileName,NULL);
+				da_fileName =JS_GetTypedArrayBuffer(ctx,src,&offset_fileName,(size_t *)&size_fileName,NULL);
 				fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,da_fileName);
 				fileName +=offset_fileName;
 				size_fileName -=offset_fileName;
@@ -310,15 +311,16 @@
 		char * tooltip;
 		JSValue da_tooltip;
 		int64_t size_tooltip;
+		JSValue src=argv[0];
 		if(JS_IsString(argv[0])==1){
-			tooltip =(char *)JS_ToCStringLen(ctx,(size_t *)&size_tooltip,argv[0]);
-		}else if(JS_IsArrayBuffer(argv[0])==1){
-			tooltip =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_tooltip,argv[0]);
+			tooltip =(char *)JS_ToCStringLen(ctx,(size_t *)&size_tooltip,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			tooltip =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_tooltip,src);
 		}else{
-			JSClassID classid_tooltip=JS_GetClassID(argv[0]);
+			JSClassID classid_tooltip=JS_GetClassID(src);
 			if(classid_tooltip==JS_CLASS_INT8_ARRAY){
 				size_t offset_tooltip;
-				da_tooltip =JS_GetTypedArrayBuffer(ctx,argv[0],&offset_tooltip,(size_t *)&size_tooltip,NULL);
+				da_tooltip =JS_GetTypedArrayBuffer(ctx,src,&offset_tooltip,(size_t *)&size_tooltip,NULL);
 				tooltip =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_tooltip,da_tooltip);
 				tooltip +=offset_tooltip;
 				size_tooltip -=offset_tooltip;
@@ -352,15 +354,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -370,8 +373,7 @@
 			}
 		}
 		char * returnVal=(char *)GuiIconText(iconId,(const char *)text);
-		JSValue ret;
-		ret =JS_NewString(ctx,(const char *)returnVal);
+		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
 		if(JS_IsArray(argv[1])==1){
 			js_free(ctx,(void *)text);
 		}else if(JS_IsString(argv[1])==1){
@@ -399,8 +401,7 @@
 	
 	static JSValue js_GuiGetIcons(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		int * returnVal=GuiGetIcons();
-		JSValue ret;
-		ret =JS_NewArray(ctx);
+		JSValue ret=JS_NewArray(ctx);
 		int * sizeref_ret=returnVal;
 		size_t size_ret=sizeof(sizeref_ret);
 		size_t size1_ret=sizeof(int);
@@ -417,15 +418,16 @@
 		char * fileName;
 		JSValue da_fileName;
 		int64_t size_fileName;
+		JSValue src=argv[0];
 		if(JS_IsString(argv[0])==1){
-			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,argv[0]);
-		}else if(JS_IsArrayBuffer(argv[0])==1){
-			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,argv[0]);
+			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,src);
 		}else{
-			JSClassID classid_fileName=JS_GetClassID(argv[0]);
+			JSClassID classid_fileName=JS_GetClassID(src);
 			if(classid_fileName==JS_CLASS_INT8_ARRAY){
 				size_t offset_fileName;
-				da_fileName =JS_GetTypedArrayBuffer(ctx,argv[0],&offset_fileName,(size_t *)&size_fileName,NULL);
+				da_fileName =JS_GetTypedArrayBuffer(ctx,src,&offset_fileName,(size_t *)&size_fileName,NULL);
 				fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,da_fileName);
 				fileName +=offset_fileName;
 				size_fileName -=offset_fileName;
@@ -451,16 +453,14 @@
 		}
 		bool loadIconsName=(bool)js_loadIconsName;
 		char * * returnVal=GuiLoadIcons((const char *)fileName,loadIconsName);
-		JSValue ret;
-		ret =JS_NewArray(ctx);
+		JSValue ret=JS_NewArray(ctx);
 		char * * sizeref_ret=returnVal;
 		size_t size_ret=sizeof(sizeref_ret);
 		size_t size1_ret=sizeof(char *);
 		size_ret =size_ret/size1_ret;
 		int i;
 		for(i=0;i<size_ret;i++){
-			JSValue js_ret;
-			js_ret =JS_NewString(ctx,(const char *)returnVal[i]);
+			JSValue js_ret=JS_NewString(ctx,(const char *)returnVal[i]);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
 		if(JS_IsArray(argv[0])==1){
@@ -519,15 +519,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[0];
 		if(JS_IsString(argv[0])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[0]);
-		}else if(JS_IsArrayBuffer(argv[0])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[0]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[0]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[0],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -561,15 +562,16 @@
 		char * title;
 		JSValue da_title;
 		int64_t size_title;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,argv[1]);
+			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
 		}else{
-			JSClassID classid_title=JS_GetClassID(argv[1]);
+			JSClassID classid_title=JS_GetClassID(src);
 			if(classid_title==JS_CLASS_INT8_ARRAY){
 				size_t offset_title;
-				da_title =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,(size_t *)&size_title,NULL);
+				da_title =JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
 				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
 				title +=offset_title;
 				size_title -=offset_title;
@@ -603,15 +605,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -645,15 +648,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -687,15 +691,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -724,6 +729,7 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
@@ -731,14 +737,15 @@
 		char * * text;
 		int64_t size_text;
 		JSClassID text_class=JS_GetClassID(argv[1]);
+		JSValue src=argv[1];
 		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(argv[1],js_ArrayProxy_class_id);
+			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[1]);
+			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[1])==1){
-			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_text)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -746,18 +753,19 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)*text);
 			int i;
 			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,argv[1],(uint32_t)i);
+				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int64_t size_texti;
+				src =js_text;
 				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,js_text);
+					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
 					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(js_text)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
+				}else if(JS_IsArrayBuffer(src)==1){
+					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
 				}else{
-					JSClassID classid_texti=JS_GetClassID(js_text);
+					JSClassID classid_texti=JS_GetClassID(src);
 					if(classid_texti==JS_CLASS_INT8_ARRAY){
 						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti,(size_t *)&size_texti,NULL);
+						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
 						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
 						text[i] +=offset_texti;
 						size_texti -=offset_texti;
@@ -785,14 +793,15 @@
 		int * active;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[3] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -800,7 +809,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)active);
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -823,8 +832,8 @@
 		}
 		int returnVal=GuiTabBar(bounds,(const char * *)text,count,active);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -841,17 +850,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -941,15 +951,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -983,15 +994,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1025,15 +1037,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1067,15 +1080,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1088,14 +1102,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1111,7 +1126,7 @@
 			active =(bool *)js_malloc(ctx,size_active*sizeof(bool));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int js_activei=JS_ToBool(ctx,js_active);
 				if(js_activei<0){
 					JS_ThrowTypeError(ctx,(const char *)"js_active is not a bool");
@@ -1141,8 +1156,8 @@
 		}
 		int returnVal=GuiToggle(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewBool(ctx,active[0]);
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewBool(ctx,active[0]);
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1171,15 +1186,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1192,14 +1208,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1215,7 +1232,7 @@
 			active =(int *)js_malloc(ctx,size_active*sizeof(int));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -1247,8 +1264,8 @@
 		}
 		int returnVal=GuiToggleGroup(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1277,15 +1294,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1298,14 +1316,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1321,7 +1340,7 @@
 			active =(int *)js_malloc(ctx,size_active*sizeof(int));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -1353,8 +1372,8 @@
 		}
 		int returnVal=GuiToggleSlider(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1383,15 +1402,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1404,14 +1424,15 @@
 		bool freesrc_checked=(bool)false;
 		int64_t size_checked;
 		JSClassID checked_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(checked_class==js_ArrayProxy_class_id){
-			void * opaque_checked=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_checked=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_checked=((ArrayProxy_class *)opaque_checked)[0];
-			argv[2] =AP_checked.values(ctx,AP_checked.opaque,(int)0,(bool)false);
+			src =AP_checked.values(ctx,AP_checked.opaque,(int)0,(bool)false);
 			freesrc_checked =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_checked)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_checked)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1427,7 +1448,7 @@
 			checked =(bool *)js_malloc(ctx,size_checked*sizeof(bool));
 			int i;
 			for(i=0;i<size_checked;i++){
-				JSValue js_checked=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_checked=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int js_checkedi=JS_ToBool(ctx,js_checked);
 				if(js_checkedi<0){
 					JS_ThrowTypeError(ctx,(const char *)"js_checked is not a bool");
@@ -1457,8 +1478,8 @@
 		}
 		int returnVal=GuiCheckBox(bounds,(const char *)text,checked);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewBool(ctx,checked[0]);
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewBool(ctx,checked[0]);
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1487,15 +1508,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1508,14 +1530,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1531,7 +1554,7 @@
 			active =(int *)js_malloc(ctx,size_active*sizeof(int));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -1563,8 +1586,8 @@
 		}
 		int returnVal=GuiComboBox(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1593,15 +1616,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1614,14 +1638,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[2] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -1637,7 +1662,7 @@
 			active =(int *)js_malloc(ctx,size_active*sizeof(int));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -1688,8 +1713,8 @@
 		bool editMode=(bool)js_editMode;
 		int returnVal=GuiDropdownBox(bounds,(const char *)text,active,editMode);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -1718,17 +1743,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1741,14 +1767,15 @@
 		bool freesrc_value=(bool)false;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
 				if(JS_IsArray(argv[1])==1){
@@ -1766,7 +1793,7 @@
 			value =(int *)js_malloc(ctx,size_value*sizeof(int));
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_valuei;
 				int err_valuei=JS_ToInt32(ctx,&long_valuei,js_value);
 				if(err_valuei<0){
@@ -1865,8 +1892,8 @@
 		bool editMode=(bool)js_editMode;
 		int returnVal=GuiSpinner(bounds,(const char *)text,value,minValue,maxValue,editMode);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
@@ -1897,17 +1924,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -1920,14 +1948,15 @@
 		bool freesrc_value=(bool)false;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
 				if(JS_IsArray(argv[1])==1){
@@ -1945,7 +1974,7 @@
 			value =(int *)js_malloc(ctx,size_value*sizeof(int));
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_valuei;
 				int err_valuei=JS_ToInt32(ctx,&long_valuei,js_value);
 				if(err_valuei<0){
@@ -2044,8 +2073,8 @@
 		bool editMode=(bool)js_editMode;
 		int returnVal=GuiValueBox(bounds,(const char *)text,value,minValue,maxValue,editMode);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
@@ -2071,22 +2100,24 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				JSValue da_text=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				JSValue da_text=JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -2099,16 +2130,17 @@
 		}
 		char * textValue;
 		int64_t size_textValue;
+		src =argv[2];
 		if(JS_IsString(argv[2])==1){
-			textValue =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textValue,argv[2]);
+			textValue =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textValue,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textValue);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,src);
 		}else{
-			JSClassID classid_textValue=JS_GetClassID(argv[2]);
+			JSClassID classid_textValue=JS_GetClassID(src);
 			if(classid_textValue==JS_CLASS_INT8_ARRAY){
 				size_t offset_textValue;
-				JSValue da_textValue=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textValue,(size_t *)&size_textValue,NULL);
+				JSValue da_textValue=JS_GetTypedArrayBuffer(ctx,src,&offset_textValue,(size_t *)&size_textValue,NULL);
 				textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,da_textValue);
 				textValue +=offset_textValue;
 				size_textValue -=offset_textValue;
@@ -2122,14 +2154,15 @@
 		float * value;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -2137,7 +2170,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -2167,8 +2200,8 @@
 		bool editMode=(bool)js_editMode;
 		int returnVal=GuiValueBoxFloat(bounds,(const char *)text,textValue,value,editMode);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -2186,31 +2219,33 @@
 		bool freesrc_text=(bool)false;
 		int64_t size_text;
 		JSClassID text_class=JS_GetClassID(argv[1]);
+		JSValue src=argv[1];
 		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(argv[1],js_ArrayProxy_class_id);
+			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
+			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
 			freesrc_text =(bool)true;
 		}
-		if(JS_IsArray(argv[1])==1){
-			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_text)==-1){
 				return JS_EXCEPTION;
 			}
 			text =(char * *)js_malloc(ctx,size_text*sizeof(char *));
 			int i;
 			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,argv[1],(uint32_t)i);
+				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int64_t size_texti;
+				src =js_text;
 				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,js_text);
+					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
 					memoryNode * memoryCurrent=memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(js_text)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
+				}else if(JS_IsArrayBuffer(src)==1){
+					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
 				}else{
-					JSClassID classid_texti=JS_GetClassID(js_text);
+					JSClassID classid_texti=JS_GetClassID(src);
 					if(classid_texti==JS_CLASS_INT8_ARRAY){
 						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti,(size_t *)&size_texti,NULL);
+						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
 						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
 						text[i] +=offset_texti;
 						size_texti -=offset_texti;
@@ -2224,7 +2259,7 @@
 			}
 		}else{
 			if(freesrc_text){
-				JS_FreeValue(ctx,argv[1]);
+				JS_FreeValue(ctx,src);
 			}
 			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char * *");
 			return JS_EXCEPTION;
@@ -2250,7 +2285,7 @@
 		bool editMode=(bool)js_editMode;
 		int returnVal=GuiTextBox(bounds,*text,textSize,editMode);
 		if(JS_IsArray(argv[1])==1){
-			argv[1] =JS_NewString(ctx,(const char *)*text);
+			argv[1] =JS_NewString(ctx,(const char *)text[0]);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -2264,24 +2299,26 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * textLeft;
 		int64_t size_textLeft;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			textLeft =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,argv[1]);
+			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
 		}else{
-			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
+			JSClassID classid_textLeft=JS_GetClassID(src);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
 				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,(size_t *)&size_textLeft,NULL);
+				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
 				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
 				textLeft +=offset_textLeft;
 				size_textLeft -=offset_textLeft;
@@ -2294,16 +2331,17 @@
 		}
 		char * textRight;
 		int64_t size_textRight;
+		src =argv[2];
 		if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,argv[2]);
+			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
 		}else{
-			JSClassID classid_textRight=JS_GetClassID(argv[2]);
+			JSClassID classid_textRight=JS_GetClassID(src);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
 				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,(size_t *)&size_textRight,NULL);
+				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
 				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
 				textRight +=offset_textRight;
 				size_textRight -=offset_textRight;
@@ -2317,14 +2355,15 @@
 		float * value;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -2332,7 +2371,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -2371,8 +2410,8 @@
 		float maxValue=((float)double_maxValue);
 		int returnVal=GuiSlider(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -2384,24 +2423,26 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * textLeft;
 		int64_t size_textLeft;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			textLeft =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,argv[1]);
+			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
 		}else{
-			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
+			JSClassID classid_textLeft=JS_GetClassID(src);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
 				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,(size_t *)&size_textLeft,NULL);
+				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
 				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
 				textLeft +=offset_textLeft;
 				size_textLeft -=offset_textLeft;
@@ -2414,16 +2455,19 @@
 		}
 		char * textRight;
 		int64_t size_textRight;
-		if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,argv[2]);
+		src =argv[2];
+		if(JS_IsNull(argv[2])||JS_IsUndefined(argv[2])){
+			textRight =NULL;
+		}else if(JS_IsString(argv[2])==1){
+			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
 		}else{
-			JSClassID classid_textRight=JS_GetClassID(argv[2]);
+			JSClassID classid_textRight=JS_GetClassID(src);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
 				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,(size_t *)&size_textRight,NULL);
+				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
 				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
 				textRight +=offset_textRight;
 				size_textRight -=offset_textRight;
@@ -2437,14 +2481,15 @@
 		float * value;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -2452,7 +2497,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -2491,8 +2536,8 @@
 		float maxValue=((float)double_maxValue);
 		int returnVal=GuiSliderBar(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -2504,24 +2549,26 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * textLeft;
 		int64_t size_textLeft;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			textLeft =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,argv[1]);
+			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
 		}else{
-			JSClassID classid_textLeft=JS_GetClassID(argv[1]);
+			JSClassID classid_textLeft=JS_GetClassID(src);
 			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
 				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_textLeft,(size_t *)&size_textLeft,NULL);
+				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
 				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
 				textLeft +=offset_textLeft;
 				size_textLeft -=offset_textLeft;
@@ -2534,16 +2581,17 @@
 		}
 		char * textRight;
 		int64_t size_textRight;
+		src =argv[2];
 		if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,argv[2]);
+			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
 		}else{
-			JSClassID classid_textRight=JS_GetClassID(argv[2]);
+			JSClassID classid_textRight=JS_GetClassID(src);
 			if(classid_textRight==JS_CLASS_INT8_ARRAY){
 				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_textRight,(size_t *)&size_textRight,NULL);
+				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
 				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
 				textRight +=offset_textRight;
 				size_textRight -=offset_textRight;
@@ -2557,14 +2605,15 @@
 		float * value;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[3] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -2572,7 +2621,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -2611,8 +2660,8 @@
 		float maxValue=((float)double_maxValue);
 		int returnVal=GuiProgressBar(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -2629,15 +2678,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -2671,15 +2721,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -2713,17 +2764,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -2815,15 +2867,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -2836,14 +2889,15 @@
 		bool freesrc_scrollIndex=(bool)false;
 		int64_t size_scrollIndex;
 		JSClassID scrollIndex_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(scrollIndex_class==js_ArrayProxy_class_id){
-			void * opaque_scrollIndex=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_scrollIndex=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
-			argv[2] =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
+			src =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
 			freesrc_scrollIndex =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_scrollIndex)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_scrollIndex)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -2859,7 +2913,7 @@
 			scrollIndex =(int *)js_malloc(ctx,size_scrollIndex*sizeof(int));
 			int i;
 			for(i=0;i<size_scrollIndex;i++){
-				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_scrollIndexi;
 				int err_scrollIndexi=JS_ToInt32(ctx,&long_scrollIndexi,js_scrollIndex);
 				if(err_scrollIndexi<0){
@@ -2893,14 +2947,15 @@
 		bool freesrc_active=(bool)false;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[3] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
 			freesrc_active =(bool)true;
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -2919,7 +2974,7 @@
 			active =(int *)js_malloc(ctx,size_active*sizeof(int));
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -2954,12 +3009,12 @@
 		}
 		int returnVal=GuiListView(bounds,(const char *)text,scrollIndex,active);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -2986,6 +3041,7 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
@@ -2993,14 +3049,15 @@
 		char * * text;
 		int64_t size_text;
 		JSClassID text_class=JS_GetClassID(argv[1]);
+		JSValue src=argv[1];
 		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(argv[1],js_ArrayProxy_class_id);
+			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			argv[1] =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[1]);
+			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[1])==1){
-			if(JS_GetLength(ctx,argv[1],&size_text)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_text)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -3008,18 +3065,19 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)*text);
 			int i;
 			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,argv[1],(uint32_t)i);
+				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int64_t size_texti;
+				src =js_text;
 				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,js_text);
+					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
 					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(js_text)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,js_text);
+				}else if(JS_IsArrayBuffer(src)==1){
+					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
 				}else{
-					JSClassID classid_texti=JS_GetClassID(js_text);
+					JSClassID classid_texti=JS_GetClassID(src);
 					if(classid_texti==JS_CLASS_INT8_ARRAY){
 						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,js_text,&offset_texti,(size_t *)&size_texti,NULL);
+						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
 						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
 						text[i] +=offset_texti;
 						size_texti -=offset_texti;
@@ -3047,14 +3105,15 @@
 		int * scrollIndex;
 		int64_t size_scrollIndex;
 		JSClassID scrollIndex_class=JS_GetClassID(argv[3]);
+		src =argv[3];
 		if(scrollIndex_class==js_ArrayProxy_class_id){
-			void * opaque_scrollIndex=JS_GetOpaque(argv[3],js_ArrayProxy_class_id);
+			void * opaque_scrollIndex=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
-			argv[3] =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[3]);
+			src =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[3])==1){
-			if(JS_GetLength(ctx,argv[3],&size_scrollIndex)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_scrollIndex)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -3062,7 +3121,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)scrollIndex);
 			int i;
 			for(i=0;i<size_scrollIndex;i++){
-				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,argv[3],(uint32_t)i);
+				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_scrollIndexi;
 				int err_scrollIndexi=JS_ToInt32(ctx,&long_scrollIndexi,js_scrollIndex);
 				if(err_scrollIndexi<0){
@@ -3086,14 +3145,15 @@
 		int * active;
 		int64_t size_active;
 		JSClassID active_class=JS_GetClassID(argv[4]);
+		src =argv[4];
 		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(argv[4],js_ArrayProxy_class_id);
+			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			argv[4] =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[4]);
+			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[4])==1){
-			if(JS_GetLength(ctx,argv[4],&size_active)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_active)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -3101,7 +3161,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)active);
 			int i;
 			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,argv[4],(uint32_t)i);
+				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_activei;
 				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
 				if(err_activei<0){
@@ -3125,14 +3185,15 @@
 		int * focus;
 		int64_t size_focus;
 		JSClassID focus_class=JS_GetClassID(argv[5]);
+		src =argv[5];
 		if(focus_class==js_ArrayProxy_class_id){
-			void * opaque_focus=JS_GetOpaque(argv[5],js_ArrayProxy_class_id);
+			void * opaque_focus=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_focus=((ArrayProxy_class *)opaque_focus)[0];
-			argv[5] =AP_focus.values(ctx,AP_focus.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[5]);
+			src =AP_focus.values(ctx,AP_focus.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[5])==1){
-			if(JS_GetLength(ctx,argv[5],&size_focus)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_focus)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -3140,7 +3201,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)focus);
 			int i;
 			for(i=0;i<size_focus;i++){
-				JSValue js_focus=JS_GetPropertyUint32(ctx,argv[5],(uint32_t)i);
+				JSValue js_focus=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int32_t long_focusi;
 				int err_focusi=JS_ToInt32(ctx,&long_focusi,js_focus);
 				if(err_focusi<0){
@@ -3150,13 +3211,13 @@
 				focus[i] =((int)long_focusi);
 				JS_FreeValue(ctx,js_focus);
 			}
-		}else if(JS_IsArrayBuffer(argv[5])==1){
-			focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,argv[5]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,src);
 		}else{
-			JSClassID classid_focus=JS_GetClassID(argv[5]);
+			JSClassID classid_focus=JS_GetClassID(src);
 			if(classid_focus==JS_CLASS_INT16_ARRAY){
 				size_t offset_focus;
-				JSValue da_focus=JS_GetTypedArrayBuffer(ctx,argv[5],&offset_focus,(size_t *)&size_focus,NULL);
+				JSValue da_focus=JS_GetTypedArrayBuffer(ctx,src,&offset_focus,(size_t *)&size_focus,NULL);
 				focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,da_focus);
 				focus +=offset_focus;
 				size_focus -=offset_focus;
@@ -3169,12 +3230,12 @@
 		}
 		int returnVal=GuiListViewEx(bounds,(const char * *)text,count,scrollIndex,active,focus);
 		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv3=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv3,JS_PROP_C_W_E);
+			JSValue js_argv30=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		if(JS_IsArray(argv[4])==1){
-			JSValue js_argv4=JS_NewInt32(ctx,(int32_t)((long)active[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[4],(uint32_t)0,js_argv4,JS_PROP_C_W_E);
+			JSValue js_argv40=JS_NewInt32(ctx,(int32_t)((long)active[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[4],(uint32_t)0,js_argv40,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -3186,22 +3247,24 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * title;
 		int64_t size_title;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,argv[1]);
+			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
 		}else{
-			JSClassID classid_title=JS_GetClassID(argv[1]);
+			JSClassID classid_title=JS_GetClassID(src);
 			if(classid_title==JS_CLASS_INT8_ARRAY){
 				size_t offset_title;
-				JSValue da_title=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,(size_t *)&size_title,NULL);
+				JSValue da_title=JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
 				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
 				title +=offset_title;
 				size_title -=offset_title;
@@ -3214,16 +3277,17 @@
 		}
 		char * message;
 		int64_t size_message;
+		src =argv[2];
 		if(JS_IsString(argv[2])==1){
-			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,argv[2]);
+			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,src);
 		}else{
-			JSClassID classid_message=JS_GetClassID(argv[2]);
+			JSClassID classid_message=JS_GetClassID(src);
 			if(classid_message==JS_CLASS_INT8_ARRAY){
 				size_t offset_message;
-				JSValue da_message=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_message,(size_t *)&size_message,NULL);
+				JSValue da_message=JS_GetTypedArrayBuffer(ctx,src,&offset_message,(size_t *)&size_message,NULL);
 				message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,da_message);
 				message +=offset_message;
 				size_message -=offset_message;
@@ -3236,16 +3300,17 @@
 		}
 		char * buttons;
 		int64_t size_buttons;
+		src =argv[3];
 		if(JS_IsString(argv[3])==1){
-			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,argv[3]);
+			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
-		}else if(JS_IsArrayBuffer(argv[3])==1){
-			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,argv[3]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,src);
 		}else{
-			JSClassID classid_buttons=JS_GetClassID(argv[3]);
+			JSClassID classid_buttons=JS_GetClassID(src);
 			if(classid_buttons==JS_CLASS_INT8_ARRAY){
 				size_t offset_buttons;
-				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,argv[3],&offset_buttons,(size_t *)&size_buttons,NULL);
+				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,src,&offset_buttons,(size_t *)&size_buttons,NULL);
 				buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,da_buttons);
 				buttons +=offset_buttons;
 				size_buttons -=offset_buttons;
@@ -3267,22 +3332,24 @@
 		memoryNode * memoryCurrent=memoryHead;
 		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
 		if(ptr_bounds==NULL){
+			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
 			return JS_EXCEPTION;
 		}
 		Rectangle bounds=*ptr_bounds;
 		char * title;
 		int64_t size_title;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,argv[1]);
+			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
 		}else{
-			JSClassID classid_title=JS_GetClassID(argv[1]);
+			JSClassID classid_title=JS_GetClassID(src);
 			if(classid_title==JS_CLASS_INT8_ARRAY){
 				size_t offset_title;
-				JSValue da_title=JS_GetTypedArrayBuffer(ctx,argv[1],&offset_title,(size_t *)&size_title,NULL);
+				JSValue da_title=JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
 				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
 				title +=offset_title;
 				size_title -=offset_title;
@@ -3295,16 +3362,17 @@
 		}
 		char * message;
 		int64_t size_message;
+		src =argv[2];
 		if(JS_IsString(argv[2])==1){
-			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,argv[2]);
+			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
-		}else if(JS_IsArrayBuffer(argv[2])==1){
-			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,argv[2]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,src);
 		}else{
-			JSClassID classid_message=JS_GetClassID(argv[2]);
+			JSClassID classid_message=JS_GetClassID(src);
 			if(classid_message==JS_CLASS_INT8_ARRAY){
 				size_t offset_message;
-				JSValue da_message=JS_GetTypedArrayBuffer(ctx,argv[2],&offset_message,(size_t *)&size_message,NULL);
+				JSValue da_message=JS_GetTypedArrayBuffer(ctx,src,&offset_message,(size_t *)&size_message,NULL);
 				message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,da_message);
 				message +=offset_message;
 				size_message -=offset_message;
@@ -3317,16 +3385,17 @@
 		}
 		char * buttons;
 		int64_t size_buttons;
+		src =argv[3];
 		if(JS_IsString(argv[3])==1){
-			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,argv[3]);
+			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
-		}else if(JS_IsArrayBuffer(argv[3])==1){
-			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,argv[3]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,src);
 		}else{
-			JSClassID classid_buttons=JS_GetClassID(argv[3]);
+			JSClassID classid_buttons=JS_GetClassID(src);
 			if(classid_buttons==JS_CLASS_INT8_ARRAY){
 				size_t offset_buttons;
-				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,argv[3],&offset_buttons,(size_t *)&size_buttons,NULL);
+				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,src,&offset_buttons,(size_t *)&size_buttons,NULL);
 				buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,da_buttons);
 				buttons +=offset_buttons;
 				size_buttons -=offset_buttons;
@@ -3339,16 +3408,17 @@
 		}
 		char * text;
 		int64_t size_text;
+		src =argv[4];
 		if(JS_IsString(argv[4])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[4]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
 			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
-		}else if(JS_IsArrayBuffer(argv[4])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[4]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[4]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				JSValue da_text=JS_GetTypedArrayBuffer(ctx,argv[4],&offset_text,(size_t *)&size_text,NULL);
+				JSValue da_text=JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3370,14 +3440,15 @@
 		bool * secretViewActive;
 		int64_t size_secretViewActive;
 		JSClassID secretViewActive_class=JS_GetClassID(argv[6]);
+		src =argv[6];
 		if(secretViewActive_class==js_ArrayProxy_class_id){
-			void * opaque_secretViewActive=JS_GetOpaque(argv[6],js_ArrayProxy_class_id);
+			void * opaque_secretViewActive=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_secretViewActive=((ArrayProxy_class *)opaque_secretViewActive)[0];
-			argv[6] =AP_secretViewActive.values(ctx,AP_secretViewActive.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&argv[6]);
+			src =AP_secretViewActive.values(ctx,AP_secretViewActive.opaque,(int)0,(bool)false);
+			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
 		}
-		if(JS_IsArray(argv[6])==1){
-			if(JS_GetLength(ctx,argv[6],&size_secretViewActive)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_secretViewActive)==-1){
 				memoryClear(ctx,memoryHead);
 				return JS_EXCEPTION;
 			}
@@ -3385,7 +3456,7 @@
 			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)secretViewActive);
 			int i;
 			for(i=0;i<size_secretViewActive;i++){
-				JSValue js_secretViewActive=JS_GetPropertyUint32(ctx,argv[6],(uint32_t)i);
+				JSValue js_secretViewActive=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				int js_secretViewActivei=JS_ToBool(ctx,js_secretViewActive);
 				if(js_secretViewActivei<0){
 					JS_ThrowTypeError(ctx,(const char *)"js_secretViewActive is not a bool");
@@ -3396,8 +3467,8 @@
 			}
 		}else if(JS_IsNull(argv[6])||JS_IsUndefined(argv[6])){
 			secretViewActive =NULL;
-		}else if(JS_IsArrayBuffer(argv[6])==1){
-			secretViewActive =(bool *)JS_GetArrayBuffer(ctx,(size_t *)&size_secretViewActive,argv[6]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			secretViewActive =(bool *)JS_GetArrayBuffer(ctx,(size_t *)&size_secretViewActive,src);
 		}else{
 			memoryClear(ctx,memoryHead);
 			JS_ThrowTypeError(ctx,(const char *)"argv[6] does not match type bool *");
@@ -3419,17 +3490,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3483,15 +3555,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3541,17 +3614,18 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 			text =NULL;
 		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3564,14 +3638,15 @@
 		bool freesrc_alpha=(bool)false;
 		int64_t size_alpha;
 		JSClassID alpha_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(alpha_class==js_ArrayProxy_class_id){
-			void * opaque_alpha=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_alpha=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_alpha=((ArrayProxy_class *)opaque_alpha)[0];
-			argv[2] =AP_alpha.values(ctx,AP_alpha.opaque,(int)0,(bool)false);
+			src =AP_alpha.values(ctx,AP_alpha.opaque,(int)0,(bool)false);
 			freesrc_alpha =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_alpha)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_alpha)==-1){
 				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
 				}
 				if(JS_IsArray(argv[1])==1){
@@ -3589,7 +3664,7 @@
 			alpha =(float *)js_malloc(ctx,size_alpha*sizeof(float));
 			int i;
 			for(i=0;i<size_alpha;i++){
-				JSValue js_alpha=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_alpha=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_alphai;
 				int err_alphai=JS_ToFloat64(ctx,&double_alphai,js_alpha);
 				if(err_alphai<0){
@@ -3623,8 +3698,8 @@
 		}
 		int returnVal=GuiColorBarAlpha(bounds,(const char *)text,alpha);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewFloat64(ctx,((double)alpha[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewFloat64(ctx,((double)alpha[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
@@ -3655,15 +3730,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3676,14 +3752,15 @@
 		bool freesrc_value=(bool)false;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(argv[2]);
+		src =argv[2];
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(argv[2],js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			argv[2] =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
 		}
-		if(JS_IsArray(argv[2])==1){
-			if(JS_GetLength(ctx,argv[2],&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				if(JS_IsArray(argv[1])==1){
 					js_free(ctx,(void *)text);
 				}else if(JS_IsString(argv[1])==1){
@@ -3699,7 +3776,7 @@
 			value =(float *)js_malloc(ctx,size_value*sizeof(float));
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,argv[2],(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -3731,8 +3808,8 @@
 		}
 		int returnVal=GuiColorBarHue(bounds,(const char *)text,value);
 		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv2=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv2,JS_PROP_C_W_E);
+			JSValue js_argv20=JS_NewFloat64(ctx,((double)value[0]));
+			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		if(JS_IsArray(argv[1])==1){
@@ -3761,15 +3838,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3819,15 +3897,16 @@
 		char * text;
 		JSValue da_text;
 		int64_t size_text;
+		JSValue src=argv[1];
 		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,argv[1]);
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,argv[1]);
+			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
+		}else if(JS_IsArrayBuffer(src)==1){
+			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
 		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
+			JSClassID classid_text=JS_GetClassID(src);
 			if(classid_text==JS_CLASS_INT8_ARRAY){
 				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_text,(size_t *)&size_text,NULL);
+				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
 				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
 				text +=offset_text;
 				size_text -=offset_text;
@@ -3927,7 +4006,7 @@
 		JS_CFUNC_DEF("GuiColorPanelHSV",3,js_GuiColorPanelHSV)
 	};
 	
-	static int js_js_raygui_init(JSContext * ctx,JSModuleDef * m){
+	static int js_raygui_init(JSContext * ctx,JSModuleDef * m){
 		size_t listcount=countof(jsraygui_funcs);
 		JS_SetModuleExportList(ctx,m,jsraygui_funcs,(int)listcount);
 		js_declare_GuiStyleProp(ctx,m);
@@ -4279,8 +4358,8 @@
 		return 0;
 	}
 	
-	JSModuleDef * js_init_module_js_raygui(JSContext * ctx,const char * module_name){
-		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_js_raygui_init);
+	JSModuleDef * js_init_module_raygui(JSContext * ctx,const char * module_name){
+		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_raygui_init);
 		if(!m){
 			return NULL;
 		}
@@ -4633,4 +4712,4 @@
 		return m;
 	}
 
-#endif //JS_js_raygui_GUARD
+#endif //JS_raygui_GUARD

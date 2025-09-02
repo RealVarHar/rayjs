@@ -1,5 +1,5 @@
-#ifndef JS_js_rlights_GUARD
-	#define JS_js_rlights_GUARD
+#ifndef JS_rlights_GUARD
+	#define JS_rlights_GUARD
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -457,7 +457,7 @@
 		JS_CFUNC_DEF("UpdateLightValues",2,js_UpdateLightValues)
 	};
 	
-	static int js_js_rlights_init(JSContext * ctx,JSModuleDef * m){
+	static int js_rlights_init(JSContext * ctx,JSModuleDef * m){
 		size_t listcount=countof(jsrlights_funcs);
 		JS_SetModuleExportList(ctx,m,jsrlights_funcs,(int)listcount);
 		js_declare_Light(ctx,m);
@@ -469,8 +469,8 @@
 		return 0;
 	}
 	
-	JSModuleDef * js_init_module_js_rlights(JSContext * ctx,const char * module_name){
-		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_js_rlights_init);
+	JSModuleDef * js_init_module_rlights(JSContext * ctx,const char * module_name){
+		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_rlights_init);
 		if(!m){
 			return NULL;
 		}
@@ -483,4 +483,4 @@
 		return m;
 	}
 
-#endif //JS_js_rlights_GUARD
+#endif //JS_rlights_GUARD

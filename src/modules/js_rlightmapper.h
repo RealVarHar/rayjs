@@ -1,5 +1,5 @@
-#ifndef JS_js_rlightmapper_GUARD
-	#define JS_js_rlightmapper_GUARD
+#ifndef JS_rlightmapper_GUARD
+	#define JS_rlightmapper_GUARD
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -19,8 +19,7 @@
 	
 	static JSValue js_Lightmapper_data_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
 		Lightmapper * ptr=(Lightmapper *)ptr_u;
-		JSValue ret;
-		ret =JS_NewArray(ctx);
+		JSValue ret=JS_NewArray(ctx);
 		int i;
 		for(i=0;i<ptr[0].w*ptr[0].h*4;i++){
 			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].data[i]));
@@ -111,20 +110,21 @@
 		JSValue da_value;
 		int64_t size_value;
 		JSClassID value_class=JS_GetClassID(v);
+		JSValue src=v;
 		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(v,js_ArrayProxy_class_id);
+			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			v =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
+			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
 			freesrc_value =(bool)true;
 		}
-		if(JS_IsArray(v)==1){
-			if(JS_GetLength(ctx,v,&size_value)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_value)==-1){
 				return JS_EXCEPTION;
 			}
 			value =(float *)jsc_malloc(ctx,size_value*sizeof(float));
 			int i;
 			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,v,(uint32_t)i);
+				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_valuei;
 				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
 				if(err_valuei<0){
@@ -134,15 +134,15 @@
 				value[i] =((float)double_valuei);
 				JS_FreeValue(ctx,js_value);
 			}
-		}else if(JS_IsArrayBuffer(v)==1){
-			float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,v);
+		}else if(JS_IsArrayBuffer(src)==1){
+			float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
 			value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
 			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
 		}else{
-			JSClassID classid_value=JS_GetClassID(v);
+			JSClassID classid_value=JS_GetClassID(src);
 			if(classid_value==JS_CLASS_FLOAT32_ARRAY){
 				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,v,&offset_value,(size_t *)&size_value,NULL);
+				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
 				float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
 				js_value +=offset_value;
 				size_value -=offset_value;
@@ -151,7 +151,7 @@
 				JS_FreeValuePtr(ctx,&da_value);
 			}else{
 				if(freesrc_value){
-					JS_FreeValue(ctx,v);
+					JS_FreeValue(ctx,src);
 				}
 				JS_ThrowTypeError(ctx,(const char *)"v does not match type float *");
 				return JS_EXCEPTION;
@@ -422,8 +422,9 @@
 		}
 		void * lm_handle;
 		int64_t size_lm_handle;
-		if(JS_IsArrayBuffer(argv[0])==1){
-			lm_handle =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_lm_handle,argv[0]);
+		JSValue src=argv[0];
+		if(JS_IsArrayBuffer(src)==1){
+			lm_handle =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_lm_handle,src);
 		}else{
 			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type void *");
 			return JS_EXCEPTION;
@@ -433,20 +434,21 @@
 		JSValue da_data;
 		int64_t size_data;
 		JSClassID data_class=JS_GetClassID(argv[1]);
+		src =argv[1];
 		if(data_class==js_ArrayProxy_class_id){
-			void * opaque_data=JS_GetOpaque(argv[1],js_ArrayProxy_class_id);
+			void * opaque_data=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_data=((ArrayProxy_class *)opaque_data)[0];
-			argv[1] =AP_data.values(ctx,AP_data.opaque,(int)0,(bool)false);
+			src =AP_data.values(ctx,AP_data.opaque,(int)0,(bool)false);
 			freesrc_data =(bool)true;
 		}
-		if(JS_IsArray(argv[1])==1){
-			if(JS_GetLength(ctx,argv[1],&size_data)==-1){
+		if(JS_IsArray(src)==1){
+			if(JS_GetLength(ctx,src,&size_data)==-1){
 				return JS_EXCEPTION;
 			}
 			data =(float *)js_malloc(ctx,size_data*sizeof(float));
 			int i;
 			for(i=0;i<size_data;i++){
-				JSValue js_data=JS_GetPropertyUint32(ctx,argv[1],(uint32_t)i);
+				JSValue js_data=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				double double_datai;
 				int err_datai=JS_ToFloat64(ctx,&double_datai,js_data);
 				if(err_datai<0){
@@ -456,19 +458,19 @@
 				data[i] =((float)double_datai);
 				JS_FreeValue(ctx,js_data);
 			}
-		}else if(JS_IsArrayBuffer(argv[1])==1){
-			data =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,argv[1]);
+		}else if(JS_IsArrayBuffer(src)==1){
+			data =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
 		}else{
-			JSClassID classid_data=JS_GetClassID(argv[1]);
+			JSClassID classid_data=JS_GetClassID(src);
 			if(classid_data==JS_CLASS_FLOAT32_ARRAY){
 				size_t offset_data;
-				da_data =JS_GetTypedArrayBuffer(ctx,argv[1],&offset_data,(size_t *)&size_data,NULL);
+				da_data =JS_GetTypedArrayBuffer(ctx,src,&offset_data,(size_t *)&size_data,NULL);
 				data =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,da_data);
 				data +=offset_data;
 				size_data -=offset_data;
 			}else{
 				if(freesrc_data){
-					JS_FreeValue(ctx,argv[1]);
+					JS_FreeValue(ctx,src);
 				}
 				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type float *");
 				return JS_EXCEPTION;
@@ -716,7 +718,7 @@
 		JS_CFUNC_DEF("LoadImageFromLightmapper",1,js_LoadImageFromLightmapper)
 	};
 	
-	static int js_js_rlightmapper_init(JSContext * ctx,JSModuleDef * m){
+	static int js_rlightmapper_init(JSContext * ctx,JSModuleDef * m){
 		size_t listcount=countof(jsrlightmapper_funcs);
 		JS_SetModuleExportList(ctx,m,jsrlightmapper_funcs,(int)listcount);
 		js_declare_Lightmapper(ctx,m);
@@ -728,8 +730,8 @@
 		return 0;
 	}
 	
-	JSModuleDef * js_init_module_js_rlightmapper(JSContext * ctx,const char * module_name){
-		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_js_rlightmapper_init);
+	JSModuleDef * js_init_module_rlightmapper(JSContext * ctx,const char * module_name){
+		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_rlightmapper_init);
 		if(!m){
 			return NULL;
 		}
@@ -740,4 +742,4 @@
 		return m;
 	}
 
-#endif //JS_js_rlightmapper_GUARD
+#endif //JS_rlightmapper_GUARD

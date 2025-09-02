@@ -476,7 +476,7 @@ export class source_parser {
                 thiz.defineName(capture[7],'callbacks',{
                     returnType: thiz.normalizeType(capture[1]+capture[2]+capture[3]+capture[4]),
                     name: capture[7],
-                    params: thiz.parseFunctionArgs(capture[12]+capture[13]),
+                    args: thiz.parseFunctionArgs(capture[12]+capture[13]),
                     type,
                     binding:{}
                 });
@@ -649,7 +649,7 @@ export class source_parser {
             this.defineName(capture[0],'functions',{
                 returnType: this.normalizeType(capture[2]+capture[1]),
                 name: capture[0],
-                params: this.parseFunctionArgs(capture[3]+capture[4]),
+                args: this.parseFunctionArgs(capture[3]+capture[4]),
                 props,
                 binding:{}
             });
