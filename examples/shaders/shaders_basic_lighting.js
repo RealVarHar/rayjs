@@ -76,11 +76,9 @@ import {BLUE, BeginDrawing,
     const matModel = LoadMaterialDefault()
     matModel.shader = shader;console.log(1);
     let materials = floor.materials;console.log(2);
-    console.log(JSON.stringify([materials[0],matModel]));
     materials[0]=matModel;console.log(3);//error here, [0] calls some internal set_value instead of setter
     //needs p1->is_exotic
     //const JSClassExoticMethods *em = ctx->rt->class_array[p1->class_id].exotic;
-    console.log(JSON.stringify([materials[0],matModel]));
     floor.materials = materials;console.log(4);
     const matCube = LoadMaterialDefault()
     matCube.shader = shader

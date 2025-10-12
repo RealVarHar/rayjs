@@ -56,27 +56,8 @@ if(globalThis.structuredClone==undefined){
 
 // Remove codepoint duplicates if requested
 // WARNING: This process could be a bit slow if there text to process is very long
-function CodepointRemoveDuplicates(codepoints, codepointCount, codepointsResultCount) {
-    let codepointsNoDupsCount = codepointCount;
-    let codepointsNoDups = structuredClone(codepoints);
-
-    // Remove duplicates
-    for (let i = 0; i < codepointsNoDupsCount; i++) {
-        for (let j = i + 1; j < codepointsNoDupsCount; j++) {
-            if (codepointsNoDups[i] == codepointsNoDups[j]) {
-                for (let k = j; k < codepointsNoDupsCount; k++) codepointsNoDups[k] = codepointsNoDups[k + 1];
-
-                codepointsNoDupsCount--;
-                j--;
-            }
-        }
-    }
-
-    // NOTE: The size of codepointsNoDups is the same as original array but
-    // only required positions are filled (codepointsNoDupsCount)
-
-    codepointsResultCount[0] = codepointsNoDupsCount;
-    return codepointsNoDups;
+function CodepointRemoveDuplicates(codepoints) {
+    return Array.from(new Set(codepoints));
 }
 
 //------------------------------------------------------------------------------------
@@ -97,12 +78,15 @@ function CodepointRemoveDuplicates(codepoints, codepointCount, codepointsResultC
 
     // Removed duplicate codepoints to generate smaller font atlas
     let codepointsNoDupsCount = [0];
-    let codepointsNoDups = CodepointRemoveDuplicates(codepoints, codepointCount[0], codepointsNoDupsCount);
+
+    let codepointsNoDups = CodepointRemoveDuplicates(codepoints);
+    codepointsNoDupsCount[0]=codepointsNoDups.length;
     UnloadCodepoints(codepoints);
     codepoints = undefined;
 
     // Load font containing all the provided codepoint glyphs
     // A texture font atlas is automatically generated
+    console.log(JSON.stringify(codepointsNoDups));
     let font = LoadFontEx("resources/DotGothic16-Regular.ttf", 36, codepointsNoDups, codepointsNoDupsCount[0]);
 
     // Set bilinear scale filter for better font scaling
@@ -131,8 +115,8 @@ function CodepointRemoveDuplicates(codepoints, codepointCount, codepointsResultC
             ClearBackground(RAYWHITE);
 
             DrawRectangle(0, 0, GetScreenWidth(), 70, BLACK);
-            DrawText(TextFormat("Total codepoints contained in provided text: %i", codepointCount), 10, 10, 20, GREEN);
-            DrawText(TextFormat("Total codepoints required for font atlas (duplicates excluded): %i", codepointsNoDupsCount), 10, 40, 20, GREEN);
+            DrawText(TextFormat("Total codepoints contained in provided text: %i", codepointCount[0]), 10, 10, 20, GREEN);
+            DrawText(TextFormat("Total codepoints required for font atlas (duplicates excluded): %i", codepointsNoDupsCount[0]), 10, 40, 20, GREEN);
 
             if (showFontAtlas) {
                 // Draw generated font texture atlas containing provided codepoints

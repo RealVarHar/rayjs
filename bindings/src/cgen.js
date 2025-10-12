@@ -152,20 +152,34 @@ export function getsubtype(type){
 
 function cast(type,variable,targetType){
     //returns variable with castings to match type to targetType
-
+    if(type==targetType){
+        return variable;
+    }
     //handles numbers using casting
     //handles pointer differences
     targetType=targetType.replaceAll('[','*').split(' *');
     type=type.replaceAll('[','*').split(' *');
-    let refcountOrig=targetType.length-1;
-    let refcountNew=type.length-1;
-    while(refcountNew<refcountOrig){
-        variable='&'+variable;
-        refcountNew++;
+    let refcountOrig=type.length-1;
+    let refcountNew=targetType.length-1;
+    if(type.join(' *')=='void *'){
+        if(refcountNew==0){
+            variable=`(${targetType[0]} *)${variable}`;
+        }else{
+            for(let i=refcountOrig;i<refcountNew;i++){
+                type.push('');
+                refcountOrig++;
+            }
+            variable=`(${targetType.join(' *')})${variable}`;
+        }
+        type[0]=targetType[0];
     }
-    while(refcountNew>refcountOrig){
+    while(refcountOrig<refcountNew){
+        variable='&'+variable;
+        refcountOrig++;
+    }
+    while(refcountOrig>refcountNew){
         variable='*'+variable;
-        refcountNew--;
+        refcountOrig--;
     }
     if(targetType[0]!=type[0]){
         return `(${targetType.join(' *')})${variable}`;
@@ -180,11 +194,14 @@ function cast(type,variable,targetType){
  */
 function compilefunctionargs(fn,args,variables){
     let ret=[];
-    for(let i=0;i<args.length;i++){
+    for(let i=0;i<fn.args.length;i++){
         //use resolveVariable to get implicit type if parameter is more complex
         let gettype=[];
         let arg=args[i];
-        if(fn.args==undefined)console.log(fn);
+        if(!fn){
+            debugger;
+            return;
+        }
         if(arg=='NULL'||fn.args[i].type=='any'){
             ret.push(arg);
             continue;
@@ -194,6 +211,7 @@ function compilefunctionargs(fn,args,variables){
             }
             break;
         }
+        if(arg==undefined)debugger;
         const parts=getVariableParts(arg,variables);
         arg = resolveVariable(parts,gettype,variables);
         //before casting, check if target type includes a function type (callback) and transform it
@@ -248,7 +266,7 @@ export function getVariableParts(input,variables){
             if(input[pos]==')')pos++;
         }
         capture=[];
-        pos=simpleregex(input,["nr*","*/+-&([{.'\""],pos,capture);
+        pos=simpleregex(input,["nr*","*/+-&%([{.'\""],pos,capture);
         let str=capture[0].trim();
         if(str!=''){
             if(isNaN(str)){
@@ -309,7 +327,7 @@ export function getVariableParts(input,variables){
             pos++;
         }else if(input[pos]=='.'){
             pos++;
-        }else if('*/+-'.includes(input[pos])){
+        }else if('*/+-%'.includes(input[pos])){
             parts.push({type:'math',name:input[pos]});
             pos++;
         }
@@ -322,6 +340,8 @@ function resolvetype(typename,variableList){
         if(defaultTypeParts.includes(typename)){
             return [typename,[]];
         }
+        debugger;
+        return [typename,[]];
         throw new Error("variable "+typename+" undefined");
     }
     while(variable.type=='alias'){
@@ -429,8 +449,9 @@ export function resolveVariable(variableParts,targetType,variableList){
             if(fn.returnType.endsWith("*")){
                 type=fn.returnType;
                 fields=[];
+            }else{
+                [type,fields]=resolvetype(fn.returnType,variableList);
             }
-            [type,fields]=resolvetype(fn.returnType,variableList);
         }else if(part.type=='child'){
             let gettype=[];
             let res=resolveVariable(part.name,gettype,variableList);
@@ -641,7 +662,135 @@ export class CodeScope {
         this.type=type;//scope or section
         globalTokenId++;
     }
-    /**
+
+    /** The simplified tostring version that creates a non-working preview version of the code
+     * @param {int} [tokennum]
+     * @param {int} [indent]
+     */
+    simpleToString(indent=0){
+        let str2='';
+        for(let tokennum=0;tokennum<this.tokenList.length;tokennum++){
+            let token=this.tokenList[tokennum];
+            const txtIndend="\t".repeat(indent);
+            let str;
+            switch(token.type){
+                case "enum":{
+                    str=`${txtIndend}enum ${token.text.name}{${fields.map(f=>`${f.name}=${f.value}`).join('.')}};`;break;
+                }
+                case "if":{
+                    //must have variables: if,scope,scope..
+                    let ifchain=`${txtIndend}if`;
+                    str='';
+                    const conditions=token.text;
+                    for(let i=0;i<conditions.length;i++){
+                        tokennum++;
+                        const nexttoken=this.tokenList[tokennum];
+                        if(nexttoken.type!='scope')break;
+                        if(conditions[i]==''){
+                            str+=`else{\n${nexttoken.simpleToString(indent+1)}${txtIndend}}`;
+                            break;
+                        }
+                        str+=`${ifchain}(${conditions[i]}){\n${nexttoken.simpleToString(indent+1)}${txtIndend}}`;
+                        ifchain='else if';
+                    }
+                    if(conditions.length!=0){
+                        str+="\n";
+                    }
+                    break;
+                }
+                case "loop":{
+                    let nexttoken=this.tokenList[tokennum+1];
+                    if(nexttoken.type!=='scope')break;
+                    tokennum++;
+                    const t=token.text;
+                    if(t['var']==undefined){
+                        //while
+                        str=`${txtIndend}while(${t['to']}){\n${nexttoken.simpleToString(indent+1)}${txtIndend}}\n`;
+                    }else{
+                        //for
+                        str=`${txtIndend}for(${t['var']}=${t['from']};${t['var']}<${t['to']};${t['var']}++){\n${nexttoken.simpleToString(indent+1)}${txtIndend}}\n`;
+                    }
+                    break;
+                }
+                case "guard":{
+                    let nexttoken=this.tokenList[tokennum];
+                    if(nexttoken.type!='scope')break;
+                    tokennum++;
+                    str =`${txtIndend}#ifndef ${token.text}\n${txtIndend}\t#define ${token.text}\n${nexttoken.simpleToString(indent+1)}\n${txtIndend}#endif //${token.text}`;
+                    break;
+                }
+                case "line":{
+                    str=token.text+";\n";
+                    break;
+                }
+                case "return":{
+                    let v=token.text.variable;
+                    if(v!=='' && v!=undefined)v=' '+String(v);
+                    str=`${txtIndend}${token.text.type}${v};\n`;
+                    break;
+                }
+                case "comment":{
+                    if(token.text.includes("\n")){
+                        str='//'+token.text+"\n";
+                    }else{
+                        str='/*'+token.text.replaceAll('*/','*\\/')+"*/\n";
+                    }
+                    break;
+                }
+                case "declare":{
+                    const t=token.text;
+                    str=`${txtIndend}${t.type} ${t.name}`;
+                    let nexttoken=this.tokenList[tokennum];
+                    if(nexttoken!==undefined && nexttoken.type=='assignlist'){
+                        const nt=nexttoken.text;
+                        str+=`={${nt.initial.join(`,`)}}`;
+                        tokennum++;
+                    }else if(nexttoken!==undefined && nexttoken.type=='assign'  && nexttoken.text.name==t.name){
+                        const nt=nexttoken.text;
+                        str+=`=${nt.initial}`;
+                        tokennum++;
+                    }else if(nexttoken!==undefined && nexttoken.type=='call' && nexttoken.text.set==t.name){//call and name is correct
+                        const nt=nexttoken.text;
+                        str+=`=${nt.name}(${nt.args.join(',')})`;
+                        tokennum++;
+                    }
+                    str+="\n";
+                    break;
+                }
+                case 'assign':{
+                    str=`${txtIndend}${token.text.name}=${token.text.initial};\n`;
+                    break;
+                }
+                case "call":{
+                    const t=token.text;
+                    str=`${txtIndend}${t.name}(${t.args.join(',')});\n`;
+                    break;
+                }
+                case 'function':{
+                    const t=token.text;
+                    const nexttoken=this.tokenList[tokennum];tokennum++;
+                    str=`${txtIndend}\n${txtIndend}${t.returnType} ${t.name}(${t.args.map(arg=>arg.type+' '+arg.name).join(',')}){\n${nexttoken.simpleToString(indent+1)}${txtIndend}}\n`;
+                    break;
+                }
+                case "scope":{
+                    str=`{\n${token.simpleToString(indent+1)}\n${txtIndend}}\n`;break;
+                }
+                case "section":{
+                    str=token.simpleToString(indent);break;
+                }
+                case "include":{
+                    if(token.text.implicit)break;
+                    if(token.text.name!=''){
+                        str=`${txtIndend}#include <${token.text.name}>\n`;
+                    }
+                }break;
+            }
+            str2+=str;
+        }
+
+        return str2;
+    }
+    /** The final tostring
      * @param {int} [tokennum]
      * @param {int} [indent]
      * @param {Object.<string, string>} [variables]
@@ -652,6 +801,29 @@ export class CodeScope {
         const txtIndend="\t".repeat(indent);
         let str;
         switch(token.type){
+            case "enum":{
+                if(token.text.name!='' && token.text.name!=undefined)
+                variables[token.text.name]={type:'type',subtype:'enum',name:token.text.name,fields:token.text.fields};
+                str=`${txtIndend}enum ${token.text.name}{`;
+                let fields=token.text.fields;
+                let i=0;
+                let lastvalue=-1;
+                for(let i=0;i<fields.length;i++){
+                    let en=fields[i];
+                    if(i>0){
+                        str+=',';
+                    }
+                    if(lastvalue+1==en.value){
+                        str+=en.name;
+                    }else{
+                        str+=`${en.name}=${en.value}`;
+                    }
+                    variables[en.name]={type:'value',subtype:'int',name:en.name,props:{}};
+                    lastvalue=en.value;
+                }
+                str+='};\n';
+                break;
+            }
             case "if":{
                 //must have variables: if,scope,scope..
                 let ifchain=`${txtIndend}if`;
@@ -675,7 +847,12 @@ export class CodeScope {
                         str+=`else{\n${nexttoken.toString(indent+1,variables)}${txtIndend}}`;
                         break;
                     }
-                    str+=`${ifchain}(${condition}){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}`;
+                    if(nexttoken.tokenList.length<=1 && i==conditions.length-1){
+                        str+=`${ifchain}(${condition})${nexttoken.toString(0,variables).trimEnd()}`;
+                    }else{
+                        str+=`${ifchain}(${condition}){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}`;
+                    }
+
                     ifchain='else if';
                 }
                 if(conditions.length!=0){
@@ -730,10 +907,16 @@ export class CodeScope {
 
                 let rettype;//var is type but var[i].arg is rettype
                 let retname;//name is var(Mesh *)[0] but retname is ((Mesh *)var)[0]
+                const name=capture[1];
+                let doDefine=variables[name]==undefined;
                 const name_parts=getVariableParts(t.name,variables);
                 if(name_parts.length==1){
                     retname=t.name;
-                    rettype=t.subtype;
+                    if(doDefine){
+                        rettype=t.subtype;
+                    }else{
+                        rettype=resolvetype(name,variables)[0];
+                    }
                 }else{
                     //resolve call result output type
                     const subtype_box=[];
@@ -741,8 +924,6 @@ export class CodeScope {
                     rettype=subtype_box[0];
                 }
 
-                const name=capture[1];
-                let doDefine=variables[name]==undefined;
                 if(doDefine){
                     variables[name]=t;
                 }
@@ -786,11 +967,11 @@ export class CodeScope {
                     //If defined name is something like arr[i] it will have multiple parts
                     //Name will not have casts or function calls so dont safeguard aganist that
                     const name_parts=getVariableParts(t.name,variables);
-                    let cast=fn.returnType!=rettype?`(${rettype})`:'';
+                    let castedName=cast(fn.returnType,nt.name,rettype);
                     globalThis.fnc=globalThis.fnc!=undefined?globalThis.fnc+1:0;
                     //console.log(globalThis.fnc);
                     const args = compilefunctionargs(fn,nt.args,variables);
-                    doAssign=`=${cast}${nt.name}(${args.join(',')})`;
+                    doAssign=`=${castedName}(${args.join(',')})`;
                     tokennum++;
                 }
                 if(doDefine){
@@ -843,7 +1024,15 @@ export class CodeScope {
                     }
 
                 }
-                str=`${txtIndend}\n${txtIndend}${statics}${t.returnType} ${t.name}(${args.join(',')}){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}\n`;
+                //console.log('fn '+t.name);
+                //console.log(nexttoken.simpleToString(0));
+                let scope_innerText=nexttoken.toString(indent+1,variables);
+                if(scope_innerText!=''){
+                    scope_innerText=`{\n${scope_innerText+txtIndend}}`;
+                }else{
+                    scope_innerText=';';
+                }
+                str=`${txtIndend}\n${txtIndend}${statics}${t.returnType} ${t.name}(${args.join(',')})${scope_innerText}\n`;
                 break;
             }
             case "scope":{
@@ -952,6 +1141,7 @@ export class CodeScope {
     allocVariable(hint='v',offset){
         const variables={};
         this._getVariables(variables,offset);
+        hint=hint.replace(/[^\w]/g,'');
         if(variables[hint]==undefined)return hint;
         let i=0;
         while(variables[hint+i]!==undefined){
@@ -989,9 +1179,7 @@ export class CodeScope {
         }
         return iftoken.tokenId;
     }
-    //This is a way to edit 'if' after the fact
-
-    /**
+    /** This is a way to edit 'if' after the fact
      * @param {string} condition
      * @param {(ctx:CodeScope)=>{}} fn
      * @param {int} [tokenId]
@@ -1240,6 +1428,7 @@ export class CodeScope {
      */
     declare(type,name,initial,props={}){
         if(String(initial).startsWith('*'))debugger;
+        type=type.replace('&','*');
         if(type.includes("*")&&!type.includes(" *"))debugger;
         if(type.startsWith('static ')){
             props.static=true;
@@ -1265,11 +1454,30 @@ export class CodeScope {
         this.addToken(new CodeToken('assign',{name,initial}));
     }
 
+    /** declare typedef of int values
+     *  @param {string} name Type name
+     *  @param {{name:string,value:number}[]} fields The list of values for enum
+     */
+    enum(name,fields){
+        let token = this.addToken(new CodeToken('enum',{name,fields}));
+        return token;
+    }
     /** Get token before this one
      * @return {undefined|CodeToken|CodeScope}
      */
     previous(){
         if(this.parent==undefined)return undefined;
         return this.parent.tokenList[this.parent.getTokenOffset(this.tokenId)-1];
+    }
+    getCurrentFunction(){
+        if(this.parent==undefined)return undefined;
+        let thiz=this;
+        let previous=this.parent.tokenList[thiz.parent.getTokenOffset(thiz.tokenId)-1];
+        while(previous.type!='function'){
+            thiz=thiz.parent;
+            if(thiz.parent==undefined)return undefined;
+            previous=thiz.parent.tokenList[thiz.parent.getTokenOffset(thiz.tokenId)-1];
+        }
+        return previous;
     }
 }

@@ -94,7 +94,7 @@ const MIN_FRAME_DELAY =  1;
 
             ClearBackground(RAYWHITE);
 
-            DrawText(TextFormat("TOTAL GIF FRAMES:  %02i", animFrames), 50, 30, 20, LIGHTGRAY);
+            DrawText(TextFormat("TOTAL GIF FRAMES:  %02i", animFrames[0]), 50, 30, 20, LIGHTGRAY);
             DrawText(TextFormat("CURRENT FRAME: %02i", currentAnimFrame), 50, 60, 20, GRAY);
             DrawText(TextFormat("CURRENT FRAME IMAGE.DATA OFFSET: %02i", nextFrameDataOffset), 50, 90, 20, GRAY);
 

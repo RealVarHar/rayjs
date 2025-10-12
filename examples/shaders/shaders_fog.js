@@ -75,7 +75,7 @@ if(['Andriod','iOS'].includes(os.platform)){
 
     let fogDensity = 0.15;
     let fogDensityLoc = GetShaderLocation(shader, "fogDensity");
-    SetShaderValue(shader, fogDensityLoc, fogDensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, fogDensityLoc, [fogDensity], SHADER_UNIFORM_FLOAT);
 
     // NOTE: All models share the same shader
     modelA.materials[0].shader = shader;
@@ -104,14 +104,14 @@ if(['Andriod','iOS'].includes(os.platform)){
             if (fogDensity < 0) fogDensity = 0;
         }
 
-        SetShaderValue(shader, fogDensityLoc, fogDensity, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(shader, fogDensityLoc, [fogDensity], SHADER_UNIFORM_FLOAT);
 
         // Rotate the torus
         modelA.transform = rm.MatrixMultiply(modelA.transform, rm.MatrixRotateX(-0.025));
         modelA.transform = rm.MatrixMultiply(modelA.transform, rm.MatrixRotateZ(0.012));
 
         // Update the light shader with the camera view position
-        SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], camera.position.x, SHADER_UNIFORM_VEC3);
+        SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], camera.position, SHADER_UNIFORM_VEC3);
         //----------------------------------------------------------------------------------
 
         // Draw

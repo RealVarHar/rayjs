@@ -96,7 +96,7 @@ class RoundedRectangle{
                             TextFormat("resources/shaders/glsl%i/rounded_rectangle.fs", GLSL_VERSION));
 
     // Create a rounded rectangle
-    let roundedRectangle = CreateRoundedRectangle(
+    let roundedRectangle = new RoundedRectangle(
         new Vector4( 5, 10, 15, 20 ), // Corner radius
         20,                           // Shadow radius
         new Vector2( 0, -5 ),         // Shadow offset

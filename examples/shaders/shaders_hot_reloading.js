@@ -23,7 +23,7 @@ import {
 import {rlGetShaderIdDefault} from "rayjs:rlgl";
 
 let GLSL_VERSION;
-if(['Andriod','iOS'].includes(os.platform){
+if(['Andriod','iOS'].includes(os.platform)){
     GLSL_VERSION = 100;
 }else{
     GLSL_VERSION = 330;
@@ -45,7 +45,7 @@ if(['Andriod','iOS'].includes(os.platform){
 
     // Load raymarching shader
     // NOTE: Defining 0 (NULL) for vertex shader forces usage of internal default vertex shader
-    let shader = LoadShader(0, TextFormat(fragShaderFileName, GLSL_VERSION));
+    let shader = LoadShader(null, TextFormat(fragShaderFileName, GLSL_VERSION));
 
     // Get shader locations for required uniforms
     let resolutionLoc = GetShaderLocation(shader, "resolution");

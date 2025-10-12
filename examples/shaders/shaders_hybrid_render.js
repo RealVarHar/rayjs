@@ -19,7 +19,7 @@ import * as os from 'qjs:os';
 import * as rg from 'rayjs:rlgl';
 import * as rm from 'rayjs:raymath';
 import {GetShaderLocation, InitWindow, LOG_INFO, LOG_WARNING, LoadShader, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-    SHADER_UNIFORM_VEC2, Camera3D as Camera,
+    SHADER_UNIFORM_VEC2, Camera3D as Camera, RenderTexture as RenderTexture2D,
     SetShaderValue, TextFormat, TraceLog, Vector2, Vector3, CAMERA_PERSPECTIVE, SetTargetFPS, WindowShouldClose, UpdateCamera, CAMERA_ORBITAL, BeginTextureMode, ClearBackground, WHITE, BeginShaderMode, DrawRectangleRec, Rectangle, EndShaderMode, BeginMode3D, DrawCubeWiresV, RED, PURPLE, DARKGREEN, YELLOW, DrawCubeV, DrawGrid, EndMode3D, EndTextureMode, BeginDrawing, RAYWHITE, DrawTextureRec, DrawFPS, EndDrawing, UnloadShader, CloseWindow } from 'rayjs:raylib';
 
 let GLSL_VERSION;
@@ -79,6 +79,12 @@ function UnloadRenderTextureDepthTex(target) {
         // queried and deleted before deleting framebuffer
         rg.rlUnloadFramebuffer(target.id);
     }
+}
+
+class RayLocs{
+    camPos=0;
+    camDir=0;
+    screenCenter=0;
 }
 
 //------------------------------------------------------------------------------------

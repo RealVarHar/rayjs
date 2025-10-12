@@ -5,16 +5,37 @@
 	#include <string.h>
 	#include <rayjs_base.h>
 	#include <config.h>
-	#include <rayjs_generated.h>
 	#include <raylib.h>
 #define RLIGHTS_IMPLEMENTATION ;
 	#include <rlights.h>
 	
+	static int js_getint(JSContext * ctx,JSValue src,bool * error);
+	
+	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
+	
+	static Vector3 js_getVector3(JSContext * ctx,JSValue src,bool * error);
+	
+	static Color js_getColor(JSContext * ctx,JSValue src,bool * error);
+	
+	static float js_getfloat(JSContext * ctx,JSValue src,bool * error);
+	
+	static Shader js_getShader(JSContext * ctx,JSValue src,bool * error);
+	
+	static Light js_getLight(JSContext * ctx,JSValue src,bool * error){
+		Light ret;
+		if(JS_GetClassID(src)==js_Light_class_id){
+			ret =*(Light *)JS_GetOpaque(src,js_Light_class_id);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type Light");
+			error[0]=(bool)1;
+			return (Light){0};
+		}
+		return ret;
+	}
+	
 	static void js_Light_finalizer(JSRuntime * rt,JSValue val){
 		Light * ptr=(Light *)JS_GetOpaque(val,js_Light_class_id);
-		if(ptr){
-			js_free_rt(rt,(void *)ptr);
-		}
+		if(ptr)js_free_rt(rt,(void *)ptr);
 	}
 	
 	static JSValue js_Light_get_type(JSContext * ctx,JSValue this_val){
@@ -25,14 +46,10 @@
 	}
 	
 	static JSValue js_Light_set_type(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].type=value;
 		return JS_UNDEFINED;
 	}
@@ -45,13 +62,10 @@
 	}
 	
 	static JSValue js_Light_set_enabled(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int js_value=JS_ToBool(ctx,v);
-		if(js_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool value=(bool)js_value;
+		bool value=js_getbool(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].enabled=value;
 		return JS_UNDEFINED;
 	}
@@ -67,13 +81,10 @@
 	}
 	
 	static JSValue js_Light_set_position(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		Vector3 * ptr_value=(Vector3 *)JS_GetOpaque(v,js_Vector3_class_id);
-		if(ptr_value==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"v does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 value=*ptr_value;
+		Vector3 value=js_getVector3(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].position=value;
 		return JS_UNDEFINED;
 	}
@@ -89,13 +100,10 @@
 	}
 	
 	static JSValue js_Light_set_target(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		Vector3 * ptr_value=(Vector3 *)JS_GetOpaque(v,js_Vector3_class_id);
-		if(ptr_value==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"v does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 value=*ptr_value;
+		Vector3 value=js_getVector3(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].target=value;
 		return JS_UNDEFINED;
 	}
@@ -111,13 +119,10 @@
 	}
 	
 	static JSValue js_Light_set_color(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		Color * ptr_value=(Color *)JS_GetOpaque(v,js_Color_class_id);
-		if(ptr_value==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"v does not allow null");
-			return JS_EXCEPTION;
-		}
-		Color value=*ptr_value;
+		Color value=js_getColor(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].color=value;
 		return JS_UNDEFINED;
 	}
@@ -130,14 +135,10 @@
 	}
 	
 	static JSValue js_Light_set_attenuation(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		double double_value;
-		int err_value=JS_ToFloat64(ctx,&double_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		float value=((float)double_value);
+		float value=js_getfloat(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].attenuation=value;
 		return JS_UNDEFINED;
 	}
@@ -150,14 +151,10 @@
 	}
 	
 	static JSValue js_Light_set_enabledLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].enabledLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -170,14 +167,10 @@
 	}
 	
 	static JSValue js_Light_set_typeLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].typeLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -190,14 +183,10 @@
 	}
 	
 	static JSValue js_Light_set_positionLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].positionLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -210,14 +199,10 @@
 	}
 	
 	static JSValue js_Light_set_targetLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].targetLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -230,14 +215,10 @@
 	}
 	
 	static JSValue js_Light_set_colorLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].colorLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -250,14 +231,10 @@
 	}
 	
 	static JSValue js_Light_set_attenuationLoc(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		Light * ptr=(Light *)JS_GetOpaque2(ctx,this_val,js_Light_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].attenuationLoc=value;
 		return JS_UNDEFINED;
 	}
@@ -295,86 +272,31 @@
 			JS_SetOpaque(_return,(void *)ptr__return);
 			return _return;
 		}
-		int32_t long_type;
-		int err_type=JS_ToInt32(ctx,&long_type,argv[0]);
-		if(err_type<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int type=((int)long_type);
-		int js_enabled=JS_ToBool(ctx,argv[1]);
-		if(js_enabled<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool enabled=(bool)js_enabled;
-		Vector3 * ptr_position=(Vector3 *)JS_GetOpaque(argv[2],js_Vector3_class_id);
-		if(ptr_position==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 position=*ptr_position;
-		Vector3 * ptr_target=(Vector3 *)JS_GetOpaque(argv[3],js_Vector3_class_id);
-		if(ptr_target==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 target=*ptr_target;
-		Color * ptr_color=(Color *)JS_GetOpaque(argv[4],js_Color_class_id);
-		if(ptr_color==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Color color=*ptr_color;
-		double double_attenuation;
-		int err_attenuation=JS_ToFloat64(ctx,&double_attenuation,argv[5]);
-		if(err_attenuation<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float attenuation=((float)double_attenuation);
-		int32_t long_enabledLoc;
-		int err_enabledLoc=JS_ToInt32(ctx,&long_enabledLoc,argv[6]);
-		if(err_enabledLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[6] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int enabledLoc=((int)long_enabledLoc);
-		int32_t long_typeLoc;
-		int err_typeLoc=JS_ToInt32(ctx,&long_typeLoc,argv[7]);
-		if(err_typeLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[7] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int typeLoc=((int)long_typeLoc);
-		int32_t long_positionLoc;
-		int err_positionLoc=JS_ToInt32(ctx,&long_positionLoc,argv[8]);
-		if(err_positionLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[8] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int positionLoc=((int)long_positionLoc);
-		int32_t long_targetLoc;
-		int err_targetLoc=JS_ToInt32(ctx,&long_targetLoc,argv[9]);
-		if(err_targetLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[9] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int targetLoc=((int)long_targetLoc);
-		int32_t long_colorLoc;
-		int err_colorLoc=JS_ToInt32(ctx,&long_colorLoc,argv[10]);
-		if(err_colorLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[10] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int colorLoc=((int)long_colorLoc);
-		int32_t long_attenuationLoc;
-		int err_attenuationLoc=JS_ToInt32(ctx,&long_attenuationLoc,argv[11]);
-		if(err_attenuationLoc<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[11] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int attenuationLoc=((int)long_attenuationLoc);
+		bool error=(bool)0;
+		int type=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool enabled=js_getbool(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 position=js_getVector3(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 target=js_getVector3(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color color=js_getColor(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		float attenuation=js_getfloat(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
+		int enabledLoc=js_getint(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
+		int typeLoc=js_getint(ctx,argv[7],&error);
+		if(error==1)return JS_EXCEPTION;
+		int positionLoc=js_getint(ctx,argv[8],&error);
+		if(error==1)return JS_EXCEPTION;
+		int targetLoc=js_getint(ctx,argv[9],&error);
+		if(error==1)return JS_EXCEPTION;
+		int colorLoc=js_getint(ctx,argv[10],&error);
+		if(error==1)return JS_EXCEPTION;
+		int attenuationLoc=js_getint(ctx,argv[11],&error);
+		if(error==1)return JS_EXCEPTION;
 		Light _struct={
 			type,
 			enabled,
@@ -397,37 +319,17 @@
 	}
 	
 	static JSValue js_CreateLight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_type;
-		int err_type=JS_ToInt32(ctx,&long_type,argv[0]);
-		if(err_type<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int type=((int)long_type);
-		Vector3 * ptr_position=(Vector3 *)JS_GetOpaque(argv[1],js_Vector3_class_id);
-		if(ptr_position==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 position=*ptr_position;
-		Vector3 * ptr_target=(Vector3 *)JS_GetOpaque(argv[2],js_Vector3_class_id);
-		if(ptr_target==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Vector3 target=*ptr_target;
-		Color * ptr_color=(Color *)JS_GetOpaque(argv[3],js_Color_class_id);
-		if(ptr_color==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Color color=*ptr_color;
-		Shader * ptr_shader=(Shader *)JS_GetOpaque(argv[4],js_Shader_class_id);
-		if(ptr_shader==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Shader shader=*ptr_shader;
+		bool error=(bool)0;
+		int type=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 position=js_getVector3(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 target=js_getVector3(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color color=js_getColor(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Shader shader=js_getShader(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		Light returnVal=CreateLight(type,position,target,color,shader);
 		Light * ptr_ret=(Light *)js_malloc(ctx,sizeof(Light));
 		ptr_ret[0]=returnVal;
@@ -437,18 +339,11 @@
 	}
 	
 	static JSValue js_UpdateLightValues(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Shader * ptr_shader=(Shader *)JS_GetOpaque(argv[0],js_Shader_class_id);
-		if(ptr_shader==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Shader shader=*ptr_shader;
-		Light * ptr_light=(Light *)JS_GetOpaque(argv[1],js_Light_class_id);
-		if(ptr_light==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Light light=*ptr_light;
+		bool error=(bool)0;
+		Shader shader=js_getShader(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Light light=js_getLight(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		UpdateLightValues(shader,light);
 		return JS_UNDEFINED;
 	}
@@ -471,9 +366,7 @@
 	
 	JSModuleDef * js_init_module_rlights(JSContext * ctx,const char * module_name){
 		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_rlights_init);
-		if(!m){
-			return NULL;
-		}
+		if(!m)return NULL;
 		size_t listcount=countof(jsrlights_funcs);
 		JS_AddModuleExportList(ctx,m,jsrlights_funcs,(int)listcount);
 		JS_AddModuleExport(ctx,m,(const char *)"Light");

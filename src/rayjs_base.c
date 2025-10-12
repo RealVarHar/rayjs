@@ -415,6 +415,14 @@ static JSValue js_NewArrayProxy(JSContext * ctx,ArrayProxy_class AP){
     JS_DupValue(ctx,AP.anchor);
     return _return;
 }
+
+static int64_t js_IsArrayLength(JSContext * ctx, JSValueConst obj, int64_t len){
+    if(!JS_IsArray(obj))return false;
+    int64_t ret;
+    JS_GetLength(ctx,obj, &ret);
+    if(ret<0)return false;
+    return ret==len;
+}
 /*
 Target will be just parent, and handle is called:
 
@@ -429,8 +437,3 @@ args[2] = receiver;
 ret = JS_CallFree(ctx, method, s->handler, 3, args);
 
 */
-
-//How can i get the proper atom? quicksj.c:6314 suggests a) can be iterated and found, b) is just text "get"
-//In fact, JS_DefinePropertyValueStr does this, its super slow, we should determine this at compile time if possible
-
-//It is possible to generate current atom mapping, use quickjs-atom.h, right one is name

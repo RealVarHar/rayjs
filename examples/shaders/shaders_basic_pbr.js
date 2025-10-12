@@ -62,10 +62,7 @@ function CreateLight(type, position, target, color, intensity, shader) {
         light.type = type;
         light.position = position;
         light.target = target;
-        light.color[0] = color.r/255;
-        light.color[1] = color.g/255;
-        light.color[2] = color.b/255;
-        light.color[3] = color.a/255;
+        light.color = [color.r/255, color.g/255, color.b/255, color.a/255];
         light.intensity = intensity;
 
         // NOTE: Shader parameters names for lights must match the requested ones
@@ -87,8 +84,8 @@ function CreateLight(type, position, target, color, intensity, shader) {
 // Update light properties on shader
 // NOTE: Light shader locations should be available
 function UpdateLight(shader, light) {
-    SetShaderValue(shader, light.enabledLoc, light.enabled, SHADER_UNIFORM_INT);
-    SetShaderValue(shader, light.typeLoc, light.type, SHADER_UNIFORM_INT);
+    SetShaderValue(shader, light.enabledLoc, [light.enabled], SHADER_UNIFORM_INT);
+    SetShaderValue(shader, light.typeLoc, [light.type], SHADER_UNIFORM_INT);
 
     // Send to shader light position values
     let position = [ light.position.x, light.position.y, light.position.z ];
@@ -98,7 +95,7 @@ function UpdateLight(shader, light) {
     let target = [ light.target.x, light.target.y, light.target.z ];
     SetShaderValue(shader, light.targetLoc, target, SHADER_UNIFORM_VEC3);
     SetShaderValue(shader, light.colorLoc, light.color, SHADER_UNIFORM_VEC4);
-    SetShaderValue(shader, light.intensityLoc, light.intensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, light.intensityLoc, [light.intensity], SHADER_UNIFORM_FLOAT);
 }
 
 //----------------------------------------------------------------------------------
@@ -139,14 +136,14 @@ function UpdateLight(shader, light) {
     // Setup additional required shader locations, including lights data
     shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
     let lightCountLoc = GetShaderLocation(shader, "numOfLights");
-    SetShaderValue(shader, lightCountLoc, MAX_LIGHTS, SHADER_UNIFORM_INT);
+    SetShaderValue(shader, lightCountLoc, [MAX_LIGHTS], SHADER_UNIFORM_INT);
 
     // Setup ambient color and intensity parameters
     let ambientIntensity = 0.02;
     let ambientColor = new Color( 26, 32, 135, 255 );
-    let ambientColorNormalized = new Vector3( ambientColor.r/255, ambientColor.g/255, ambientColor.b/255 );
+    let ambientColorNormalized = [ ambientColor.r/255, ambientColor.g/255, ambientColor.b/255 ];
     SetShaderValue(shader, GetShaderLocation(shader, "ambientColor"), ambientColorNormalized, SHADER_UNIFORM_VEC3);
-    SetShaderValue(shader, GetShaderLocation(shader, "ambient"), ambientIntensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, GetShaderLocation(shader, "ambient"), [ambientIntensity], SHADER_UNIFORM_FLOAT);
 
     // Get location for shader parameters that can be modified in real time
     let emissiveIntensityLoc = GetShaderLocation(shader, "emissivePower");
@@ -198,8 +195,8 @@ function UpdateLight(shader, light) {
 
     // Models texture tiling parameter can be stored in the Material struct if required (CURRENTLY NOT USED)
     // NOTE: Material.params[4] are available for generic parameters storage (float)
-    let carTextureTiling = new Vector2( 0.5, 0.5 );
-    let floorTextureTiling = new Vector2( 0.5, 0.5 );
+    let carTextureTiling = [ 0.5, 0.5 ];
+    let floorTextureTiling = [ 0.5, 0.5 ];
 
     // Create some lights
     let lights = new Array(MAX_LIGHTS);
@@ -230,10 +227,10 @@ function UpdateLight(shader, light) {
         SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
 
         // Check key inputs to enable/disable lights
-        if (IsKeyPressed(KEY_ONE)) { lights[2].enabled = !lights[2].enabled; }
-        if (IsKeyPressed(KEY_TWO)) { lights[1].enabled = !lights[1].enabled; }
-        if (IsKeyPressed(KEY_THREE)) { lights[3].enabled = !lights[3].enabled; }
-        if (IsKeyPressed(KEY_FOUR)) { lights[0].enabled = !lights[0].enabled; }
+        if (IsKeyPressed(KEY_ONE))  { lights[2].enabled = !lights[2].enabled?1:0; }
+        if (IsKeyPressed(KEY_TWO))  { lights[1].enabled = !lights[1].enabled?1:0; }
+        if (IsKeyPressed(KEY_THREE)){ lights[3].enabled = !lights[3].enabled?1:0; }
+        if (IsKeyPressed(KEY_FOUR)) { lights[0].enabled = !lights[0].enabled?1:0; }
 
         // Update light values on shader (actually, only enable/disable them)
         for (let i = 0; i < MAX_LIGHTS; i++) UpdateLight(shader, lights[i]);
@@ -251,7 +248,7 @@ function UpdateLight(shader, light) {
                 SetShaderValue(shader, textureTilingLoc, floorTextureTiling, SHADER_UNIFORM_VEC2);
                 let floorEmissiveColor = ColorNormalize(floor.materials[0].maps[MATERIAL_MAP_EMISSION].color);
                 SetShaderValue(shader, emissiveColorLoc, floorEmissiveColor, SHADER_UNIFORM_VEC4);
-                
+
                 DrawModel(floor, new Vector3( 0, 0, 0 ), 5, WHITE);   // Draw floor model
 
                 // Set old car model texture tiling, emissive color and emissive intensity parameters on shader
@@ -259,7 +256,7 @@ function UpdateLight(shader, light) {
                 let carEmissiveColor = ColorNormalize(car.materials[0].maps[MATERIAL_MAP_EMISSION].color);
                 SetShaderValue(shader, emissiveColorLoc, carEmissiveColor, SHADER_UNIFORM_VEC4);
                 let emissiveIntensity = 0.01;
-                SetShaderValue(shader, emissiveIntensityLoc, emissiveIntensity, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(shader, emissiveIntensityLoc, [emissiveIntensity], SHADER_UNIFORM_FLOAT);
                 
                 DrawModel(car, new Vector3( 0, 0, 0 ), 0.25, WHITE);   // Draw car model
 
@@ -289,12 +286,10 @@ function UpdateLight(shader, light) {
     // to avoid UnloadMaterial() trying to unload it automatically
     car.materials[0].shader = new Shader();
     UnloadMaterial(car.materials[0]);
-    car.materials[0].maps = null;
     UnloadModel(car);
     
     floor.materials[0].shader = new Shader();
     UnloadMaterial(floor.materials[0]);
-    floor.materials[0].maps = null;
     UnloadModel(floor);
     
     UnloadShader(shader);       // Unload Shader

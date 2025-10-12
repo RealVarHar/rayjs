@@ -66,11 +66,11 @@ const MAP_SIZE = 10;
     mesh.texcoords2[6] = 1;    mesh.texcoords2[7] = 1;
 
     // Load a new texcoords2 attributes buffer
-    mesh.vboId[SHADER_LOC_VERTEX_TEXCOORD02] = rg.rlLoadVertexBuffer(mesh.texcoords2,mesh.vertexCount*2*Float32Array.BYTES_PER_ELEMENT, false);
+    mesh.vboId[SHADER_LOC_VERTEX_TEXCOORD02] = rg.rlLoadVertexBuffer(new Float32Array(mesh.texcoords2),mesh.vertexCount*2*Float32Array.BYTES_PER_ELEMENT, false);
     rg.rlEnableVertexArray(mesh.vaoId);
     
     // Index 5 is for texcoords2
-    rg.rlSetVertexAttribute(5, 2, rg.RL_FLOAT, 0, 0, 0);
+    rg.rlSetVertexAttribute(5, 2, rg.RL_FLOAT, false, 0, 0);
     rg.rlEnableVertexAttribute(5);
     rg.rlDisableVertexArray();
 

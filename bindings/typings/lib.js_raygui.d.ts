@@ -48,13 +48,13 @@ function GuiToggleSlider(bounds: Rectangle, text: string, active: number | numbe
 function GuiCheckBox(bounds: Rectangle, text: string, checked: boolean | boolean[]): number/** undefined */
 function GuiComboBox(bounds: Rectangle, text: string, active: number | number[]): number/** undefined */
 function GuiDropdownBox(bounds: Rectangle, text: string, active: number | number[], editMode: boolean): number/** undefined */
-function GuiSpinner(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBox(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number | number[], editMode: boolean): number/** undefined */
+function GuiSpinner(bounds: Rectangle, text: string, value: number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
+function GuiValueBox(bounds: Rectangle, text: string, value: number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
+function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number[], editMode: boolean): number/** undefined */
 function GuiTextBox(bounds: Rectangle, text: string | string[], textSize: number, editMode: boolean): number/** undefined */
-function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
-function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
-function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
+function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
+function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
+function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
 function GuiStatusBar(bounds: Rectangle, text: string): number/** undefined */
 function GuiDummyRec(bounds: Rectangle, text: string): number/** undefined */
 function GuiGrid(bounds: Rectangle, text: string, spacing: number, subdivs: number, mouseCell: Vector2): number/** undefined */
@@ -65,7 +65,7 @@ function GuiTextInputBox(bounds: Rectangle, title: string, message: string, butt
 function GuiColorPicker(bounds: Rectangle, text: string, color: Color): number/** undefined */
 function GuiColorPanel(bounds: Rectangle, text: string, color: Color): number/** undefined */
 function GuiColorBarAlpha(bounds: Rectangle, text: string, alpha: number | number[]): number/** undefined */
-function GuiColorBarHue(bounds: Rectangle, text: string, value: number | number[]): number/** undefined */
+function GuiColorBarHue(bounds: Rectangle, text: string, value: number[]): number/** undefined */
 function GuiColorPickerHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** undefined */
 function GuiColorPanelHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/**  */
 var STATE_NORMAL: number/**  */

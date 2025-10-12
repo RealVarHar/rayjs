@@ -121,9 +121,9 @@ const DEFERRED_SHADING = 3;
         let texUnitPosition = 0;
         let texUnitNormal = 1;
         let texUnitAlbedoSpec = 2;
-        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gPosition"), texUnitPosition, rg.RL_SHADER_UNIFORM_SAMPLER2D);
-        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gNormal"), texUnitNormal, rg.RL_SHADER_UNIFORM_SAMPLER2D);
-        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gAlbedoSpec"), texUnitAlbedoSpec, rg.RL_SHADER_UNIFORM_SAMPLER2D);
+        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gPosition"), [texUnitPosition], rg.RL_SHADER_UNIFORM_SAMPLER2D);
+        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gNormal"), [texUnitNormal], rg.RL_SHADER_UNIFORM_SAMPLER2D);
+        SetShaderValue(deferredShader, rg.rlGetLocationUniform(deferredShader.id, "gAlbedoSpec"), [texUnitAlbedoSpec], rg.RL_SHADER_UNIFORM_SAMPLER2D);
     rg.rlDisableShader();
 
     // Assign out lighting shader to model

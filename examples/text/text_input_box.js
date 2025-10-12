@@ -79,7 +79,7 @@ function IsAnyKeyPressed() {
             while (key > 0) {
                 // NOTE: Only allow keys in range [32..125]
                 if ((key >= 32) && (key <= 125) && (letterCount < MAX_INPUT_CHARS)) {
-                    name = name.substring(0,letterCount-1) + String.fromCodePoint(key);// Add null terminator at the end of the string.
+                    name += String.fromCodePoint(key);// Add null terminator at the end of the string.
                     letterCount++;
                 }
 
@@ -89,7 +89,7 @@ function IsAnyKeyPressed() {
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 letterCount--;
                 if (letterCount < 0) letterCount = 0;
-                name = name.substring(0,letterCount-1);
+                name = name.substring(0,letterCount);
             }
         }
         else SetMouseCursor(MOUSE_CURSOR_DEFAULT);

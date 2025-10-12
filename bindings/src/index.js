@@ -1,6 +1,8 @@
 import * as fs from "./fs.js";
 globalThis.config=JSON.parse(fs.readFileSync('bindings/config/buildFlags.json','utf8'));
 globalThis.extrainfo={};
+
+const cgen = (await import("./cgen.js"));
 const rayjs_header = (await import("./raylib-header.js")).RayJsHeader;
 
 let source_parser,simpleregex,defaultTypeParts;
@@ -10,7 +12,8 @@ let source_parser,simpleregex,defaultTypeParts;
     defaultTypeParts=sp.defaultTypeParts;
     simpleregex=sp.simpleregex;
 }
-const QuickJsGenerator = (await import("./quickjs.js")).QuickJsGenerator;
+const qj=await import("./quickjs.js");
+const QuickJsGenerator = qj.QuickJsGenerator;
 
 // @ts-ignore
 String.prototype.replaceAt = function(index, replacement) {
@@ -185,12 +188,11 @@ function updateInclude(module,includeName,key,value){
 function main() {
     let att,cb;
     // load quickjs.c since it has the enum we need
-    //let toolsSource = new source_parser(fs.readFileSync("src/rayjs_base.c", "utf8"));
     let sourcefiles= {
         "quickjs.h": "thirdparty/quickjs/quickjs.h",
-        "rayjs_generated.c": "src/rayjs_generated.c",
         "modules/quickjs-libc.h": "src/modules/quickjs-libc.h",
         "quickjs-atom.h": "thirdparty/quickjs/quickjs-atom.h",
+        "rayjs_generated.h":"src/rayjs_generated.h",
         "stdbool.h":false,"stdio.h":false,"stdint.h":false,"string.h":false,"math.h":false,"sal.h":false,"stdarg.h":false,"stdlib.h":false,"inttypes.h":false,"assert.h":false,"time.h":false,"sys/time.h":false,
         "timezoneapi.h":false,"intrin.h":false,"fenv.h":false,"cutils.h":"src/cutils.h","libregexp.h":false,"quickjs-c-atomics.h":false,"builtin-array-fromasync.h":false,"mimalloc.h":false,"raymath.h":false,"raylib.h":false,
         "ctype.h":false,"OpenGL/gl.h":false,"OpenGL/glext.h":false,"GL/gl.h":false,"external/glad.h":false,"GLES":false,"external/glad_gles":false,"rlgl.h":false,"lightmapper.h":false,"list.h":false,"xsum.h":false,
@@ -270,13 +272,13 @@ function main() {
     modules_generated.structs=[];
     for(let en of modules_generated.enums){
         // Register enum
-
+        modules_generated.gen.cgen.enum(en.name,en.values);
     }
     fs.writeFileSync(`src/rayjs_generated.h`, modules_generated.gen.cgen.toString());
 
     //We dont expect to both create an include and import it, so re-creation is necessary
     includeDictionary['generated']=(gen,vars)=>{
-        gen.includeGen.include("rayjs_generated.h",vars);
+        //gen.includeGen.include("rayjs_generated.h",vars);
     };
     includeDictionary["config"]=(gen,vars)=>{
         gen.includeGen.include("config.h",vars);
@@ -284,15 +286,16 @@ function main() {
     includeDictionary["raylib"]=(gen,vars)=>{
         gen.includeGen.include("raylib.h",vars);
     };
-    modules['raylib'].gen = new rayjs_header("raylib",'raylib.h');
+    let sharedFnNames={};
+    modules['raylib'].gen = new rayjs_header("raylib",'raylib.h',sharedFnNames);
     includeDictionary["raymath"]=(gen,vars)=>{
         gen.includeGen.include("raymath.h",vars);
     };
-    modules['raymath'].gen = new rayjs_header("raymath",'raymath.h');
+    modules['raymath'].gen = new rayjs_header("raymath",'raymath.h',sharedFnNames);
     includeDictionary["rcamera"]=(gen,vars)=>{
         gen.includeGen.include("rcamera.h",vars);
     };
-    modules['rcamera'].gen = new rayjs_header("rcamera",'rcamera.h');
+    modules['rcamera'].gen = new rayjs_header("rcamera",'rcamera.h',sharedFnNames);
     includeDictionary["raygui"]=(gen,vars)=>{
         let defines=[];
         if(!once['raygui']){
@@ -301,7 +304,7 @@ function main() {
         }
         gen.includeGen.include("raygui.h",vars,defines);
     };
-    modules['raygui'].gen = new rayjs_header("raygui",'raygui.h');
+    modules['raygui'].gen = new rayjs_header("raygui",'raygui.h',sharedFnNames);
     includeDictionary["rlights"]=(gen,vars)=>{
         let defines=[];
         if(!once['rlights']){
@@ -310,15 +313,15 @@ function main() {
         }
         gen.includeGen.include("rlights.h",vars,defines);
     };
-    modules['rlights'].gen = new rayjs_header("rlights",'rlights.h');
+    modules['rlights'].gen = new rayjs_header("rlights",'rlights.h',sharedFnNames);
     includeDictionary["reasings"]=(gen,vars)=>{
         gen.includeGen.include("reasings.h",vars );
     };
-    modules['reasings'].gen = new rayjs_header("reasings",'reasings.h');
+    modules['reasings'].gen = new rayjs_header("reasings",'reasings.h',sharedFnNames);
     includeDictionary["rlgl"]=(gen,vars)=>{
         gen.includeGen.include("rlgl.h",vars );
     };
-    modules['rlgl'].gen = new rayjs_header("rlgl",'rlgl.h');
+    modules['rlgl'].gen = new rayjs_header("rlgl",'rlgl.h',sharedFnNames);
     includeDictionary['rlightmapper']=(gen,vars)=>{
         let defines=[];
         if(!once['rlightmapper']){
@@ -327,7 +330,7 @@ function main() {
         }
         gen.includeGen.include("rlightmapper.h",vars,defines);
     };
-    modules['rlightmapper'].gen = new rayjs_header("rlightmapper",'rlightmapper.h');
+    modules['rlightmapper'].gen = new rayjs_header("rlightmapper",'rlightmapper.h',sharedFnNames);
     for(let key in modules)attachGetters(modules[key]);
 
     //generate hashmap of names to detect dependencies
@@ -405,6 +408,8 @@ function main() {
     att.fields.find(a=>a.name=='materials').binding.sizeVars=['ptr.materialCount'];
     att.fields.find(a=>a.name=='bones').binding.sizeVars=['ptr.boneCount'];
     att.fields.find(a=>a.name=='bindPose').binding.sizeVars=['ptr.boneCount'];
+    att = modules['raylib'].getFunction("LoadCodepoints");
+    att.returnSizeVars=['count[0]'];
     att = modules['raylib'].getStruct("ModelAnimation");
     att.fields.find(a=>a.name=='bones').binding.sizeVars=['ptr.boneCount'];
     att.fields.find(a=>a.name=='framePoses').binding.sizeVars=['ptr.frameCount','ptr.boneCount'];
@@ -459,23 +464,25 @@ function main() {
     // NOT SUPPORTED BECAUSE NEEDS COMPILER FLAG
     modules['raylib'].ignore("SwapScreenBuffer");
     modules['raylib'].ignore("PollInputEvents");
-    modules['raylib'].getFunction("SetShaderValue").binding = {};
-    modules['raylib'].getFunction("SetShaderValue").binding.body = (gen) => {
-        let qjs = new QuickJsGenerator(gen);
-        qjs.jsToC("Shader", "shader", "argv[0]");
-        qjs.jsToC("int", "locIndex", "argv[1]");
+    modules['raylib'].getFunction("SetShaderValue").binding.body = (gen,header) => {
+        gen.declare('bool','error',0);
         gen.declare("void *", "value", "NULL");
-        gen.declare("JSValue", "da_value");
-        qjs.jsToC("int", "uniformType", "argv[3]");
+        header.jsToC(gen,"Shader","shader", "argv[0]");
+        header.jsToC(gen,"int","locIndex", "argv[1]");
+        header.jsToC(gen,"int","uniformType", "argv[3]");
         let cases={
-            "SHADER_UNIFORM_FLOAT":['[1]','float'],
-            "SHADER_UNIFORM_VEC2":['[2]','float'],
-            "SHADER_UNIFORM_VEC3":['[3]','float'],
-            "SHADER_UNIFORM_VEC4":['[4]','float'],
-            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D":['[1]','int'],
-            "SHADER_UNIFORM_IVEC2":['[2]','float'],
-            "SHADER_UNIFORM_IVEC3":['[3]','float'],
-            "SHADER_UNIFORM_IVEC4":['[4]','float'],
+            "SHADER_UNIFORM_FLOAT":['float *','float &'],
+            "SHADER_UNIFORM_VEC2":["Vector2 *",'Vector2 &'],
+            "SHADER_UNIFORM_VEC3":["Vector3 *",'Vector3 &'],
+            "SHADER_UNIFORM_VEC4":["Vector4 *",'Vector4 &'],
+            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D":['int *','int &'],
+            "SHADER_UNIFORM_IVEC2":["int *",'int [2]'],
+            "SHADER_UNIFORM_IVEC3":["int *","int [3]"],
+            "SHADER_UNIFORM_IVEC4":["int *","int [4]"],
+            "SHADER_UNIFORM_UINT":['unsigned int *','unsigned int &'],
+            "SHADER_UNIFORM_UIVEC2":['unsigned int *',"unsigned int [2]"],
+            "SHADER_UNIFORM_UIVEC3":['unsigned int *',"unsigned int [3]"],
+            "SHADER_UNIFORM_UIVEC4":['unsigned int *',"unsigned int [4]"],
             "default":[]
         };
         //Named VEC but examples and inner code use (float *) technically the same
@@ -484,43 +491,80 @@ function main() {
                 ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
                 ctx.return("JS_EXCEPTION");
             }else{
-                new QuickJsGenerator(ctx).jsToC(`${cases[i][1]} ${cases[i][0]}`, "val", "argv[2]");
+                header.jsToC(ctx,cases[i][1],"val", "argv[2]");
                 ctx.assign("value",'val(void *)');
-                ctx.assign("da_value",'da_val');
             }
         });
         gen.call("SetShaderValue", ["shader", "locIndex", "value", "uniformType"]);
-        qjs.jsCleanUpParameter("void *", 'value', "argv[2]");
         gen.return("JS_UNDEFINED");
     };
-    modules['raylib'].getFunction("SetShaderValueV").binding = {};
-    modules['raylib'].getFunction("SetShaderValueV").binding.body = (gen) => {
-        let qjs = new QuickJsGenerator(gen);
-        qjs.jsToC("Shader", "shader", "argv[0]");
-        qjs.jsToC("int", "locIndex", "argv[1]");
-        qjs.jsToC("int", "uniformType", "argv[3]");
-        qjs.jsToC("int", "count", "argv[4]");
+    modules['raylib'].getFunction("SetShaderValueV").binding.body = (gen,header) => {
+        header.jsToC(gen,"int","count","argv[4]");
+        gen.declare('bool','error',0);
         gen.declare("void *", "value", "NULL");
-        gen.declare("JSValue", "da_value");
-        const sw = gen.switch("uniformType",[
-            "SHADER_UNIFORM_FLOAT||SHADER_UNIFORM_VEC2||SHADER_UNIFORM_VEC3",
-            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D||SHADER_UNIFORM_IVEC2||SHADER_UNIFORM_IVEC3||SHADER_UNIFORM_IVEC4",
-            "default"],(ctx,i)=>{
-            if(i=="SHADER_UNIFORM_FLOAT||SHADER_UNIFORM_VEC2||SHADER_UNIFORM_VEC3"){
-                (new QuickJsGenerator(ctx)).jsToC("int *", "val", "argv[2]");
-            }else if(i=="SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D||SHADER_UNIFORM_IVEC2||SHADER_UNIFORM_IVEC3||SHADER_UNIFORM_IVEC4"){
-                (new QuickJsGenerator(ctx)).jsToC("float *", "val", "argv[2]");
-            }else{
+        header.jsToC(gen,"Shader","shader", "argv[0]");
+        header.jsToC(gen,"int","locIndex", "argv[1]");
+        header.jsToC(gen,"int","uniformType", "argv[3]");
+        let cases={
+            "SHADER_UNIFORM_FLOAT":['float *','float [size0]','count'],
+            "SHADER_UNIFORM_VEC2":["Vector2 *",'Vector2 [size0]','count'],
+            "SHADER_UNIFORM_VEC3":["Vector3 *",'Vector3 [size0]','count'],
+            "SHADER_UNIFORM_VEC4":["Vector4 *",'Vector4 [size0]','count'],
+            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D":['int *','int [size0]','count'],
+            "SHADER_UNIFORM_IVEC2":["int *",'int [size0]','2*count'],
+            "SHADER_UNIFORM_IVEC3":["int *","int [size0]",'3*count'],
+            "SHADER_UNIFORM_IVEC4":["int *","int [size0]",'4*count'],
+            "SHADER_UNIFORM_UINT":['unsigned int *','unsigned int [size0]','count'],
+            "SHADER_UNIFORM_UIVEC2":['unsigned int *',"unsigned int [size0]",'2*count'],
+            "SHADER_UNIFORM_UIVEC3":['unsigned int *',"unsigned int [size0]",'3*count'],
+            "SHADER_UNIFORM_UIVEC4":['unsigned int *',"unsigned int [size0]",'4*count'],
+            "default":[]
+        };
+        //Named VEC but examples and inner code use (float *) technically the same
+        const sw = gen.switch("uniformType",Object.keys(cases),(ctx,i)=>{
+            if(i=='default'){
                 ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
                 ctx.return("JS_EXCEPTION");
-                return;
+            }else{
+                header.jsToC(ctx,cases[i][1],"val", "argv[2]",[cases[i][2]]);
+                ctx.assign("value",'val(void *)');
             }
-            ctx.assign("value","val(void *)");
-            ctx.assign("da_value","da_val");
         });
-        //Named VEC but examples and inner code use (float *) technically the same
         gen.call("SetShaderValueV", ["shader", "locIndex", "value", "uniformType",'count']);
-        qjs.jsCleanUpParameter("void *", 'value', "argv[2]");
+        gen.return("JS_UNDEFINED");
+    };
+    modules['rlgl'].getFunction("rlSetUniform").binding.body = (gen,header) => {
+        header.jsToC(gen,"int","count","argv[3]");
+        gen.declare('bool','error',0);
+        gen.declare("void *", "value", "NULL");
+        header.jsToC(gen,"int","locIndex", "argv[0]");
+        header.jsToC(gen,"int","uniformType", "argv[2]");
+        let cases={
+            "SHADER_UNIFORM_FLOAT":['float *','float [size0]','count'],
+            "SHADER_UNIFORM_VEC2":["Vector2 *",'Vector2 [size0]','count'],
+            "SHADER_UNIFORM_VEC3":["Vector3 *",'Vector3 [size0]','count'],
+            "SHADER_UNIFORM_VEC4":["Vector4 *",'Vector4 [size0]','count'],
+            "SHADER_UNIFORM_INT||SHADER_UNIFORM_SAMPLER2D":['int *','int [size0]','count'],
+            "SHADER_UNIFORM_IVEC2":["int *",'int [size0]','2*count'],
+            "SHADER_UNIFORM_IVEC3":["int *","int [size0]",'3*count'],
+            "SHADER_UNIFORM_IVEC4":["int *","int [size0]",'4*count'],
+            "SHADER_UNIFORM_UINT":['unsigned int *','unsigned int [size0]','count'],
+            "SHADER_UNIFORM_UIVEC2":['unsigned int *',"unsigned int [size0]",'2*count'],
+            "SHADER_UNIFORM_UIVEC3":['unsigned int *',"unsigned int [size0]",'3*count'],
+            "SHADER_UNIFORM_UIVEC4":['unsigned int *',"unsigned int [size0]",'4*count'],
+            "default":[]
+        };
+        //Named VEC but examples and inner code use (float *) technically the same
+        const sw = gen.switch("uniformType",Object.keys(cases),(ctx,i)=>{
+            if(i=='default'){
+                ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
+                ctx.return("JS_EXCEPTION");
+            }else{
+                header.jsToC(ctx,cases[i][1],"val", "argv[1]",[cases[i][2]]);
+                ctx.assign("value",'val(void *)');
+            }
+        });
+        gen.call("rlSetUniform", ["locIndex", "value", "uniformType",'count']);
         gen.return("JS_UNDEFINED");
     };
     modules['raylib'].getFunction("SetShaderValueV").args.find(a=>a.name=='value').name='values';
@@ -568,9 +612,8 @@ function main() {
     };
     modules['raylib'].getFunction("LoadDirectoryFiles").binding = {
         jsReturns: "string[]",
-        body: gen => {
-            let qjs = new QuickJsGenerator(gen);
-            qjs.jsToC("const char *", "dirPath", "argv[0]");
+        body: (gen,header) => {
+            header.jsToC(gen,"const char *", "dirPath", "argv[0]");
             createFileList(gen, "LoadDirectoryFiles", "UnloadDirectoryFiles", ["dirPath"]);
             gen.call('JS_FreeCString',['ctx','dirPath']);
             gen.return("ret");
@@ -578,11 +621,10 @@ function main() {
     };
     modules['raylib'].getFunction("LoadDirectoryFilesEx").binding = {
         jsReturns: "string[]",
-        body: gen => {
-            let qjs = new QuickJsGenerator(gen);
-            qjs.jsToC("const char *", "basePath", "argv[0]");
-            qjs.jsToC("const char *", "filter", "argv[1]");
-            qjs.jsToC("bool", "scanSubdirs", "argv[2]");
+        body: (gen,header) => {
+            header.jsToC(gen,"const char *", "basePath", "argv[0]");
+            header.jsToC(gen,"const char *", "filter", "argv[1]");
+            header.jsToC(gen,"bool", "scanSubdirs", "argv[2]");
             createFileList(gen, "LoadDirectoryFilesEx", "UnloadDirectoryFiles", ["basePath", "filter", "scanSubdirs"]);
             gen.call('JS_FreeCString',['ctx','basePath']);
             gen.call('JS_FreeCString',['ctx','filter']);
@@ -600,9 +642,8 @@ function main() {
     modules['raylib'].ignore("UnloadDroppedFiles");
     modules['raylib'].getFunction("LoadImageColors").binding = {
         jsReturns: "ArrayBuffer",
-        body: gen => {
-            let qjs = new QuickJsGenerator(gen);
-            qjs.jsToC("Image", "image", "argv[0]");
+        body: (gen,header) => {
+            header.jsToC(gen,"Image", "image", "argv[0]");
             gen.call("LoadImageColors", ["image"], { name: "colors", type: "Color *" });
             gen.call('JS_NewArrayBufferCopy',['ctx','colors','image.width*image.height*sizeof(Color)'],{type:'JSValue',name:'retVal'});
             gen.call("UnloadImageColors", ["colors"]);
@@ -621,7 +662,7 @@ function main() {
         modules['raylib'].ignore("TextCopy");
         /*******OPINION*********/
         //modules['raylib'].getFunction("TextCopy").args.find(parm => parm.name === 'dst').type='char * &';
-        modules['raylib'].getFunction("TextFormat").binding.body=(gen)=>{
+        modules['raylib'].getFunction("TextFormat").binding.body=(gen,header)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
             const errorCleanupFn =(ctx)=>{
@@ -640,8 +681,7 @@ function main() {
                 errorCleanupFn(ctx);
                 ctx.return("JS_EXCEPTION");
             });
-            let qjs = new QuickJsGenerator(gen);
-            qjs.jsToC('char *','format','argv[0]',flags);
+            header.jsToC(gen,'char *','format','argv[0]');
             gen.declare('char *','subformat',`format`);
             gen.declare('size_t','subformatlen',0);
             gen.declare('char','subformatlenh');
@@ -683,7 +723,7 @@ function main() {
                             ctx.if("n==1",(ctx)=>{
                                 ctx.declare('int','w','p');
                             });
-                            (new QuickJsGenerator(ctx)).jsToC('int','p','argv[c]',flags,0,errorCleanupFn);
+                            header.jsToC(ctx,'int','p','argv[c]');
                             ctx.add('int','c',1);
                             ctx.sub('int','n',1);
                         });
@@ -709,7 +749,7 @@ function main() {
                     ctx.switch('har',["'d'||'i'","'u'||'o'||'x'||'X'","'f'||'F'||'e'||'E'||'g'||'G'||'a'||'A'","'c'","'s'","'p'","'n'"],(ctx,cas)=>{
                         switch(cas){
                             case "'d'||'i'":{
-                                (new QuickJsGenerator(ctx)).jsToC('int64_t','a','argv[c]',flags,0,errorCleanupFn);
+                                header.jsToC(ctx,'int64_t','a','argv[c]');
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(int)a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
@@ -744,7 +784,7 @@ function main() {
                                 });
                             }break;
                             case "'u'||'o'||'x'||'X'":{
-                                (new QuickJsGenerator(ctx)).jsToC('uint32_t','a','argv[c]',flags,0,errorCleanupFn);
+                                header.jsToC(ctx,'uint32_t','a','argv[c]');
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(unsigned int)a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
@@ -779,16 +819,15 @@ function main() {
                                 });
                             }break;
                             case "'f'||'F'||'e'||'E'||'g'||'G'||'a'||'A'":{
-                                (new QuickJsGenerator(ctx)).jsToC('double','a','argv[c]',flags,0,errorCleanupFn);
+                                header.jsToC(ctx,'double','a','argv[c]');
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(double)a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(long double)a'],{type:'char *',name:'char_ptr'});
                                 });
-
                             }break;
                             case "'c'":{
-                                (new QuickJsGenerator(ctx)).jsToC('int','a','argv[c]',flags,0,errorCleanupFn);
+                                header.jsToC(ctx,'int','a','argv[c]');
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(int)a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
@@ -797,10 +836,10 @@ function main() {
                             }break;
                             case "'s'":{
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
-                                    (new QuickJsGenerator(ctx)).jsToC('char *','a','argv[c]',flags,0,errorCleanupFn);
+                                    header.jsToC(ctx,'char *','a','argv[c]');
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
-                                    (new QuickJsGenerator(ctx)).jsToC('wchar_t *','a','argv[c]',flags,0,errorCleanupFn);
+                                    header.jsToC(ctx,'wchar_t *','a','argv[c]');
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','a'],{type:'char *',name:'char_ptr'});
                                 });
                             }break;
@@ -843,6 +882,8 @@ function main() {
     }else{
         modules['rlgl'].ignore("rlReadTexturePixels");
     }
+    att = modules['rlgl'].getFunction('rlLoadTexture');
+    att.args[0].binding.allowNull=true;
     att = modules['rlgl'].getFunction("rlGetShaderLocsDefault");
     att.returnSizeVars = [String(config.defined['RL_MAX_SHADER_LOCATIONS'].content.body)];
     // Wave/Sound management functions
@@ -856,25 +897,26 @@ function main() {
     // Requires fixes to void* parameters
     modules['rlgl'].ignore("rlLoadExtensions");
     modules['rlgl'].ignore("rlSetVertexAttributeDefault");
-    modules['rlgl'].ignore("rlSetUniform");
+    //modules['rlgl'].ignore("rlSetUniform");
     modules['rlgl'].ignore("rlGetProcAddress");
     att = modules['raylib'].getFunction("LoadRandomSequence");
     att.returnSizeVars = ['count'];
     att.binding = { after: gen => gen.call("UnloadRandomSequence", ['returnVal']) };
     att = modules['rlgl'].getFunction("rlReadScreenPixels");
     att.returnSizeVars = ['width*height*4'];
+    att = modules['raylib'].getFunction("LoadModelAnimations");
+    att.returnSizeVars = ['animCount[0]'];
     function detectPointer(fn){//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
         for(let i=0;i<fn.args.length;i++){
             const parm=fn.args[i];
             if(parm.type.endsWith(' *')>0){
-                if(fn.args.length==1 && !parm.type.endsWith('char *')){//Arrays tend to require length int but strings not
-                    parm.type=parm.type.replaceAt(parm.type.length-1,'&');
+                if(fn.args.length==1 && parm.type.endsWith('char *')){//Arrays tend to require length int but strings not
                     continue;
                 }
                 const name=parm.name.toLowerCase();
                 const subtype=parm.type.toLowerCase().substring(0,parm.type.length-2);
                 //common names
-                if(name==subtype || ['dst','texture','view','active','alpha','filesize','datasize','count','position','value','frames','lm','checked','scrollindex','codepointsize'].includes(name)){
+                if(name==subtype || ['dst','texture','view','active','alpha','filesize','datasize','count','position','frames','lm','checked','scrollindex','codepointsize','animcount'].includes(name)){
                     parm.type=parm.type.replaceAt(parm.type.length-1,'&');
                 }else
                 if(name.endsWith('s')){

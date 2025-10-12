@@ -468,7 +468,7 @@ function LoadShaderFromMemory(vsCode: string, fsCode: string): Shader/** undefin
 function IsShaderValid(shader: Shader): boolean/** undefined */
 function GetShaderLocation(shader: Shader, uniformName: string): number/** undefined */
 function GetShaderLocationAttrib(shader: Shader, attribName: string): number/** undefined */
-function SetShaderValue(shader: Shader, locIndex: number, value: void | void[], uniformType: number): void/** undefined */
+function SetShaderValue(shader: Shader, locIndex: number, value: ArrayBuffer, uniformType: number): void/** undefined */
 function SetShaderValueV(shader: Shader, locIndex: number, values: ArrayBuffer, uniformType: number, count: number): void/** undefined */
 function SetShaderValueMatrix(shader: Shader, locIndex: number, mat: Matrix): void/** undefined */
 function SetShaderValueTexture(shader: Shader, locIndex: number, texture: Texture2D): void/** undefined */
@@ -488,7 +488,7 @@ function GetFPS(): number/** undefined */
 function SetRandomSeed(seed: number): void/** undefined */
 function GetRandomValue(min: number, max: number): number/** undefined */
 function LoadRandomSequence(count: number, min: number, max: number): number[]/** undefined */
-function UnloadRandomSequence(sequence: number | number[]): void/** undefined */
+function UnloadRandomSequence(sequence: number[]): void/** undefined */
 function TakeScreenshot(fileName: string): void/** undefined */
 function SetConfigFlags(flags: number): void/** undefined */
 function OpenURL(url: string): void/** undefined */
@@ -533,7 +533,7 @@ function ComputeSHA1(data: number[], dataSize: number): number[]/** undefined */
 function LoadAutomationEventList(fileName: string): AutomationEventList/** undefined */
 function UnloadAutomationEventList(list: AutomationEventList): void/** undefined */
 function ExportAutomationEventList(list: AutomationEventList, fileName: string): boolean/** undefined */
-function SetAutomationEventList(list: AutomationEventList): void/** undefined */
+function SetAutomationEventList(list: AutomationEventList[]): void/** undefined */
 function SetAutomationEventBaseFrame(frame: number): void/** undefined */
 function StartAutomationEventRecording(): void/** undefined */
 function StopAutomationEventRecording(): void/** undefined */
@@ -708,8 +708,8 @@ function ImageColorBrightness(image: Image, brightness: number): void/** undefin
 function ImageColorReplace(image: Image, color: Color, replace: Color): void/** undefined */
 function LoadImageColors(image: Image): ArrayBuffer/** undefined */
 function LoadImagePalette(image: Image, maxPaletteSize: number, colorCount: number[]): Color[]/** undefined */
-function UnloadImageColors(colors: Color): void/** undefined */
-function UnloadImagePalette(colors: Color): void/** undefined */
+function UnloadImageColors(colors: Color[]): void/** undefined */
+function UnloadImagePalette(colors: Color[]): void/** undefined */
 function GetImageAlphaBorder(image: Image, threshold: number): Rectangle/** undefined */
 function GetImageColor(image: Image, x: number, y: number): Color/** undefined */
 function ImageClearBackground(dst: Image, color: Color): void/** undefined */
@@ -796,14 +796,14 @@ function GetGlyphAtlasRec(font: Font, codepoint: number): Rectangle/** undefined
 function LoadUTF8(codepoints: number[], length: number): string/** undefined */
 function UnloadUTF8(text: string): void/** undefined */
 function LoadCodepoints(text: string, count: number | number[]): number[]/** undefined */
-function UnloadCodepoints(codepoints: number | number[]): void/** undefined */
+function UnloadCodepoints(codepoints: number[]): void/** undefined */
 function GetCodepointCount(text: string): number/** undefined */
 function GetCodepoint(text: string, codepointSize: number | number[]): number/** undefined */
 function GetCodepointNext(text: string, codepointSize: number | number[]): number/** undefined */
 function GetCodepointPrevious(text: string, codepointSize: number | number[]): number/** undefined */
 function CodepointToUTF8(codepoint: number, utf8Size: number[]): string/** undefined */
 function LoadTextLines(text: string, count: number | number[]): string[]/** undefined */
-function UnloadTextLines(text: string | string[]): void/** undefined */
+function UnloadTextLines(text: string[]): void/** undefined */
 function TextIsEqual(text1: string, text2: string): boolean/** undefined */
 function TextLength(text: string): number/** undefined */
 function TextFormat(text: string, ...args: any): string/** undefined */
@@ -883,7 +883,7 @@ function IsMaterialValid(material: Material): boolean/** undefined */
 function UnloadMaterial(material: Material): void/** undefined */
 function SetMaterialTexture(material: Material, mapType: number, texture: Texture2D): void/** undefined */
 function SetModelMeshMaterial(model: Model, meshId: number, materialId: number): void/** undefined */
-function LoadModelAnimations(fileName: string, animCount: number[]): ModelAnimation[]/** undefined */
+function LoadModelAnimations(fileName: string, animCount: number | number[]): ModelAnimation[]/** undefined */
 function UpdateModelAnimation(model: Model, anim: ModelAnimation, frame: number): void/** undefined */
 function UpdateModelAnimationBones(model: Model, anim: ModelAnimation, frame: number): void/** undefined */
 function UnloadModelAnimation(anim: ModelAnimation): void/** undefined */
@@ -927,7 +927,7 @@ function WaveCopy(wave: Wave): Wave/** undefined */
 function WaveCrop(wave: Wave, initFrame: number, finalFrame: number): void/** undefined */
 function WaveFormat(wave: Wave, sampleRate: number, sampleSize: number, channels: number): void/** undefined */
 function LoadWaveSamples(wave: Wave): number[]/** undefined */
-function UnloadWaveSamples(samples: number | number[]): void/** undefined */
+function UnloadWaveSamples(samples: number[]): void/** undefined */
 function LoadMusicStream(fileName: string): Music/** undefined */
 function LoadMusicStreamFromMemory(fileType: string, data: number[], dataSize: number): Music/** undefined */
 function IsMusicValid(music: Music): boolean/** undefined */

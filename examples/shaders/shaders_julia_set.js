@@ -83,7 +83,7 @@ const startingZoom = 0.75;
 
     // Load julia set shader
     // NOTE: Defining 0 (NULL) for vertex shader forces usage of internal default vertex shader
-    let shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/julia_set.fs", GLSL_VERSION));
+    let shader = LoadShader(null, TextFormat("resources/shaders/glsl%i/julia_set.fs", GLSL_VERSION));
 
     // Create a RenderTexture2D to be used for render to texture
     let target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());

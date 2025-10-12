@@ -66,12 +66,12 @@ class LightInfo{
 
         // Shadow geometry
         this.shadows =new Array(MAX_SHADOWS).fill(undefined).map(()=> [new Vector2(),new Vector2(),new Vector2(),new Vector2()]);
-        this.shadowCount = MAX_SHADOWS;
+        this.shadowCount = 0;
     }
 }
 
 let lights = new Array(MAX_LIGHTS);
-for(let key in lights){
+for(let key=0;key<MAX_LIGHTS;key++){
     lights[key] = new LightInfo();
 }
 
@@ -99,10 +99,19 @@ function ComputeShadowVolumeForEdge(slot, sp, ep) {
     let epVector = rm.Vector2Normalize(rm.Vector2Subtract(ep, lights[slot].position));
     let epProjection = rm.Vector2Add(ep, rm.Vector2Scale(epVector, extension));
 
-    lights[slot].shadows[lights[slot].shadowCount].vertices[0] = sp;
-    lights[slot].shadows[lights[slot].shadowCount].vertices[1] = ep;
-    lights[slot].shadows[lights[slot].shadowCount].vertices[2] = epProjection;
-    lights[slot].shadows[lights[slot].shadowCount].vertices[3] = spProjection;
+    let shadow;
+    shadow = lights[slot].shadows[lights[slot].shadowCount][0];
+    shadow.x = sp.x;
+    shadow.y = sp.y;
+    shadow = lights[slot].shadows[lights[slot].shadowCount][1];
+    shadow.x = ep.x;
+    shadow.y = ep.y;
+    shadow = lights[slot].shadows[lights[slot].shadowCount][2];
+    shadow.x = epProjection.x;
+    shadow.y = epProjection.y;
+    shadow = lights[slot].shadows[lights[slot].shadowCount][3];
+    shadow.x = spProjection.x;
+    shadow.y = spProjection.y;
 
     lights[slot].shadowCount++;
 }
@@ -130,7 +139,7 @@ function DrawLightMask(slot) {
 
         // Draw the shadows to the alpha mask
         for (let i = 0; i < lights[slot].shadowCount; i++) {
-            DrawTriangleFan(lights[slot].shadows[i].vertices, 4, WHITE);
+            DrawTriangleFan(lights[slot].shadows[i], 4, WHITE);
         }
 
         rg.rlDrawRenderBatchActive();
@@ -181,25 +190,25 @@ function UpdateLight(slot, boxes,count) {
         if (lights[slot].position.y > ep.y) ComputeShadowVolumeForEdge(slot, sp, ep);
 
         // Right
-        sp = ep;
+        sp.x=ep.x; sp.y=ep.y;
         ep.y += boxes[i].height;
         if (lights[slot].position.x < ep.x) ComputeShadowVolumeForEdge(slot, sp, ep);
 
         // Bottom
-        sp = ep;
+        sp.x=ep.x; sp.y=ep.y;
         ep.x -= boxes[i].width;
         if (lights[slot].position.y < ep.y) ComputeShadowVolumeForEdge(slot, sp, ep);
 
         // Left
-        sp = ep;
+        sp.x=ep.x; sp.y=ep.y;
         ep.y -= boxes[i].height;
         if (lights[slot].position.x > ep.x) ComputeShadowVolumeForEdge(slot, sp, ep);
 
         // The box itself
-        lights[slot].shadows[lights[slot].shadowCount].vertices[0] = new Vector2( boxes[i].x, boxes[i].y );
-        lights[slot].shadows[lights[slot].shadowCount].vertices[1] = new Vector2( boxes[i].x, boxes[i].y + boxes[i].height );
-        lights[slot].shadows[lights[slot].shadowCount].vertices[2] = new Vector2( boxes[i].x + boxes[i].width, boxes[i].y + boxes[i].height );
-        lights[slot].shadows[lights[slot].shadowCount].vertices[3] = new Vector2( boxes[i].x + boxes[i].width, boxes[i].y );
+        lights[slot].shadows[lights[slot].shadowCount][0] = new Vector2( boxes[i].x, boxes[i].y );
+        lights[slot].shadows[lights[slot].shadowCount][1] = new Vector2( boxes[i].x, boxes[i].y + boxes[i].height );
+        lights[slot].shadows[lights[slot].shadowCount][2] = new Vector2( boxes[i].x + boxes[i].width, boxes[i].y + boxes[i].height );
+        lights[slot].shadows[lights[slot].shadowCount][3] = new Vector2( boxes[i].x + boxes[i].width, boxes[i].y );
         lights[slot].shadowCount++;
     }
 
@@ -323,7 +332,7 @@ function SetupBoxes(boxes, count) {
 
             if (showLines) {
                 for (let s = 0; s < lights[0].shadowCount; s++) {
-                    DrawTriangleFan(lights[0].shadows[s].vertices, 4, DARKPURPLE);
+                    DrawTriangleFan(lights[0].shadows[s], 4, DARKPURPLE);
                 }
 
                 for (let b = 0; b < boxCount[0]; b++) {

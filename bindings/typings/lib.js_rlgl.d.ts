@@ -44,7 +44,7 @@ function rlLoadIdentity(): void/** undefined */
 function rlTranslatef(x: number, y: number, z: number): void/** undefined */
 function rlRotatef(angle: number, x: number, y: number, z: number): void/** undefined */
 function rlScalef(x: number, y: number, z: number): void/** undefined */
-function rlMultMatrixf(matf: number | number[]): void/** undefined */
+function rlMultMatrixf(matf: number[]): void/** undefined */
 function rlFrustum(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): void/** undefined */
 function rlOrtho(left: number, right: number, bottom: number, top: number, znear: number, zfar: number): void/** undefined */
 function rlViewport(x: number, y: number, width: number, height: number): void/** undefined */
@@ -126,8 +126,8 @@ function rlGetShaderIdDefault(): number/** undefined */
 function rlGetShaderLocsDefault(): number[]/** undefined */
 function rlLoadRenderBatch(numBuffers: number, bufferElements: number): rlRenderBatch/** undefined */
 function rlUnloadRenderBatch(batch: rlRenderBatch): void/** undefined */
-function rlDrawRenderBatch(batch: rlRenderBatch): void/** undefined */
-function rlSetRenderBatchActive(batch: rlRenderBatch): void/** undefined */
+function rlDrawRenderBatch(batch: rlRenderBatch[]): void/** undefined */
+function rlSetRenderBatchActive(batch: rlRenderBatch[]): void/** undefined */
 function rlDrawRenderBatchActive(): void/** undefined */
 function rlCheckRenderBatchLimit(vCount: number): boolean/** undefined */
 function rlSetTexture(id: number): void/** undefined */
@@ -164,6 +164,7 @@ function rlLoadShaderProgram(vShaderId: number, fShaderId: number): number/** un
 function rlUnloadShaderProgram(id: number): void/** undefined */
 function rlGetLocationUniform(shaderId: number, uniformName: string): number/** undefined */
 function rlGetLocationAttrib(shaderId: number, attribName: string): number/** undefined */
+function rlSetUniform(locIndex: number, value: ArrayBuffer, uniformType: number, count: number): void/** undefined */
 function rlSetUniformMatrix(locIndex: number, mat: Matrix): void/** undefined */
 function rlSetUniformMatrices(locIndex: number, mat: Matrix[], count: number): void/** undefined */
 function rlSetUniformSampler(locIndex: number, textureId: number): void/** undefined */

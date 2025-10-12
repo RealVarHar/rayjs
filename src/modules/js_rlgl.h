@@ -5,15 +5,309 @@
 	#include <string.h>
 	#include <rayjs_base.h>
 	#include <config.h>
-	#include <rayjs_generated.h>
 	#include <raylib.h>
 	#include <rlgl.h>
 	
+	static int js_getint(JSContext * ctx,JSValue src,bool * error);
+	
+	static float js_getfloat(JSContext * ctx,JSValue src,bool * error);
+	
+	static float * js_getfloat_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static unsigned char js_getunsignedchar(JSContext * ctx,JSValue src,bool * error);
+	
+	static unsigned char * js_getunsignedchar_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static unsigned int js_getunsignedint(JSContext * ctx,JSValue src,bool * error);
+	
+	static unsigned int * js_getunsignedint_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static unsigned int * js_getunsignedint_arr5(JSContext * ctx,JSValue src,bool * error){
+		unsigned int * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else if(JS_IsArrayBuffer(src)){
+			int64_t size_ret;
+			ret =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_ret,src);
+		}else if(js_IsArrayLength(ctx,src,(int64_t)5)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret<5){
+				JS_ThrowTypeError(ctx,(const char *)"src too short (5)");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			size_ret =(int64_t)5;
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(unsigned int *)js_malloc(ctx,size_ret*sizeof(unsigned int));
+			int i;
+			for(i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsNumber(src0)){
+					uint32_t long_reti;
+					JS_ToUint32(ctx,&long_reti,src0);
+					ret[i] =((unsigned int)long_reti);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type unsigned int *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+		}else if(JS_GetClassID(src)==JS_CLASS_UINT16_ARRAY){
+			size_t offset_ret;
+			size_t size_ret;
+			JSValue da_ret=JS_GetTypedArrayBuffer(ctx,src,&offset_ret,&size_ret,NULL);
+			ret =(unsigned int *)JS_GetArrayBuffer(ctx,&size_ret,da_ret);
+			ret +=offset_ret;
+			size_ret -=offset_ret;
+			ret =(unsigned int *)js_malloc(ctx,size_ret);
+			memcpy((void *)ret,(const void *)ret,size_ret);
+			JS_FreeValuePtr(ctx,&da_ret);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type unsigned int *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static rlVertexBuffer js_getrlVertexBuffer(JSContext * ctx,JSValue src,bool * error){
+		rlVertexBuffer ret;
+		if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
+			ret =*(rlVertexBuffer *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer");
+			error[0]=(bool)1;
+			return (rlVertexBuffer){0};
+		}
+		return ret;
+	}
+	
+	static rlVertexBuffer * js_getrlVertexBuffer_arr(JSContext * ctx,JSValue src,bool * error){
+		rlVertexBuffer * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(rlVertexBuffer *)js_malloc(ctx,size_ret*sizeof(rlVertexBuffer));
+			int i;
+			for(i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_GetClassID(src0)==js_rlVertexBuffer_class_id){
+					ret[i] =*(rlVertexBuffer *)JS_GetOpaque(src0,js_rlVertexBuffer_class_id);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlVertexBuffer *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+		}else if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
+			if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
+				ret =(rlVertexBuffer *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static rlDrawCall js_getrlDrawCall(JSContext * ctx,JSValue src,bool * error){
+		rlDrawCall ret;
+		if(JS_GetClassID(src)==js_rlDrawCall_class_id){
+			ret =*(rlDrawCall *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall");
+			error[0]=(bool)1;
+			return (rlDrawCall){0};
+		}
+		return ret;
+	}
+	
+	static rlDrawCall * js_getrlDrawCall_arr(JSContext * ctx,JSValue src,bool * error){
+		rlDrawCall * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(rlDrawCall *)js_malloc(ctx,size_ret*sizeof(rlDrawCall));
+			int i;
+			for(i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_GetClassID(src0)==js_rlDrawCall_class_id){
+					ret[i] =*(rlDrawCall *)JS_GetOpaque(src0,js_rlDrawCall_class_id);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlDrawCall *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+		}else if(JS_GetClassID(src)==js_rlDrawCall_class_id){
+			if(JS_GetClassID(src)==js_rlDrawCall_class_id){
+				ret =(rlDrawCall *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static double js_getdouble(JSContext * ctx,JSValue src,bool * error);
+	
+	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
+	
+	static rlRenderBatch js_getrlRenderBatch(JSContext * ctx,JSValue src,bool * error){
+		rlRenderBatch ret;
+		if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
+			ret =*(rlRenderBatch *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch");
+			error[0]=(bool)1;
+			return (rlRenderBatch){0};
+		}
+		return ret;
+	}
+	
+	static rlRenderBatch * js_getrlRenderBatch_arr(JSContext * ctx,JSValue src,bool * error){
+		rlRenderBatch * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(rlRenderBatch *)js_malloc(ctx,size_ret*sizeof(rlRenderBatch));
+			int i;
+			for(i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_GetClassID(src0)==js_rlRenderBatch_class_id){
+					ret[i] =*(rlRenderBatch *)JS_GetOpaque(src0,js_rlRenderBatch_class_id);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlRenderBatch *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+		}else if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
+			if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
+				ret =(rlRenderBatch *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static int * js_getint_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static char * js_getchar_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static float * js_getfloat_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static Vector2 * js_getVector2_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static Vector3 * js_getVector3_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static Vector4 * js_getVector4_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static int * js_getint_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static unsigned int * js_getunsignedint_arr_arg1(JSContext * ctx,JSValue src,bool * error,int size0);
+	
+	static Matrix js_getMatrix(JSContext * ctx,JSValue src,bool * error);
+	
+	static Matrix * js_getMatrix_arr(JSContext * ctx,JSValue src,bool * error);
+	
 	static void js_rlVertexBuffer_finalizer(JSRuntime * rt,JSValue val){
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque(val,js_rlVertexBuffer_class_id);
-		if(ptr){
-			js_free_rt(rt,(void *)ptr);
-		}
+		if(ptr)js_free_rt(rt,(void *)ptr);
 	}
 	
 	static JSValue js_rlVertexBuffer_get_elementCount(JSContext * ctx,JSValue this_val){
@@ -24,14 +318,10 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_elementCount(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].elementCount=value;
 		return JS_UNDEFINED;
 	}
@@ -87,13 +377,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			double double_ret;
-			int err_ret=JS_ToFloat64(ctx,&double_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			float ret=((float)double_ret);
+			bool error=(bool)0;
+			float ret=js_getfloat(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].vertices[property] =ret;
 		}
 		return true;
@@ -123,62 +409,11 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_vertices(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		if(ptr[0].vertices!=NULL){
-			jsc_free(ctx,(void *)ptr[0].vertices);
-		}
+		float * value=js_getfloat_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].vertices!=NULL)jsc_free(ctx,(void *)ptr[0].vertices);
 		ptr[0].vertices =value;
 		return JS_UNDEFINED;
 	}
@@ -234,13 +469,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			double double_ret;
-			int err_ret=JS_ToFloat64(ctx,&double_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			float ret=((float)double_ret);
+			bool error=(bool)0;
+			float ret=js_getfloat(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].texcoords[property] =ret;
 		}
 		return true;
@@ -270,62 +501,11 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_texcoords(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		if(ptr[0].texcoords!=NULL){
-			jsc_free(ctx,(void *)ptr[0].texcoords);
-		}
+		float * value=js_getfloat_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].texcoords!=NULL)jsc_free(ctx,(void *)ptr[0].texcoords);
 		ptr[0].texcoords =value;
 		return JS_UNDEFINED;
 	}
@@ -381,13 +561,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			double double_ret;
-			int err_ret=JS_ToFloat64(ctx,&double_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			float ret=((float)double_ret);
+			bool error=(bool)0;
+			float ret=js_getfloat(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].normals[property] =ret;
 		}
 		return true;
@@ -417,62 +593,11 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_normals(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				float * js_value=(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(float *)jsc_malloc(ctx,size_value*sizeof(float *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		if(ptr[0].normals!=NULL){
-			jsc_free(ctx,(void *)ptr[0].normals);
-		}
+		float * value=js_getfloat_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].normals!=NULL)jsc_free(ctx,(void *)ptr[0].normals);
 		ptr[0].normals =value;
 		return JS_UNDEFINED;
 	}
@@ -528,13 +653,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			uint32_t long_ret;
-			int err_ret=JS_ToUint32(ctx,&long_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			unsigned char ret=((unsigned char)long_ret);
+			bool error=(bool)0;
+			unsigned char ret=js_getunsignedchar(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].colors[property] =ret;
 		}
 		return true;
@@ -564,62 +685,11 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_colors(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned char * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(unsigned char *)jsc_malloc(ctx,size_value*sizeof(unsigned char));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_valuei;
-				int err_valuei=JS_ToUint32(ctx,&long_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((unsigned char)long_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			unsigned char * js_value=(unsigned char *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(unsigned char *)jsc_malloc(ctx,size_value*sizeof(unsigned char *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_UINT8_ARRAY||classid_value==JS_CLASS_UINT8C_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				unsigned char * js_value=(unsigned char *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(unsigned char *)jsc_malloc(ctx,size_value*sizeof(unsigned char *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type unsigned char *");
-				return JS_EXCEPTION;
-			}
-		}
-		if(ptr[0].colors!=NULL){
-			jsc_free(ctx,(void *)ptr[0].colors);
-		}
+		unsigned char * value=js_getunsignedchar_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].colors!=NULL)jsc_free(ctx,(void *)ptr[0].colors);
 		ptr[0].colors =value;
 		return JS_UNDEFINED;
 	}
@@ -675,13 +745,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			uint32_t long_ret;
-			int err_ret=JS_ToUint32(ctx,&long_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			unsigned int ret=((unsigned int)long_ret);
+			bool error=(bool)0;
+			unsigned int ret=js_getunsignedint(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].indices[property] =ret;
 		}
 		return true;
@@ -711,62 +777,11 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_indices(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned int * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(unsigned int *)jsc_malloc(ctx,size_value*sizeof(unsigned int));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_valuei;
-				int err_valuei=JS_ToUint32(ctx,&long_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((unsigned int)long_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			unsigned int * js_value=(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(unsigned int *)jsc_malloc(ctx,size_value*sizeof(unsigned int *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_UINT16_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				unsigned int * js_value=(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(unsigned int *)jsc_malloc(ctx,size_value*sizeof(unsigned int *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
-		if(ptr[0].indices!=NULL){
-			jsc_free(ctx,(void *)ptr[0].indices);
-		}
+		unsigned int * value=js_getunsignedint_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].indices!=NULL)jsc_free(ctx,(void *)ptr[0].indices);
 		ptr[0].indices =value;
 		return JS_UNDEFINED;
 	}
@@ -779,14 +794,10 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_vaoId(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		uint32_t long_value;
-		int err_value=JS_ToUint32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int value=((unsigned int)long_value);
+		unsigned int value=js_getunsignedint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].vaoId=value;
 		return JS_UNDEFINED;
 	}
@@ -842,13 +853,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			uint32_t long_ret;
-			int err_ret=JS_ToUint32(ctx,&long_ret,set_to);
-			if(err_ret<0){
-				JS_ThrowTypeError(ctx,(const char *)"set_to is not numeric");
-				return -1;
-			}
-			unsigned int ret=((unsigned int)long_ret);
+			bool error=(bool)0;
+			unsigned int ret=js_getunsignedint(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].vboId[property] =ret;
 		}
 		return true;
@@ -878,56 +885,10 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_set_vboId(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned int * value;
-		bool freesrc_value=(bool)false;
-		JSValue da_value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			value =(unsigned int *)jsc_malloc(ctx,5*sizeof(unsigned int));
-			int i;
-			for(i=0;i<5;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_valuei;
-				int err_valuei=JS_ToUint32(ctx,&long_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((unsigned int)long_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			unsigned int * js_value=(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(unsigned int *)jsc_malloc(ctx,size_value*sizeof(unsigned int *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			JSClassID classid_value=JS_GetClassID(src);
-			if(classid_value==JS_CLASS_UINT16_ARRAY){
-				size_t offset_value;
-				da_value =JS_GetTypedArrayBuffer(ctx,src,&offset_value,(size_t *)&size_value,NULL);
-				unsigned int * js_value=(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,da_value);
-				js_value +=offset_value;
-				size_value -=offset_value;
-				value =(unsigned int *)jsc_malloc(ctx,size_value*sizeof(unsigned int *));
-				memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-				JS_FreeValuePtr(ctx,&da_value);
-			}else{
-				if(freesrc_value){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"v does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
+		unsigned int * value=js_getunsignedint_arr5(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		memcpy((void *)ptr[0].vboId,(const void *)value,5*sizeof(unsigned int));
 		return JS_UNDEFINED;
 	}
@@ -956,9 +917,7 @@
 	
 	static void js_rlDrawCall_finalizer(JSRuntime * rt,JSValue val){
 		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque(val,js_rlDrawCall_class_id);
-		if(ptr){
-			js_free_rt(rt,(void *)ptr);
-		}
+		if(ptr)js_free_rt(rt,(void *)ptr);
 	}
 	
 	static JSValue js_rlDrawCall_get_mode(JSContext * ctx,JSValue this_val){
@@ -969,14 +928,10 @@
 	}
 	
 	static JSValue js_rlDrawCall_set_mode(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].mode=value;
 		return JS_UNDEFINED;
 	}
@@ -989,14 +944,10 @@
 	}
 	
 	static JSValue js_rlDrawCall_set_vertexCount(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].vertexCount=value;
 		return JS_UNDEFINED;
 	}
@@ -1009,14 +960,10 @@
 	}
 	
 	static JSValue js_rlDrawCall_set_vertexAlignment(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].vertexAlignment=value;
 		return JS_UNDEFINED;
 	}
@@ -1029,14 +976,10 @@
 	}
 	
 	static JSValue js_rlDrawCall_set_textureId(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
-		uint32_t long_value;
-		int err_value=JS_ToUint32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int value=((unsigned int)long_value);
+		unsigned int value=js_getunsignedint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].textureId=value;
 		return JS_UNDEFINED;
 	}
@@ -1061,9 +1004,7 @@
 	
 	static void js_rlRenderBatch_finalizer(JSRuntime * rt,JSValue val){
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque(val,js_rlRenderBatch_class_id);
-		if(ptr){
-			js_free_rt(rt,(void *)ptr);
-		}
+		if(ptr)js_free_rt(rt,(void *)ptr);
 	}
 	
 	static JSValue js_rlRenderBatch_get_bufferCount(JSContext * ctx,JSValue this_val){
@@ -1074,14 +1015,10 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_bufferCount(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].bufferCount=value;
 		return JS_UNDEFINED;
 	}
@@ -1094,14 +1031,10 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_currentBuffer(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].currentBuffer=value;
 		return JS_UNDEFINED;
 	}
@@ -1163,12 +1096,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			rlVertexBuffer * ptr_ret=(rlVertexBuffer *)JS_GetOpaque(set_to,js_rlVertexBuffer_class_id);
-			if(ptr_ret==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"set_to does not allow null");
-				return -1;
-			}
-			rlVertexBuffer ret=*ptr_ret;
+			bool error=(bool)0;
+			rlVertexBuffer ret=js_getrlVertexBuffer(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].vertexBuffer[property] =ret;
 		}
 		return true;
@@ -1198,48 +1128,11 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_vertexBuffer(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		rlVertexBuffer * value;
-		bool freesrc_value=(bool)false;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(rlVertexBuffer *)jsc_malloc(ctx,size_value*sizeof(rlVertexBuffer));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				rlVertexBuffer * ptr_valuei=(rlVertexBuffer *)JS_GetOpaque(js_value,js_rlVertexBuffer_class_id);
-				if(ptr_valuei==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_value does not allow null");
-					return JS_EXCEPTION;
-				}
-				value[i] =*ptr_valuei;
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			rlVertexBuffer * js_value=(rlVertexBuffer *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(rlVertexBuffer *)jsc_malloc(ctx,size_value*sizeof(rlVertexBuffer *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			if(freesrc_value){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"v does not match type rlVertexBuffer *");
-			return JS_EXCEPTION;
-		}
-		if(ptr[0].vertexBuffer!=NULL){
-			jsc_free(ctx,(void *)ptr[0].vertexBuffer);
-		}
+		rlVertexBuffer * value=js_getrlVertexBuffer_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].vertexBuffer!=NULL)jsc_free(ctx,(void *)ptr[0].vertexBuffer);
 		ptr[0].vertexBuffer =value;
 		return JS_UNDEFINED;
 	}
@@ -1301,12 +1194,9 @@
 		if(as_sting==true){
 			return false;
 		}else{
-			rlDrawCall * ptr_ret=(rlDrawCall *)JS_GetOpaque(set_to,js_rlDrawCall_class_id);
-			if(ptr_ret==NULL){
-				JS_ThrowTypeError(ctx,(const char *)"set_to does not allow null");
-				return -1;
-			}
-			rlDrawCall ret=*ptr_ret;
+			bool error=(bool)0;
+			rlDrawCall ret=js_getrlDrawCall(ctx,set_to,&error);
+			if(error==1)return 0;
 			ptr[0].draws[property] =ret;
 		}
 		return true;
@@ -1336,48 +1226,11 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_draws(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		rlDrawCall * value;
-		bool freesrc_value=(bool)false;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(v);
-		JSValue src=v;
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				return JS_EXCEPTION;
-			}
-			value =(rlDrawCall *)jsc_malloc(ctx,size_value*sizeof(rlDrawCall));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				rlDrawCall * ptr_valuei=(rlDrawCall *)JS_GetOpaque(js_value,js_rlDrawCall_class_id);
-				if(ptr_valuei==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_value does not allow null");
-					return JS_EXCEPTION;
-				}
-				value[i] =*ptr_valuei;
-				JS_FreeValue(ctx,js_value);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			rlDrawCall * js_value=(rlDrawCall *)JS_GetArrayBuffer(ctx,(size_t *)&size_value,src);
-			value =(rlDrawCall *)jsc_malloc(ctx,size_value*sizeof(rlDrawCall *));
-			memcpy((void *)value,(const void *)js_value,(size_t)size_value);
-		}else{
-			if(freesrc_value){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"v does not match type rlDrawCall *");
-			return JS_EXCEPTION;
-		}
-		if(ptr[0].draws!=NULL){
-			jsc_free(ctx,(void *)ptr[0].draws);
-		}
+		rlDrawCall * value=js_getrlDrawCall_arr(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
+		if(ptr[0].draws!=NULL)jsc_free(ctx,(void *)ptr[0].draws);
 		ptr[0].draws =value;
 		return JS_UNDEFINED;
 	}
@@ -1390,14 +1243,10 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_drawCounter(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].drawCounter=value;
 		return JS_UNDEFINED;
 	}
@@ -1410,14 +1259,10 @@
 	}
 	
 	static JSValue js_rlRenderBatch_set_currentDepth(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		double double_value;
-		int err_value=JS_ToFloat64(ctx,&double_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		float value=((float)double_value);
+		float value=js_getfloat(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].currentDepth=value;
 		return JS_UNDEFINED;
 	}
@@ -1449,299 +1294,23 @@
 			JS_SetOpaque(_return,(void *)ptr__return);
 			return _return;
 		}
-		int32_t long_elementCount;
-		int err_elementCount=JS_ToInt32(ctx,&long_elementCount,argv[0]);
-		if(err_elementCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int elementCount=((int)long_elementCount);
-		float * vertices;
-		bool freesrc_vertices=(bool)false;
-		JSValue da_vertices;
-		int64_t size_vertices;
-		JSClassID vertices_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(vertices_class==js_ArrayProxy_class_id){
-			void * opaque_vertices=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_vertices=((ArrayProxy_class *)opaque_vertices)[0];
-			src =AP_vertices.values(ctx,AP_vertices.opaque,(int)0,(bool)false);
-			freesrc_vertices =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_vertices)==-1){
-				return JS_EXCEPTION;
-			}
-			vertices =(float *)js_malloc(ctx,size_vertices*sizeof(float));
-			int i;
-			for(i=0;i<size_vertices;i++){
-				JSValue js_vertices=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_verticesi;
-				int err_verticesi=JS_ToFloat64(ctx,&double_verticesi,js_vertices);
-				if(err_verticesi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_vertices is not numeric");
-					return JS_EXCEPTION;
-				}
-				vertices[i] =((float)double_verticesi);
-				JS_FreeValue(ctx,js_vertices);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			vertices =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_vertices,src);
-		}else{
-			JSClassID classid_vertices=JS_GetClassID(src);
-			if(classid_vertices==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_vertices;
-				da_vertices =JS_GetTypedArrayBuffer(ctx,src,&offset_vertices,(size_t *)&size_vertices,NULL);
-				vertices =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_vertices,da_vertices);
-				vertices +=offset_vertices;
-				size_vertices -=offset_vertices;
-			}else{
-				if(freesrc_vertices){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * texcoords;
-		bool freesrc_texcoords=(bool)false;
-		JSValue da_texcoords;
-		int64_t size_texcoords;
-		JSClassID texcoords_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(texcoords_class==js_ArrayProxy_class_id){
-			void * opaque_texcoords=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_texcoords=((ArrayProxy_class *)opaque_texcoords)[0];
-			src =AP_texcoords.values(ctx,AP_texcoords.opaque,(int)0,(bool)false);
-			freesrc_texcoords =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_texcoords)==-1){
-				return JS_EXCEPTION;
-			}
-			texcoords =(float *)js_malloc(ctx,size_texcoords*sizeof(float));
-			int i;
-			for(i=0;i<size_texcoords;i++){
-				JSValue js_texcoords=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_texcoordsi;
-				int err_texcoordsi=JS_ToFloat64(ctx,&double_texcoordsi,js_texcoords);
-				if(err_texcoordsi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_texcoords is not numeric");
-					return JS_EXCEPTION;
-				}
-				texcoords[i] =((float)double_texcoordsi);
-				JS_FreeValue(ctx,js_texcoords);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			texcoords =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_texcoords,src);
-		}else{
-			JSClassID classid_texcoords=JS_GetClassID(src);
-			if(classid_texcoords==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_texcoords;
-				da_texcoords =JS_GetTypedArrayBuffer(ctx,src,&offset_texcoords,(size_t *)&size_texcoords,NULL);
-				texcoords =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_texcoords,da_texcoords);
-				texcoords +=offset_texcoords;
-				size_texcoords -=offset_texcoords;
-			}else{
-				if(freesrc_texcoords){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * normals;
-		bool freesrc_normals=(bool)false;
-		JSValue da_normals;
-		int64_t size_normals;
-		JSClassID normals_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(normals_class==js_ArrayProxy_class_id){
-			void * opaque_normals=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_normals=((ArrayProxy_class *)opaque_normals)[0];
-			src =AP_normals.values(ctx,AP_normals.opaque,(int)0,(bool)false);
-			freesrc_normals =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_normals)==-1){
-				return JS_EXCEPTION;
-			}
-			normals =(float *)js_malloc(ctx,size_normals*sizeof(float));
-			int i;
-			for(i=0;i<size_normals;i++){
-				JSValue js_normals=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_normalsi;
-				int err_normalsi=JS_ToFloat64(ctx,&double_normalsi,js_normals);
-				if(err_normalsi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_normals is not numeric");
-					return JS_EXCEPTION;
-				}
-				normals[i] =((float)double_normalsi);
-				JS_FreeValue(ctx,js_normals);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			normals =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_normals,src);
-		}else{
-			JSClassID classid_normals=JS_GetClassID(src);
-			if(classid_normals==JS_CLASS_FLOAT32_ARRAY){
-				size_t offset_normals;
-				da_normals =JS_GetTypedArrayBuffer(ctx,src,&offset_normals,(size_t *)&size_normals,NULL);
-				normals =(float *)JS_GetArrayBuffer(ctx,(size_t *)&size_normals,da_normals);
-				normals +=offset_normals;
-				size_normals -=offset_normals;
-			}else{
-				if(freesrc_normals){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type float *");
-				return JS_EXCEPTION;
-			}
-		}
-		unsigned char * colors;
-		bool freesrc_colors=(bool)false;
-		JSValue da_colors;
-		int64_t size_colors;
-		JSClassID colors_class=JS_GetClassID(argv[4]);
-		src =argv[4];
-		if(colors_class==js_ArrayProxy_class_id){
-			void * opaque_colors=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_colors=((ArrayProxy_class *)opaque_colors)[0];
-			src =AP_colors.values(ctx,AP_colors.opaque,(int)0,(bool)false);
-			freesrc_colors =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_colors)==-1){
-				return JS_EXCEPTION;
-			}
-			colors =(unsigned char *)js_malloc(ctx,size_colors*sizeof(unsigned char));
-			int i;
-			for(i=0;i<size_colors;i++){
-				JSValue js_colors=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_colorsi;
-				int err_colorsi=JS_ToUint32(ctx,&long_colorsi,js_colors);
-				if(err_colorsi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_colors is not numeric");
-					return JS_EXCEPTION;
-				}
-				colors[i] =((unsigned char)long_colorsi);
-				JS_FreeValue(ctx,js_colors);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			colors =(unsigned char *)JS_GetArrayBuffer(ctx,(size_t *)&size_colors,src);
-		}else{
-			JSClassID classid_colors=JS_GetClassID(src);
-			if(classid_colors==JS_CLASS_UINT8_ARRAY||classid_colors==JS_CLASS_UINT8C_ARRAY){
-				size_t offset_colors;
-				da_colors =JS_GetTypedArrayBuffer(ctx,src,&offset_colors,(size_t *)&size_colors,NULL);
-				colors =(unsigned char *)JS_GetArrayBuffer(ctx,(size_t *)&size_colors,da_colors);
-				colors +=offset_colors;
-				size_colors -=offset_colors;
-			}else{
-				if(freesrc_colors){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[4] does not match type unsigned char *");
-				return JS_EXCEPTION;
-			}
-		}
-		unsigned int * indices;
-		bool freesrc_indices=(bool)false;
-		JSValue da_indices;
-		int64_t size_indices;
-		JSClassID indices_class=JS_GetClassID(argv[5]);
-		src =argv[5];
-		if(indices_class==js_ArrayProxy_class_id){
-			void * opaque_indices=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_indices=((ArrayProxy_class *)opaque_indices)[0];
-			src =AP_indices.values(ctx,AP_indices.opaque,(int)0,(bool)false);
-			freesrc_indices =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_indices)==-1){
-				return JS_EXCEPTION;
-			}
-			indices =(unsigned int *)js_malloc(ctx,size_indices*sizeof(unsigned int));
-			int i;
-			for(i=0;i<size_indices;i++){
-				JSValue js_indices=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_indicesi;
-				int err_indicesi=JS_ToUint32(ctx,&long_indicesi,js_indices);
-				if(err_indicesi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_indices is not numeric");
-					return JS_EXCEPTION;
-				}
-				indices[i] =((unsigned int)long_indicesi);
-				JS_FreeValue(ctx,js_indices);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			indices =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_indices,src);
-		}else{
-			JSClassID classid_indices=JS_GetClassID(src);
-			if(classid_indices==JS_CLASS_UINT16_ARRAY){
-				size_t offset_indices;
-				da_indices =JS_GetTypedArrayBuffer(ctx,src,&offset_indices,(size_t *)&size_indices,NULL);
-				indices =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_indices,da_indices);
-				indices +=offset_indices;
-				size_indices -=offset_indices;
-			}else{
-				if(freesrc_indices){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[5] does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
-		uint32_t long_vaoId;
-		int err_vaoId=JS_ToUint32(ctx,&long_vaoId,argv[6]);
-		if(err_vaoId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[6] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int vaoId=((unsigned int)long_vaoId);
-		unsigned int * vboId;
-		bool freesrc_vboId=(bool)false;
-		JSValue da_vboId;
-		int64_t size_vboId;
-		JSClassID vboId_class=JS_GetClassID(argv[7]);
-		src =argv[7];
-		if(vboId_class==js_ArrayProxy_class_id){
-			void * opaque_vboId=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_vboId=((ArrayProxy_class *)opaque_vboId)[0];
-			src =AP_vboId.values(ctx,AP_vboId.opaque,(int)0,(bool)false);
-			freesrc_vboId =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			vboId =(unsigned int *)js_malloc(ctx,5*sizeof(unsigned int));
-			int i;
-			for(i=0;i<5;i++){
-				JSValue js_vboId=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_vboIdi;
-				int err_vboIdi=JS_ToUint32(ctx,&long_vboIdi,js_vboId);
-				if(err_vboIdi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_vboId is not numeric");
-					return JS_EXCEPTION;
-				}
-				vboId[i] =((unsigned int)long_vboIdi);
-				JS_FreeValue(ctx,js_vboId);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			vboId =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_vboId,src);
-		}else{
-			JSClassID classid_vboId=JS_GetClassID(src);
-			if(classid_vboId==JS_CLASS_UINT16_ARRAY){
-				size_t offset_vboId;
-				da_vboId =JS_GetTypedArrayBuffer(ctx,src,&offset_vboId,(size_t *)&size_vboId,NULL);
-				vboId =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_vboId,da_vboId);
-				vboId +=offset_vboId;
-				size_vboId -=offset_vboId;
-			}else{
-				if(freesrc_vboId){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[7] does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		int elementCount=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * vertices=js_getfloat_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * texcoords=js_getfloat_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * normals=js_getfloat_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char * colors=js_getunsignedchar_arr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int * indices=js_getunsignedint_arr(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int vaoId=js_getunsignedint(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int * vboId=js_getunsignedint_arr5(ctx,argv[7],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlVertexBuffer _struct={
 			elementCount,
 			vertices,
@@ -1766,34 +1335,15 @@
 			JS_SetOpaque(_return,(void *)ptr__return);
 			return _return;
 		}
-		int32_t long_mode;
-		int err_mode=JS_ToInt32(ctx,&long_mode,argv[0]);
-		if(err_mode<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mode=((int)long_mode);
-		int32_t long_vertexCount;
-		int err_vertexCount=JS_ToInt32(ctx,&long_vertexCount,argv[1]);
-		if(err_vertexCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int vertexCount=((int)long_vertexCount);
-		int32_t long_vertexAlignment;
-		int err_vertexAlignment=JS_ToInt32(ctx,&long_vertexAlignment,argv[2]);
-		if(err_vertexAlignment<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int vertexAlignment=((int)long_vertexAlignment);
-		uint32_t long_textureId;
-		int err_textureId=JS_ToUint32(ctx,&long_textureId,argv[3]);
-		if(err_textureId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int textureId=((unsigned int)long_textureId);
+		bool error=(bool)0;
+		int mode=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int vertexCount=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int vertexAlignment=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int textureId=js_getunsignedint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawCall _struct={
 			mode,
 			vertexCount,
@@ -1814,106 +1364,19 @@
 			JS_SetOpaque(_return,(void *)ptr__return);
 			return _return;
 		}
-		int32_t long_bufferCount;
-		int err_bufferCount=JS_ToInt32(ctx,&long_bufferCount,argv[0]);
-		if(err_bufferCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int bufferCount=((int)long_bufferCount);
-		int32_t long_currentBuffer;
-		int err_currentBuffer=JS_ToInt32(ctx,&long_currentBuffer,argv[1]);
-		if(err_currentBuffer<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int currentBuffer=((int)long_currentBuffer);
-		rlVertexBuffer * vertexBuffer;
-		bool freesrc_vertexBuffer=(bool)false;
-		int64_t size_vertexBuffer;
-		JSClassID vertexBuffer_class=JS_GetClassID(argv[2]);
-		JSValue src=argv[2];
-		if(vertexBuffer_class==js_ArrayProxy_class_id){
-			void * opaque_vertexBuffer=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_vertexBuffer=((ArrayProxy_class *)opaque_vertexBuffer)[0];
-			src =AP_vertexBuffer.values(ctx,AP_vertexBuffer.opaque,(int)0,(bool)false);
-			freesrc_vertexBuffer =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_vertexBuffer)==-1){
-				return JS_EXCEPTION;
-			}
-			vertexBuffer =(rlVertexBuffer *)js_malloc(ctx,size_vertexBuffer*sizeof(rlVertexBuffer));
-			int i;
-			for(i=0;i<size_vertexBuffer;i++){
-				JSValue js_vertexBuffer=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				rlVertexBuffer * ptr_vertexBufferi=(rlVertexBuffer *)JS_GetOpaque(js_vertexBuffer,js_rlVertexBuffer_class_id);
-				if(ptr_vertexBufferi==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_vertexBuffer does not allow null");
-					return JS_EXCEPTION;
-				}
-				vertexBuffer[i] =*ptr_vertexBufferi;
-				JS_FreeValue(ctx,js_vertexBuffer);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			vertexBuffer =(rlVertexBuffer *)JS_GetArrayBuffer(ctx,(size_t *)&size_vertexBuffer,src);
-		}else{
-			if(freesrc_vertexBuffer){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type rlVertexBuffer *");
-			return JS_EXCEPTION;
-		}
-		rlDrawCall * draws;
-		bool freesrc_draws=(bool)false;
-		int64_t size_draws;
-		JSClassID draws_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(draws_class==js_ArrayProxy_class_id){
-			void * opaque_draws=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_draws=((ArrayProxy_class *)opaque_draws)[0];
-			src =AP_draws.values(ctx,AP_draws.opaque,(int)0,(bool)false);
-			freesrc_draws =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_draws)==-1){
-				return JS_EXCEPTION;
-			}
-			draws =(rlDrawCall *)js_malloc(ctx,size_draws*sizeof(rlDrawCall));
-			int i;
-			for(i=0;i<size_draws;i++){
-				JSValue js_draws=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				rlDrawCall * ptr_drawsi=(rlDrawCall *)JS_GetOpaque(js_draws,js_rlDrawCall_class_id);
-				if(ptr_drawsi==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_draws does not allow null");
-					return JS_EXCEPTION;
-				}
-				draws[i] =*ptr_drawsi;
-				JS_FreeValue(ctx,js_draws);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			draws =(rlDrawCall *)JS_GetArrayBuffer(ctx,(size_t *)&size_draws,src);
-		}else{
-			if(freesrc_draws){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type rlDrawCall *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_drawCounter;
-		int err_drawCounter=JS_ToInt32(ctx,&long_drawCounter,argv[4]);
-		if(err_drawCounter<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int drawCounter=((int)long_drawCounter);
-		double double_currentDepth;
-		int err_currentDepth=JS_ToFloat64(ctx,&double_currentDepth,argv[5]);
-		if(err_currentDepth<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float currentDepth=((float)double_currentDepth);
+		bool error=(bool)0;
+		int bufferCount=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int currentBuffer=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		rlVertexBuffer * vertexBuffer=js_getrlVertexBuffer_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		rlDrawCall * draws=js_getrlDrawCall_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int drawCounter=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		float currentDepth=js_getfloat(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlRenderBatch _struct={
 			bufferCount,
 			currentBuffer,
@@ -1930,1234 +1393,754 @@
 	}
 	
 	static JSValue js_rlMatrixMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_mode;
-		int err_mode=JS_ToInt32(ctx,&long_mode,argv[0]);
-		if(err_mode<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mode=((int)long_mode);
+		bool error=(bool)0;
+		int mode=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlMatrixMode(mode);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlPushMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlPushMatrix();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlPopMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlPopMatrix();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadIdentity(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlLoadIdentity();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlTranslatef(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlTranslatef(x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlRotatef(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_angle;
-		int err_angle=JS_ToFloat64(ctx,&double_angle,argv[0]);
-		if(err_angle<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float angle=((float)double_angle);
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[1]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[2]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[3]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float angle=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float x=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlRotatef(angle,x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlScalef(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlScalef(x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlMultMatrixf(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		float * matf;
-		bool freesrc_matf=(bool)false;
-		int64_t size_matf;
-		JSClassID matf_class=JS_GetClassID(argv[0]);
-		JSValue src=argv[0];
-		if(matf_class==js_ArrayProxy_class_id){
-			void * opaque_matf=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_matf=((ArrayProxy_class *)opaque_matf)[0];
-			src =AP_matf.values(ctx,AP_matf.opaque,(int)0,(bool)false);
-			freesrc_matf =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_matf)==-1){
-				return JS_EXCEPTION;
-			}
-			matf =(float *)js_malloc(ctx,size_matf*sizeof(float));
-			int i;
-			for(i=0;i<size_matf;i++){
-				JSValue js_matf=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_matfi;
-				int err_matfi=JS_ToFloat64(ctx,&double_matfi,js_matf);
-				if(err_matfi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_matf is not numeric");
-					return JS_EXCEPTION;
-				}
-				matf[i] =((float)double_matfi);
-				JS_FreeValue(ctx,js_matf);
-			}
-		}else{
-			double double_js_matf;
-			int err_js_matf=JS_ToFloat64(ctx,&double_js_matf,argv[0]);
-			if(err_js_matf<0){
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_matf=((float)double_js_matf);
-			matf =&js_matf;
-		}
+		bool error=(bool)0;
+		float * matf=js_getfloat_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlMultMatrixf((const float *)matf);
-		if(JS_IsArray(argv[0])==1){
-			JSValue js_argv00=JS_NewFloat64(ctx,((double)matf[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[0],(uint32_t)0,js_argv00,JS_PROP_C_W_E);
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlFrustum(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double left;
-		int err_left=JS_ToFloat64(ctx,&left,argv[0]);
-		if(err_left<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double right;
-		int err_right=JS_ToFloat64(ctx,&right,argv[1]);
-		if(err_right<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double bottom;
-		int err_bottom=JS_ToFloat64(ctx,&bottom,argv[2]);
-		if(err_bottom<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double top;
-		int err_top=JS_ToFloat64(ctx,&top,argv[3]);
-		if(err_top<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double znear;
-		int err_znear=JS_ToFloat64(ctx,&znear,argv[4]);
-		if(err_znear<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double zfar;
-		int err_zfar=JS_ToFloat64(ctx,&zfar,argv[5]);
-		if(err_zfar<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		double left=js_getdouble(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		double right=js_getdouble(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		double bottom=js_getdouble(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		double top=js_getdouble(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		double znear=js_getdouble(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		double zfar=js_getdouble(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlFrustum(left,right,bottom,top,znear,zfar);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlOrtho(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double left;
-		int err_left=JS_ToFloat64(ctx,&left,argv[0]);
-		if(err_left<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double right;
-		int err_right=JS_ToFloat64(ctx,&right,argv[1]);
-		if(err_right<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double bottom;
-		int err_bottom=JS_ToFloat64(ctx,&bottom,argv[2]);
-		if(err_bottom<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double top;
-		int err_top=JS_ToFloat64(ctx,&top,argv[3]);
-		if(err_top<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double znear;
-		int err_znear=JS_ToFloat64(ctx,&znear,argv[4]);
-		if(err_znear<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double zfar;
-		int err_zfar=JS_ToFloat64(ctx,&zfar,argv[5]);
-		if(err_zfar<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		double left=js_getdouble(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		double right=js_getdouble(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		double bottom=js_getdouble(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		double top=js_getdouble(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		double znear=js_getdouble(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		double zfar=js_getdouble(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlOrtho(left,right,bottom,top,znear,zfar);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlViewport(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_x;
-		int err_x=JS_ToInt32(ctx,&long_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int x=((int)long_x);
-		int32_t long_y;
-		int err_y=JS_ToInt32(ctx,&long_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int y=((int)long_y);
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[2]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[3]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
+		bool error=(bool)0;
+		int x=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int y=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlViewport(x,y,width,height);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetClipPlanes(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double nearPlane;
-		int err_nearPlane=JS_ToFloat64(ctx,&nearPlane,argv[0]);
-		if(err_nearPlane<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		double farPlane;
-		int err_farPlane=JS_ToFloat64(ctx,&farPlane,argv[1]);
-		if(err_farPlane<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		double nearPlane=js_getdouble(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		double farPlane=js_getdouble(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetClipPlanes(nearPlane,farPlane);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetCullDistanceNear(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		double returnVal=rlGetCullDistanceNear();
 		JSValue ret=JS_NewFloat64(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlGetCullDistanceFar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		double returnVal=rlGetCullDistanceFar();
 		JSValue ret=JS_NewFloat64(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlBegin(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_mode;
-		int err_mode=JS_ToInt32(ctx,&long_mode,argv[0]);
-		if(err_mode<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mode=((int)long_mode);
+		bool error=(bool)0;
+		int mode=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlBegin(mode);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnd(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnd();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlVertex2i(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_x;
-		int err_x=JS_ToInt32(ctx,&long_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int x=((int)long_x);
-		int32_t long_y;
-		int err_y=JS_ToInt32(ctx,&long_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int y=((int)long_y);
+		bool error=(bool)0;
+		int x=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int y=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlVertex2i(x,y);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlVertex2f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlVertex2f(x,y);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlVertex3f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlVertex3f(x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlTexCoord2f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlTexCoord2f(x,y);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlNormal3f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlNormal3f(x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlColor4ub(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_r;
-		int err_r=JS_ToUint32(ctx,&long_r,argv[0]);
-		if(err_r<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char r=((unsigned char)long_r);
-		uint32_t long_g;
-		int err_g=JS_ToUint32(ctx,&long_g,argv[1]);
-		if(err_g<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char g=((unsigned char)long_g);
-		uint32_t long_b;
-		int err_b=JS_ToUint32(ctx,&long_b,argv[2]);
-		if(err_b<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char b=((unsigned char)long_b);
-		uint32_t long_a;
-		int err_a=JS_ToUint32(ctx,&long_a,argv[3]);
-		if(err_a<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char a=((unsigned char)long_a);
+		bool error=(bool)0;
+		unsigned char r=js_getunsignedchar(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char g=js_getunsignedchar(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char b=js_getunsignedchar(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char a=js_getunsignedchar(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlColor4ub(r,g,b,a);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlColor3f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlColor3f(x,y,z);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlColor4f(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_x;
-		int err_x=JS_ToFloat64(ctx,&double_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float x=((float)double_x);
-		double double_y;
-		int err_y=JS_ToFloat64(ctx,&double_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float y=((float)double_y);
-		double double_z;
-		int err_z=JS_ToFloat64(ctx,&double_z,argv[2]);
-		if(err_z<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float z=((float)double_z);
-		double double_w;
-		int err_w=JS_ToFloat64(ctx,&double_w,argv[3]);
-		if(err_w<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float w=((float)double_w);
+		bool error=(bool)0;
+		float x=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		float y=js_getfloat(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float z=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float w=js_getfloat(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlColor4f(x,y,z,w);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_vaoId;
-		int err_vaoId=JS_ToUint32(ctx,&long_vaoId,argv[0]);
-		if(err_vaoId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int vaoId=((unsigned int)long_vaoId);
+		bool error=(bool)0;
+		unsigned int vaoId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		bool returnVal=rlEnableVertexArray(vaoId);
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlDisableVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableVertexArray();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableVertexBuffer(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableVertexBuffer();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableVertexBufferElement(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableVertexBufferElement(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableVertexBufferElement(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableVertexBufferElement();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableVertexAttribute(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[0]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
+		bool error=(bool)0;
+		unsigned int index=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableVertexAttribute(index);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableVertexAttribute(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[0]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
+		bool error=(bool)0;
+		unsigned int index=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDisableVertexAttribute(index);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlActiveTextureSlot(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_slot;
-		int err_slot=JS_ToInt32(ctx,&long_slot,argv[0]);
-		if(err_slot<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int slot=((int)long_slot);
+		bool error=(bool)0;
+		int slot=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlActiveTextureSlot(slot);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableTexture(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableTexture();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableTextureCubemap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableTextureCubemap(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableTextureCubemap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableTextureCubemap();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlTextureParameters(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int32_t long_param;
-		int err_param=JS_ToInt32(ctx,&long_param,argv[1]);
-		if(err_param<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int param=((int)long_param);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,argv[2]);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int param=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int value=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlTextureParameters(id,param,value);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlCubemapParameters(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int32_t long_param;
-		int err_param=JS_ToInt32(ctx,&long_param,argv[1]);
-		if(err_param<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int param=((int)long_param);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,argv[2]);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int param=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int value=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlCubemapParameters(id,param,value);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableShader(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableShader(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableShader(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableShader();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlEnableFramebuffer(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableFramebuffer();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetActiveFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetActiveFramebuffer();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlActiveDrawBuffers(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[0]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
+		bool error=(bool)0;
+		int count=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlActiveDrawBuffers(count);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlBlitFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_srcX;
-		int err_srcX=JS_ToInt32(ctx,&long_srcX,argv[0]);
-		if(err_srcX<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int srcX=((int)long_srcX);
-		int32_t long_srcY;
-		int err_srcY=JS_ToInt32(ctx,&long_srcY,argv[1]);
-		if(err_srcY<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int srcY=((int)long_srcY);
-		int32_t long_srcWidth;
-		int err_srcWidth=JS_ToInt32(ctx,&long_srcWidth,argv[2]);
-		if(err_srcWidth<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int srcWidth=((int)long_srcWidth);
-		int32_t long_srcHeight;
-		int err_srcHeight=JS_ToInt32(ctx,&long_srcHeight,argv[3]);
-		if(err_srcHeight<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int srcHeight=((int)long_srcHeight);
-		int32_t long_dstX;
-		int err_dstX=JS_ToInt32(ctx,&long_dstX,argv[4]);
-		if(err_dstX<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dstX=((int)long_dstX);
-		int32_t long_dstY;
-		int err_dstY=JS_ToInt32(ctx,&long_dstY,argv[5]);
-		if(err_dstY<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dstY=((int)long_dstY);
-		int32_t long_dstWidth;
-		int err_dstWidth=JS_ToInt32(ctx,&long_dstWidth,argv[6]);
-		if(err_dstWidth<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[6] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dstWidth=((int)long_dstWidth);
-		int32_t long_dstHeight;
-		int err_dstHeight=JS_ToInt32(ctx,&long_dstHeight,argv[7]);
-		if(err_dstHeight<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[7] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dstHeight=((int)long_dstHeight);
-		int32_t long_bufferMask;
-		int err_bufferMask=JS_ToInt32(ctx,&long_bufferMask,argv[8]);
-		if(err_bufferMask<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[8] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int bufferMask=((int)long_bufferMask);
+		bool error=(bool)0;
+		int srcX=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int srcY=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int srcWidth=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int srcHeight=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dstX=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dstY=js_getint(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dstWidth=js_getint(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dstHeight=js_getint(ctx,argv[7],&error);
+		if(error==1)return JS_EXCEPTION;
+		int bufferMask=js_getint(ctx,argv[8],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlBlitFramebuffer(srcX,srcY,srcWidth,srcHeight,dstX,dstY,dstWidth,dstHeight,bufferMask);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlBindFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_target;
-		int err_target=JS_ToUint32(ctx,&long_target,argv[0]);
-		if(err_target<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int target=((unsigned int)long_target);
-		uint32_t long_framebuffer;
-		int err_framebuffer=JS_ToUint32(ctx,&long_framebuffer,argv[1]);
-		if(err_framebuffer<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int framebuffer=((unsigned int)long_framebuffer);
+		bool error=(bool)0;
+		unsigned int target=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int framebuffer=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlBindFramebuffer(target,framebuffer);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableColorBlend(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableColorBlend();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableColorBlend(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableColorBlend();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableDepthTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableDepthTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableDepthTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableDepthTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableDepthMask(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableDepthMask();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableDepthMask(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableDepthMask();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableBackfaceCulling(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableBackfaceCulling();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableBackfaceCulling(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableBackfaceCulling();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlColorMask(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int js_r=JS_ToBool(ctx,argv[0]);
-		if(js_r<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool r=(bool)js_r;
-		int js_g=JS_ToBool(ctx,argv[1]);
-		if(js_g<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool g=(bool)js_g;
-		int js_b=JS_ToBool(ctx,argv[2]);
-		if(js_b<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool b=(bool)js_b;
-		int js_a=JS_ToBool(ctx,argv[3]);
-		if(js_a<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool a=(bool)js_a;
+		bool error=(bool)0;
+		bool r=js_getbool(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool g=js_getbool(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool b=js_getbool(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool a=js_getbool(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlColorMask(r,g,b,a);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetCullFace(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_mode;
-		int err_mode=JS_ToInt32(ctx,&long_mode,argv[0]);
-		if(err_mode<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mode=((int)long_mode);
+		bool error=(bool)0;
+		int mode=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetCullFace(mode);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableScissorTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableScissorTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableScissorTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableScissorTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlScissor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_x;
-		int err_x=JS_ToInt32(ctx,&long_x,argv[0]);
-		if(err_x<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int x=((int)long_x);
-		int32_t long_y;
-		int err_y=JS_ToInt32(ctx,&long_y,argv[1]);
-		if(err_y<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int y=((int)long_y);
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[2]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[3]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
+		bool error=(bool)0;
+		int x=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int y=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlScissor(x,y,width,height);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnablePointMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnablePointMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisablePointMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisablePointMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableWireMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableWireMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableWireMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableWireMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetLineWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_width;
-		int err_width=JS_ToFloat64(ctx,&double_width,argv[0]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float width=((float)double_width);
+		bool error=(bool)0;
+		float width=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetLineWidth(width);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetLineWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		float returnVal=rlGetLineWidth();
 		JSValue ret=JS_NewFloat64(ctx,((double)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlEnableSmoothLines(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableSmoothLines();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableSmoothLines(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableSmoothLines();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableStereoRender(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlEnableStereoRender();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableStereoRender(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDisableStereoRender();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlIsStereoRenderEnabled(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		bool returnVal=rlIsStereoRenderEnabled();
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlClearColor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_r;
-		int err_r=JS_ToUint32(ctx,&long_r,argv[0]);
-		if(err_r<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char r=((unsigned char)long_r);
-		uint32_t long_g;
-		int err_g=JS_ToUint32(ctx,&long_g,argv[1]);
-		if(err_g<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char g=((unsigned char)long_g);
-		uint32_t long_b;
-		int err_b=JS_ToUint32(ctx,&long_b,argv[2]);
-		if(err_b<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char b=((unsigned char)long_b);
-		uint32_t long_a;
-		int err_a=JS_ToUint32(ctx,&long_a,argv[3]);
-		if(err_a<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned char a=((unsigned char)long_a);
+		bool error=(bool)0;
+		unsigned char r=js_getunsignedchar(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char g=js_getunsignedchar(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char b=js_getunsignedchar(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned char a=js_getunsignedchar(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlClearColor(r,g,b,a);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlClearScreenBuffers(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlClearScreenBuffers();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlCheckErrors(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlCheckErrors();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetBlendMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_mode;
-		int err_mode=JS_ToInt32(ctx,&long_mode,argv[0]);
-		if(err_mode<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mode=((int)long_mode);
+		bool error=(bool)0;
+		int mode=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetBlendMode(mode);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetBlendFactors(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_glSrcFactor;
-		int err_glSrcFactor=JS_ToInt32(ctx,&long_glSrcFactor,argv[0]);
-		if(err_glSrcFactor<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glSrcFactor=((int)long_glSrcFactor);
-		int32_t long_glDstFactor;
-		int err_glDstFactor=JS_ToInt32(ctx,&long_glDstFactor,argv[1]);
-		if(err_glDstFactor<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glDstFactor=((int)long_glDstFactor);
-		int32_t long_glEquation;
-		int err_glEquation=JS_ToInt32(ctx,&long_glEquation,argv[2]);
-		if(err_glEquation<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glEquation=((int)long_glEquation);
+		bool error=(bool)0;
+		int glSrcFactor=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glDstFactor=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glEquation=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetBlendFactors(glSrcFactor,glDstFactor,glEquation);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetBlendFactorsSeparate(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_glSrcRGB;
-		int err_glSrcRGB=JS_ToInt32(ctx,&long_glSrcRGB,argv[0]);
-		if(err_glSrcRGB<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glSrcRGB=((int)long_glSrcRGB);
-		int32_t long_glDstRGB;
-		int err_glDstRGB=JS_ToInt32(ctx,&long_glDstRGB,argv[1]);
-		if(err_glDstRGB<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glDstRGB=((int)long_glDstRGB);
-		int32_t long_glSrcAlpha;
-		int err_glSrcAlpha=JS_ToInt32(ctx,&long_glSrcAlpha,argv[2]);
-		if(err_glSrcAlpha<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glSrcAlpha=((int)long_glSrcAlpha);
-		int32_t long_glDstAlpha;
-		int err_glDstAlpha=JS_ToInt32(ctx,&long_glDstAlpha,argv[3]);
-		if(err_glDstAlpha<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glDstAlpha=((int)long_glDstAlpha);
-		int32_t long_glEqRGB;
-		int err_glEqRGB=JS_ToInt32(ctx,&long_glEqRGB,argv[4]);
-		if(err_glEqRGB<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glEqRGB=((int)long_glEqRGB);
-		int32_t long_glEqAlpha;
-		int err_glEqAlpha=JS_ToInt32(ctx,&long_glEqAlpha,argv[5]);
-		if(err_glEqAlpha<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int glEqAlpha=((int)long_glEqAlpha);
+		bool error=(bool)0;
+		int glSrcRGB=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glDstRGB=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glSrcAlpha=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glDstAlpha=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glEqRGB=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int glEqAlpha=js_getint(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetBlendFactorsSeparate(glSrcRGB,glDstRGB,glSrcAlpha,glDstAlpha,glEqRGB,glEqAlpha);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlglInit(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[0]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[1]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
+		bool error=(bool)0;
+		int width=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlglInit(width,height);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlglClose(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlglClose();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetVersion(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetVersion();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlSetFramebufferWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[0]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
+		bool error=(bool)0;
+		int width=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetFramebufferWidth(width);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetFramebufferWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetFramebufferWidth();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlSetFramebufferHeight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[0]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
+		bool error=(bool)0;
+		int height=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetFramebufferHeight(height);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetFramebufferHeight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetFramebufferHeight();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetTextureIdDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetTextureIdDefault();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetShaderIdDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlGetShaderIdDefault();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetShaderLocsDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int * returnVal=rlGetShaderLocsDefault();
 		JSValue ret=JS_NewArray(ctx);
 		int i;
@@ -3169,20 +2152,11 @@
 	}
 	
 	static JSValue js_rlLoadRenderBatch(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_numBuffers;
-		int err_numBuffers=JS_ToInt32(ctx,&long_numBuffers,argv[0]);
-		if(err_numBuffers<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int numBuffers=((int)long_numBuffers);
-		int32_t long_bufferElements;
-		int err_bufferElements=JS_ToInt32(ctx,&long_bufferElements,argv[1]);
-		if(err_bufferElements<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int bufferElements=((int)long_bufferElements);
+		bool error=(bool)0;
+		int numBuffers=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int bufferElements=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlRenderBatch returnVal=rlLoadRenderBatch(numBuffers,bufferElements);
 		rlRenderBatch * ptr_ret=(rlRenderBatch *)js_malloc(ctx,sizeof(rlRenderBatch));
 		ptr_ret[0]=returnVal;
@@ -3192,854 +2166,330 @@
 	}
 	
 	static JSValue js_rlUnloadRenderBatch(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		rlRenderBatch * ptr_batch=(rlRenderBatch *)JS_GetOpaque(argv[0],js_rlRenderBatch_class_id);
-		if(ptr_batch==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		rlRenderBatch batch=*ptr_batch;
+		bool error=(bool)0;
+		rlRenderBatch batch=js_getrlRenderBatch(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadRenderBatch(batch);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawRenderBatch(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		rlRenderBatch * batch=(rlRenderBatch *)JS_GetOpaque(argv[0],js_rlRenderBatch_class_id);
-		if(batch==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type rlRenderBatch");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		rlRenderBatch * batch=js_getrlRenderBatch_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawRenderBatch(batch);
-		JS_SetOpaque(argv[0],(void *)batch);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetRenderBatchActive(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		rlRenderBatch * batch=(rlRenderBatch *)JS_GetOpaque(argv[0],js_rlRenderBatch_class_id);
-		if(batch==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type rlRenderBatch");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		rlRenderBatch * batch=js_getrlRenderBatch_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetRenderBatchActive(batch);
-		JS_SetOpaque(argv[0],(void *)batch);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawRenderBatchActive(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlDrawRenderBatchActive();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlCheckRenderBatchLimit(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_vCount;
-		int err_vCount=JS_ToInt32(ctx,&long_vCount,argv[0]);
-		if(err_vCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int vCount=((int)long_vCount);
+		bool error=(bool)0;
+		int vCount=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		bool returnVal=rlCheckRenderBatchLimit(vCount);
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlSetTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetTexture(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlLoadVertexArray();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlLoadVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		void * buffer;
-		int64_t size_buffer;
-		JSValue src=argv[0];
-		if(JS_IsArrayBuffer(src)==1){
-			buffer =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_buffer,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_size;
-		int err_size=JS_ToInt32(ctx,&long_size,argv[1]);
-		if(err_size<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int size=((int)long_size);
-		int js_dynamic=JS_ToBool(ctx,argv[2]);
-		if(js_dynamic<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool dynamic=(bool)js_dynamic;
+		bool error=(bool)0;
+		void * buffer=js_getvoid_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int size=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool dynamic=js_getbool(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadVertexBuffer((const void *)buffer,size,dynamic);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlLoadVertexBufferElement(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		void * buffer;
-		int64_t size_buffer;
-		JSValue src=argv[0];
-		if(JS_IsArrayBuffer(src)==1){
-			buffer =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_buffer,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_size;
-		int err_size=JS_ToInt32(ctx,&long_size,argv[1]);
-		if(err_size<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int size=((int)long_size);
-		int js_dynamic=JS_ToBool(ctx,argv[2]);
-		if(js_dynamic<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool dynamic=(bool)js_dynamic;
+		bool error=(bool)0;
+		void * buffer=js_getvoid_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int size=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool dynamic=js_getbool(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadVertexBufferElement((const void *)buffer,size,dynamic);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlUpdateVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_bufferId;
-		int err_bufferId=JS_ToUint32(ctx,&long_bufferId,argv[0]);
-		if(err_bufferId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int bufferId=((unsigned int)long_bufferId);
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[1];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_dataSize;
-		int err_dataSize=JS_ToInt32(ctx,&long_dataSize,argv[2]);
-		if(err_dataSize<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dataSize=((int)long_dataSize);
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[3]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
+		bool error=(bool)0;
+		unsigned int bufferId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * data=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dataSize=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int offset=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUpdateVertexBuffer(bufferId,(const void *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlUpdateVertexBufferElements(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[1];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_dataSize;
-		int err_dataSize=JS_ToInt32(ctx,&long_dataSize,argv[2]);
-		if(err_dataSize<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int dataSize=((int)long_dataSize);
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[3]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * data=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dataSize=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int offset=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUpdateVertexBufferElements(id,(const void *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlUnloadVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_vaoId;
-		int err_vaoId=JS_ToUint32(ctx,&long_vaoId,argv[0]);
-		if(err_vaoId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int vaoId=((unsigned int)long_vaoId);
+		bool error=(bool)0;
+		unsigned int vaoId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadVertexArray(vaoId);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlUnloadVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_vboId;
-		int err_vboId=JS_ToUint32(ctx,&long_vboId,argv[0]);
-		if(err_vboId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int vboId=((unsigned int)long_vboId);
+		bool error=(bool)0;
+		unsigned int vboId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadVertexBuffer(vboId);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetVertexAttribute(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[0]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
-		int32_t long_compSize;
-		int err_compSize=JS_ToInt32(ctx,&long_compSize,argv[1]);
-		if(err_compSize<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int compSize=((int)long_compSize);
-		int32_t long_type;
-		int err_type=JS_ToInt32(ctx,&long_type,argv[2]);
-		if(err_type<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int type=((int)long_type);
-		int js_normalized=JS_ToBool(ctx,argv[3]);
-		if(js_normalized<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool normalized=(bool)js_normalized;
-		int32_t long_stride;
-		int err_stride=JS_ToInt32(ctx,&long_stride,argv[4]);
-		if(err_stride<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int stride=((int)long_stride);
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[5]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
+		bool error=(bool)0;
+		unsigned int index=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int compSize=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int type=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool normalized=js_getbool(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int stride=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int offset=js_getint(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetVertexAttribute(index,compSize,type,normalized,stride,offset);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetVertexAttributeDivisor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[0]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
-		int32_t long_divisor;
-		int err_divisor=JS_ToInt32(ctx,&long_divisor,argv[1]);
-		if(err_divisor<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int divisor=((int)long_divisor);
+		bool error=(bool)0;
+		unsigned int index=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int divisor=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetVertexAttributeDivisor(index,divisor);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[0]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[1]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
+		bool error=(bool)0;
+		int offset=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawVertexArray(offset,count);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawVertexArrayElements(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[0]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[1]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
-		void * buffer;
-		int64_t size_buffer;
-		JSValue src=argv[2];
-		if(JS_IsArrayBuffer(src)==1){
-			buffer =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_buffer,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type void *");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		int offset=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * buffer=js_getvoid_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawVertexArrayElements(offset,count,(const void *)buffer);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawVertexArrayInstanced(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[0]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[1]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
-		int32_t long_instances;
-		int err_instances=JS_ToInt32(ctx,&long_instances,argv[2]);
-		if(err_instances<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int instances=((int)long_instances);
+		bool error=(bool)0;
+		int offset=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int instances=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawVertexArrayInstanced(offset,count,instances);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawVertexArrayElementsInstanced(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_offset;
-		int err_offset=JS_ToInt32(ctx,&long_offset,argv[0]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offset=((int)long_offset);
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[1]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
-		void * buffer;
-		int64_t size_buffer;
-		JSValue src=argv[2];
-		if(JS_IsArrayBuffer(src)==1){
-			buffer =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_buffer,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_instances;
-		int err_instances=JS_ToInt32(ctx,&long_instances,argv[3]);
-		if(err_instances<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int instances=((int)long_instances);
+		bool error=(bool)0;
+		int offset=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * buffer=js_getvoid_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int instances=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlDrawVertexArrayElementsInstanced(offset,count,(const void *)buffer,instances);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[0];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[1]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[2]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[3]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		int32_t long_mipmapCount;
-		int err_mipmapCount=JS_ToInt32(ctx,&long_mipmapCount,argv[4]);
-		if(err_mipmapCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mipmapCount=((int)long_mipmapCount);
+		bool error=(bool)0;
+		void * data=js_getvoid_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int mipmapCount=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadTexture((const void *)data,width,height,format,mipmapCount);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlLoadTextureDepth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[0]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[1]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
-		int js_useRenderBuffer=JS_ToBool(ctx,argv[2]);
-		if(js_useRenderBuffer<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool useRenderBuffer=(bool)js_useRenderBuffer;
+		bool error=(bool)0;
+		int width=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool useRenderBuffer=js_getbool(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadTextureDepth(width,height,useRenderBuffer);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlLoadTextureCubemap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[0];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_size;
-		int err_size=JS_ToInt32(ctx,&long_size,argv[1]);
-		if(err_size<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int size=((int)long_size);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[2]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		int32_t long_mipmapCount;
-		int err_mipmapCount=JS_ToInt32(ctx,&long_mipmapCount,argv[3]);
-		if(err_mipmapCount<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mipmapCount=((int)long_mipmapCount);
+		bool error=(bool)0;
+		void * data=js_getvoid_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int size=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int mipmapCount=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadTextureCubemap((const void *)data,size,format,mipmapCount);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlUpdateTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int32_t long_offsetX;
-		int err_offsetX=JS_ToInt32(ctx,&long_offsetX,argv[1]);
-		if(err_offsetX<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offsetX=((int)long_offsetX);
-		int32_t long_offsetY;
-		int err_offsetY=JS_ToInt32(ctx,&long_offsetY,argv[2]);
-		if(err_offsetY<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int offsetY=((int)long_offsetY);
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[3]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[4]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[5]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[6];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[6] does not match type void *");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int offsetX=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int offsetY=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * data=js_getvoid_arr(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUpdateTexture(id,offsetX,offsetY,width,height,format,(const void *)data);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetGlTextureFormats(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[0]);
-		if(err_format<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		unsigned int * glInternalFormat;
-		int64_t size_glInternalFormat;
-		JSClassID glInternalFormat_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(glInternalFormat_class==js_ArrayProxy_class_id){
-			void * opaque_glInternalFormat=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_glInternalFormat=((ArrayProxy_class *)opaque_glInternalFormat)[0];
-			src =AP_glInternalFormat.values(ctx,AP_glInternalFormat.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_glInternalFormat)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			glInternalFormat =(unsigned int *)js_malloc(ctx,size_glInternalFormat*sizeof(unsigned int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)glInternalFormat);
-			int i;
-			for(i=0;i<size_glInternalFormat;i++){
-				JSValue js_glInternalFormat=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_glInternalFormati;
-				int err_glInternalFormati=JS_ToUint32(ctx,&long_glInternalFormati,js_glInternalFormat);
-				if(err_glInternalFormati<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_glInternalFormat is not numeric");
-					return JS_EXCEPTION;
-				}
-				glInternalFormat[i] =((unsigned int)long_glInternalFormati);
-				JS_FreeValue(ctx,js_glInternalFormat);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			glInternalFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glInternalFormat,src);
-		}else{
-			JSClassID classid_glInternalFormat=JS_GetClassID(src);
-			if(classid_glInternalFormat==JS_CLASS_UINT16_ARRAY){
-				size_t offset_glInternalFormat;
-				JSValue da_glInternalFormat=JS_GetTypedArrayBuffer(ctx,src,&offset_glInternalFormat,(size_t *)&size_glInternalFormat,NULL);
-				glInternalFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glInternalFormat,da_glInternalFormat);
-				glInternalFormat +=offset_glInternalFormat;
-				size_glInternalFormat -=offset_glInternalFormat;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_glInternalFormat);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
-		unsigned int * glFormat;
-		int64_t size_glFormat;
-		JSClassID glFormat_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(glFormat_class==js_ArrayProxy_class_id){
-			void * opaque_glFormat=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_glFormat=((ArrayProxy_class *)opaque_glFormat)[0];
-			src =AP_glFormat.values(ctx,AP_glFormat.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_glFormat)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			glFormat =(unsigned int *)js_malloc(ctx,size_glFormat*sizeof(unsigned int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)glFormat);
-			int i;
-			for(i=0;i<size_glFormat;i++){
-				JSValue js_glFormat=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_glFormati;
-				int err_glFormati=JS_ToUint32(ctx,&long_glFormati,js_glFormat);
-				if(err_glFormati<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_glFormat is not numeric");
-					return JS_EXCEPTION;
-				}
-				glFormat[i] =((unsigned int)long_glFormati);
-				JS_FreeValue(ctx,js_glFormat);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			glFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glFormat,src);
-		}else{
-			JSClassID classid_glFormat=JS_GetClassID(src);
-			if(classid_glFormat==JS_CLASS_UINT16_ARRAY){
-				size_t offset_glFormat;
-				JSValue da_glFormat=JS_GetTypedArrayBuffer(ctx,src,&offset_glFormat,(size_t *)&size_glFormat,NULL);
-				glFormat =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glFormat,da_glFormat);
-				glFormat +=offset_glFormat;
-				size_glFormat -=offset_glFormat;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_glFormat);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
-		unsigned int * glType;
-		int64_t size_glType;
-		JSClassID glType_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(glType_class==js_ArrayProxy_class_id){
-			void * opaque_glType=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_glType=((ArrayProxy_class *)opaque_glType)[0];
-			src =AP_glType.values(ctx,AP_glType.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_glType)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			glType =(unsigned int *)js_malloc(ctx,size_glType*sizeof(unsigned int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)glType);
-			int i;
-			for(i=0;i<size_glType;i++){
-				JSValue js_glType=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				uint32_t long_glTypei;
-				int err_glTypei=JS_ToUint32(ctx,&long_glTypei,js_glType);
-				if(err_glTypei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_glType is not numeric");
-					return JS_EXCEPTION;
-				}
-				glType[i] =((unsigned int)long_glTypei);
-				JS_FreeValue(ctx,js_glType);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			glType =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glType,src);
-		}else{
-			JSClassID classid_glType=JS_GetClassID(src);
-			if(classid_glType==JS_CLASS_UINT16_ARRAY){
-				size_t offset_glType;
-				JSValue da_glType=JS_GetTypedArrayBuffer(ctx,src,&offset_glType,(size_t *)&size_glType,NULL);
-				glType =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_glType,da_glType);
-				glType +=offset_glType;
-				size_glType -=offset_glType;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_glType);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type unsigned int *");
-				return JS_EXCEPTION;
-			}
-		}
+		int format=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int * glInternalFormat=js_getunsignedint_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int * glFormat=js_getunsignedint_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int * glType=js_getunsignedint_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlGetGlTextureFormats(format,glInternalFormat,glFormat,glType);
 		memoryClear(ctx,memoryHead);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetPixelFormatName(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_format;
-		int err_format=JS_ToUint32(ctx,&long_format,argv[0]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int format=((unsigned int)long_format);
+		bool error=(bool)0;
+		unsigned int format=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		char * returnVal=(char *)rlGetPixelFormatName(format);
 		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlUnloadTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadTexture(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGenTextureMipmaps(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[1]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[2]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[3]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		int * mipmaps;
-		bool freesrc_mipmaps=(bool)false;
-		JSValue da_mipmaps;
-		int64_t size_mipmaps;
-		JSClassID mipmaps_class=JS_GetClassID(argv[4]);
-		JSValue src=argv[4];
-		if(mipmaps_class==js_ArrayProxy_class_id){
-			void * opaque_mipmaps=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_mipmaps=((ArrayProxy_class *)opaque_mipmaps)[0];
-			src =AP_mipmaps.values(ctx,AP_mipmaps.opaque,(int)0,(bool)false);
-			freesrc_mipmaps =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_mipmaps)==-1){
-				return JS_EXCEPTION;
-			}
-			mipmaps =(int *)js_malloc(ctx,size_mipmaps*sizeof(int));
-			int i;
-			for(i=0;i<size_mipmaps;i++){
-				JSValue js_mipmaps=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_mipmapsi;
-				int err_mipmapsi=JS_ToInt32(ctx,&long_mipmapsi,js_mipmaps);
-				if(err_mipmapsi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_mipmaps is not numeric");
-					return JS_EXCEPTION;
-				}
-				mipmaps[i] =((int)long_mipmapsi);
-				JS_FreeValue(ctx,js_mipmaps);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			mipmaps =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_mipmaps,src);
-		}else{
-			JSClassID classid_mipmaps=JS_GetClassID(src);
-			if(classid_mipmaps==JS_CLASS_INT16_ARRAY){
-				size_t offset_mipmaps;
-				da_mipmaps =JS_GetTypedArrayBuffer(ctx,src,&offset_mipmaps,(size_t *)&size_mipmaps,NULL);
-				mipmaps =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_mipmaps,da_mipmaps);
-				mipmaps +=offset_mipmaps;
-				size_mipmaps -=offset_mipmaps;
-			}else{
-				if(freesrc_mipmaps){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[4] does not match type int *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * mipmaps=js_getint_arr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlGenTextureMipmaps(id,width,height,format,mipmaps);
-		if(JS_IsArray(argv[4])==1){
-			js_free(ctx,(void *)mipmaps);
-		}else{
-			JSClassID classid_mipmaps=JS_GetClassID(argv[4]);
-			if(classid_mipmaps==JS_CLASS_INT16_ARRAY){
-				js_free(ctx,(void *)&da_mipmaps);
-			}
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlReadTexturePixels(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[1]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[2]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[3]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int width=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		void * returnVal=rlReadTexturePixels(id,width,height,format);
 		JSValue ret=JS_NewArray(ctx);
 		ret =JS_NewArrayBufferCopy(ctx,(const uint8_t *)returnVal,(size_t)GetPixelDataSize(width,height,format));
@@ -4047,145 +2497,64 @@
 	}
 	
 	static JSValue js_rlReadScreenPixels(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_width;
-		int err_width=JS_ToInt32(ctx,&long_width,argv[0]);
-		if(err_width<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int width=((int)long_width);
-		int32_t long_height;
-		int err_height=JS_ToInt32(ctx,&long_height,argv[1]);
-		if(err_height<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int height=((int)long_height);
+		bool error=(bool)0;
+		int width=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int height=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		char * returnVal=rlReadScreenPixels(width,height);
 		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlLoadFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=rlLoadFramebuffer();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlFramebufferAttach(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_fboId;
-		int err_fboId=JS_ToUint32(ctx,&long_fboId,argv[0]);
-		if(err_fboId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int fboId=((unsigned int)long_fboId);
-		uint32_t long_texId;
-		int err_texId=JS_ToUint32(ctx,&long_texId,argv[1]);
-		if(err_texId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int texId=((unsigned int)long_texId);
-		int32_t long_attachType;
-		int err_attachType=JS_ToInt32(ctx,&long_attachType,argv[2]);
-		if(err_attachType<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int attachType=((int)long_attachType);
-		int32_t long_texType;
-		int err_texType=JS_ToInt32(ctx,&long_texType,argv[3]);
-		if(err_texType<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int texType=((int)long_texType);
-		int32_t long_mipLevel;
-		int err_mipLevel=JS_ToInt32(ctx,&long_mipLevel,argv[4]);
-		if(err_mipLevel<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int mipLevel=((int)long_mipLevel);
+		bool error=(bool)0;
+		unsigned int fboId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int texId=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int attachType=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int texType=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int mipLevel=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlFramebufferAttach(fboId,texId,attachType,texType,mipLevel);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlFramebufferComplete(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		bool returnVal=rlFramebufferComplete(id);
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlUnloadFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadFramebuffer(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadShaderCode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		char * vsCode;
-		int64_t size_vsCode;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			vsCode =(char *)JS_ToCStringLen(ctx,(size_t *)&size_vsCode,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)vsCode);
-		}else if(JS_IsArrayBuffer(src)==1){
-			vsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_vsCode,src);
-		}else{
-			JSClassID classid_vsCode=JS_GetClassID(src);
-			if(classid_vsCode==JS_CLASS_INT8_ARRAY){
-				size_t offset_vsCode;
-				JSValue da_vsCode=JS_GetTypedArrayBuffer(ctx,src,&offset_vsCode,(size_t *)&size_vsCode,NULL);
-				vsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_vsCode,da_vsCode);
-				vsCode +=offset_vsCode;
-				size_vsCode -=offset_vsCode;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_vsCode);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * fsCode;
-		int64_t size_fsCode;
-		src =argv[1];
-		if(JS_IsString(argv[1])==1){
-			fsCode =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fsCode,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)fsCode);
-		}else if(JS_IsArrayBuffer(src)==1){
-			fsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fsCode,src);
-		}else{
-			JSClassID classid_fsCode=JS_GetClassID(src);
-			if(classid_fsCode==JS_CLASS_INT8_ARRAY){
-				size_t offset_fsCode;
-				JSValue da_fsCode=JS_GetTypedArrayBuffer(ctx,src,&offset_fsCode,(size_t *)&size_fsCode,NULL);
-				fsCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fsCode,da_fsCode);
-				fsCode +=offset_fsCode;
-				size_fsCode -=offset_fsCode;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_fsCode);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		char * vsCode=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * fsCode=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadShaderCode((const char *)vsCode,(const char *)fsCode);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -4193,599 +2562,286 @@
 	}
 	
 	static JSValue js_rlCompileShader(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		char * shaderCode;
-		JSValue da_shaderCode;
-		int64_t size_shaderCode;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			shaderCode =(char *)JS_ToCStringLen(ctx,(size_t *)&size_shaderCode,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			shaderCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_shaderCode,src);
-		}else{
-			JSClassID classid_shaderCode=JS_GetClassID(src);
-			if(classid_shaderCode==JS_CLASS_INT8_ARRAY){
-				size_t offset_shaderCode;
-				da_shaderCode =JS_GetTypedArrayBuffer(ctx,src,&offset_shaderCode,(size_t *)&size_shaderCode,NULL);
-				shaderCode =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_shaderCode,da_shaderCode);
-				shaderCode +=offset_shaderCode;
-				size_shaderCode -=offset_shaderCode;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int32_t long_type;
-		int err_type=JS_ToInt32(ctx,&long_type,argv[1]);
-		if(err_type<0){
-			if(JS_IsArray(argv[0])==1){
-				js_free(ctx,(void *)shaderCode);
-			}else if(JS_IsString(argv[0])==1){
-				JS_FreeCString(ctx,(const char *)shaderCode);
-			}else{
-				JSClassID classid_shaderCode=JS_GetClassID(argv[0]);
-				if(classid_shaderCode==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_shaderCode);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int type=((int)long_type);
+		bool error=(bool)0;
+		char * shaderCode=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int type=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlCompileShader((const char *)shaderCode,type);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)shaderCode);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)shaderCode);
-		}else{
-			JSClassID classid_shaderCode=JS_GetClassID(argv[0]);
-			if(classid_shaderCode==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_shaderCode);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_rlLoadShaderProgram(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_vShaderId;
-		int err_vShaderId=JS_ToUint32(ctx,&long_vShaderId,argv[0]);
-		if(err_vShaderId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int vShaderId=((unsigned int)long_vShaderId);
-		uint32_t long_fShaderId;
-		int err_fShaderId=JS_ToUint32(ctx,&long_fShaderId,argv[1]);
-		if(err_fShaderId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int fShaderId=((unsigned int)long_fShaderId);
+		bool error=(bool)0;
+		unsigned int vShaderId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int fShaderId=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadShaderProgram(vShaderId,fShaderId);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlUnloadShaderProgram(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadShaderProgram(id);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetLocationUniform(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_shaderId;
-		int err_shaderId=JS_ToUint32(ctx,&long_shaderId,argv[0]);
-		if(err_shaderId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int shaderId=((unsigned int)long_shaderId);
-		char * uniformName;
-		JSValue da_uniformName;
-		int64_t size_uniformName;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			uniformName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_uniformName,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			uniformName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_uniformName,src);
-		}else{
-			JSClassID classid_uniformName=JS_GetClassID(src);
-			if(classid_uniformName==JS_CLASS_INT8_ARRAY){
-				size_t offset_uniformName;
-				da_uniformName =JS_GetTypedArrayBuffer(ctx,src,&offset_uniformName,(size_t *)&size_uniformName,NULL);
-				uniformName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_uniformName,da_uniformName);
-				uniformName +=offset_uniformName;
-				size_uniformName -=offset_uniformName;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		unsigned int shaderId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * uniformName=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlGetLocationUniform(shaderId,(const char *)uniformName);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)uniformName);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)uniformName);
-		}else{
-			JSClassID classid_uniformName=JS_GetClassID(argv[1]);
-			if(classid_uniformName==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_uniformName);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_rlGetLocationAttrib(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_shaderId;
-		int err_shaderId=JS_ToUint32(ctx,&long_shaderId,argv[0]);
-		if(err_shaderId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int shaderId=((unsigned int)long_shaderId);
-		char * attribName;
-		JSValue da_attribName;
-		int64_t size_attribName;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			attribName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_attribName,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			attribName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_attribName,src);
-		}else{
-			JSClassID classid_attribName=JS_GetClassID(src);
-			if(classid_attribName==JS_CLASS_INT8_ARRAY){
-				size_t offset_attribName;
-				da_attribName =JS_GetTypedArrayBuffer(ctx,src,&offset_attribName,(size_t *)&size_attribName,NULL);
-				attribName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_attribName,da_attribName);
-				attribName +=offset_attribName;
-				size_attribName -=offset_attribName;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		unsigned int shaderId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * attribName=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlGetLocationAttrib(shaderId,(const char *)attribName);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)attribName);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)attribName);
-		}else{
-			JSClassID classid_attribName=JS_GetClassID(argv[1]);
-			if(classid_attribName==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_attribName);
-			}
-		}
 		return ret;
 	}
 	
+	static JSValue js_rlSetUniform(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		int count=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		error =(bool)0;
+		void * value=NULL;
+		int locIndex=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int uniformType=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		if(uniformType==SHADER_UNIFORM_FLOAT){
+			float * val=js_getfloat_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_VEC2){
+			Vector2 * val=js_getVector2_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_VEC3){
+			Vector3 * val=js_getVector3_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_VEC4){
+			Vector4 * val=js_getVector4_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_INT||uniformType==SHADER_UNIFORM_SAMPLER2D){
+			int * val=js_getint_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_IVEC2){
+			int * val=js_getint_arr_arg1(ctx,argv[1],&error,(int)2*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_IVEC3){
+			int * val=js_getint_arr_arg1(ctx,argv[1],&error,(int)3*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_IVEC4){
+			int * val=js_getint_arr_arg1(ctx,argv[1],&error,(int)4*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_UINT){
+			unsigned int * val=js_getunsignedint_arr_arg1(ctx,argv[1],&error,count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_UIVEC2){
+			unsigned int * val=js_getunsignedint_arr_arg1(ctx,argv[1],&error,(int)2*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_UIVEC3){
+			unsigned int * val=js_getunsignedint_arr_arg1(ctx,argv[1],&error,(int)3*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else if(uniformType==SHADER_UNIFORM_UIVEC4){
+			unsigned int * val=js_getunsignedint_arr_arg1(ctx,argv[1],&error,(int)4*count);
+			if(error==1)return JS_EXCEPTION;
+			value=((void *)val);
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"unknown uniformType");
+			return JS_EXCEPTION;
+		}
+		rlSetUniform(locIndex,(const void *)value,uniformType,count);
+		return JS_UNDEFINED;
+	}
+	
 	static JSValue js_rlSetUniformMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_locIndex;
-		int err_locIndex=JS_ToInt32(ctx,&long_locIndex,argv[0]);
-		if(err_locIndex<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int locIndex=((int)long_locIndex);
-		Matrix * ptr_mat=(Matrix *)JS_GetOpaque(argv[1],js_Matrix_class_id);
-		if(ptr_mat==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix mat=*ptr_mat;
+		bool error=(bool)0;
+		int locIndex=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Matrix mat=js_getMatrix(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetUniformMatrix(locIndex,mat);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetUniformMatrices(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_locIndex;
-		int err_locIndex=JS_ToInt32(ctx,&long_locIndex,argv[0]);
-		if(err_locIndex<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int locIndex=((int)long_locIndex);
-		Matrix * mat;
-		bool freesrc_mat=(bool)false;
-		int64_t size_mat;
-		JSClassID mat_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(mat_class==js_ArrayProxy_class_id){
-			void * opaque_mat=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_mat=((ArrayProxy_class *)opaque_mat)[0];
-			src =AP_mat.values(ctx,AP_mat.opaque,(int)0,(bool)false);
-			freesrc_mat =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_mat)==-1){
-				return JS_EXCEPTION;
-			}
-			mat =(Matrix *)js_malloc(ctx,size_mat*sizeof(Matrix));
-			int i;
-			for(i=0;i<size_mat;i++){
-				JSValue js_mat=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				Matrix * ptr_mati=(Matrix *)JS_GetOpaque(js_mat,js_Matrix_class_id);
-				if(ptr_mati==NULL){
-					JS_ThrowTypeError(ctx,(const char *)"js_mat does not allow null");
-					return JS_EXCEPTION;
-				}
-				mat[i] =*ptr_mati;
-				JS_FreeValue(ctx,js_mat);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			mat =(Matrix *)JS_GetArrayBuffer(ctx,(size_t *)&size_mat,src);
-		}else{
-			if(freesrc_mat){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type Matrix *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[2]);
-		if(err_count<0){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)mat);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
+		bool error=(bool)0;
+		int locIndex=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Matrix * mat=js_getMatrix_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetUniformMatrices(locIndex,(const Matrix *)mat,count);
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)mat);
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetUniformSampler(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_locIndex;
-		int err_locIndex=JS_ToInt32(ctx,&long_locIndex,argv[0]);
-		if(err_locIndex<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int locIndex=((int)long_locIndex);
-		uint32_t long_textureId;
-		int err_textureId=JS_ToUint32(ctx,&long_textureId,argv[1]);
-		if(err_textureId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int textureId=((unsigned int)long_textureId);
+		bool error=(bool)0;
+		int locIndex=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int textureId=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetUniformSampler(locIndex,textureId);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetShader(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		int * locs;
-		bool freesrc_locs=(bool)false;
-		JSValue da_locs;
-		int64_t size_locs;
-		JSClassID locs_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(locs_class==js_ArrayProxy_class_id){
-			void * opaque_locs=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_locs=((ArrayProxy_class *)opaque_locs)[0];
-			src =AP_locs.values(ctx,AP_locs.opaque,(int)0,(bool)false);
-			freesrc_locs =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_locs)==-1){
-				return JS_EXCEPTION;
-			}
-			locs =(int *)js_malloc(ctx,size_locs*sizeof(int));
-			int i;
-			for(i=0;i<size_locs;i++){
-				JSValue js_locs=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_locsi;
-				int err_locsi=JS_ToInt32(ctx,&long_locsi,js_locs);
-				if(err_locsi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_locs is not numeric");
-					return JS_EXCEPTION;
-				}
-				locs[i] =((int)long_locsi);
-				JS_FreeValue(ctx,js_locs);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			locs =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_locs,src);
-		}else{
-			JSClassID classid_locs=JS_GetClassID(src);
-			if(classid_locs==JS_CLASS_INT16_ARRAY){
-				size_t offset_locs;
-				da_locs =JS_GetTypedArrayBuffer(ctx,src,&offset_locs,(size_t *)&size_locs,NULL);
-				locs =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_locs,da_locs);
-				locs +=offset_locs;
-				size_locs -=offset_locs;
-			}else{
-				if(freesrc_locs){
-					JS_FreeValue(ctx,src);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type int *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * locs=js_getint_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetShader(id,locs);
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)locs);
-		}else{
-			JSClassID classid_locs=JS_GetClassID(argv[1]);
-			if(classid_locs==JS_CLASS_INT16_ARRAY){
-				js_free(ctx,(void *)&da_locs);
-			}
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadComputeShaderProgram(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_shaderId;
-		int err_shaderId=JS_ToUint32(ctx,&long_shaderId,argv[0]);
-		if(err_shaderId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int shaderId=((unsigned int)long_shaderId);
+		bool error=(bool)0;
+		unsigned int shaderId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadComputeShaderProgram(shaderId);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlComputeShaderDispatch(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_groupX;
-		int err_groupX=JS_ToUint32(ctx,&long_groupX,argv[0]);
-		if(err_groupX<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int groupX=((unsigned int)long_groupX);
-		uint32_t long_groupY;
-		int err_groupY=JS_ToUint32(ctx,&long_groupY,argv[1]);
-		if(err_groupY<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int groupY=((unsigned int)long_groupY);
-		uint32_t long_groupZ;
-		int err_groupZ=JS_ToUint32(ctx,&long_groupZ,argv[2]);
-		if(err_groupZ<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int groupZ=((unsigned int)long_groupZ);
+		bool error=(bool)0;
+		unsigned int groupX=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int groupY=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int groupZ=js_getunsignedint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlComputeShaderDispatch(groupX,groupY,groupZ);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_size;
-		int err_size=JS_ToUint32(ctx,&long_size,argv[0]);
-		if(err_size<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int size=((unsigned int)long_size);
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[1];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_usageHint;
-		int err_usageHint=JS_ToInt32(ctx,&long_usageHint,argv[2]);
-		if(err_usageHint<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int usageHint=((int)long_usageHint);
+		bool error=(bool)0;
+		unsigned int size=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * data=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int usageHint=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadShaderBuffer(size,(const void *)data,usageHint);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlUnloadShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_ssboId;
-		int err_ssboId=JS_ToUint32(ctx,&long_ssboId,argv[0]);
-		if(err_ssboId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int ssboId=((unsigned int)long_ssboId);
+		bool error=(bool)0;
+		unsigned int ssboId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUnloadShaderBuffer(ssboId);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlUpdateShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		void * data;
-		int64_t size_data;
-		JSValue src=argv[1];
-		if(JS_IsArrayBuffer(src)==1){
-			data =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_data,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		uint32_t long_dataSize;
-		int err_dataSize=JS_ToUint32(ctx,&long_dataSize,argv[2]);
-		if(err_dataSize<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int dataSize=((unsigned int)long_dataSize);
-		uint32_t long_offset;
-		int err_offset=JS_ToUint32(ctx,&long_offset,argv[3]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int offset=((unsigned int)long_offset);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * data=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int dataSize=js_getunsignedint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int offset=js_getunsignedint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlUpdateShaderBuffer(id,(const void *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlBindShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[1]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int index=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlBindShaderBuffer(id,index);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlReadShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		void * dest;
-		int64_t size_dest;
-		JSValue src=argv[1];
-		if(JS_IsArrayBuffer(src)==1){
-			dest =(void *)JS_GetArrayBuffer(ctx,(size_t *)&size_dest,src);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type void *");
-			return JS_EXCEPTION;
-		}
-		uint32_t long_count;
-		int err_count=JS_ToUint32(ctx,&long_count,argv[2]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int count=((unsigned int)long_count);
-		uint32_t long_offset;
-		int err_offset=JS_ToUint32(ctx,&long_offset,argv[3]);
-		if(err_offset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int offset=((unsigned int)long_offset);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * dest=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int count=js_getunsignedint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int offset=js_getunsignedint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlReadShaderBuffer(id,dest,count,offset);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlCopyShaderBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_destId;
-		int err_destId=JS_ToUint32(ctx,&long_destId,argv[0]);
-		if(err_destId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int destId=((unsigned int)long_destId);
-		uint32_t long_srcId;
-		int err_srcId=JS_ToUint32(ctx,&long_srcId,argv[1]);
-		if(err_srcId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int srcId=((unsigned int)long_srcId);
-		uint32_t long_destOffset;
-		int err_destOffset=JS_ToUint32(ctx,&long_destOffset,argv[2]);
-		if(err_destOffset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int destOffset=((unsigned int)long_destOffset);
-		uint32_t long_srcOffset;
-		int err_srcOffset=JS_ToUint32(ctx,&long_srcOffset,argv[3]);
-		if(err_srcOffset<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int srcOffset=((unsigned int)long_srcOffset);
-		uint32_t long_count;
-		int err_count=JS_ToUint32(ctx,&long_count,argv[4]);
-		if(err_count<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int count=((unsigned int)long_count);
+		bool error=(bool)0;
+		unsigned int destId=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int srcId=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int destOffset=js_getunsignedint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int srcOffset=js_getunsignedint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int count=js_getunsignedint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlCopyShaderBuffer(destId,srcId,destOffset,srcOffset,count);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetShaderBufferSize(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlGetShaderBufferSize(id);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlBindImageTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		uint32_t long_id;
-		int err_id=JS_ToUint32(ctx,&long_id,argv[0]);
-		if(err_id<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int id=((unsigned int)long_id);
-		uint32_t long_index;
-		int err_index=JS_ToUint32(ctx,&long_index,argv[1]);
-		if(err_index<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned int index=((unsigned int)long_index);
-		int32_t long_format;
-		int err_format=JS_ToInt32(ctx,&long_format,argv[2]);
-		if(err_format<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int format=((int)long_format);
-		int js_readonly=JS_ToBool(ctx,argv[3]);
-		if(js_readonly<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool readonly=(bool)js_readonly;
+		bool error=(bool)0;
+		unsigned int id=js_getunsignedint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned int index=js_getunsignedint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int format=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool readonly=js_getbool(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlBindImageTexture(id,index,format,readonly);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetMatrixModelview(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixModelview();
 		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
 		ptr_ret[0]=returnVal;
@@ -4795,6 +2851,7 @@
 	}
 	
 	static JSValue js_rlGetMatrixProjection(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixProjection();
 		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
 		ptr_ret[0]=returnVal;
@@ -4804,6 +2861,7 @@
 	}
 	
 	static JSValue js_rlGetMatrixTransform(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixTransform();
 		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
 		ptr_ret[0]=returnVal;
@@ -4813,13 +2871,9 @@
 	}
 	
 	static JSValue js_rlGetMatrixProjectionStereo(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_eye;
-		int err_eye=JS_ToInt32(ctx,&long_eye,argv[0]);
-		if(err_eye<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int eye=((int)long_eye);
+		bool error=(bool)0;
+		int eye=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		Matrix returnVal=rlGetMatrixProjectionStereo(eye);
 		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
 		ptr_ret[0]=returnVal;
@@ -4829,13 +2883,9 @@
 	}
 	
 	static JSValue js_rlGetMatrixViewOffsetStereo(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_eye;
-		int err_eye=JS_ToInt32(ctx,&long_eye,argv[0]);
-		if(err_eye<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int eye=((int)long_eye);
+		bool error=(bool)0;
+		int eye=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		Matrix returnVal=rlGetMatrixViewOffsetStereo(eye);
 		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
 		ptr_ret[0]=returnVal;
@@ -4845,67 +2895,49 @@
 	}
 	
 	static JSValue js_rlSetMatrixProjection(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Matrix * ptr_proj=(Matrix *)JS_GetOpaque(argv[0],js_Matrix_class_id);
-		if(ptr_proj==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix proj=*ptr_proj;
+		bool error=(bool)0;
+		Matrix proj=js_getMatrix(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetMatrixProjection(proj);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetMatrixModelview(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Matrix * ptr_view=(Matrix *)JS_GetOpaque(argv[0],js_Matrix_class_id);
-		if(ptr_view==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix view=*ptr_view;
+		bool error=(bool)0;
+		Matrix view=js_getMatrix(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetMatrixModelview(view);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetMatrixProjectionStereo(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Matrix * ptr_right=(Matrix *)JS_GetOpaque(argv[0],js_Matrix_class_id);
-		if(ptr_right==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix right=*ptr_right;
-		Matrix * ptr_left=(Matrix *)JS_GetOpaque(argv[1],js_Matrix_class_id);
-		if(ptr_left==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix left=*ptr_left;
+		bool error=(bool)0;
+		Matrix right=js_getMatrix(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Matrix left=js_getMatrix(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetMatrixProjectionStereo(right,left);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlSetMatrixViewOffsetStereo(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Matrix * ptr_right=(Matrix *)JS_GetOpaque(argv[0],js_Matrix_class_id);
-		if(ptr_right==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix right=*ptr_right;
-		Matrix * ptr_left=(Matrix *)JS_GetOpaque(argv[1],js_Matrix_class_id);
-		if(ptr_left==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Matrix left=*ptr_left;
+		bool error=(bool)0;
+		Matrix right=js_getMatrix(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Matrix left=js_getMatrix(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		rlSetMatrixViewOffsetStereo(right,left);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadDrawCube(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlLoadDrawCube();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadDrawQuad(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		rlLoadDrawQuad();
 		return JS_UNDEFINED;
 	}
@@ -5037,6 +3069,7 @@
 		JS_CFUNC_DEF("rlUnloadShaderProgram",1,js_rlUnloadShaderProgram),
 		JS_CFUNC_DEF("rlGetLocationUniform",2,js_rlGetLocationUniform),
 		JS_CFUNC_DEF("rlGetLocationAttrib",2,js_rlGetLocationAttrib),
+		JS_CFUNC_DEF("rlSetUniform",4,js_rlSetUniform),
 		JS_CFUNC_DEF("rlSetUniformMatrix",2,js_rlSetUniformMatrix),
 		JS_CFUNC_DEF("rlSetUniformMatrices",3,js_rlSetUniformMatrices),
 		JS_CFUNC_DEF("rlSetUniformSampler",2,js_rlSetUniformSampler),
@@ -5265,9 +3298,7 @@
 	
 	JSModuleDef * js_init_module_rlgl(JSContext * ctx,const char * module_name){
 		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_rlgl_init);
-		if(!m){
-			return NULL;
-		}
+		if(!m)return NULL;
 		size_t listcount=countof(jsrlgl_funcs);
 		JS_AddModuleExportList(ctx,m,jsrlgl_funcs,(int)listcount);
 		JS_AddModuleExport(ctx,m,(const char *)"rlVertexBuffer");

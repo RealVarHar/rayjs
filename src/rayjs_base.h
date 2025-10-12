@@ -40,8 +40,7 @@ typedef struct ArrayProxy_class {
     ArrayProxy_has has;//property (ctx,opaque,NULL,0..n or atom,using_atom?)
 } ArrayProxy_class;
 
-
-#include "rayjs_generated.c"
+#include "rayjs_generated.h"
 #endif
 
 #include <string.h>
@@ -108,3 +107,4 @@ static void memoryClear(JSContext * ctx, memoryNode *head);
 static void JS_FreeValuePtr(JSContext *ctx, JSValue * v);
 static char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, int skip_args, ...);
 static JSValue js_NewArrayProxy(JSContext * ctx,ArrayProxy_class AP);
+static int64_t js_IsArrayLength(JSContext * ctx, JSValueConst obj, int64_t len);

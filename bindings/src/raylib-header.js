@@ -1,7 +1,7 @@
-import {QuickJsGenerator,getDefaultReturn} from "./quickjs.js"
+import {QuickJsGenerator,getDefaultReturn,getaliasedVariable,ctojsType,jsToC,getStaticArrayLen,subrepeat,jsToCallback} from "./quickjs.js"
 import {getsubtype} from "./cgen.js"
 import { TypeScriptDeclaration } from "./typescript.js"
-import {source_parser} from "./source_parser.js";
+import {source_parser,simpleregex,azZ0,a0} from "./source_parser.js";
 import * as fs from "./fs.js";
 import {studio_h,stdlib_h,string_h} from "./stdLibs_includes.js";
 export class RayJsHeader {
@@ -15,7 +15,7 @@ export class RayJsHeader {
     moduleFunctionList;
     moduleInit;
     moduleEntry;
-    constructor(name,c_source) {
+    constructor(name,c_source,sharedFnNames={}) {
         const thiz=this;
         this.typings = new TypeScriptDeclaration('rayjs:'+name);
         this.name = name;
@@ -29,6 +29,7 @@ export class RayJsHeader {
         this.includeGen.include("stdlib.h",stdlib_h);
         this.includeGen.include("string.h",string_h);
         this.includeGen.include("rayjs_base.h",globalThis.toolsSource);
+        this.shared={cgen:this.body.section(),fnMap:{},sharedFnNames};
         this.definitions = new QuickJsGenerator(this.body.section());
         this.structGen = new QuickJsGenerator(this.body.section());
         this.callbackGen = new QuickJsGenerator(this.body.section());
@@ -78,7 +79,9 @@ export class RayJsHeader {
         if(threaded)this.callbackGen.cgen.declare('static JSContext *',`${callbackName}_ctx`,'NULL');
         if(attachMultiple)this.callbackGen.cgen.declare('static size_t',`${callbackName}_size`,0);
         let dynamicAlloc=false;
+        let thiz=this;
         function addcall(sub,arr){
+            sub.declare('bool','error',0);
             sub.declare('trampolineContext','tctx',arr);
             sub.declare('JSContext *','ctx',threaded?`${callbackName}_ctx`:'tctx.ctx');
             //init parameters
@@ -88,7 +91,6 @@ export class RayJsHeader {
                 if(arrtype.length>0){
                     if(arrtype=='&'){
                         type = type.replaceAll('&','*');
-                        callback.args[i].sizeVars.push(1);
                     }else{
                         type = type.replaceAll(' &','');
                     }
@@ -136,11 +138,11 @@ export class RayJsHeader {
             function saveReferences(ctx){
                 for (let i = 0; i < callback.args.length; i++) {
                     if(callback.args[i].type.endsWith('&')){
-                        (new QuickJsGenerator(ctx)).jsToC(callback.args[i].type,callback.args[i].name,'js'+i,{allowNull:false,supressDeclaration:true,supressAllocation:true,jsType:'array',altReturn:getDefaultReturn(callback.returnType)},0,errorCleanupFn,structuredClone(callback.args[i].sizeVars));
+                        thiz.jsToC(ctx,callback.args[i].type,callback.args[i].name,'js'+i,structuredClone(callback.args[i].sizeVars));
                     }
                 }
                 if(callback.returnType!=='void'){
-                    (new QuickJsGenerator(ctx)).jsToC(callback.returnType, `resp`, 'js_ret',{altReturn:getDefaultReturn(callback.returnType)},0,errorCleanupFn);
+                    thiz.jsToC(ctx,callback.returnType,'resp', 'js_ret',[]);
                     errorCleanupFn(ctx);
                     ctx.return('resp');
                 }else{
@@ -198,14 +200,107 @@ export class RayJsHeader {
         }
         this.typings.addCallback(callback.name, args);
     }
+
+    /** Package JSValue to c equivalent using reusable functions
+     * @param ctx {CodeScope} The function to add the final call to
+     * @param returnType {string} The c type of return
+     * @param returnName {string} Name of variable to return the result to
+     * @param src {string} Name of variable to get result from
+     * @param (sizeVars) {(string|int)[]} Variables describing
+     */
+    jsToC(ctx,returnType,returnName,src,sizeVars=[]){
+        //a basic implementation is to call quickjs ctojs
+        //rather than inline eneration:
+        //check if fnMap already has the function to reuse
+        returnType=returnType.replaceAll('const ','');
+        if(returnType=='void &'){
+            //only prepare a return adress
+            let target=ctx.allocVariable('target');
+            ctx.declare('void *',`target`);
+            ctx.assign(returnName,`${target}&`);
+            return;
+        }
+        let pos=0;
+        let jsType=ctojsType(ctx.getVariables(), returnType);
+        let functionName='';
+        let returnType_ptr='';
+        while(pos!==false){
+            let capture;
+            pos=simpleregex(returnType,['r+',azZ0+'*& '],pos,capture=[]);
+            if(pos==false)break;
+            functionName+=capture[0];
+            returnType_ptr+=capture[0];
+            pos=simpleregex(returnType,['s','[','r+',azZ0+' +*/','s',']'],pos,capture=[]);
+            if(pos==false)break;
+            if(isNaN(capture[1])){
+                functionName+='_arr';
+            }else{
+                functionName+='_arr'+capture[1];
+            }
+            returnType_ptr+='*';
+        }
+        let isFunction=jsType.length==1&&typeof(jsType[0])=='object' && jsType[0].type=='type'&& jsType[0].subtype=='function';
+        if(isFunction){
+            returnType_ptr='JSValue';
+            returnType='JSValue';
+            functionName='js_getFunction';
+        }else{
+            returnType_ptr=returnType_ptr.replaceAll('&','*');
+            returnType=returnType.replaceAll('&','*');
+            functionName='js_get'+functionName.replaceAll(' ','').replaceAll('&','_ptr').replaceAll('*','_arr');
+        }
+        if(sizeVars.length>0){
+            functionName+='_arg'+sizeVars.length;
+        }
+
+        if(this.shared.fnMap[functionName]==undefined){
+            //create function
+            const args = [
+                { type: "JSContext *", name: "ctx" },
+                { type: "JSValue", name: "src" },
+                { type: "bool *", name: "error" },
+            ];
+            for(let i in sizeVars){
+                args.push({ type:'int', name:`size${i}` });
+            }
+            this.shared.cgen.function(returnType_ptr,functionName, args, true,(fn)=>{
+                let flags={
+                    onError:(fn)=>{
+                        fn.assign('error[0]',1);
+                        fn.return(getDefaultReturn(returnType_ptr));
+                    },
+                    sizeVars
+                };
+                //Do not include implementation if this function exists in other function (c redefinition)
+                if(!this.shared.sharedFnNames[functionName]){
+                    jsToC(fn,jsType,returnType_ptr,"ret", "src",flags,ctx.getVariables());
+                    fn.return("ret");
+                    this.shared.sharedFnNames[functionName]=true;
+                }
+            });
+            this.shared.fnMap[functionName]=true;
+        }
+        //call the bound function
+        let params=['ctx',src,'error'];
+        for(let size of sizeVars){
+            params.push(size);
+        }
+        ctx.call(functionName,params,{type:returnType_ptr,name:returnName});
+        ctx.if('error==1',(fn)=>{
+            let currentFunction=ctx.getCurrentFunction();
+            fn.return(getDefaultReturn(currentFunction.text.returnType));
+        });
+    }
+
     addApiFunction(api) {
         const options = api.binding || {};
         if (options.ignore) return;
         const jName = options.jsName || api.name;
         console.log("Binding function " + api.name);
         this.functionGen.jsBindingFunction(jName,fun=>{
+            fun.declare('bool','error',0);
             if (options.body) {
-                options.body(fun);
+                options.body(fun,this);
             } else {
                 if (options.before)
                     options.before(fun);
@@ -242,7 +337,7 @@ export class RayJsHeader {
                             param.binding.customCleanup(ctx, "argv[" + j + "]");
                         }
                         if (!dynamicAlloc && !param.binding.customCleanup){
-                            (new QuickJsGenerator(ctx)).jsCleanUpParameter(param.type, param.name, "argv[" + j + "]",{allowNull:param.binding.allowNull});
+                            //(new QuickJsGenerator(ctx)).jsCleanUpParameter(param.type, param.name, "argv[" + j + "]",{allowNull:param.binding.allowNull});
                         }
                     }
                 };
@@ -250,6 +345,7 @@ export class RayJsHeader {
                 if(hasSpread){
                     len-=2;
                 }
+                let variables=this.includeGen.getVariables();
                 for (let i = 0; i < len; i++) {
                     const param = activeArgs[i];
                     allocLen+=this.paramAllocLen(param);
@@ -258,7 +354,28 @@ export class RayJsHeader {
                     if(param.binding.typeCast!=undefined){
                         fun.declare(param.type.replaceAll('&','*'),param.name);
                     }
-                    (new QuickJsGenerator(fun)).jsToC(param.binding.typeCast||param.type, param.name, "argv[" + i + "]", {allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded},0,(ctx)=>{errorCleanupFn(ctx,i)});
+                    let type=param.binding.typeCast||param.type;
+                    let type0=type.split(' ');
+                    let typeProperties=variables[type0[0]];
+                    let bound=false;
+                    let flags={allowNull:param.binding.allowNull,dynamicAlloc,threaded:param.binding.threaded};
+                    if(typeProperties!=undefined){
+                        typeProperties=getaliasedVariable(typeProperties);
+                        if(typeProperties.subtype=='struct'&&typeProperties.props.isSympleType){
+                            flags.isSympleType=true;
+                        }
+                    }
+                    if(typeProperties!=undefined&&typeProperties.subtype=='function'){
+                        fun.declare('void *',param.name);
+                        let capture=[];
+                        simpleregex(api.name.toLowerCase(),['os','detach','os','attach','os','set'],0,capture);
+                        let mode=capture.find(a=>a!='');//mode==[set|attach|detach]
+                        jsToCallback(fun,typeProperties,param.name,"argv[" + i + "]",mode,param.binding);
+                    }else{
+                        let ctype=param.binding.typeCast||param.type.replace('const ','');
+                        this.jsToC(fun,ctype,param.name,"argv[" + i + "]",[]);
+                    }
+
                 }
                 //if(api.name=='GenImageFontAtlas')debugger;
                 // call c function
@@ -282,7 +399,7 @@ export class RayJsHeader {
                     fun.for('0','size_' + tmpname,(ctx,i)=>{
                         const plusstr=len>0?`+${len}`:'';
                         //subitems use dynamicAlloc, since we can not define names statically
-                        (new QuickJsGenerator(ctx)).jsToC(last.type,`${last.name}[${i}]`,`argv[${i}${plusstr}]`,{supressDeclaration:true,dynamicAlloc:true,allowNull:last.binding.allowNull});
+                        this.jsToC(ctx,last.type,`${last.name}[${i}]`,`argv[${i}${plusstr}]`,[]);
                     });
 
                     if(api.returnType!=='void')fun.declare(api.returnType, "returnVal");
@@ -335,23 +452,6 @@ export class RayJsHeader {
         //TODO: actually register them in cgen!
 
     }
-    registerApiStruct(struct){
-        const binding = struct.binding || {};
-        if (binding.ignore) return;
-        let variables=this.definitions.cgen.getVariables();
-        if(variables[struct.name]==undefined){
-            throw new Error("Attempted to bind an not imported struct");
-        }
-        if(variables[`js_${struct.name}_class_id`]!=undefined){
-            throw new Error("Attempted to bind a struct twice");
-        }
-        console.log("Registered struct " + struct.name);
-        struct.props=struct.props||{};
-        struct.props.bound_name = `js_${struct.name}_class_id`;
-        this.definitions.jsClassId(struct.props.bound_name);
-        variables[struct.name].props = struct.props;
-        //binding.aliases?.forEach(x => {this.structLookup[x] = classId});//Aliases are now handled on top level
-    }
     //addApiStruct is called explicitly, this creates optional structs - ok
     //addApiStruct needs to check if api struct already exists, we might need material* or material_proxy
     addApiStruct_object(struct) {
@@ -380,10 +480,24 @@ export class RayJsHeader {
         const classDeclName = this.structGen.jsClassDeclaration(struct.name, classId, finalizerName, classFuncList.text.name);
         this.moduleInit.call(classDeclName, ["ctx", "m"]);
         if (binding?.createConstructor) {
-            const constructorName = this.functionGen.jsStructConstructor(struct.name, struct.fields, classId);
+            const constructorName = this.jsStructConstructor(struct.name, struct.fields, classId);
             this.moduleInit.call('JS_NewCFunction2',['ctx',constructorName,`"${struct.name}"`,struct.fields.length,'JS_CFUNC_constructor', 0],{type:'JSValue',name:`${struct.name}_constr`});
             this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${struct.name}"`, struct.name + "_constr"]);
             this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", '"' + struct.name + '"']);
+        }
+        //Check if castable to type[];
+        if(struct.fields.length==0){
+            struct.props.isSympleType=false;
+        }else{
+            let maintype=struct.fields[0].type;
+            let isSympleType=true;
+            for(let i=1;i<struct.fields.length;i++){
+                if(struct.fields[i].type!=maintype){
+                    isSympleType=false;
+                    break;
+                }
+            }
+            struct.props.isSympleType=isSympleType;
         }
         this.typings.addStruct(struct);
     }
@@ -391,6 +505,7 @@ export class RayJsHeader {
         //console.log('jsStructSetter',structName, classId, field, type, ids, overrideWrite);
         const args = [{ type: "JSContext *", name: "ctx" }, { type: "JSValue", name: "this_val" }, { type: "JSValue", name: "v" }];
         this.structGen.cgen.function("JSValue",`js_${structName}_set_${field.name}`, args, true,(fun)=>{
+            fun.declare('bool','error',0);
             fun.call('JS_GetOpaque2',['ctx','this_val',classId],{type:`${structName} *`,name:'ptr'});
             let flags={noContextAlloc:true};
             if( (field.type.match(/\*/g)||[]).length > 1 ){
@@ -398,7 +513,7 @@ export class RayJsHeader {
                 fun.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
                 fun.declare('memoryNode *', 'memoryCurrent','memoryHead');
             }
-            (new QuickJsGenerator(fun)).jsToC(field.type, "value", "v",flags);
+            this.jsToC(fun,field.type,"value","v",[]);
 
             if(field.type.endsWith('*')){
                 fun.if(`ptr.${field.name}!=NULL`,(ctx)=>{
@@ -465,6 +580,63 @@ export class RayJsHeader {
         });
 
         return `js_${structName}_get_${field.name}`;//function name
+    }
+    jsStructConstructor(structType, fields, classId) {
+        //console.log('jsStructConstructor',structType, fields, classId, ids);
+        let functionName;
+        this.functionGen.jsBindingFunction(structType + "_constructor",(body)=>{
+            functionName=body.previous().text.name;
+
+            body.if('argc==0',(r1)=>{
+                r1.call('js_calloc',['ctx',1,`sizeof(${structType})`],{type:`${structType} *`,name:'ptr__return'});
+                r1.call('JS_NewObjectClass',['ctx',classId],{type:"JSValue", name:'_return'})
+                r1.call("JS_SetOpaque", ['_return', "ptr__return"]);
+                r1.return("_return");
+            });
+
+            let flags={};
+            for(let i = 0; i < fields.length; i++) {
+                const para = fields[i];
+                if( (para.type.match(/\*/g)||[]).length > 1){
+                    flags.dynamicAlloc = true;
+                    body.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
+                    body.declare('memoryNode *', 'memoryCurrent','memoryHead');
+                    break;
+                }
+            }
+            body.declare('bool','error',0);
+            for(let i = 0; i < fields.length; i++) {
+                const para = fields[i];
+                this.jsToC(body,para.type, para.name, "argv[" + i + "]");
+            }
+            let structArgs=[];
+            let toCopy = [];
+            for(let field of fields){
+                let type=field.type;
+                if(type.endsWith(']')){
+                    let arrayLen = getStaticArrayLen(type);
+                    if(arrayLen.sizevars.some(a=>isNaN(a))){
+                        //If contains variable length, fallback on memcpy
+                        toCopy.push([field.name,arrayLen.type,arrayLen.sizevars]);
+                    }else{
+                        structArgs.push(subrepeat(field.name,arrayLen.sizevars));
+                    }
+                }else{
+                    structArgs.push(field.name);
+                }
+            }
+            body.declare(structType, "_struct", structArgs);
+            while(toCopy.length>0){
+                let [name,subtype,sizevars]=toCopy.pop();
+                let size= sizevars.reduce((a,b)=>a*b,1);
+                body.call('memcpy',[`_struct.${name}`,name,`sizeof(${subtype}) * ${size}`]);
+                memcpy(_struct.params,params,sizeof(float) * 4);
+            }
+            (new QuickJsGenerator(body)).jsStructToOpq(structType, "_return", "_struct", classId);
+            body.return("_return");
+
+        });
+        return functionName;
     }
     jsStructGetter_array(structName, field){
         const binding = field.binding || {};
@@ -549,7 +721,9 @@ export class RayJsHeader {
             ctx.if([`as_sting==true`,''],ctx=>{
                 ctx.return('false');
             },ctx=>{
-                (new QuickJsGenerator(ctx)).jsToC(getsubtype(binding.typeCast||field.type),'ret','set_to',{altReturn:'-1'});
+                ctx.declare('bool','error',0);
+                let ctype=getsubtype(binding.typeCast||field.type);
+                this.jsToC(ctx,ctype,'ret','set_to',[]);//{altReturn:'-1'}
                 const cast=(binding.typeCast==undefined?'':`(${binding.typeCast})`);
                 ctx.declare(binding.typeCast||field.type, `ptr.${field.name}${cast}[property]`, `ret`);
             });

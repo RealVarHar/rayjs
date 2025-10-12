@@ -241,20 +241,20 @@ export class source_parser {
         //Resolve Encountering enum or struct (not typedef)
         let mode=input[pos]=='e'?'enum':'struct';
         let capture=[];
-        let ret=simpleregex(input,['s',mode,'r+',' \t\n','os','{'],pos,capture);
+        let ret=simpleregex(input,['s',mode,'r+',' \t\r\n','os','{'],pos,capture);
         if(ret==false)return pos;
         let namecapture=['r*',azZ0];
         let name='';
         if(capture[2]!='{'){
             let capture2=[];
-            ret=simpleregex(input,['r+',azZ0,'r*',' \t\n','os','{'],ret,capture2);
+            ret=simpleregex(input,['r+',azZ0,'r*',' \t\r\n','os','{'],ret,capture2);
             if(ret==false)return pos;
             name=capture2[0];
             namecapture=['os',name];
         }
         let tmp=this.skipDepth(input,ret-1)+1;
         capture.push(input.substring(ret,tmp-1));
-        ret=simpleregex(input,['r*',' \t\n',...namecapture,'r*',' \t\n','s',';'],tmp,capture);
+        ret=simpleregex(input,['r*',' \t\r\n',...namecapture,'r*',' \t\r\n','s',';'],tmp,capture);
         if(ret===false)return pos;
         if(capture[5]!='')name=capture[5];
         if(save){
@@ -409,7 +409,7 @@ export class source_parser {
     parseTypedef(input, pos=0, save=true){
         //Resolve Encountering top level !typedef struct or !typedef enum
         let capture=[];
-        let ret=simpleregex(input,['s','typedef ','os','const ','os','struct','os','enum','os','union','r*',' \t\n','r*',azZ0,'r*',' \t\n','os','{'],pos,capture);
+        let ret=simpleregex(input,['s','typedef ','os','const ','os','struct','os','enum','os','union','r*',' \t\r\n','r*',azZ0,'r*',' \t\r\n','os','{'],pos,capture);
         if(ret===false)return pos;
         let thiz=this;
         function enum_struct_union(){
@@ -421,16 +421,16 @@ export class source_parser {
             }else{
                 capture.push('');
             }
-            ret=simpleregex(input,['r*',' \t\n','os',structName],ret,capture);
+            ret=simpleregex(input,['r*',' \t\r\n','os',structName],ret,capture);
             if(capture[11]!=''){
                 //self-define
-                ret=simpleregex(input,['r*',' \t\n','s',';'],ret,capture);
+                ret=simpleregex(input,['r*',' \t\r\n','s',';'],ret,capture);
             }else{
                 //alias
                 capture.pop();
                 ret=simpleregex(input,['r*','* &'],ret,capture);
                 let ptr=capture.pop();
-                ret=simpleregex(input,['r+',azZ0,'r*',' \t\n','s',';'],ret,capture);
+                ret=simpleregex(input,['r+',azZ0,'r*',' \t\r\n','s',';'],ret,capture);
                 capture[11]=ptr+capture[11];
             }
             if(ret===false)return pos;
@@ -488,7 +488,7 @@ export class source_parser {
         }else{
             //check if is some simple alias
             if(capture[6]!==''){//type
-                let alias_end=simpleregex(input,['r*',' \t\n','r*',azZ0+'*','r*',' \t\n','s',';'],ret,capture);
+                let alias_end=simpleregex(input,['r*',' \t\r\n','r*',azZ0+'*','r*',' \t\r\n','s',';'],ret,capture);
                 if(alias_end!==false){
                     thiz.defineName(capture[10],'aliases',{
                         name: capture[10],
@@ -503,7 +503,7 @@ export class source_parser {
     }
     parseDefFunction(input, pos=0){
         let capture=[];
-        let ret=simpleregex(input,['br+',azZ0,'r+',' \t\n'],pos-1,capture);
+        let ret=simpleregex(input,['br+',azZ0,'r+',' \t\r\n'],pos-1,capture);
         if(ret==false)return false;
         let name=capture[0];
         let def=defined[name];
@@ -515,6 +515,7 @@ export class source_parser {
         return {from:pos-name.length,to:pos3+1,replace:this.safeEval(def.content.body,Object.fromEntries(args))};
     }
     parseFunction(input, pos=0, save=true){
+        if(lookBackward(input,'JS_IsModule',pos))debugger;
         //Resolve Encountering top level !(){
         //((?:\/\/.+\n)+)^[A-Z]+ (.+?)(\w+)\(([^\)]+)\)
         //Search argsStart,' (',name,' ',type
@@ -628,12 +629,12 @@ export class source_parser {
         let wlen=simpleregex(words,['r+',azZ0],0,capture);
         if(wlen!=words.length)return pos;
         if(input[ret]!="\n")return pos;
-        ret=simpleregex(input,['r*',', \n*[]'+azZ0,'os','...','r*',' ','s',')','r*'," \t\n",'os','/','os','{','os',';'],pos+1,capture);
+        ret=simpleregex(input,['r*',', \r\n*[]'+azZ0,'os','...','r*',' ','s',')','r*'," \t\r\n",'os','/','os','{','os',';'],pos+1,capture);
         if(ret===false)return pos;
         if(capture[8]==='/'){//some comment, remove it
             ret=this.parseComment(input,ret-1);
             capture.splice(capture.length-4,4);
-            ret=simpleregex(input,['r*'," \t\n",'os','/','os','{','os',';'],ret,capture);
+            ret=simpleregex(input,['r*'," \t\r\n",'os','/','os','{','os',';'],ret,capture);
             if(ret===false)return pos;
         }
         if(capture[9]!=='{'&&capture[10]!==';')return pos;
@@ -1049,7 +1050,7 @@ export class source_parser {
         let capture=[];
         let pos=simpleregex(input,["os","define","os","undef","r*"," \t"],0,capture);
         let is_undefine=capture[1]!='';
-        input=input.replace(/\\\n/g,' ').trim().replace(/\s+/g,' ');
+        input=input.replace(/\\\r*\n/g,' ').trim().replace(/\s+/g,' ');
         capture=[];
         pos=simpleregex(input,['r+',azZ0],pos,capture);
         if(pos===false)return false;
@@ -1396,8 +1397,7 @@ export class source_parser {
                 }
                 case "\n":{
                     //For newline or comment, if in #if header, write this as 'if'
-                    if(input[pos-1]=='\\')
-                        break;//handle multiline if
+                    if(input[pos-1]=='\\'||input.substring(pos-2,pos)=="\\\r") break;//handle multiline if
                     if(inDefine){
                         ifStatement+=input.substring(start,pos);
                         if(this.parseDefine(ifStatement,parseBody)){

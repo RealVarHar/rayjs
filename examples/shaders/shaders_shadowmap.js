@@ -230,7 +230,7 @@ function DrawScene(cube, robot) {
         let slot = 10; // Can be anything 0 to 15, but 0 will probably be taken up
         rg.rlActiveTextureSlot(10);
         rg.rlEnableTexture(shadowMap.depth.id);
-        rg.rlSetUniform(shadowMapLoc, slot, SHADER_UNIFORM_INT, 1);
+        rg.rlSetUniform(shadowMapLoc, [slot], SHADER_UNIFORM_INT, 1);
 
         BeginMode3D(cam);
 

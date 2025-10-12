@@ -5,16 +5,603 @@
 	#include <string.h>
 	#include <rayjs_base.h>
 	#include <config.h>
-	#include <rayjs_generated.h>
 	#include <raylib.h>
 #define RAYGUI_IMPLEMENTATION ;
 	#include <raygui.h>
 	
+	static unsigned short js_getunsignedshort(JSContext * ctx,JSValue src,bool * error);
+	
+	static int js_getint(JSContext * ctx,JSValue src,bool * error);
+	
+	static float js_getfloat(JSContext * ctx,JSValue src,bool * error);
+	
+	static Font js_getFont(JSContext * ctx,JSValue src,bool * error);
+	
+	static char * js_getchar_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
+	
+	static Color js_getColor(JSContext * ctx,JSValue src,bool * error);
+	
+	static Rectangle js_getRectangle(JSContext * ctx,JSValue src,bool * error);
+	
+	static char * * js_getchar_arr_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static int * js_getint_ptr(JSContext * ctx,JSValue src,bool * error);
+	
+	static Vector2 * js_getVector2_ptr(JSContext * ctx,JSValue src,bool * error);
+	
+	static Rectangle * js_getRectangle_ptr(JSContext * ctx,JSValue src,bool * error){
+		Rectangle * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+			JS_FreeValue(ctx,src0);
+			if(JS_GetClassID(src0)==js_Rectangle_class_id){
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(Rectangle *)js_malloc(ctx,size_ret*sizeof(Rectangle));
+				int i;
+				for(i=0;i<size_ret;i++){
+					src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+					JS_FreeValue(ctx,src0);
+					if(JS_GetClassID(src0)==js_Rectangle_class_id){
+						ret[i] =*(Rectangle *)JS_GetOpaque(src0,js_Rectangle_class_id);
+					}else{
+						JS_ThrowTypeError(ctx,(const char *)"src0 does not match type Rectangle *");
+						error[0]=(bool)1;
+						return NULL;
+					}
+				}
+			}else if(JS_IsNumber(src0)){
+				size_ret -=size_ret%4;
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(Rectangle *)js_malloc(ctx,size_ret*sizeof(float));
+				int i;
+				for(i=0;i<size_ret;i++){
+					float * tmp_obj=(float *)ret;
+					int i0;
+					for(i0=0;i0<4;i0++){
+						src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)i+i0);
+						JS_FreeValue(ctx,src0);
+						if(JS_IsNumber(src0)){
+							double double_tmp_objii0;
+							JS_ToFloat64(ctx,&double_tmp_objii0,src0);
+							tmp_obj[i+i0] =((float)double_tmp_objii0);
+						}else{
+							JS_ThrowTypeError(ctx,(const char *)"src0 does not match type Rectangle *");
+							error[0]=(bool)1;
+							return NULL;
+						}
+					}
+					i +=3;
+				}
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type Rectangle *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else if(JS_GetClassID(src)==js_Rectangle_class_id){
+			if(JS_GetClassID(src)==js_Rectangle_class_id){
+				ret =(Rectangle *)JS_GetOpaque(src,js_Rectangle_class_id);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type Rectangle *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type Rectangle *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static bool * js_getbool_ptr(JSContext * ctx,JSValue src,bool * error){
+		bool * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(js_IsArrayLength(ctx,src,(int64_t)1)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret<1){
+				JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(bool *)js_malloc(ctx,sizeof(bool));
+			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+			JS_FreeValue(ctx,src0);
+			if(JS_IsBool(src0)){
+				int js_ret0=JS_ToBool(ctx,src0);
+				ret[0] =(bool)js_ret0;
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src0 does not match type bool *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else if(JS_IsBool(src)){
+			ret =(bool *)js_malloc(ctx,sizeof(bool));
+			if(JS_IsBool(src)){
+				int js_ret0=JS_ToBool(ctx,src);
+				ret[0] =(bool)js_ret0;
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type bool *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type bool *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static int * js_getint_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static float * js_getfloat_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static char * * js_getchar_arr_ptr(JSContext * ctx,JSValue src,bool * error){
+		char * * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(js_IsArrayLength(ctx,src,(int64_t)1)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+			JS_FreeValue(ctx,src0);
+			if(JS_IsArrayBuffer(src0)){
+				if(size_ret<1){
+					JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(char * *)js_malloc(ctx,sizeof(char *));
+				src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsArrayBuffer(src0)){
+					int64_t size_ret0;
+					ret[0] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_ret0,src0);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}else if(JS_GetClassID(src0)==js_ArrayProxy_class_id){
+				if(size_ret<1){
+					JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(char * *)js_malloc(ctx,sizeof(char *));
+				src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+				JS_FreeValue(ctx,src0);
+				bool is_arrayProxy0=(bool)0;
+				if(JS_GetClassID(src0)==js_ArrayProxy_class_id){
+					is_arrayProxy0 =(bool)1;
+					void * AP_opaque=JS_GetOpaque(src0,js_ArrayProxy_class_id);
+					ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+					src0 =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+				}
+				if(JS_IsArray(src0)){
+					int64_t size_ret0;
+					if(JS_GetLength(ctx,src0,&size_ret0)==-1){
+						error[0]=(bool)1;
+						return NULL;
+					}
+					if(size_ret0==0){
+						JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+						error[0]=(bool)1;
+						return NULL;
+					}
+					ret[0] =(char *)js_malloc(ctx,size_ret0*sizeof(char));
+					int i;
+					for(i=0;i<size_ret0;i++){
+						JSValue src00=JS_GetPropertyUint32(ctx,src0,(uint32_t)i);
+						JS_FreeValue(ctx,src00);
+						if(JS_IsString(src00)){
+							char * js_ret0i=(char *)JS_ToCString(ctx,src00);
+							ret[0][i] =((char)js_ret0i[0]);
+							JS_FreeCString(ctx,(const char *)js_ret0i);
+						}else{
+							JS_ThrowTypeError(ctx,(const char *)"src00 does not match type char * *");
+							error[0]=(bool)1;
+							return NULL;
+						}
+					}
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(is_arrayProxy0)JS_FreeValue(ctx,src0);
+			}else if(JS_IsArray(src0)){
+				if(size_ret<1){
+					JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(char * *)js_malloc(ctx,sizeof(char *));
+				src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsArray(src0)){
+					int64_t size_ret0;
+					if(JS_GetLength(ctx,src0,&size_ret0)==-1){
+						error[0]=(bool)1;
+						return NULL;
+					}
+					if(size_ret0==0){
+						JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+						error[0]=(bool)1;
+						return NULL;
+					}
+					ret[0] =(char *)js_malloc(ctx,size_ret0*sizeof(char));
+					int i;
+					for(i=0;i<size_ret0;i++){
+						JSValue src00=JS_GetPropertyUint32(ctx,src0,(uint32_t)i);
+						JS_FreeValue(ctx,src00);
+						if(JS_IsString(src00)){
+							char * js_ret0i=(char *)JS_ToCString(ctx,src00);
+							ret[0][i] =((char)js_ret0i[0]);
+							JS_FreeCString(ctx,(const char *)js_ret0i);
+						}else{
+							JS_ThrowTypeError(ctx,(const char *)"src00 does not match type char * *");
+							error[0]=(bool)1;
+							return NULL;
+						}
+					}
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}else if(JS_GetClassID(src0)==JS_CLASS_INT8_ARRAY){
+				if(size_ret<1){
+					JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(char * *)js_malloc(ctx,sizeof(char *));
+				src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+				JS_FreeValue(ctx,src0);
+				if(JS_GetClassID(src0)==JS_CLASS_INT8_ARRAY){
+					size_t offset_ret0;
+					size_t size_ret0;
+					JSValue da_ret0=JS_GetTypedArrayBuffer(ctx,src0,&offset_ret0,&size_ret0,NULL);
+					ret[0] =(char *)JS_GetArrayBuffer(ctx,&size_ret0,da_ret0);
+					ret[0] +=offset_ret0;
+					size_ret0 -=offset_ret0;
+					ret[0] =(char *)js_malloc(ctx,size_ret0);
+					memcpy((void *)ret[0],(const void *)ret[0],size_ret0);
+					JS_FreeValuePtr(ctx,&da_ret0);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}else if(JS_IsString(src0)){
+				if(size_ret<1){
+					JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(char * *)js_malloc(ctx,sizeof(char *));
+				src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsString(src0)){
+					int64_t size_ret0;
+					char * js_ret0=(char *)JS_ToCStringLen(ctx,(size_t *)&size_ret0,src0);
+					ret[0] =(char *)js_malloc(ctx,size_ret0+1);
+					memcpy((void *)ret[0],(const void *)js_ret0,(size_t)size_ret0);
+					ret[0][size_ret0]=(char)0;
+					JS_FreeCString(ctx,(const char *)js_ret0);
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else if(JS_IsArrayBuffer(src)||JS_GetClassID(src)==js_ArrayProxy_class_id||JS_IsArray(src)||JS_GetClassID(src)==JS_CLASS_INT8_ARRAY||JS_IsString(src)){
+			ret =(char * *)js_malloc(ctx,sizeof(char *));
+			if(JS_IsString(src)){
+				int64_t size_ret0;
+				char * js_ret0=(char *)JS_ToCStringLen(ctx,(size_t *)&size_ret0,src);
+				ret[0] =(char *)js_malloc(ctx,size_ret0+1);
+				memcpy((void *)ret[0],(const void *)js_ret0,(size_t)size_ret0);
+				ret[0][size_ret0]=(char)0;
+				JS_FreeCString(ctx,(const char *)js_ret0);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(JS_GetClassID(src)==JS_CLASS_INT8_ARRAY){
+				size_t offset_ret0;
+				size_t size_ret0;
+				JSValue da_ret0=JS_GetTypedArrayBuffer(ctx,src,&offset_ret0,&size_ret0,NULL);
+				ret[0] =(char *)JS_GetArrayBuffer(ctx,&size_ret0,da_ret0);
+				ret[0] +=offset_ret0;
+				size_ret0 -=offset_ret0;
+				ret[0] =(char *)js_malloc(ctx,size_ret0);
+				memcpy((void *)ret[0],(const void *)ret[0],size_ret0);
+				JS_FreeValuePtr(ctx,&da_ret0);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(JS_IsArray(src)){
+				int64_t size_ret0;
+				if(JS_GetLength(ctx,src,&size_ret0)==-1){
+					error[0]=(bool)1;
+					return NULL;
+				}
+				if(size_ret0==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret[0] =(char *)js_malloc(ctx,size_ret0*sizeof(char));
+				int i;
+				for(i=0;i<size_ret0;i++){
+					JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+					JS_FreeValue(ctx,src0);
+					if(JS_IsString(src0)){
+						char * js_ret0i=(char *)JS_ToCString(ctx,src0);
+						ret[0][i] =((char)js_ret0i[0]);
+						JS_FreeCString(ctx,(const char *)js_ret0i);
+					}else{
+						JS_ThrowTypeError(ctx,(const char *)"src0 does not match type char * *");
+						error[0]=(bool)1;
+						return NULL;
+					}
+				}
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			bool is_arrayProxy0=(bool)0;
+			if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+				is_arrayProxy0 =(bool)1;
+				void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+				ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+				src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+			}
+else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(is_arrayProxy0)JS_FreeValue(ctx,src);
+			if(JS_IsArrayBuffer(src)){
+				int64_t size_ret0;
+				ret[0] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_ret0,src);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type char * *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static bool * js_getbool_arr(JSContext * ctx,JSValue src,bool * error){
+		bool * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else if(JS_IsArrayBuffer(src)){
+			int64_t size_ret;
+			ret =(bool *)JS_GetArrayBuffer(ctx,(size_t *)&size_ret,src);
+		}else if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(bool *)js_malloc(ctx,size_ret*sizeof(bool));
+			int i;
+			for(i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsBool(src0)){
+					int js_reti=JS_ToBool(ctx,src0);
+					ret[i] =(bool)js_reti;
+				}else{
+					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type bool *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type bool *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static Color * js_getColor_ptr(JSContext * ctx,JSValue src,bool * error){
+		Color * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
+			JS_FreeValue(ctx,src0);
+			if(JS_GetClassID(src0)==js_Color_class_id){
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(Color *)js_malloc(ctx,size_ret*sizeof(Color));
+				int i;
+				for(i=0;i<size_ret;i++){
+					src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+					JS_FreeValue(ctx,src0);
+					if(JS_GetClassID(src0)==js_Color_class_id){
+						ret[i] =*(Color *)JS_GetOpaque(src0,js_Color_class_id);
+					}else{
+						JS_ThrowTypeError(ctx,(const char *)"src0 does not match type Color *");
+						error[0]=(bool)1;
+						return NULL;
+					}
+				}
+			}else if(JS_IsNumber(src0)){
+				size_ret -=size_ret%4;
+				if(size_ret==0){
+					JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+					error[0]=(bool)1;
+					return NULL;
+				}
+				ret =(Color *)js_malloc(ctx,size_ret*sizeof(unsigned char));
+				int i;
+				for(i=0;i<size_ret;i++){
+					unsigned char * tmp_obj=(unsigned char *)ret;
+					int i0;
+					for(i0=0;i0<4;i0++){
+						src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)i+i0);
+						JS_FreeValue(ctx,src0);
+						if(JS_IsNumber(src0)){
+							uint32_t long_tmp_objii0;
+							JS_ToUint32(ctx,&long_tmp_objii0,src0);
+							tmp_obj[i+i0] =((unsigned char)long_tmp_objii0);
+						}else{
+							JS_ThrowTypeError(ctx,(const char *)"src0 does not match type Color *");
+							error[0]=(bool)1;
+							return NULL;
+						}
+					}
+					i +=3;
+				}
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type Color *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else if(JS_GetClassID(src)==js_Color_class_id){
+			if(JS_GetClassID(src)==js_Color_class_id){
+				ret =(Color *)JS_GetOpaque(src,js_Color_class_id);
+			}else{
+				JS_ThrowTypeError(ctx,(const char *)"src does not match type Color *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char *)"src does not match type Color *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
+	
+	static float * js_getfloat_ptr(JSContext * ctx,JSValue src,bool * error);
+	
+	static Vector3 * js_getVector3_ptr(JSContext * ctx,JSValue src,bool * error);
+	
 	static void js_GuiStyleProp_finalizer(JSRuntime * rt,JSValue val){
 		GuiStyleProp * ptr=(GuiStyleProp *)JS_GetOpaque(val,js_GuiStyleProp_class_id);
-		if(ptr){
-			js_free_rt(rt,(void *)ptr);
-		}
+		if(ptr)js_free_rt(rt,(void *)ptr);
 	}
 	
 	static JSValue js_GuiStyleProp_get_controlId(JSContext * ctx,JSValue this_val){
@@ -25,14 +612,10 @@
 	}
 	
 	static JSValue js_GuiStyleProp_set_controlId(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		GuiStyleProp * ptr=(GuiStyleProp *)JS_GetOpaque2(ctx,this_val,js_GuiStyleProp_class_id);
-		uint32_t long_value;
-		int err_value=JS_ToUint32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned short value=((unsigned short)long_value);
+		unsigned short value=js_getunsignedshort(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].controlId=value;
 		return JS_UNDEFINED;
 	}
@@ -45,14 +628,10 @@
 	}
 	
 	static JSValue js_GuiStyleProp_set_propertyId(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		GuiStyleProp * ptr=(GuiStyleProp *)JS_GetOpaque2(ctx,this_val,js_GuiStyleProp_class_id);
-		uint32_t long_value;
-		int err_value=JS_ToUint32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned short value=((unsigned short)long_value);
+		unsigned short value=js_getunsignedshort(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].propertyId=value;
 		return JS_UNDEFINED;
 	}
@@ -65,14 +644,10 @@
 	}
 	
 	static JSValue js_GuiStyleProp_set_propertyValue(JSContext * ctx,JSValue this_val,JSValue v){
+		bool error=(bool)0;
 		GuiStyleProp * ptr=(GuiStyleProp *)JS_GetOpaque2(ctx,this_val,js_GuiStyleProp_class_id);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,v);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"v is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		int value=js_getint(ctx,v,&error);
+		if(error==1)return JS_EXCEPTION;
 		ptr[0].propertyValue=value;
 		return JS_UNDEFINED;
 	}
@@ -101,27 +676,13 @@
 			JS_SetOpaque(_return,(void *)ptr__return);
 			return _return;
 		}
-		uint32_t long_controlId;
-		int err_controlId=JS_ToUint32(ctx,&long_controlId,argv[0]);
-		if(err_controlId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned short controlId=((unsigned short)long_controlId);
-		uint32_t long_propertyId;
-		int err_propertyId=JS_ToUint32(ctx,&long_propertyId,argv[1]);
-		if(err_propertyId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		unsigned short propertyId=((unsigned short)long_propertyId);
-		int32_t long_propertyValue;
-		int err_propertyValue=JS_ToInt32(ctx,&long_propertyValue,argv[2]);
-		if(err_propertyValue<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int propertyValue=((int)long_propertyValue);
+		bool error=(bool)0;
+		unsigned short controlId=js_getunsignedshort(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		unsigned short propertyId=js_getunsignedshort(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int propertyValue=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiStyleProp _struct={
 			controlId,
 			propertyId,
@@ -135,73 +696,69 @@
 	}
 	
 	static JSValue js_GuiEnable(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiEnable();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiDisable(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiDisable();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiLock(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiLock();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiUnlock(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiUnlock();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiIsLocked(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		bool returnVal=GuiIsLocked();
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_GuiSetAlpha(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		double double_alpha;
-		int err_alpha=JS_ToFloat64(ctx,&double_alpha,argv[0]);
-		if(err_alpha<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float alpha=((float)double_alpha);
+		bool error=(bool)0;
+		float alpha=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetAlpha(alpha);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiSetState(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_state;
-		int err_state=JS_ToInt32(ctx,&long_state,argv[0]);
-		if(err_state<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int state=((int)long_state);
+		bool error=(bool)0;
+		int state=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetState(state);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiGetState(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int returnVal=GuiGetState();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_GuiSetFont(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Font * ptr_font=(Font *)JS_GetOpaque(argv[0],js_Font_class_id);
-		if(ptr_font==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Font font=*ptr_font;
+		bool error=(bool)0;
+		Font font=js_getFont(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetFont(font);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiGetFont(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		Font returnVal=GuiGetFont();
 		Font * ptr_ret=(Font *)js_malloc(ctx,sizeof(Font));
 		ptr_ret[0]=returnVal;
@@ -211,195 +768,83 @@
 	}
 	
 	static JSValue js_GuiSetStyle(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_control;
-		int err_control=JS_ToInt32(ctx,&long_control,argv[0]);
-		if(err_control<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int control=((int)long_control);
-		int32_t long_property;
-		int err_property=JS_ToInt32(ctx,&long_property,argv[1]);
-		if(err_property<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int property=((int)long_property);
-		int32_t long_value;
-		int err_value=JS_ToInt32(ctx,&long_value,argv[2]);
-		if(err_value<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int value=((int)long_value);
+		bool error=(bool)0;
+		int control=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int property=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int value=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetStyle(control,property,value);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiGetStyle(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_control;
-		int err_control=JS_ToInt32(ctx,&long_control,argv[0]);
-		if(err_control<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int control=((int)long_control);
-		int32_t long_property;
-		int err_property=JS_ToInt32(ctx,&long_property,argv[1]);
-		if(err_property<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int property=((int)long_property);
+		bool error=(bool)0;
+		int control=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int property=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiGetStyle(control,property);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_GuiLoadStyle(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		char * fileName;
-		JSValue da_fileName;
-		int64_t size_fileName;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,src);
-		}else{
-			JSClassID classid_fileName=JS_GetClassID(src);
-			if(classid_fileName==JS_CLASS_INT8_ARRAY){
-				size_t offset_fileName;
-				da_fileName =JS_GetTypedArrayBuffer(ctx,src,&offset_fileName,(size_t *)&size_fileName,NULL);
-				fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,da_fileName);
-				fileName +=offset_fileName;
-				size_fileName -=offset_fileName;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiLoadStyle((const char *)fileName);
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)fileName);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)fileName);
-		}else{
-			JSClassID classid_fileName=JS_GetClassID(argv[0]);
-			if(classid_fileName==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_fileName);
-			}
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiLoadStyleDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiLoadStyleDefault();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiEnableTooltip(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiEnableTooltip();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiDisableTooltip(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		GuiDisableTooltip();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiSetTooltip(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		char * tooltip;
-		JSValue da_tooltip;
-		int64_t size_tooltip;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			tooltip =(char *)JS_ToCStringLen(ctx,(size_t *)&size_tooltip,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			tooltip =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_tooltip,src);
-		}else{
-			JSClassID classid_tooltip=JS_GetClassID(src);
-			if(classid_tooltip==JS_CLASS_INT8_ARRAY){
-				size_t offset_tooltip;
-				da_tooltip =JS_GetTypedArrayBuffer(ctx,src,&offset_tooltip,(size_t *)&size_tooltip,NULL);
-				tooltip =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_tooltip,da_tooltip);
-				tooltip +=offset_tooltip;
-				size_tooltip -=offset_tooltip;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		char * tooltip=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetTooltip((const char *)tooltip);
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)tooltip);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)tooltip);
-		}else{
-			JSClassID classid_tooltip=JS_GetClassID(argv[0]);
-			if(classid_tooltip==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_tooltip);
-			}
-		}
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiIconText(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_iconId;
-		int err_iconId=JS_ToInt32(ctx,&long_iconId,argv[0]);
-		if(err_iconId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int iconId=((int)long_iconId);
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		int iconId=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		char * returnVal=(char *)GuiIconText(iconId,(const char *)text);
 		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiSetIconScale(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_scale;
-		int err_scale=JS_ToInt32(ctx,&long_scale,argv[0]);
-		if(err_scale<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int scale=((int)long_scale);
+		bool error=(bool)0;
+		int scale=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiSetIconScale(scale);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiGetIcons(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		int * returnVal=GuiGetIcons();
 		JSValue ret=JS_NewArray(ctx);
 		int * sizeref_ret=returnVal;
@@ -415,43 +860,11 @@
 	}
 	
 	static JSValue js_GuiLoadIcons(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		char * fileName;
-		JSValue da_fileName;
-		int64_t size_fileName;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			fileName =(char *)JS_ToCStringLen(ctx,(size_t *)&size_fileName,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,src);
-		}else{
-			JSClassID classid_fileName=JS_GetClassID(src);
-			if(classid_fileName==JS_CLASS_INT8_ARRAY){
-				size_t offset_fileName;
-				da_fileName =JS_GetTypedArrayBuffer(ctx,src,&offset_fileName,(size_t *)&size_fileName,NULL);
-				fileName =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_fileName,da_fileName);
-				fileName +=offset_fileName;
-				size_fileName -=offset_fileName;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int js_loadIconsName=JS_ToBool(ctx,argv[1]);
-		if(js_loadIconsName<0){
-			if(JS_IsArray(argv[0])==1){
-				js_free(ctx,(void *)fileName);
-			}else if(JS_IsString(argv[0])==1){
-				JS_FreeCString(ctx,(const char *)fileName);
-			}else{
-				JSClassID classid_fileName=JS_GetClassID(argv[0]);
-				if(classid_fileName==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_fileName);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool loadIconsName=(bool)js_loadIconsName;
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool loadIconsName=js_getbool(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		char * * returnVal=GuiLoadIcons((const char *)fileName,loadIconsName);
 		JSValue ret=JS_NewArray(ctx);
 		char * * sizeref_ret=returnVal;
@@ -463,373 +876,90 @@
 			JSValue js_ret=JS_NewString(ctx,(const char *)returnVal[i]);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
 		}
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)fileName);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)fileName);
-		}else{
-			JSClassID classid_fileName=JS_GetClassID(argv[0]);
-			if(classid_fileName==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_fileName);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiDrawIcon(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		int32_t long_iconId;
-		int err_iconId=JS_ToInt32(ctx,&long_iconId,argv[0]);
-		if(err_iconId<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int iconId=((int)long_iconId);
-		int32_t long_posX;
-		int err_posX=JS_ToInt32(ctx,&long_posX,argv[1]);
-		if(err_posX<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int posX=((int)long_posX);
-		int32_t long_posY;
-		int err_posY=JS_ToInt32(ctx,&long_posY,argv[2]);
-		if(err_posY<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int posY=((int)long_posY);
-		int32_t long_pixelSize;
-		int err_pixelSize=JS_ToInt32(ctx,&long_pixelSize,argv[3]);
-		if(err_pixelSize<0){
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int pixelSize=((int)long_pixelSize);
-		Color * ptr_color=(Color *)JS_GetOpaque(argv[4],js_Color_class_id);
-		if(ptr_color==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Color color=*ptr_color;
+		bool error=(bool)0;
+		int iconId=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int posX=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int posY=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int pixelSize=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color color=js_getColor(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		GuiDrawIcon(iconId,posX,posY,pixelSize,color);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_GuiGetTextWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[0];
-		if(JS_IsString(argv[0])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[0] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		char * text=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiGetTextWidth((const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[0])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[0])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[0]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiWindowBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * title;
-		JSValue da_title;
-		int64_t size_title;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
-		}else{
-			JSClassID classid_title=JS_GetClassID(src);
-			if(classid_title==JS_CLASS_INT8_ARRAY){
-				size_t offset_title;
-				da_title =JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
-				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
-				title +=offset_title;
-				size_title -=offset_title;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * title=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiWindowBox(bounds,(const char *)title);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)title);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)title);
-		}else{
-			JSClassID classid_title=JS_GetClassID(argv[1]);
-			if(classid_title==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_title);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiGroupBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiGroupBox(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiLine(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiLine(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiPanel(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiPanel(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiTabBar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * * text;
-		int64_t size_text;
-		JSClassID text_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_text)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			text =(char * *)js_malloc(ctx,size_text*sizeof(char *));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)*text);
-			int i;
-			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int64_t size_texti;
-				src =js_text;
-				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
-					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(src)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
-				}else{
-					JSClassID classid_texti=JS_GetClassID(src);
-					if(classid_texti==JS_CLASS_INT8_ARRAY){
-						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
-						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
-						text[i] +=offset_texti;
-						size_texti -=offset_texti;
-						memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_texti);
-					}else{
-						JS_ThrowTypeError(ctx,(const char *)"js_text does not match type char *");
-						return JS_EXCEPTION;
-					}
-				}
-				JS_FreeValue(ctx,js_text);
-			}
-		}else{
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char * *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[2]);
-		if(err_count<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
-		int * active;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)active);
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[3]);
-			if(err_js_active<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * * text=js_getchar_arr_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiTabBar(bounds,(const char * *)text,count,active);
 		if(JS_IsArray(argv[3])==1){
 			JSValue js_argv30=JS_NewInt32(ctx,(int32_t)((long)active[0]));
@@ -841,2172 +971,359 @@
 	}
 	
 	static JSValue js_GuiScrollPanel(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		Rectangle * ptr_content=(Rectangle *)JS_GetOpaque(argv[2],js_Rectangle_class_id);
-		if(ptr_content==NULL){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle content=*ptr_content;
-		Vector2 * scroll=(Vector2 *)JS_GetOpaque(argv[3],js_Vector2_class_id);
-		if(scroll==NULL){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type Vector2");
-			return JS_EXCEPTION;
-		}
-		Rectangle * view=(Rectangle *)JS_GetOpaque(argv[4],js_Rectangle_class_id);
-		if(view==NULL){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] does not match type Rectangle");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Rectangle content=js_getRectangle(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector2 * scroll=js_getVector2_ptr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Rectangle * view=js_getRectangle_ptr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiScrollPanel(bounds,(const char *)text,content,scroll,view);
 		JS_SetOpaque(argv[3],(void *)scroll);
 		JS_SetOpaque(argv[4],(void *)view);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiLabel(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiLabel(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiButton(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiButton(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiLabelButton(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiLabelButton(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiToggle(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		bool * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			active =(bool *)js_malloc(ctx,size_active*sizeof(bool));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int js_activei=JS_ToBool(ctx,js_active);
-				if(js_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not a bool");
-					return JS_EXCEPTION;
-				}
-				active[i] =(bool)js_activei;
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int js_js_active=JS_ToBool(ctx,argv[2]);
-			if(js_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-				return JS_EXCEPTION;
-			}
-			bool js_active=(bool)js_js_active;
-			active =&js_active;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool * active=js_getbool_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiToggle(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewBool(ctx,active[0]);
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiToggleGroup(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[2]);
-			if(err_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiToggleGroup(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiToggleSlider(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[2]);
-			if(err_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiToggleSlider(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiCheckBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		bool * checked;
-		bool freesrc_checked=(bool)false;
-		int64_t size_checked;
-		JSClassID checked_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(checked_class==js_ArrayProxy_class_id){
-			void * opaque_checked=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_checked=((ArrayProxy_class *)opaque_checked)[0];
-			src =AP_checked.values(ctx,AP_checked.opaque,(int)0,(bool)false);
-			freesrc_checked =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_checked)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			checked =(bool *)js_malloc(ctx,size_checked*sizeof(bool));
-			int i;
-			for(i=0;i<size_checked;i++){
-				JSValue js_checked=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int js_checkedi=JS_ToBool(ctx,js_checked);
-				if(js_checkedi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_checked is not a bool");
-					return JS_EXCEPTION;
-				}
-				checked[i] =(bool)js_checkedi;
-				JS_FreeValue(ctx,js_checked);
-			}
-		}else{
-			int js_js_checked=JS_ToBool(ctx,argv[2]);
-			if(js_js_checked<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not a bool");
-				return JS_EXCEPTION;
-			}
-			bool js_checked=(bool)js_js_checked;
-			checked =&js_checked;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool * checked=js_getbool_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiCheckBox(bounds,(const char *)text,checked);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewBool(ctx,checked[0]);
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)checked);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiComboBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[2]);
-			if(err_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiComboBox(bounds,(const char *)text,active);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiDropdownBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[2]);
-			if(err_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
-		int js_editMode=JS_ToBool(ctx,argv[3]);
-		if(js_editMode<0){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)active);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool editMode=(bool)js_editMode;
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool editMode=js_getbool(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiDropdownBox(bounds,(const char *)text,active,editMode);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)active[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiSpinner(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * value;
-		bool freesrc_value=(bool)false;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			value =(int *)js_malloc(ctx,size_value*sizeof(int));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_valuei;
-				int err_valuei=JS_ToInt32(ctx,&long_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((int)long_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			int32_t long_js_value;
-			int err_js_value=JS_ToInt32(ctx,&long_js_value,argv[2]);
-			if(err_js_value<0){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_value=((int)long_js_value);
-			value =&js_value;
-		}
-		int32_t long_minValue;
-		int err_minValue=JS_ToInt32(ctx,&long_minValue,argv[3]);
-		if(err_minValue<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int minValue=((int)long_minValue);
-		int32_t long_maxValue;
-		int err_maxValue=JS_ToInt32(ctx,&long_maxValue,argv[4]);
-		if(err_maxValue<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int maxValue=((int)long_maxValue);
-		int js_editMode=JS_ToBool(ctx,argv[5]);
-		if(js_editMode<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool editMode=(bool)js_editMode;
+		bool error=(bool)0;
+		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
+		memoryNode * memoryCurrent=memoryHead;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * value=js_getint_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int minValue=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int maxValue=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool editMode=js_getbool(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiSpinner(bounds,(const char *)text,value,minValue,maxValue,editMode);
-		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)value);
-		}
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiValueBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * value;
-		bool freesrc_value=(bool)false;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			value =(int *)js_malloc(ctx,size_value*sizeof(int));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_valuei;
-				int err_valuei=JS_ToInt32(ctx,&long_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((int)long_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			int32_t long_js_value;
-			int err_js_value=JS_ToInt32(ctx,&long_js_value,argv[2]);
-			if(err_js_value<0){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_value=((int)long_js_value);
-			value =&js_value;
-		}
-		int32_t long_minValue;
-		int err_minValue=JS_ToInt32(ctx,&long_minValue,argv[3]);
-		if(err_minValue<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int minValue=((int)long_minValue);
-		int32_t long_maxValue;
-		int err_maxValue=JS_ToInt32(ctx,&long_maxValue,argv[4]);
-		if(err_maxValue<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int maxValue=((int)long_maxValue);
-		int js_editMode=JS_ToBool(ctx,argv[5]);
-		if(js_editMode<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			if(JS_IsArray(argv[2])==1){
-				js_free(ctx,(void *)value);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool editMode=(bool)js_editMode;
+		bool error=(bool)0;
+		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
+		memoryNode * memoryCurrent=memoryHead;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * value=js_getint_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int minValue=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int maxValue=js_getint(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool editMode=js_getbool(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiValueBox(bounds,(const char *)text,value,minValue,maxValue,editMode);
-		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)value);
-		}
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiValueBoxFloat(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				JSValue da_text=JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_text);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * textValue;
-		int64_t size_textValue;
-		src =argv[2];
-		if(JS_IsString(argv[2])==1){
-			textValue =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textValue,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textValue);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,src);
-		}else{
-			JSClassID classid_textValue=JS_GetClassID(src);
-			if(classid_textValue==JS_CLASS_INT8_ARRAY){
-				size_t offset_textValue;
-				JSValue da_textValue=JS_GetTypedArrayBuffer(ctx,src,&offset_textValue,(size_t *)&size_textValue,NULL);
-				textValue =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textValue,da_textValue);
-				textValue +=offset_textValue;
-				size_textValue -=offset_textValue;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textValue);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			value =(float *)js_malloc(ctx,size_value*sizeof(float));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			double double_js_value;
-			int err_js_value=JS_ToFloat64(ctx,&double_js_value,argv[3]);
-			if(err_js_value<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_value=((float)double_js_value);
-			value =&js_value;
-		}
-		int js_editMode=JS_ToBool(ctx,argv[4]);
-		if(js_editMode<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool editMode=(bool)js_editMode;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textValue=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * value=js_getfloat_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool editMode=js_getbool(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiValueBoxFloat(bounds,(const char *)text,textValue,value,editMode);
-		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiTextBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * * text;
-		bool freesrc_text=(bool)false;
-		int64_t size_text;
-		JSClassID text_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
-			freesrc_text =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_text)==-1){
-				return JS_EXCEPTION;
-			}
-			text =(char * *)js_malloc(ctx,size_text*sizeof(char *));
-			int i;
-			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int64_t size_texti;
-				src =js_text;
-				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
-					memoryNode * memoryCurrent=memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(src)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
-				}else{
-					JSClassID classid_texti=JS_GetClassID(src);
-					if(classid_texti==JS_CLASS_INT8_ARRAY){
-						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
-						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
-						text[i] +=offset_texti;
-						size_texti -=offset_texti;
-						memoryNode * memoryCurrent=memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_texti);
-					}else{
-						JS_ThrowTypeError(ctx,(const char *)"js_text does not match type char *");
-						return JS_EXCEPTION;
-					}
-				}
-				JS_FreeValue(ctx,js_text);
-			}
-		}else{
-			if(freesrc_text){
-				JS_FreeValue(ctx,src);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char * *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_textSize;
-		int err_textSize=JS_ToInt32(ctx,&long_textSize,argv[2]);
-		if(err_textSize<0){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)*text);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int textSize=((int)long_textSize);
-		int js_editMode=JS_ToBool(ctx,argv[3]);
-		if(js_editMode<0){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)*text);
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not a bool");
-			return JS_EXCEPTION;
-		}
-		bool editMode=(bool)js_editMode;
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * * text=js_getchar_arr_ptr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int textSize=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool editMode=js_getbool(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiTextBox(bounds,*text,textSize,editMode);
 		if(JS_IsArray(argv[1])==1){
 			argv[1] =JS_NewString(ctx,(const char *)text[0]);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)*text);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiSlider(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * textLeft;
-		int64_t size_textLeft;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			textLeft =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
-		}else{
-			JSClassID classid_textLeft=JS_GetClassID(src);
-			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
-				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
-				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
-				textLeft +=offset_textLeft;
-				size_textLeft -=offset_textLeft;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textLeft);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * textRight;
-		int64_t size_textRight;
-		src =argv[2];
-		if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
-		}else{
-			JSClassID classid_textRight=JS_GetClassID(src);
-			if(classid_textRight==JS_CLASS_INT8_ARRAY){
-				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
-				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
-				textRight +=offset_textRight;
-				size_textRight -=offset_textRight;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textRight);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			value =(float *)js_malloc(ctx,size_value*sizeof(float));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			double double_js_value;
-			int err_js_value=JS_ToFloat64(ctx,&double_js_value,argv[3]);
-			if(err_js_value<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_value=((float)double_js_value);
-			value =&js_value;
-		}
-		double double_minValue;
-		int err_minValue=JS_ToFloat64(ctx,&double_minValue,argv[4]);
-		if(err_minValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float minValue=((float)double_minValue);
-		double double_maxValue;
-		int err_maxValue=JS_ToFloat64(ctx,&double_maxValue,argv[5]);
-		if(err_maxValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float maxValue=((float)double_maxValue);
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textLeft=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textRight=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * value=js_getfloat_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		float minValue=js_getfloat(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		float maxValue=js_getfloat(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiSlider(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
-		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiSliderBar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * textLeft;
-		int64_t size_textLeft;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			textLeft =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
-		}else{
-			JSClassID classid_textLeft=JS_GetClassID(src);
-			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
-				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
-				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
-				textLeft +=offset_textLeft;
-				size_textLeft -=offset_textLeft;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textLeft);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * textRight;
-		int64_t size_textRight;
-		src =argv[2];
-		if(JS_IsNull(argv[2])||JS_IsUndefined(argv[2])){
-			textRight =NULL;
-		}else if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
-		}else{
-			JSClassID classid_textRight=JS_GetClassID(src);
-			if(classid_textRight==JS_CLASS_INT8_ARRAY){
-				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
-				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
-				textRight +=offset_textRight;
-				size_textRight -=offset_textRight;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textRight);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			value =(float *)js_malloc(ctx,size_value*sizeof(float));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			double double_js_value;
-			int err_js_value=JS_ToFloat64(ctx,&double_js_value,argv[3]);
-			if(err_js_value<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_value=((float)double_js_value);
-			value =&js_value;
-		}
-		double double_minValue;
-		int err_minValue=JS_ToFloat64(ctx,&double_minValue,argv[4]);
-		if(err_minValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float minValue=((float)double_minValue);
-		double double_maxValue;
-		int err_maxValue=JS_ToFloat64(ctx,&double_maxValue,argv[5]);
-		if(err_maxValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float maxValue=((float)double_maxValue);
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textLeft=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textRight=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * value=js_getfloat_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		float minValue=js_getfloat(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		float maxValue=js_getfloat(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiSliderBar(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
-		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiProgressBar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * textLeft;
-		int64_t size_textLeft;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			textLeft =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			textLeft =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textLeft,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textLeft);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,src);
-		}else{
-			JSClassID classid_textLeft=JS_GetClassID(src);
-			if(classid_textLeft==JS_CLASS_INT8_ARRAY){
-				size_t offset_textLeft;
-				JSValue da_textLeft=JS_GetTypedArrayBuffer(ctx,src,&offset_textLeft,(size_t *)&size_textLeft,NULL);
-				textLeft =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textLeft,da_textLeft);
-				textLeft +=offset_textLeft;
-				size_textLeft -=offset_textLeft;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textLeft);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * textRight;
-		int64_t size_textRight;
-		src =argv[2];
-		if(JS_IsString(argv[2])==1){
-			textRight =(char *)JS_ToCStringLen(ctx,(size_t *)&size_textRight,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)textRight);
-		}else if(JS_IsArrayBuffer(src)==1){
-			textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,src);
-		}else{
-			JSClassID classid_textRight=JS_GetClassID(src);
-			if(classid_textRight==JS_CLASS_INT8_ARRAY){
-				size_t offset_textRight;
-				JSValue da_textRight=JS_GetTypedArrayBuffer(ctx,src,&offset_textRight,(size_t *)&size_textRight,NULL);
-				textRight =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_textRight,da_textRight);
-				textRight +=offset_textRight;
-				size_textRight -=offset_textRight;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_textRight);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * value;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			value =(float *)js_malloc(ctx,size_value*sizeof(float));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)value);
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			double double_js_value;
-			int err_js_value=JS_ToFloat64(ctx,&double_js_value,argv[3]);
-			if(err_js_value<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_value=((float)double_js_value);
-			value =&js_value;
-		}
-		double double_minValue;
-		int err_minValue=JS_ToFloat64(ctx,&double_minValue,argv[4]);
-		if(err_minValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float minValue=((float)double_minValue);
-		double double_maxValue;
-		int err_maxValue=JS_ToFloat64(ctx,&double_maxValue,argv[5]);
-		if(err_maxValue<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float maxValue=((float)double_maxValue);
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textLeft=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * textRight=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * value=js_getfloat_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		float minValue=js_getfloat(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		float maxValue=js_getfloat(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiProgressBar(bounds,(const char *)textLeft,(const char *)textRight,value,minValue,maxValue);
-		if(JS_IsArray(argv[3])==1){
-			JSValue js_argv30=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiStatusBar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiStatusBar(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiDummyRec(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiDummyRec(bounds,(const char *)text);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiGrid(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		double double_spacing;
-		int err_spacing=JS_ToFloat64(ctx,&double_spacing,argv[2]);
-		if(err_spacing<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		float spacing=((float)double_spacing);
-		int32_t long_subdivs;
-		int err_subdivs=JS_ToInt32(ctx,&long_subdivs,argv[3]);
-		if(err_subdivs<0){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int subdivs=((int)long_subdivs);
-		Vector2 * mouseCell=(Vector2 *)JS_GetOpaque(argv[4],js_Vector2_class_id);
-		if(mouseCell==NULL){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[4] does not match type Vector2");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float spacing=js_getfloat(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int subdivs=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector2 * mouseCell=js_getVector2_ptr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiGrid(bounds,(const char *)text,spacing,subdivs,mouseCell);
 		JS_SetOpaque(argv[4],(void *)mouseCell);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiListView(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int * scrollIndex;
-		bool freesrc_scrollIndex=(bool)false;
-		int64_t size_scrollIndex;
-		JSClassID scrollIndex_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(scrollIndex_class==js_ArrayProxy_class_id){
-			void * opaque_scrollIndex=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
-			src =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
-			freesrc_scrollIndex =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_scrollIndex)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			scrollIndex =(int *)js_malloc(ctx,size_scrollIndex*sizeof(int));
-			int i;
-			for(i=0;i<size_scrollIndex;i++){
-				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_scrollIndexi;
-				int err_scrollIndexi=JS_ToInt32(ctx,&long_scrollIndexi,js_scrollIndex);
-				if(err_scrollIndexi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_scrollIndex is not numeric");
-					return JS_EXCEPTION;
-				}
-				scrollIndex[i] =((int)long_scrollIndexi);
-				JS_FreeValue(ctx,js_scrollIndex);
-			}
-		}else{
-			int32_t long_js_scrollIndex;
-			int err_js_scrollIndex=JS_ToInt32(ctx,&long_js_scrollIndex,argv[2]);
-			if(err_js_scrollIndex<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_scrollIndex=((int)long_js_scrollIndex);
-			scrollIndex =&js_scrollIndex;
-		}
-		int * active;
-		bool freesrc_active=(bool)false;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			freesrc_active =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				if(JS_IsArray(argv[2])==1){
-					js_free(ctx,(void *)scrollIndex);
-				}
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[3]);
-			if(err_js_active<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				if(JS_IsArray(argv[2])==1){
-					js_free(ctx,(void *)scrollIndex);
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * scrollIndex=js_getint_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiListView(bounds,(const char *)text,scrollIndex,active);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
@@ -3017,217 +1334,25 @@
 			JS_DefinePropertyValueUint32(ctx,argv[3],(uint32_t)0,js_argv30,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)scrollIndex);
-		}
-		if(JS_IsArray(argv[3])==1){
-			js_free(ctx,(void *)active);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiListViewEx(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * * text;
-		int64_t size_text;
-		JSClassID text_class=JS_GetClassID(argv[1]);
-		JSValue src=argv[1];
-		if(text_class==js_ArrayProxy_class_id){
-			void * opaque_text=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_text=((ArrayProxy_class *)opaque_text)[0];
-			src =AP_text.values(ctx,AP_text.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_text)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			text =(char * *)js_malloc(ctx,size_text*sizeof(char *));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)*text);
-			int i;
-			for(i=0;i<size_text;i++){
-				JSValue js_text=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int64_t size_texti;
-				src =js_text;
-				if(JS_IsString(js_text)==1){
-					text[i] =(char *)JS_ToCStringLen(ctx,(size_t *)&size_texti,src);
-					memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text[i]);
-				}else if(JS_IsArrayBuffer(src)==1){
-					text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,src);
-				}else{
-					JSClassID classid_texti=JS_GetClassID(src);
-					if(classid_texti==JS_CLASS_INT8_ARRAY){
-						size_t offset_texti;
-						JSValue da_texti=JS_GetTypedArrayBuffer(ctx,src,&offset_texti,(size_t *)&size_texti,NULL);
-						text[i] =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_texti,da_texti);
-						text[i] +=offset_texti;
-						size_texti -=offset_texti;
-						memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_texti);
-					}else{
-						JS_ThrowTypeError(ctx,(const char *)"js_text does not match type char *");
-						return JS_EXCEPTION;
-					}
-				}
-				JS_FreeValue(ctx,js_text);
-			}
-		}else{
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char * *");
-			return JS_EXCEPTION;
-		}
-		int32_t long_count;
-		int err_count=JS_ToInt32(ctx,&long_count,argv[2]);
-		if(err_count<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int count=((int)long_count);
-		int * scrollIndex;
-		int64_t size_scrollIndex;
-		JSClassID scrollIndex_class=JS_GetClassID(argv[3]);
-		src =argv[3];
-		if(scrollIndex_class==js_ArrayProxy_class_id){
-			void * opaque_scrollIndex=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_scrollIndex=((ArrayProxy_class *)opaque_scrollIndex)[0];
-			src =AP_scrollIndex.values(ctx,AP_scrollIndex.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_scrollIndex)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			scrollIndex =(int *)js_malloc(ctx,size_scrollIndex*sizeof(int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)scrollIndex);
-			int i;
-			for(i=0;i<size_scrollIndex;i++){
-				JSValue js_scrollIndex=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_scrollIndexi;
-				int err_scrollIndexi=JS_ToInt32(ctx,&long_scrollIndexi,js_scrollIndex);
-				if(err_scrollIndexi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_scrollIndex is not numeric");
-					return JS_EXCEPTION;
-				}
-				scrollIndex[i] =((int)long_scrollIndexi);
-				JS_FreeValue(ctx,js_scrollIndex);
-			}
-		}else{
-			int32_t long_js_scrollIndex;
-			int err_js_scrollIndex=JS_ToInt32(ctx,&long_js_scrollIndex,argv[3]);
-			if(err_js_scrollIndex<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_scrollIndex=((int)long_js_scrollIndex);
-			scrollIndex =&js_scrollIndex;
-		}
-		int * active;
-		int64_t size_active;
-		JSClassID active_class=JS_GetClassID(argv[4]);
-		src =argv[4];
-		if(active_class==js_ArrayProxy_class_id){
-			void * opaque_active=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_active=((ArrayProxy_class *)opaque_active)[0];
-			src =AP_active.values(ctx,AP_active.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_active)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			active =(int *)js_malloc(ctx,size_active*sizeof(int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)active);
-			int i;
-			for(i=0;i<size_active;i++){
-				JSValue js_active=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_activei;
-				int err_activei=JS_ToInt32(ctx,&long_activei,js_active);
-				if(err_activei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_active is not numeric");
-					return JS_EXCEPTION;
-				}
-				active[i] =((int)long_activei);
-				JS_FreeValue(ctx,js_active);
-			}
-		}else{
-			int32_t long_js_active;
-			int err_js_active=JS_ToInt32(ctx,&long_js_active,argv[4]);
-			if(err_js_active<0){
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[4] is not numeric");
-				return JS_EXCEPTION;
-			}
-			int js_active=((int)long_js_active);
-			active =&js_active;
-		}
-		int * focus;
-		int64_t size_focus;
-		JSClassID focus_class=JS_GetClassID(argv[5]);
-		src =argv[5];
-		if(focus_class==js_ArrayProxy_class_id){
-			void * opaque_focus=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_focus=((ArrayProxy_class *)opaque_focus)[0];
-			src =AP_focus.values(ctx,AP_focus.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_focus)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			focus =(int *)js_malloc(ctx,size_focus*sizeof(int));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)focus);
-			int i;
-			for(i=0;i<size_focus;i++){
-				JSValue js_focus=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int32_t long_focusi;
-				int err_focusi=JS_ToInt32(ctx,&long_focusi,js_focus);
-				if(err_focusi<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_focus is not numeric");
-					return JS_EXCEPTION;
-				}
-				focus[i] =((int)long_focusi);
-				JS_FreeValue(ctx,js_focus);
-			}
-		}else if(JS_IsArrayBuffer(src)==1){
-			focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,src);
-		}else{
-			JSClassID classid_focus=JS_GetClassID(src);
-			if(classid_focus==JS_CLASS_INT16_ARRAY){
-				size_t offset_focus;
-				JSValue da_focus=JS_GetTypedArrayBuffer(ctx,src,&offset_focus,(size_t *)&size_focus,NULL);
-				focus =(int *)JS_GetArrayBuffer(ctx,(size_t *)&size_focus,da_focus);
-				focus +=offset_focus;
-				size_focus -=offset_focus;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_focus);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[5] does not match type int *");
-				return JS_EXCEPTION;
-			}
-		}
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * * text=js_getchar_arr_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int count=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * scrollIndex=js_getint_ptr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * active=js_getint_ptr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * focus=js_getint_arr(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiListViewEx(bounds,(const char * *)text,count,scrollIndex,active,focus);
 		if(JS_IsArray(argv[3])==1){
 			JSValue js_argv30=JS_NewInt32(ctx,(int32_t)((long)scrollIndex[0]));
@@ -3243,84 +1368,17 @@
 	}
 	
 	static JSValue js_GuiMessageBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * title;
-		int64_t size_title;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
-		}else if(JS_IsArrayBuffer(src)==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
-		}else{
-			JSClassID classid_title=JS_GetClassID(src);
-			if(classid_title==JS_CLASS_INT8_ARRAY){
-				size_t offset_title;
-				JSValue da_title=JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
-				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
-				title +=offset_title;
-				size_title -=offset_title;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_title);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * message;
-		int64_t size_message;
-		src =argv[2];
-		if(JS_IsString(argv[2])==1){
-			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
-		}else if(JS_IsArrayBuffer(src)==1){
-			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,src);
-		}else{
-			JSClassID classid_message=JS_GetClassID(src);
-			if(classid_message==JS_CLASS_INT8_ARRAY){
-				size_t offset_message;
-				JSValue da_message=JS_GetTypedArrayBuffer(ctx,src,&offset_message,(size_t *)&size_message,NULL);
-				message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,da_message);
-				message +=offset_message;
-				size_message -=offset_message;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_message);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * buttons;
-		int64_t size_buttons;
-		src =argv[3];
-		if(JS_IsString(argv[3])==1){
-			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
-		}else if(JS_IsArrayBuffer(src)==1){
-			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,src);
-		}else{
-			JSClassID classid_buttons=JS_GetClassID(src);
-			if(classid_buttons==JS_CLASS_INT8_ARRAY){
-				size_t offset_buttons;
-				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,src,&offset_buttons,(size_t *)&size_buttons,NULL);
-				buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,da_buttons);
-				buttons +=offset_buttons;
-				size_buttons -=offset_buttons;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_buttons);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * title=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * message=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * buttons=js_getchar_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiMessageBox(bounds,(const char *)title,(const char *)message,(const char *)buttons);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -3328,152 +1386,23 @@
 	}
 	
 	static JSValue js_GuiTextInputBox(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
 		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
 		memoryNode * memoryCurrent=memoryHead;
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * title;
-		int64_t size_title;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			title =(char *)JS_ToCStringLen(ctx,(size_t *)&size_title,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)title);
-		}else if(JS_IsArrayBuffer(src)==1){
-			title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,src);
-		}else{
-			JSClassID classid_title=JS_GetClassID(src);
-			if(classid_title==JS_CLASS_INT8_ARRAY){
-				size_t offset_title;
-				JSValue da_title=JS_GetTypedArrayBuffer(ctx,src,&offset_title,(size_t *)&size_title,NULL);
-				title =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_title,da_title);
-				title +=offset_title;
-				size_title -=offset_title;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_title);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * message;
-		int64_t size_message;
-		src =argv[2];
-		if(JS_IsString(argv[2])==1){
-			message =(char *)JS_ToCStringLen(ctx,(size_t *)&size_message,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)message);
-		}else if(JS_IsArrayBuffer(src)==1){
-			message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,src);
-		}else{
-			JSClassID classid_message=JS_GetClassID(src);
-			if(classid_message==JS_CLASS_INT8_ARRAY){
-				size_t offset_message;
-				JSValue da_message=JS_GetTypedArrayBuffer(ctx,src,&offset_message,(size_t *)&size_message,NULL);
-				message =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_message,da_message);
-				message +=offset_message;
-				size_message -=offset_message;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_message);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * buttons;
-		int64_t size_buttons;
-		src =argv[3];
-		if(JS_IsString(argv[3])==1){
-			buttons =(char *)JS_ToCStringLen(ctx,(size_t *)&size_buttons,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)buttons);
-		}else if(JS_IsArrayBuffer(src)==1){
-			buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,src);
-		}else{
-			JSClassID classid_buttons=JS_GetClassID(src);
-			if(classid_buttons==JS_CLASS_INT8_ARRAY){
-				size_t offset_buttons;
-				JSValue da_buttons=JS_GetTypedArrayBuffer(ctx,src,&offset_buttons,(size_t *)&size_buttons,NULL);
-				buttons =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_buttons,da_buttons);
-				buttons +=offset_buttons;
-				size_buttons -=offset_buttons;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_buttons);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[3] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		char * text;
-		int64_t size_text;
-		src =argv[4];
-		if(JS_IsString(argv[4])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeCString,(void *)text);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				JSValue da_text=JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-				memoryCurrent =memoryStore(memoryCurrent,JS_FreeValuePtr,(void *)&da_text);
-			}else{
-				memoryClear(ctx,memoryHead);
-				JS_ThrowTypeError(ctx,(const char *)"argv[4] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		int32_t long_textMaxSize;
-		int err_textMaxSize=JS_ToInt32(ctx,&long_textMaxSize,argv[5]);
-		if(err_textMaxSize<0){
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[5] is not numeric");
-			return JS_EXCEPTION;
-		}
-		int textMaxSize=((int)long_textMaxSize);
-		bool * secretViewActive;
-		int64_t size_secretViewActive;
-		JSClassID secretViewActive_class=JS_GetClassID(argv[6]);
-		src =argv[6];
-		if(secretViewActive_class==js_ArrayProxy_class_id){
-			void * opaque_secretViewActive=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_secretViewActive=((ArrayProxy_class *)opaque_secretViewActive)[0];
-			src =AP_secretViewActive.values(ctx,AP_secretViewActive.opaque,(int)0,(bool)false);
-			memoryCurrent =memoryStore(memoryCurrent,JS_FreeValue,(void *)&src);
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_secretViewActive)==-1){
-				memoryClear(ctx,memoryHead);
-				return JS_EXCEPTION;
-			}
-			secretViewActive =(bool *)js_malloc(ctx,size_secretViewActive*sizeof(bool));
-			memoryCurrent =memoryStore(memoryCurrent,js_free,(void *)secretViewActive);
-			int i;
-			for(i=0;i<size_secretViewActive;i++){
-				JSValue js_secretViewActive=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				int js_secretViewActivei=JS_ToBool(ctx,js_secretViewActive);
-				if(js_secretViewActivei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_secretViewActive is not a bool");
-					return JS_EXCEPTION;
-				}
-				secretViewActive[i] =(bool)js_secretViewActivei;
-				JS_FreeValue(ctx,js_secretViewActive);
-			}
-		}else if(JS_IsNull(argv[6])||JS_IsUndefined(argv[6])){
-			secretViewActive =NULL;
-		}else if(JS_IsArrayBuffer(src)==1){
-			secretViewActive =(bool *)JS_GetArrayBuffer(ctx,(size_t *)&size_secretViewActive,src);
-		}else{
-			memoryClear(ctx,memoryHead);
-			JS_ThrowTypeError(ctx,(const char *)"argv[6] does not match type bool *");
-			return JS_EXCEPTION;
-		}
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * title=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * message=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * buttons=js_getchar_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		int textMaxSize=js_getint(ctx,argv[5],&error);
+		if(error==1)return JS_EXCEPTION;
+		bool * secretViewActive=js_getbool_arr(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiTextInputBox(bounds,(const char *)title,(const char *)message,(const char *)buttons,text,textMaxSize,secretViewActive);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx,memoryHead);
@@ -3481,468 +1410,91 @@
 	}
 	
 	static JSValue js_GuiColorPicker(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		Color * color=(Color *)JS_GetOpaque(argv[2],js_Color_class_id);
-		if(color==NULL){
-			if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			}
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type Color");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color * color=js_getColor_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorPicker(bounds,(const char *)text,color);
 		JS_SetOpaque(argv[2],(void *)color);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiColorPanel(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		Color * color=(Color *)JS_GetOpaque(argv[2],js_Color_class_id);
-		if(color==NULL){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type Color");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color * color=js_getColor_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorPanel(bounds,(const char *)text,color);
 		JS_SetOpaque(argv[2],(void *)color);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiColorBarAlpha(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-			text =NULL;
-		}else if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * alpha;
-		bool freesrc_alpha=(bool)false;
-		int64_t size_alpha;
-		JSClassID alpha_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(alpha_class==js_ArrayProxy_class_id){
-			void * opaque_alpha=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_alpha=((ArrayProxy_class *)opaque_alpha)[0];
-			src =AP_alpha.values(ctx,AP_alpha.opaque,(int)0,(bool)false);
-			freesrc_alpha =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_alpha)==-1){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			alpha =(float *)js_malloc(ctx,size_alpha*sizeof(float));
-			int i;
-			for(i=0;i<size_alpha;i++){
-				JSValue js_alpha=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_alphai;
-				int err_alphai=JS_ToFloat64(ctx,&double_alphai,js_alpha);
-				if(err_alphai<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_alpha is not numeric");
-					return JS_EXCEPTION;
-				}
-				alpha[i] =((float)double_alphai);
-				JS_FreeValue(ctx,js_alpha);
-			}
-		}else{
-			double double_js_alpha;
-			int err_js_alpha=JS_ToFloat64(ctx,&double_js_alpha,argv[2]);
-			if(err_js_alpha<0){
-				if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-				}
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_alpha=((float)double_js_alpha);
-			alpha =&js_alpha;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * alpha=js_getfloat_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorBarAlpha(bounds,(const char *)text,alpha);
 		if(JS_IsArray(argv[2])==1){
 			JSValue js_argv20=JS_NewFloat64(ctx,((double)alpha[0]));
 			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
 		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsNull(argv[1])||JS_IsUndefined(argv[1])){
-		}
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)alpha);
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiColorBarHue(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		float * value;
-		bool freesrc_value=(bool)false;
-		int64_t size_value;
-		JSClassID value_class=JS_GetClassID(argv[2]);
-		src =argv[2];
-		if(value_class==js_ArrayProxy_class_id){
-			void * opaque_value=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_value=((ArrayProxy_class *)opaque_value)[0];
-			src =AP_value.values(ctx,AP_value.opaque,(int)0,(bool)false);
-			freesrc_value =(bool)true;
-		}
-		if(JS_IsArray(src)==1){
-			if(JS_GetLength(ctx,src,&size_value)==-1){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				return JS_EXCEPTION;
-			}
-			value =(float *)js_malloc(ctx,size_value*sizeof(float));
-			int i;
-			for(i=0;i<size_value;i++){
-				JSValue js_value=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				double double_valuei;
-				int err_valuei=JS_ToFloat64(ctx,&double_valuei,js_value);
-				if(err_valuei<0){
-					JS_ThrowTypeError(ctx,(const char *)"js_value is not numeric");
-					return JS_EXCEPTION;
-				}
-				value[i] =((float)double_valuei);
-				JS_FreeValue(ctx,js_value);
-			}
-		}else{
-			double double_js_value;
-			int err_js_value=JS_ToFloat64(ctx,&double_js_value,argv[2]);
-			if(err_js_value<0){
-				if(JS_IsArray(argv[1])==1){
-					js_free(ctx,(void *)text);
-				}else if(JS_IsString(argv[1])==1){
-					JS_FreeCString(ctx,(const char *)text);
-				}else{
-					JSClassID classid_text=JS_GetClassID(argv[1]);
-					if(classid_text==JS_CLASS_INT8_ARRAY){
-						js_free(ctx,(void *)&da_text);
-					}
-				}
-				JS_ThrowTypeError(ctx,(const char *)"argv[2] is not numeric");
-				return JS_EXCEPTION;
-			}
-			float js_value=((float)double_js_value);
-			value =&js_value;
-		}
+		bool error=(bool)0;
+		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
+		memoryNode * memoryCurrent=memoryHead;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		float * value=js_getfloat_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorBarHue(bounds,(const char *)text,value);
-		if(JS_IsArray(argv[2])==1){
-			JSValue js_argv20=JS_NewFloat64(ctx,((double)value[0]));
-			JS_DefinePropertyValueUint32(ctx,argv[2],(uint32_t)0,js_argv20,JS_PROP_C_W_E);
-		}
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
-		if(JS_IsArray(argv[2])==1){
-			js_free(ctx,(void *)value);
-		}
+		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
 	static JSValue js_GuiColorPickerHSV(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		Vector3 * colorHsv=(Vector3 *)JS_GetOpaque(argv[2],js_Vector3_class_id);
-		if(colorHsv==NULL){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type Vector3");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 * colorHsv=js_getVector3_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorPickerHSV(bounds,(const char *)text,colorHsv);
 		JS_SetOpaque(argv[2],(void *)colorHsv);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	
 	static JSValue js_GuiColorPanelHSV(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		Rectangle * ptr_bounds=(Rectangle *)JS_GetOpaque(argv[0],js_Rectangle_class_id);
-		if(ptr_bounds==NULL){
-			JS_ThrowTypeError(ctx,(const char *)"argv[0] does not allow null");
-			return JS_EXCEPTION;
-		}
-		Rectangle bounds=*ptr_bounds;
-		char * text;
-		JSValue da_text;
-		int64_t size_text;
-		JSValue src=argv[1];
-		if(JS_IsString(argv[1])==1){
-			text =(char *)JS_ToCStringLen(ctx,(size_t *)&size_text,src);
-		}else if(JS_IsArrayBuffer(src)==1){
-			text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,src);
-		}else{
-			JSClassID classid_text=JS_GetClassID(src);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				size_t offset_text;
-				da_text =JS_GetTypedArrayBuffer(ctx,src,&offset_text,(size_t *)&size_text,NULL);
-				text =(char *)JS_GetArrayBuffer(ctx,(size_t *)&size_text,da_text);
-				text +=offset_text;
-				size_text -=offset_text;
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"argv[1] does not match type char *");
-				return JS_EXCEPTION;
-			}
-		}
-		Vector3 * colorHsv=(Vector3 *)JS_GetOpaque(argv[2],js_Vector3_class_id);
-		if(colorHsv==NULL){
-			if(JS_IsArray(argv[1])==1){
-				js_free(ctx,(void *)text);
-			}else if(JS_IsString(argv[1])==1){
-				JS_FreeCString(ctx,(const char *)text);
-			}else{
-				JSClassID classid_text=JS_GetClassID(argv[1]);
-				if(classid_text==JS_CLASS_INT8_ARRAY){
-					js_free(ctx,(void *)&da_text);
-				}
-			}
-			JS_ThrowTypeError(ctx,(const char *)"argv[2] does not match type Vector3");
-			return JS_EXCEPTION;
-		}
+		bool error=(bool)0;
+		Rectangle bounds=js_getRectangle(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * text=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector3 * colorHsv=js_getVector3_ptr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
 		int returnVal=GuiColorPanelHSV(bounds,(const char *)text,colorHsv);
 		JS_SetOpaque(argv[2],(void *)colorHsv);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		if(JS_IsArray(argv[1])==1){
-			js_free(ctx,(void *)text);
-		}else if(JS_IsString(argv[1])==1){
-			JS_FreeCString(ctx,(const char *)text);
-		}else{
-			JSClassID classid_text=JS_GetClassID(argv[1]);
-			if(classid_text==JS_CLASS_INT8_ARRAY){
-				js_free(ctx,(void *)&da_text);
-			}
-		}
 		return ret;
 	}
 	static const JSCFunctionListEntry jsraygui_funcs[]={
@@ -4360,9 +1912,7 @@
 	
 	JSModuleDef * js_init_module_raygui(JSContext * ctx,const char * module_name){
 		JSModuleDef * m=JS_NewCModule(ctx,module_name,js_raygui_init);
-		if(!m){
-			return NULL;
-		}
+		if(!m)return NULL;
 		size_t listcount=countof(jsraygui_funcs);
 		JS_AddModuleExportList(ctx,m,jsraygui_funcs,(int)listcount);
 		JS_AddModuleExport(ctx,m,(const char *)"GuiStyleProp");
