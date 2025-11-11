@@ -557,11 +557,11 @@ export function GuiLoadStyleAshes() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(ashesFontRecs);
+    font.recs = ashesFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(ashesFontGlyphs);
+    font.glyphs = ashesFontGlyphs;
 
     GuiSetFont(font);
 

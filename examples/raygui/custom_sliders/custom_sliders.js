@@ -15,16 +15,21 @@
 *
 **********************************************************************************************/
 
-import {BACKGROUND_COLOR, BASE_COLOR_DISABLED, BASE_COLOR_NORMAL,
-    BASE_COLOR_PRESSED, BORDER_WIDTH,
-    DEFAULT, GuiGetState, GuiGetStyle,
-    GuiGroupBox,
+import {
+    BACKGROUND_COLOR, BASE_COLOR_DISABLED, BASE_COLOR_NORMAL,
+    BASE_COLOR_PRESSED, BORDER, BORDER_WIDTH,
+    DEFAULT, GuiDrawRectangle, GuiDrawText, GuiGetAlpha, GuiGetState, GuiGetStyle,
+    GuiGetTextWidth,
+    GuiGroupBox, GuiIsLocked,
     GuiLock, GuiSlider, GuiUnlock, SLIDER, SLIDER_PADDING, SLIDER_WIDTH, STATE_DISABLED, STATE_FOCUSED,
-    STATE_NORMAL, STATE_PRESSED, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT, TEXT_COLOR_FOCUSED, TEXT_PADDING, TEXT_SIZE } from 'rayjs:raygui';
+    STATE_NORMAL, STATE_PRESSED, TEXT, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT, TEXT_COLOR_FOCUSED, TEXT_PADDING, TEXT_SIZE
+} from 'rayjs:raygui';
 import {BLANK, BeginDrawing, CheckCollisionPointRec,
     ClearBackground, CloseWindow, EndDrawing, Fade, GetColor, GetMousePosition, InitWindow, IsMouseButtonDown,
     IsMouseButtonPressed, IsMouseButtonReleased, MOUSE_LEFT_BUTTON, Rectangle, SetTargetFPS,
     TextFormat, WindowShouldClose } from 'rayjs:raylib';
+
+let guiAlpha=GuiGetAlpha();
 
 //----------------------------------------------------------------------------------
 // Controls Functions Declaration
@@ -51,6 +56,7 @@ function GuiVerticalSliderPro(bounds, textTop, textBottom, value, minValue, maxV
         slider.y -= GuiGetStyle(SLIDER, BORDER_WIDTH);
         slider.height = sliderValue;
     }
+    let guiLocked=GuiIsLocked();
     // Update control
     //--------------------------------------------------------------------
     if ((state != STATE_DISABLED) && !guiLocked) {
@@ -104,7 +110,7 @@ function GuiVerticalSliderPro(bounds, textTop, textBottom, value, minValue, maxV
     // Draw top/bottom text if provided
     if (textTop != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textTop);
+        textBounds.width = GuiGetTextWidth(textTop);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
         textBounds.y = bounds.y - textBounds.height - GuiGetStyle(SLIDER, TEXT_PADDING);
@@ -114,7 +120,7 @@ function GuiVerticalSliderPro(bounds, textTop, textBottom, value, minValue, maxV
 
     if (textBottom != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textBottom);
+        textBounds.width = GuiGetTextWidth(textBottom);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
         textBounds.y = bounds.y + bounds.height + GuiGetStyle(SLIDER, TEXT_PADDING);
@@ -156,6 +162,7 @@ function GuiSliderProOwning(bounds, textLeft, textRight, value, minValue, maxVal
         slider.x += GuiGetStyle(SLIDER, BORDER_WIDTH);
         slider.width = sliderValue;
     }
+    let guiLocked=GuiIsLocked();
 
     // Update control
     //--------------------------------------------------------------------
@@ -217,7 +224,7 @@ function GuiSliderProOwning(bounds, textLeft, textRight, value, minValue, maxVal
     // Draw left/right text if provided
     if (textLeft != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textLeft);
+        textBounds.width = GuiGetTextWidth(textLeft);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SLIDER, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
@@ -225,9 +232,9 @@ function GuiSliderProOwning(bounds, textLeft, textRight, value, minValue, maxVal
         GuiDrawText(textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
     }
 
-    if (textRight != NULL) {
+    if (textRight != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textRight);
+        textBounds.width = GuiGetTextWidth(textRight);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(SLIDER, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
@@ -270,6 +277,7 @@ function GuiVerticalSliderProOwning(bounds, textTop, textBottom, value, minValue
         slider.y -= GuiGetStyle(SLIDER, BORDER_WIDTH);
         slider.height = sliderValue;
     }
+    let guiLocked=GuiIsLocked();
     // Update control
     //--------------------------------------------------------------------
     if ((state != STATE_DISABLED) && (editMode || !guiLocked)) {
@@ -331,7 +339,7 @@ function GuiVerticalSliderProOwning(bounds, textTop, textBottom, value, minValue
     // Draw top/bottom text if provided
     if (textTop != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textTop);
+        textBounds.width = GuiGetTextWidth(textTop);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
         textBounds.y = bounds.y - textBounds.height - GuiGetStyle(SLIDER, TEXT_PADDING);
@@ -341,7 +349,7 @@ function GuiVerticalSliderProOwning(bounds, textTop, textBottom, value, minValue
 
     if (textBottom != null) {
         let textBounds = new Rectangle();
-        textBounds.width = GetTextWidth(textBottom);
+        textBounds.width = GuiGetTextWidth(textBottom);
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
         textBounds.y = bounds.y + bounds.height + GuiGetStyle(SLIDER, TEXT_PADDING);
@@ -401,8 +409,8 @@ function GuiVerticalSliderBarOwning(bounds, textTop, textBottom, value, minValue
             //----------------------------------------------------------------------------------
             GuiGroupBox(new Rectangle( 66, 24, 276, 312 ), "STANDARD");
             GuiSlider(new Rectangle( 96, 48, 216, 16 ), TextFormat("%0.2f", value[0]), null, value, 0, 1);
-            value[0] = GuiVerticalSlider(new Rectangle( 120, 120, 24, 192 ), TextFormat("%0.2f", value[0]), null, value, 0, 1);
-            value[0] = GuiVerticalSliderBar(new Rectangle( 264, 120, 24, 192 ), TextFormat("%0.2f", value[0]), null, value, 0, 1);
+            value[0] = GuiVerticalSlider(new Rectangle( 120, 120, 24, 192 ), TextFormat("%0.2f", value[0]), null, value[0], 0, 1);
+            value[0] = GuiVerticalSliderBar(new Rectangle( 264, 120, 24, 192 ), TextFormat("%0.2f", value[0]), null, value[0], 0, 1);
 
             GuiGroupBox(new Rectangle( 378, 24, 276, 312 ), "OWNING");
             if (GuiSliderOwning(new Rectangle( 408, 48, 216, 16 ), null, TextFormat("%0.2f", value[0]), value, 0, 1, sliderEditMode)) sliderEditMode = !sliderEditMode;

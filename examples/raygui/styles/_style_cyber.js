@@ -570,11 +570,11 @@ export function GuiLoadStyleCyber() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(cyberFontRecs);
+    font.recs = cyberFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(cyberFontGlyphs);
+    font.glyphs = cyberFontGlyphs;
 
     GuiSetFont(font);
 

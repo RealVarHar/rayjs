@@ -6,7 +6,7 @@ export const a0='1234567890';
 export const azZ=az+aZ;
 export const azZ0=az+aZ+a0+'_-';
 export const defaultTypeParts =['int_least16_t','int_fast16_t','int_least8_t','int_fast8_t','unsigned', 'uint64_t', 'uint32_t','volatile','restrict','uint16_t', 'int32_t', 'int64_t','wchar_t','int16_t','uint8_t','int8_t', 'signed', 'double', 'short', 'float', 'const', 'bool', 'char', 'long', 'int','*', '&', '...'];
-
+const implicit_attrs=["unsigned","const","inline","static","_Thread_local"];
 function isType(input){return input.split(' ').filter(a=>a!=''&&!defaultTypeParts.includes(a)).join('').length==0}
 //text detection
 export function lookBackward(input,str,pos=input.length){
@@ -25,6 +25,14 @@ export function lookForward(input,str,pos=0){
     }
     return true;
 }
+
+/**
+ * @param input
+ * @param test
+ * @param pos
+ * @param capture
+ * @return {number|false}
+ */
 export function simpleregex(input='',test=[],pos=0,capture=[]){
     //very simple regex replacement for long text, since regex always starts with begining of string
     let i=0;
@@ -213,10 +221,10 @@ export class source_parser {
                     if(removeString){
                         ret+=input.substring(start,pos);
                     }else{
-                        ret+=input.substring(start,tmp+1);
+                        ret+=input.substring(start,tmp);
                     }
-                    start=tmp+1;
-                    pos=tmp+1;
+                    start=tmp;
+                    pos=tmp;
                     break;
                 }
                 case "/":{
@@ -235,6 +243,150 @@ export class source_parser {
         }
         ret+=input.substring(start,pos);
         return ret;
+    }
+    //deep text parsing
+    /**
+     * @param {string} word
+     * @param {string[]} args
+     * @param { {} } props
+     * @return {string}
+     */
+    cleanword(word,args,props){
+        if(word=='__attribute__'){
+            let argtokens=[];
+            let argspos=1;//enclosed in (()) instead of ()
+            while(argspos<args.length-1){
+                //attributes are a attr,attr() list
+                argspos=simpleregex(args,['r*',' \t','r+',azZ0,'r*',' \t','os',"("],argspos,argtokens);
+                if(argspos==false)return word;
+                let attributes=true;
+                //attributes can have parameters
+                if(argtokens[3]=='('){
+                    let argend=this.skipDepthf(args,argspos);
+                    attributes=args.substring(argspos,argend).split(',').map(a=>a.trim());
+                    argspos=argend+1;
+                }
+                props[argtokens[1]]=attributes;
+                argspos=simpleregex(args,['r*',' \t','os',","],argspos);
+            }
+            return "";
+        }
+        if(args!=undefined){
+            //word has to be a defined function!
+            const def=defined[word];
+            if(def==undefined)return `${word}(${args})`;
+            if(def.type=='function'){
+                args=args.split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
+                word = this.safeEval(def.content.body,Object.fromEntries(args));
+            }else{
+                return word;
+            }
+            let pos=word.length-1;
+            let words=[];
+            while(pos>0){
+                const w=this.getwordb(word,pos,props);
+                if(w==false)return word;
+                pos=w[0];
+                if(w[1].length>0)words.push(w[1]);
+            }
+            return words.join(' ');
+        }
+        if(implicit_attrs.includes(word)){
+            props[word]=true;
+            return "";
+        }
+        //last, the word may have been redefined earlier
+        const def=defined[word];
+        if(def==undefined)return word;
+        if(def.type=='undefined'){
+            word = def.content.body;
+            let pos=word.length-1;
+            let words=[];
+            while(pos>0){
+                const w=this.getwordb(word,pos,props);
+                if(w==false)return word;
+                pos=w[0];
+                if(w[1].length>0)words.push(w[1]);
+            }
+            return words.join(' ');
+        }
+        return word;
+    }
+    /**
+     * @param {string} input
+     * @param {number} pos
+     * @param { {} } props
+     * @return {false | [number,string] }
+     */
+    getword(input,pos,props){
+        while(true){
+            pos=simpleregex(input,["r*"," \t"],pos);
+            switch(input[pos]){
+                case "/":{
+                    if(input[pos+1]=='*'){
+                        pos=simpleregex(input,['ns','*/'],pos-1);
+                    }else{
+                        return false;
+                    }
+                    break;
+                }
+                case "(":{
+                    let pos2=this.skipDepthf(input,pos);
+                    return [pos2,input.substring(pos,pos2)];
+                }
+                default:{
+                    let pos2=simpleregex(input,["r+",azZ0],pos);
+                    if(pos2==false)return false;
+                    let pos3=pos2;
+                    let args;
+                    if(input[pos2]=='('){
+                        pos3=this.skipDepthf(input,pos2);
+                        args=input.substring(pos2+1,pos3);
+                        pos3++;
+                    }
+                    const word=this.cleanword(input.substring(pos,pos2),args,props);
+                    pos3=simpleregex(input,["r*"," \t"],pos3);
+                    return [pos3,word];
+                }
+            }
+        }
+    }
+    /**
+     * @param {string} input
+     * @param {number} pos
+     * @param { {} } props
+     * @return {false | [number,string] }
+     */
+    getwordb(input,pos,props){
+        while(true){
+            pos=simpleregex(input,["br*"," \t"],pos);
+            switch(input[pos]){
+                case "/":{
+                    if(input[pos-1]=='*'){
+                        pos=simpleregex(input,['bns','/*'],pos-1);
+                    }else{
+                        return false;
+                    }
+                    break;
+                }
+                case ")":{
+                    let pos2=this.skipDepthfb(input,pos);
+                    let pos3=simpleregex(input,["br+",azZ0],pos2);
+                    if(pos3==false)return false;
+                    const word=this.cleanword(input.substring(pos3+1,pos2+1),input.substring(pos2+2,pos),props);
+                    pos3=simpleregex(input,["br*"," \t"],pos3);
+                    return [pos3,word];
+                }
+                default:{
+                    let pos2=simpleregex(input,["br+",azZ0],pos);
+                    if(pos2==false)return false;
+                    const word=this.cleanword(input.substring(pos2+1,pos+1),undefined,props);
+                    pos2=simpleregex(input,["br*"," \t"],pos2);
+                    return [pos2,word];
+                }
+            }
+        }
+        return false;
     }
     //Parsers
     parseES(input, pos=0, save=true){
@@ -524,103 +676,9 @@ export class source_parser {
         let ret=simpleregex(input,['br+',azZ0,'br*',' *'],pos-1,capture);
         if(ret===false)return pos;
         let props={};
-        let thiz=this;
-        const implicit_attrs=["unsigned","const","inline","static"];
-        function cleanword(word,args){
-            if(word=='__attribute__'){
-                let argtokens=[];
-                let argspos=1;//enclosed in (()) instead of ()
-                while(argspos<args.length-1){
-                    //attributes are a attr,attr() list
-                    argspos=simpleregex(args,['r*',' \t','r+',azZ0,'r*',' \t','os',"("],argspos,argtokens);
-                    if(argspos==false)return word;
-                    let attributes=true;
-                    //attributes can have parameters
-                    if(argtokens[3]=='('){
-                        let argend=thiz.skipDepthf(args,argspos);
-                        attributes=args.substring(argspos,argend).split(',').map(a=>a.trim());
-                        argspos=argend+1;
-                    }
-                    props[argtokens[1]]=attributes;
-                    argspos=simpleregex(args,['r*',' \t','os',","],argspos);
-                }
-                return "";
-            }
-            if(args!=undefined){
-                //word has to be a defined function!
-                const def=defined[word];
-                if(def==undefined)return word;
-                if(def.type=='function'){
-                    args=args.split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
-                    word = thiz.safeEval(def.content.body,Object.fromEntries(args));
-                }else{
-                    return word;
-                }
-                let pos=word.length-1;
-                let words=[];
-                while(pos>0){
-                    const w=getword(word,pos);
-                    if(w==false)return word;
-                    pos=w[0];
-                    if(w[1].length>0)words.push(w[1]);
-                }
-                return words.join(' ');
-            }
-            if(implicit_attrs.includes(word)){
-                props[word]=true;
-                return "";
-            }
-            //last, the word may have been redefined earlier
-            const def=defined[word];
-            if(def==undefined)return word;
-            if(def.type=='undefined'){
-                word = def.content.body;
-                let pos=word.length-1;
-                let words=[];
-                while(pos>0){
-                    const w=getword(word,pos);
-                    if(w==false)return word;
-                    pos=w[0];
-                    if(w[1].length>0)words.push(w[1]);
-                }
-                return words.join(' ');
-            }
-            return word;
-        }
-        //Gather words, may need to be cleaned
-        function getword(input,pos){
-            while(true){
-                pos=simpleregex(input,["br*"," \t"],pos);
-                switch(input[pos]){
-                    case "/":{
-                        if(input[pos-1]=='*'){
-                            pos=simpleregex(input,['bns','/*'],pos-1);
-                        }else{
-                            return false;
-                        }
-                        break;
-                    }
-                    case ")":{
-                        let pos2=thiz.skipDepthfb(input,pos);
-                        let pos3=simpleregex(input,["br+",azZ0],pos2);
-                        if(pos3==false)return false;
-                        const word=cleanword(input.substring(pos3+1,pos2+1),input.substring(pos2+2,pos));
-                        pos3=simpleregex(input,["br*"," \t"],pos3);
-                        return [pos3,word];
-                    }
-                    default:{
-                        let pos2=simpleregex(input,["br+",azZ0],pos);
-                        if(pos2==false)return false;
-                        const word=cleanword(input.substring(pos2+1,pos+1));
-                        pos2=simpleregex(input,["br*"," \t"],pos2);
-                        return [pos2,word];
-                    }
-                }
-            }
-        }
         let words=[];
         while(ret>0&&input[ret]!="\n"){
-            const w=getword(input,ret);
+            const w=this.getwordb(input,ret,props);
             if(w==false)return pos;
             ret=w[0];
             if(w[1].length>0)words.push(w[1]);
@@ -665,8 +723,8 @@ export class source_parser {
             }
             let frags=type.split(' ');
             let name=frags[frags.length-1];
-            if(name=='*'|| defined[name] || defaultTypeParts.includes(name) ){
-                name=='';
+            if(name=='*'|| this.nameSet[name] || defaultTypeParts.includes(name) ){
+                name='';
             }else{
                 frags.pop();
             }
@@ -683,13 +741,13 @@ export class source_parser {
             return { name: name, type: frags.filter(a=>a!='').join(' '), binding:{},sizeVars:[] };
         });
     }
-    parseComment(input,pos=0,save=true,eatnewline=false){
+    parseComment(input,pos=0,save=true){
         //Resolve Encountering !// or !/*
         if(input.length<=pos+1)return false;
         let next=input[pos+1];
         let ret;
         if(next=='/'){
-            ret=simpleregex(input,['ns',"\n"],pos+2)+(eatnewline?1:0);
+            ret=simpleregex(input,['ns',"\n"],pos+2);
         }else if(next=='*'){
             ret=simpleregex(input,['ns',"*/"],pos+2)+2;
         }else{
@@ -714,7 +772,7 @@ export class source_parser {
             if(capture[0].length%2==0)break;
             pos++;
         }
-        return pos;
+        return pos+1;
     }
     parseStringb(input,pos=0){
         //Resolve Encountering " or '
@@ -730,7 +788,7 @@ export class source_parser {
             if(capture[0].length%2==0)break;
             pos-=capture[0].length+1;
         }
-        return pos;
+        return pos-1;
     }
     parseIfHeader(input){
         //read header statement of #if and resolve to bool
@@ -860,25 +918,37 @@ export class source_parser {
         //static char **qjs__argv;
         //static int default_dump;
         if(!lookForward(input,'static ',pos))return pos;
-        let capture=[];
-        let ret=simpleregex(input,['os','const ','os','unsigned ','r*',' *','r+',azZ0,'r*',' \t','os','const '],pos+'static '.length,capture);
-        if(!ret)return pos;
-        let type=capture.join(' ').trim();
-        ret=simpleregex(input,['r+',azZ0,'r*',' \t','os','['],ret,capture=[]);
-        let name=capture[0];
-        if(capture[2]=='['){
-            ret=simpleregex(input,['nr+',']'],ret,capture=[]);
+        let ret=pos+'static '.length;
+        let props={};
+        let words=[];
+        while(ret<input.length&&input[ret]!="\n"){
+            const w=this.getword(input,ret,props);
+            if(w==false)break;
+            ret=w[0];
+            if(w[1].length>0){
+                if(w[1].includes('('))return pos;
+                words.push(w[1]);
+            }
+            ret=simpleregex(input,['r*',' *\t'],ret,words);
+            if(words[words.length-1].trimEnd()=='')words.pop();
+        }
+        let name=words.pop();
+        let type=words.join(' ');
+        if(input[ret]=='['){
+            let capture=[];
+            ret=simpleregex(input,['nr+',']'],ret,capture);
             if(ret==false||input[ret]!=']')return pos;
             ret++;
             type=type+`[${capture[0].trim()}]`;
         }
-        ret=simpleregex(input,['r*',' \t','os',';','os','='],ret,capture=[]);
+        let capture=[];
+        ret=simpleregex(input,['r*',' \t','os',';','os','='],ret,capture);
         if(capture[1]==';'){
-            this.defineName(name,'staticData',{name, type,initial:undefined});
-            return ret-capture[2].length;
+            this.defineName(name,'staticData',{name, type,initial:undefined,props});
+            return ret;
         }else if(capture[2]=='='){
             ret=simpleregex(input,['nr+',';'],ret,capture);
-            this.defineName(name,'staticData',{name, type,initial:capture[3]});
+            this.defineName(name,'staticData',{name, type,initial:capture[3],props});
             return ret;
         }
         return pos;
@@ -1270,13 +1340,18 @@ export class source_parser {
         let depth=1;
         pos++;
         while(pos<input.length && depth>0){
+            let ret=pos;
             switch(input[pos]){
                 case "{":depth++;break;
                 case "}":depth--;break;
-                case "'":case '"':pos=this.parseString(input,pos);break;
-                case "/":pos=this.parseComment(input,pos);break;
+                case "'":case '"':ret=this.parseString(input,pos);break;
+                case "/":ret=this.parseComment(input,pos);break;
             }
-            pos++;
+            if(ret==pos){
+                pos++;
+            }else{
+                pos=ret;
+            }
         }
         return pos-1;
     }
@@ -1284,13 +1359,18 @@ export class source_parser {
         let depth=1;
         pos++;
         while(pos<input.length && depth>0){
+            let ret=pos;
             switch(input[pos]){
                 case "(":depth++;break;
                 case ")":depth--;break;
-                case "'":case '"':pos=this.parseString(input,pos);break;
-                case "/":pos=this.parseComment(input,pos);break;
+                case "'":case '"':ret=this.parseString(input,pos);break;
+                case "/":ret=this.parseComment(input,pos);break;
             }
-            pos++;
+            if(ret==pos){
+                pos++;
+            }else{
+                pos=ret;
+            }
         }
         return pos-1;
     }
@@ -1298,17 +1378,23 @@ export class source_parser {
         let depth=1;
         pos--;
         while(pos>=0 && depth>0){
+            let ret=pos;
             switch(input[pos]){
                 case "(":depth--;break;
                 case ")":depth++;break;
-                case "'":case '"':pos=this.parseStringb(input,pos);break;
+                case "'":case '"':ret=this.parseStringb(input,pos);break;
                 case "/"://NOTE: cant handle single line comments
                     if(input[pos-1]=='*'){
-                        pos=simpleregex(input,['bns','/*'],pos-1);
+                        ret=simpleregex(input,['bns','/*'],pos-1);
                     }
+                    pos--;
                     break;
             }
-            pos--;
+            if(ret==pos){
+                pos--;
+            }else{
+                pos=ret;
+            }
         }
         return pos;
     }
@@ -1429,7 +1515,9 @@ export class source_parser {
                     }
                     break;
                 }
-                case "'":case "":pos=this.parseString(input,pos);break;
+                case "'":case '"':
+                    pos=this.parseString(input,pos);
+                    break;
                 case "t":{
                     //todo: handle callbacks
                     //example: raylib.h line 953
@@ -1472,7 +1560,7 @@ export class source_parser {
                         ifStatement+=input.substring(start,pos);
                     }
                     //Skip comments
-                    let pos2=this.parseComment(input,pos,parseBody,!inDefine);
+                    let pos2=this.parseComment(input,pos,parseBody);
                     if(pos2>pos){
                         pos=pos2;
                         start=pos;

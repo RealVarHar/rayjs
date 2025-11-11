@@ -1,6 +1,6 @@
 import { CodeScope, getsubtype, resolveVariable, getVariableParts } from "./cgen.js";
 import * as fs from "./fs.js";
-import {simpleregex, source_parser, azZ0} from "./source_parser.js";
+import {simpleregex, source_parser, a0, azZ0} from "./source_parser.js";
 
 function compileSrcLen(ctx0,srcLen0,writeto){
     //We get ['condition','variable'|object]
@@ -242,18 +242,10 @@ export function ctojsType(variables,ctype){
     let maintype=ctype.substring(0,pos+1);
     if(capture[0]==' &'){
         //if aref of simpleType, use arr* otherwise arr1
-        let variable=getaliasedVariable(variables[maintype]);
-        if(variable!=undefined && variable.type=='type' && variable.subtype=='struct' && variable.props.bound_name
-            && variable.props.isSympleType
-        ){
-            jsType[0]=['arrayProxy','arr|*','ptr'];
-        }else{
-            jsType[0]=['arrayProxy','arr|1','ptr'];
-        }
+        jsType[0]=['arr|1','ptr|1'];
     }
     for(let i=0;i<pointers.length;i++){
         let t=[];
-        if(jsType.length==0)t.push('null');
         if(i==pointers.length-1){
             let variable=getaliasedVariable(variables[maintype]);
             if(variable!=undefined && variable.type=='type' && variable.subtype=='struct' && variable.props.bound_name){
@@ -268,12 +260,16 @@ export function ctojsType(variables,ctype){
                 if(variable.props.isSympleType){
                     t.push('buffer');
                 }
-                t.push('ptr');//ptr shall always be pushed last
+                if(pointers[i]=='*'||pointers[i]==1){
+                    t.push('ptr');//ptr shall always be pushed last
+                }
             }else{
                 t.push('buffer');
                 if(maintype!='void'){
                     t.push('arrayProxy');
                     t.push('arr|'+pointers[i]);
+                }else{
+                    t.push('string');
                 }
                 if(getTypedArray(maintype)!=false){
                     t.push('typedbuffer');
@@ -431,6 +427,91 @@ function jscheck(jsType,nextjsType,src){
     }
     return undefined;
 }
+export function resolveSizeVar(ctx,sizeVar,sizevarName){
+    //Resolvers sizevar iftrees (arrays)
+    if(!Array.isArray(sizeVar))return sizeVar;
+    if(sizevarName==undefined){
+        sizevarName=ctx.allocVariable('size');
+    }
+    let branches=[[ctx,sizeVar]];
+    while(branches.length>0){
+        let [fn,branch]=branches.pop();
+        let ifbodies=[];
+        for(let result of branch.slice(branch.length/2)){
+            ifbodies.push((fn2)=>{
+                if(Array.isArray(result)){
+                    branches.push([fn2,result]);
+                }else{
+                    fn2.assign(sizevarName,result);
+                }
+            })
+        }
+        fn.declare('size_t',sizevarName);
+        fn.if(branch.slice(0,branch.length/2),...ifbodies);
+    }
+    return sizevarName;
+}
+export function deepCCopy(ctx,ctype,name,src,variables,deepCCopyBox,testShallow=false){
+    //generates code that creates name as ptr to a full copy
+    let variable=variables[ctype];
+    if(variable==undefined)return false;
+    variable=getaliasedVariable(variable);
+    if(!testShallow)ctx.declare(ctype,name,src);
+    for(let i=0;i<variable.fields.length;i++){
+        let field=variable.fields[i];
+        let capture=[];
+        simpleregex(field.type,['r+',azZ0+' ','r*',' *','os','[','r*',a0+' '],0,capture);
+        let arrsize=capture[1].replaceAll(' ','').length;
+        if(field.type.startsWith('char *'))arrsize--;
+        capture[3]=Number.parseInt(capture[3]);
+        let sizeVars=field.binding.sizeVars||[];
+        let type=field.type;
+        let fn=ctx;
+        let rowsrc=`${src}.${field.name}`;
+        let rowtarget=`${name}.${field.name}`;
+        let iter=0;
+        if(!isNaN(capture[3])){
+            type=capture[0]+capture[1]+'*';
+            if(arrsize>0){
+                fn.for(0,capture[3],(fn2,iter2)=>{fn=fn2;iter=iter2});
+                rowsrc=`${rowsrc}[${iter}]`;
+                rowtarget=`${rowtarget}[${iter}]`;
+            }
+        }
+        if(arrsize>0){
+            if(testShallow)return false;
+            for(let i=0;i<arrsize;i++){
+                if(sizeVars[i]==undefined){
+                    throw new Error(`size of ${ctype}.${field.name} is undefined`);
+                }
+                fn.call('jsc_malloc',['ctx',`sizeof(${type})${sizeVars[i]!=1?('*'+sizeVars[i]):''}`],{type,name:rowtarget});
+                let size=resolveSizeVar(fn,sizeVars[i],fn.allocVariable(`size${i}`));
+
+                fn.for(0,size,(fn2,iter2)=>{fn=fn2;iter=iter2});
+                type=getsubtype(type);
+
+                rowsrc=`${rowsrc}[${iter}]`;
+                rowtarget=`${rowtarget}[${iter}]`;
+
+                if(i==arrsize-1){
+                    deepCCopyBox.deepCCopy(fn,type,rowtarget,rowsrc,variables);
+                }else{
+                    let newrowsrc=fn.allocVariable(`${field.name}_src${i+1}`);
+                    fn.declare(type,newrowsrc,rowsrc);
+                    rowsrc=newrowsrc;
+                    let newrowtarget=fn.allocVariable(`${field.name}_target${i+1}`);
+                    fn.declare(type,newrowtarget,rowtarget);
+                    rowtarget=newrowtarget;
+                }
+            }
+        }
+    }
+    return true;
+}
+export function deepCFree(ctx,ctype,name,src){
+    //generates code that frees deeply the whole struct but not the top level pointer (ctype is 'struct' not 'struct *')
+
+}
 export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables){
     if(variables==undefined){
         variables=topctx.getVariables();
@@ -443,9 +524,10 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
             fn.return("JS_EXCEPTION");
         });
     }
+    if(flags.onEmpty==undefined)flags.onEmpty=flags.onError;
     topjsType=topjsType.map(a=>{if(!Array.isArray(a))return [a];return a;});
+    let allowNull=topjsType[0].find(a=>a=='null')!=undefined;
     //Allowed flags:
-    //dynamicAlloc: save all deallocation pointers to an array instead of logic
     //nocontextAlloc: own all internal memory for compatibility
     //altReturn: replace JS_EXCEPTION on error
     //The purpose of this function is co write correctly to $name based on jsType
@@ -472,7 +554,7 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
         let is_arrayProxy=undefined;
         if(currentTypes.includes('arrayProxy')){
             is_arrayProxy=ctx.allocVariable('is_arrayProxy');
-            currentTypes.splice()
+            currentTypes.splice(currentTypes.indexOf('arrayProxy'),1);
             ctx.declare('bool',is_arrayProxy,0);
             ctx.if(`JS_GetClassID(${src}) == js_ArrayProxy_class_id`,(fn)=>{
                 let AP_opaque=ctx.allocVariable('AP_opaque');
@@ -480,7 +562,7 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                 fn.declare('bool',is_arrayProxy,1);
                 fn.call('JS_GetOpaque',[src, 'js_ArrayProxy_class_id'],{type:'void *',name:AP_opaque});
                 fn.declare('ArrayProxy_class',AP_fn,`${AP_opaque}(ArrayProxy_class *)[0]`);
-                fn.call(`${AP_fn}.values`,['ctx',`${AP_fn}.opaque`,0,false],{type:'JSValue',name:src});
+                fn.call(`${AP_fn}.values`,['ctx',src,`${AP_fn}.opaque`,0,false],{type:'JSValue',name:src});
             });
         }
         ctx.if([]);
@@ -567,126 +649,163 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                     break;
                 case "string":
                     ctx.elsif(`JS_IsString(${src})`,(fn)=>{
-                        let size_name=fn.allocVariable(`size_${name}`);
-                        let tmp_name=fn.allocVariable('js_'+name);
-                        fn.declare('int64_t',size_name);
-                        fn.call('JS_ToCStringLen',['ctx', size_name,src],{name:tmp_name,type:"char *"});
-                        fn.call(jsc.malloc,['ctx', `${size_name}+1`],{type,name});
-                        fn.call(`memcpy`,[name,tmp_name,size_name]);
-                        fn.assign(`${name}[${size_name}]`,0);
-                        fn.call('JS_FreeCString',['ctx',tmp_name]);
+                        if(flags.noContextAlloc){
+                            //The static memory version
+                            let size_name=fn.allocVariable(`size_${name}`);
+                            let tmp_name=fn.allocVariable('js_'+name);
+                            fn.declare('int64_t',size_name);
+                            fn.call('JS_ToCStringLen',['ctx', size_name,src],{name:tmp_name,type:"char *"});
+                            let tmp2_name=fn.allocVariable('js2_'+name);
+                            fn.call(jsc.malloc,['ctx', `${size_name}+1`],{type:'char *',name:tmp2_name});
+                            fn.call(`memcpy`,[tmp2_name,tmp_name,size_name]);
+                            fn.assign(`${tmp2_name}[${size_name}]`,0);
+                            fn.assign(name,tmp2_name);
+                            fn.call('JS_FreeCString',['ctx',tmp_name]);
+                        }else{
+                            fn.call('JS_ToCStringLen',['ctx', 'NULL',src],{name:name,type:"char *"});
+                            fn.call('memoryStore',['JS_FreeCString', name]);
+                            flags.dynamicAlloc=true;
+                        }
                     });
                     break;
                 case "arr":
-                    ctx.elsif(jscheck(currentTypes[i],nextTypes,src),(fn)=>{
-                        let size_name=fn.allocVariable(`size_${name}`);
-                        fn.declare('int64_t',size_name);
-                        fn.if(`JS_GetLength(ctx,${src},${size_name})==-1`,(fn2)=>{
-                            flags.onError(fn2);
-                        });
+                    //There is an issue with known sizes, if size must be 2 but it can be 2*16 (simpletype)
+                    //Then 2 separate checks must happen:
+                    //1) is it 2 withour simpletype
+                    //2) is it 32 with only simpletype
 
-                        //is array of objects? if so, do some re-packaging
-                        let validTypes=[];
-                        for(let nextType of nextTypes){
-                            let newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return [nextType];return a;});
-                            if(typeof(nextType)=='object' && nextType.type=='type' && nextType.subtype=='struct' && nextType.props.bound_name){
-                                validTypes.push({type:'obj',len:currentTypeLen,mod:1,ctype:nextType.name,jsType:newjsType,convert:false});
-                                if(nextType.props.isSympleType){
-                                    newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return ctojsType(variables,nextType.fields[0].type);return a;});
-                                    if(currentTypeLen!='*'){
-                                        if(isNaN(currentTypeLen)){
-                                            currentTypeLen=`${currentTypeLen}*${nextType.fields.length}`;
-                                        }else{
-                                            currentTypeLen=currentTypeLen*nextType.fields.length;
-                                        }
+                    //Check what subchecks have to be done
+                    //is array of objects? if so, do some re-packaging
+                    let checks=[];
+                    for(let nextType of nextTypes){
+                        let newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return [nextType];return a;});
+                        if(typeof(nextType)=='object' && nextType.type=='type' && nextType.subtype=='struct' && nextType.props.bound_name){
+                            checks.push({type:'obj',len:currentTypeLen,mod:1,ctype:nextType.name,jsType:newjsType,convert:false});
+                            if(nextType.props.isSympleType){
+                                newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return ctojsType(variables,nextType.fields[0].type);return a;});
+                                if(currentTypeLen!='*'){
+                                    if(isNaN(currentTypeLen)){
+                                        currentTypeLen=`${currentTypeLen}*${nextType.fields.length}`;
+                                    }else{
+                                        currentTypeLen=currentTypeLen*nextType.fields.length;
                                     }
-                                    validTypes.push({type:'arr',len:currentTypeLen,mod:nextType.fields.length,ctype:nextType.fields[0].type,jsType:newjsType,convert:nextType});
                                 }
-                            }else{
-                                validTypes.push({type:'arr',len:currentTypeLen,mod:1,ctype:subtype,jsType:newjsType,convert:false});
+                                checks.push({type:'arr',len:currentTypeLen,mod:nextType.fields.length,ctype:nextType.fields[0].type,jsType:newjsType,convert:nextType});
                             }
+                        }else{
+                            checks.push({type:'arr',len:currentTypeLen,mod:1,ctype:subtype,jsType:newjsType,convert:false});
                         }
-                        let nextType;
-                        let subsrc=fn.allocVariable(`${src}0`);
-                        function bindArr(fn2){
-                            if(nextType.len!='*'){//"arr|2" - with known size
-                                fn2.if(`${size_name}<${nextType.len}`,(fn3)=>{
-                                    fn3.call('JS_ThrowTypeError',['ctx',`"${src} too short (${nextType.len})"`]);
-                                    flags.onError(fn3);
+                    }
+                    let checks_map={};
+                    for(let check of checks){
+                        let key='arr|'+check.len;
+                        if(checks_map[key]==undefined){
+                            checks_map[key]=[check];
+                        }else{
+                            checks_map[key].push(check);
+                        }
+                    }
+                    for(let checkKey in checks_map){
+                        let validTypes=checks_map[checkKey];
+                        ctx.elsif(jscheck(checkKey,nextTypes,src),(fn)=>{
+                            let size_name=fn.allocVariable(`size_${name}`);
+                            if(currentTypeLen=='*'){
+                                fn.declare('int64_t',size_name);
+                                fn.if(`JS_GetLength(ctx,${src},${size_name})==-1`,(fn2)=>{
+                                    flags.onError(fn2);
                                 });
-                                if(nextType.len>1){
-                                    fn2.declare('int64_t',size_name,nextType.len);
-                                }
+                            }else{
+                                fn.declare('int64_t',size_name,currentTypeLen);
                             }
-                            if(nextType.mod!=1){//"arr%2" - must be divisible by n
-                                fn2.declare('int64_t',size_name,`${size_name}-${size_name}%${nextType.mod}`);
-                            }
-                            fn2.if(`${size_name}==0`,(fn3)=>{
-                                fn3.call('JS_ThrowTypeError',['ctx',`"Received empty array"`]);
-                                flags.onError(fn3);
-                            });
-                            let foreach=(fn3,iter,name2)=>{
-                                name2=name2||name;
-                                let subname=`${name2}[${iter}]`;
-                                if(iter==undefined){
-                                    subname=name2;
-                                    iter=0;
-                                }
-                                fn3.call('JS_GetPropertyUint32',['ctx',src,iter],{type:'JSValue',name:subsrc});
-                                fn3.call('JS_FreeValue',['ctx',subsrc]);
-                                if(nextType.jsType[0][0]=='arrayProxy'){
-                                    nextType.jsType[0].push('arr|*');
-                                }
-                                paths.push({ctx:fn3,src:subsrc,jsType:nextType.jsType,name:subname,type:nextType.ctype});
-                            }
-                            if(nextType.type=='obj' && nextType.len==1 ){
-                                foreach(fn2,undefined);
-                            }else
-                            if(nextType.len!=1){
-                                fn2.call(jsc.malloc,['ctx',`${size_name} * sizeof(${nextType.ctype})`],{type,name});
-                                if(!nextType.convert){
-                                    fn2.for(0,size_name,foreach);
+
+
+                            let nextType;
+                            let subsrc=fn.allocVariable(`${src}0`);
+                            function bindArr(fn2){
+                                if(nextType.len!='*'){//"arr|2" - with known size
+                                    if(nextType.len>1){
+                                        fn2.declare('int64_t',size_name,nextType.len);
+                                    }
                                 }else{
-                                    fn2.for(0,size_name,(fn3,iter)=>{
-                                        let tmp_obj=fn3.allocVariable('tmp_obj');
-                                        fn3.declare(`${nextType.ctype} *`,tmp_obj,name);//cast
-                                        fn3.for(0,nextType.convert.fields.length,(fn4,iter2)=>{
-                                            foreach(fn4,`${iter}+${iter2}`,tmp_obj);
-                                        });
-                                        fn3.add('int',iter,nextType.convert.fields.length-1);
+                                    fn2.if(`${size_name}==0`,(fn3)=>{
+                                        if(allowNull){
+                                            flags.onEmpty(fn3);
+                                        }else{
+                                            fn3.call('JS_ThrowTypeError',['ctx',`"Received empty array"`]);
+                                            flags.onError(fn3);
+                                        }
                                     });
                                 }
-                            }else{
-                                fn2.call(jsc.malloc,['ctx',`sizeof(${nextType.ctype})`],{type,name});
-                                foreach(fn2,0);
-                            }
-
-                        }
-                        if(validTypes.length>1){
-                            fn.call('JS_GetPropertyUint32',['ctx',src,0],{type:'JSValue',name:subsrc});
-                            fn.call('JS_FreeValue',['ctx',subsrc]);
-                            fn.if([]);
-                            for(let i=0;i<validTypes.length;i++){
-                                nextType=validTypes[i];
-                                const check=jscheck(nextType.jsType[0],nextType.jsType[1],subsrc);
-                                if(check!=false){
-                                    fn.elsif(check,bindArr);
+                                if(nextType.mod!=1){//"arr%2" - must be divisible by n
+                                    fn2.declare('int64_t',size_name,`${size_name}-${size_name}%${nextType.mod}`);
                                 }
+                                let foreach=(fn3,iter,name2)=>{
+                                    name2=name2||name;
+                                    let subname=`${name2}[${iter}]`;
+                                    if(iter==undefined){
+                                        subname=name2;
+                                        iter=0;
+                                    }
+                                    fn3.call('JS_GetPropertyUint32',['ctx',src,iter],{type:'JSValue',name:subsrc});
+                                    fn3.call('JS_FreeValue',['ctx',subsrc]);
+                                    if(nextType.jsType[0][0]=='arrayProxy'){
+                                        nextType.jsType[0].push('arr|*');
+                                    }
+                                    paths.push({ctx:fn3,src:subsrc,jsType:nextType.jsType,name:subname,type:nextType.ctype});
+                                }
+                                if(nextType.type=='obj' && nextType.len==1 ){
+                                    foreach(fn2,undefined);
+                                }else
+                                if(nextType.len!=1){
+                                    fn2.call(jsc.malloc,['ctx',`${size_name} * sizeof(${nextType.ctype})`],{type,name});
+                                    if(!nextType.convert){
+                                        fn2.for(0,size_name,foreach);
+                                    }else{
+                                        fn2.for(0,size_name,(fn3,iter)=>{
+                                            let tmp_obj=fn3.allocVariable('tmp_obj');
+                                            fn3.declare(`${nextType.ctype} *`,tmp_obj,name);//cast
+                                            fn3.for(0,nextType.convert.fields.length,(fn4,iter2)=>{
+                                                foreach(fn4,`${iter}+${iter2}`,tmp_obj);
+                                            });
+                                            fn3.add('int',iter,nextType.convert.fields.length-1);
+                                        });
+                                    }
+                                }else{
+                                    fn2.call(jsc.malloc,['ctx',`sizeof(${nextType.ctype})`],{type,name});
+                                    foreach(fn2,0);
+                                }
+                                fn2.call('memoryStore',[jsc.free, name]);
+                                flags.dynamicAlloc=true;
                             }
-                            fn.elsif('',(fn2)=>{
-                                fn2.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${toptype}"`]);
-                                flags.onError(fn2);
-                            });
-                        }else{
-                            nextType=validTypes[0];
-                            bindArr(fn);
-                        }
-                    });
+                            if(validTypes.length>1){
+                                fn.call('JS_GetPropertyUint32',['ctx',src,0],{type:'JSValue',name:subsrc});
+                                fn.call('JS_FreeValue',['ctx',subsrc]);
+                                fn.if([]);
+                                for(let i=0;i<validTypes.length;i++){
+                                    nextType=validTypes[i];
+                                    const check=jscheck(nextType.jsType[0],nextType.jsType[1],subsrc);
+                                    if(check!=false){
+                                        fn.elsif(check,bindArr);
+                                    }
+                                }
+                                fn.elsif('',(fn2)=>{
+                                    fn2.call('JS_ThrowTypeError',['ctx',`"${src} does not match type ${toptype}"`]);
+                                    flags.onError(fn2);
+                                });
+                            }else{
+                                nextType=validTypes[0];
+                                bindArr(fn);
+                            }
+                        });
+                    }
+
+
                     break;
                 case "ptr":
                     //A noop, only advance and add (array key -1 for struct)
                     //overrodeElse=true;
                     ctx.elsif(jscheck(nextTypes,currentPath.jsType[2],src),(fn)=>{
+                        if(currentTypeLen==1)fn.assign('isptr[0]',true);
                         let requiresMalloc=false;
                         for(let i=0;i<currentPath.jsType[1].length;i++){
                             let newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return [a[i]];return a;});
@@ -701,19 +820,23 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                         }
                         if(requiresMalloc){
                             fn.call(jsc.malloc,['ctx',`sizeof(${subtype})`],{type,name});//if we are on top, malloc can be skipped
+                            fn.call('memoryStore',[jsc.free, name]);
+                            flags.dynamicAlloc=true;
                         }
                     });
                     break;
                 case "buffer":
                     ctx.elsif(`JS_IsArrayBuffer(${src})`,(fn)=>{
                         let size_name=fn.allocVariable(`size_${name}`);
+                        let tmp_name=fn.allocVariable('js_'+name);
                         fn.declare('int64_t',size_name);
 
                         if(flags.noContextAlloc){
-                            let tmp_name=fn.allocVariable('js_'+name);
-                            fn.call('JS_GetArrayBuffer',['ctx', size_name, src],{type:`${subtype} *`,name:tmp_name});
-                            fn.call(jsc.malloc,['ctx', size_name],{type:`${subtype} *`,name});
+                            fn.call('JS_GetArrayBuffer',['ctx', size_name, src],{type,name:tmp_name});
+                            fn.call(jsc.malloc,['ctx', size_name],{type,name});
                             fn.call(`memcpy`,[name,tmp_name,size_name]);
+                            fn.call('memoryStore',[jsc.free, name]);
+                            flags.dynamicAlloc=true;
                         }else{
                             fn.call('JS_GetArrayBuffer',['ctx',size_name,src],{type:`${subtype} *`,name});
                         }
@@ -725,27 +848,23 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                         let offset_name=fn.allocVariable(`offset_${name}`);
                         let size_name=fn.allocVariable(`size_${name}`);
                         let da_name=fn.allocVariable(`da_${name}`);
-                        let tmp_name;
-                        if(flags.noContextAlloc){
-                            tmp_name=fn.allocVariable(`js_${name}`);
-                        }else{
-                            tmp_name=name;
-                        }
+                        let tmp_name=fn.allocVariable('js_'+name);
                         fn.declare('size_t','offset_'+tmpname);
                         fn.declare('size_t',size_name);
                         fn.call('JS_GetTypedArrayBuffer',['ctx',src,offset_name,size_name,'NULL'],{type:'JSValue',name:da_name});
 
-                        fn.call('JS_GetArrayBuffer',['ctx',size_name,da_name],{type,name:tmp_name});
-                        fn.add(subtype,tmp_name,offset_name);
-                        fn.sub('size_t',size_name,offset_name);
-                        if(!flags.noContextAlloc){
+                        if(flags.noContextAlloc){
+                            fn.call('JS_GetArrayBuffer',['ctx', size_name, da_name],{type,name:tmp_name});
                             fn.call(jsc.malloc,['ctx', size_name],{type,name});
                             fn.call(`memcpy`,[name,tmp_name,size_name]);
-                            if(flags.dynamicAlloc){
-                                fn.call('memoryStore',['memoryCurrent', `${jsc.free}`, name],{type:'memoryNode *',name:'memoryCurrent'});
-                            }
+                            fn.call('memoryStore',[jsc.free, name]);
+                            flags.dynamicAlloc=true;
+                        }else{
+                            fn.call('JS_GetArrayBuffer',['ctx',size_name,src],{type:`${subtype} *`,name});
                         }
-                        fn.call('JS_FreeValuePtr',['ctx',`da_${tmpname}`]);//debug this! will this ever lower usage count to 0?
+                        fn.add(subtype,name,offset_name);
+                        fn.sub('size_t',size_name,offset_name);
+                        fn.call('JS_FreeValuePtr',['ctx',da_name]);
                     });
                     break;
                 default:{
@@ -754,8 +873,14 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                         if(typeof(currentType)=='object' && currentType.type=='type'){
                             if( currentType.subtype=='struct' && currentType.props.bound_name ){
                                 ctx.elsif(`JS_GetClassID(${src}) == ${currentType.props.bound_name}`,(fn)=>{
-                                    //if(type.endsWith('*'))return ptr;
-                                    fn.call('JS_GetOpaque',[src,currentType.props.bound_name],{type:type,name});
+                                    let class_id=currentType.props.bound_name;
+                                    if(class_id.startsWith('js_')&&class_id!='js_ArrayProxy_class_id'){
+                                        let tmpshadow=fn.allocVariable('tmpshadow');
+                                        fn.call('JS_GetOpaque',[src,class_id],{type:'opaqueShadow *',name:tmpshadow});
+                                        fn.declare(type,name,`${tmpshadow}[0].ptr`);
+                                    }else{
+                                        fn.call('JS_GetOpaque',[src,class_id],{type:type,name});
+                                    }
                                 });
                             }else
                             if(currentType.subtype=='function'){
@@ -783,6 +908,134 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
             });
         }
     }
+}
+export function isobject(name,variables){
+    let variable=variables[name];
+    if(variable==undefined)return false;
+    variable=getaliasedVariable(variables[name]);
+    return typeof(variable)=='object' && variable.type=='type';
+}
+export function cToJs(topctx,ctype,name,src,flags={},variables){
+    if(variables==undefined){
+        variables=topctx.getVariables();
+    }
+    let ctx=topctx;
+    if(ctype.endsWith(']'))debugger;
+    let capture=[];
+    simpleregex(ctype,['br*',' *','br*',azZ0+' '],ctype.length-1,capture);
+    let arrsize=capture[0].replaceAll(' ','').length;
+    let variable;
+    let isstring=false;
+    if(flags.sizeVars==undefined)flags.sizeVars=[];
+    if(capture[1]=='char'&&arrsize>0){
+        isstring=true;
+        arrsize--;
+    }else{
+        variable=getaliasedVariable(variables[capture[1]]);
+        if(typeof(variable)=='object' && variable.type=='type'){
+            if(arrsize>flags.sizeVars.length){
+                arrsize--;
+            }
+        }else{
+            variable=undefined;
+        }
+    }
+    if(arrsize>0){
+        for(let i=0;i<arrsize;i++){
+            let namei=i==0?name:`${name}${i}`;
+            let namei1=`${name}${i+1}`;
+            if(i!=0||ctx.getVariables()[name]==undefined){
+                ctx.call('JS_NewArray',['ctx'],{type:'JSValue',name:namei});
+            }
+            let sizeVar=flags.sizeVars[i];
+            if(sizeVar==undefined){
+                throw new Error(`sizeVars are now required, at: ${src} depth ${i}`);
+            }
+            sizeVar=resolveSizeVar(ctx,sizeVar,ctx.allocVariable('size'+i));
+            ctx.for('0',sizeVar,(fn,iter)=>{
+                if(variable!=undefined && i==arrsize-1 && flags.anchor){
+                    fn.declare(ctype,`src${i}`,`(${src}+${iter})`);
+                }else{
+                    ctype=getsubtype(ctype);
+                    fn.declare(ctype,`src${i}`,`${src}[${iter}]`);
+                }
+                src=`src${i}`;
+                let innerctx;
+                fn.section((fn2)=>{innerctx=fn2});
+                fn.call('JS_DefinePropertyValueUint32',['ctx',namei,iter,namei1,'JS_PROP_C_W_E']);
+                ctx=innerctx;
+            });
+        }
+        name=`${name}${arrsize}`;
+    }
+    if(isstring){
+        ctx.call('JS_NewString',['ctx',src],{type:'JSValue',name});
+        return;
+    }
+    if(variable!=undefined){
+        if(flags.anchor){
+            //TODO: where is case with JS_NULL (extern data but no anchor) used?
+            ctx.call('JS_DupValue',['ctx',flags.anchor]);
+            ctx.call('create_shadow_with_external',[src,flags.anchor],{type:'opaqueShadow *',name:"ptr_"+name});
+        }else{
+            ctx.call('create_shadow_with_data',[`sizeof(${ctype})`],{type:`opaqueShadow *`,name:'ptr_'+name});
+            ctx.declare(`${ctype} *`,'ptr2_'+name,`(ptr_${name}+1)(${ctype} *)`);
+            ctx.assign(`ptr2_${name}[0]`,src);
+        }
+        ctx.call('JS_NewObjectClass',['ctx', variable.props.bound_name],{type:"JSValue", name});
+        ctx.call("JS_SetOpaque", [name, "ptr_"+name]);
+        return;
+    }
+    switch(ctype){
+        case "bool":return ctx.call('JS_NewBool',['ctx',src],{type:'JSValue',name});
+        case "char":return ctx.call('JS_NewStringLen',['ctx',`${src}`,1],{type:'JSValue',name});
+        case "int8_t":
+        case "int":
+        case "signed":
+        case "signed int":
+        case "short":
+        case "short int":
+        case "signed short":
+        case "signed short int":
+        case "signed char"://too small, needs to be cast
+            return ctx.call('JS_NewInt32',['ctx',`${src}(long)`],{type:'JSValue',name});
+        case "int32_t":
+        case "long":
+        case "long int":
+        case "signed long":
+        case "signed long int":
+            return ctx.call('JS_NewInt32',['ctx',src],{type:'JSValue',name});
+        case "uint8_t":
+        case "unsigned char":
+        case "unsigned short":
+        case "unsigned short int":
+        case "unsigned":
+        case "unsigned int"://too small, needs to be cast
+            return ctx.call('JS_NewUint32',['ctx',`${src}(unsigned long)`],{type:'JSValue',name});
+        case "uint32_t":
+        case "unsigned long":
+        case "unsigned long int":
+            return ctx.call('JS_NewUint32',['ctx',src],{type:'JSValue',name});
+        case "int64_t":
+        case "long long":
+        case "long long int":
+        case "signed long long":
+        case "signed long long int":
+            return ctx.call('JS_NewInt64',['ctx',src],{type:'JSValue',name});
+        case "uint64_t":
+        case "unsigned long long":
+        case "unsigned long long int":
+            return ctx.call('JS_NewInt64',['ctx',`${src}(long long)`],{type:'JSValue',name});
+        case "float":
+        case "long double":
+            return ctx.call('JS_NewFloat64',['ctx',`${src}(double)`],{type:'JSValue',name});
+        case "double":
+            return ctx.call('JS_NewFloat64',['ctx',src],{type:'JSValue',name});
+        //va_list can not be generic
+        //case "va_list"
+    }
+    throw new Error("Requred type is not found: " + ctype);
+
 }
 export function jsToCallback(topctx,topjsType,topname,src,mode,flags={}){
     let toptype=`${topjsType.name} *`;
@@ -1153,6 +1406,7 @@ export class QuickJsGenerator {
         if(!supressDeclaration){
             this.cgen.call('js_malloc',['ctx', `sizeof(${structType})`],{type:`${structType} *`,name:'ptr_'+jsVar});
             this.cgen.assign(`ptr_${jsVar}[0]`,srcVar);
+            debugger;
             this.cgen.call('JS_NewObjectClass',['ctx', classId],{type:"JSValue", name:jsVar});
             this.cgen.call("JS_SetOpaque", [jsVar, "ptr_"+jsVar]);
         }else{
@@ -1184,7 +1438,7 @@ export class QuickJsGenerator {
             //Check if IsString
             if(getsubtype(type)=='char') {
                 ctx.elsif(`JS_IsString(${src}) == 1`,(ctx)=>{
-                    ctx.call('JS_FreeCString',['ctx',name]);
+                    ctx.call('js_free',['ctx',name]);
                 });
             }
             let tmpname=name.replace(/[^\w]/g,'');
@@ -1240,13 +1494,15 @@ export class QuickJsGenerator {
     jsStructFinalizer(classId, structName, onFinalize) {
         const args = [{ type: "JSRuntime *", name: "rt" }, { type: "JSValue", name: "val" }];
         this.cgen.function("void",`js_${structName}_finalizer`, args, true,(ctx)=>{
-            ctx.call('JS_GetOpaque',['val',classId],{type:`${structName} *`,name:'ptr'});
-            ctx.if(["ptr"], (cond) => {
-                //cond.call("TraceLog", ["LOG_INFO",`"Finalize ${structName} %p"`,"ptr"])
-                if (onFinalize)
-                    onFinalize(cond, "ptr");
-                cond.call("js_free_rt", ["rt", "ptr"]);
-            });
+            let mainstruct=structName;
+            if(classId.startsWith('js_')&&classId!='js_ArrayProxy_class_id'){
+                mainstruct='opaqueShadow';
+            }
+            ctx.call('JS_GetOpaque',['val',classId],{type:`${mainstruct} *`,name:'shadow'});
+            if (onFinalize){
+                onFinalize(ctx, "shadow[0].ptr");
+            }
+            ctx.call('deallocate_shadow',['rt',"shadow"]);//TODO: test if runtime dealloc is correct
         });
         return `js_${structName}_finalizer`;
     }

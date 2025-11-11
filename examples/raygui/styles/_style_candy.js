@@ -568,11 +568,11 @@ export function GuiLoadStyleCandy() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(candyFontRecs);
+    font.recs = candyFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(candyFontGlyphs);
+    font.glyphs = candyFontGlyphs;
 
     GuiSetFont(font);
 

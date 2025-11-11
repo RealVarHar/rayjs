@@ -27,7 +27,7 @@ import {
     GetScreenWidth, InitWindow, IsKeyPressed, KEY_SPACE, LoadCodepoints, LoadFontEx,
     RAYWHITE,
     SetTargetFPS,
-    SetTextLineSpacing, SetTextureFilter, TEXTURE_FILTER_BILINEAR, TextFormat, UnloadCodepoints,
+    SetTextLineSpacing, SetTextureFilter, TEXTURE_FILTER_BILINEAR, TextFormat,
     UnloadFont,
     Vector2, WindowShouldClose } from "rayjs:raylib";
 
@@ -81,12 +81,10 @@ function CodepointRemoveDuplicates(codepoints) {
 
     let codepointsNoDups = CodepointRemoveDuplicates(codepoints);
     codepointsNoDupsCount[0]=codepointsNoDups.length;
-    UnloadCodepoints(codepoints);
     codepoints = undefined;
 
     // Load font containing all the provided codepoint glyphs
     // A texture font atlas is automatically generated
-    console.log(JSON.stringify(codepointsNoDups));
     let font = LoadFontEx("resources/DotGothic16-Regular.ttf", 36, codepointsNoDups, codepointsNoDupsCount[0]);
 
     // Set bilinear scale filter for better font scaling

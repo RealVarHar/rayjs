@@ -67,7 +67,7 @@ const SPLINE_BEZIER = 3;      // Cubic Bezier
     
     // Array required for spline bezier-cubic, 
     // including control points interleaved with start-end segment points
-    let pointsInterleaved = new Array(3*(MAX_SPLINE_POINTS - 1) + 1);
+    let pointsInterleaved = [];
     
     let pointCount = 5;
     let selectedPoint = -1;
@@ -123,25 +123,27 @@ const SPLINE_BEZIER = 3;      // Cubic Bezier
         
         // Cubic Bezier spline control points logic
         if ((splineTypeActive[0] == SPLINE_BEZIER) && (focusedPoint == -1)) {
-            // Spline control point focus and selection logic
-            for (let i = 0; i < pointCount - 1; i++) {
-                if (CheckCollisionPointCircle(GetMousePosition(), control[i].start, 6)) {
-                    focusedControlPoint = control[i].start;
-                    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) selectedControlPoint = control[i].start;
-                    break;
-                } else if (CheckCollisionPointCircle(GetMousePosition(), control[i].end, 6)) {
-                    focusedControlPoint = control[i].end;
-                    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) selectedControlPoint = control[i].end;
-                    break;
-                }
-                else focusedControlPoint = null;
-            }
-            
             // Spline control point movement logic
             if (selectedControlPoint != null) {
-                selectedControlPoint = GetMousePosition();
+                selectedControlPoint[0][selectedControlPoint[1]] = GetMousePosition();
                 if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) selectedControlPoint = null;
+            }else{
+                // Spline control point focus and selection logic
+                for (let i = 0; i < pointCount - 1; i++) {
+                    if (CheckCollisionPointCircle(GetMousePosition(), control[i].start, 6)) {
+                        focusedControlPoint = control[i].start;
+                        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) selectedControlPoint = [control[i],'start'];
+                        break;
+                    } else if (CheckCollisionPointCircle(GetMousePosition(), control[i].end, 6)) {
+                        focusedControlPoint = control[i].end;
+                        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) selectedControlPoint = [control[i],'end'];
+                        break;
+                    }
+                    else focusedControlPoint = null;
+                }
             }
+            
+
         }
         
         // Spline selection logic

@@ -519,8 +519,8 @@ function GenerateRandomColor(s, v) {
                         let opt = TextFormat("< SIZE: %2.1f >", fontSize);
                         quads += TextLength(opt);
                         let m = MeasureTextEx(GetFontDefault(), opt, 0.8, 0.1);
-                        let pos = new Vector3( -m.x/2, 0.01, 2);
-                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, BLUE);
+                        let pos = new Vector3( -m.x/2, 0.01, 2);//console.log(522);
+                        DrawText3D(GetFontDefault(), opt, pos, 8, 0.1, 0, false, BLUE);//console.log(523);
                         pos.z += 0.5 + m.y;
 
                         opt = TextFormat("< SPACING: %2.1f >", fontSpacing);

@@ -585,11 +585,11 @@ export function GuiLoadStyleAmber() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(amberFontRecs);
+    font.recs = amberFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(amberFontGlyphs);
+    font.glyphs = amberFontGlyphs;
 
     GuiSetFont(font);
 

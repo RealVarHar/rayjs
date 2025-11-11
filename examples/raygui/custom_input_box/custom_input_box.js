@@ -12,7 +12,32 @@
 **********************************************************************************************/
 
 import {
-    BASE_COLOR_DISABLED, BASE_COLOR_PRESSED, BORDER_COLOR_PRESSED, BORDER_WIDTH, DEFAULT, GuiButton, GuiGetStyle, LABEL, STATE_DISABLED, STATE_FOCUSED, STATE_PRESSED, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT, TEXT_PADDING, TEXT_SIZE, VALUEBOX, STATE_NORMAL as guiState
+    BASE_COLOR_DISABLED,
+    BASE_COLOR_PRESSED,
+    BORDER_COLOR_PRESSED,
+    BORDER_WIDTH,
+    DEFAULT,
+    GuiButton,
+    GuiGetStyle,
+    GuiGetTextWidth,
+    LABEL,
+    STATE_DISABLED,
+    STATE_FOCUSED,
+    STATE_PRESSED,
+    TEXT_ALIGNMENT,
+    TEXT_ALIGN_CENTER,
+    TEXT_ALIGN_LEFT,
+    TEXT_ALIGN_RIGHT,
+    TEXT_PADDING,
+    TEXT_SIZE,
+    VALUEBOX,
+    STATE_NORMAL,
+    GuiIsLocked,
+    GuiIsExclusive,
+    GuiDrawRectangle,
+    GuiDrawText,
+    GetTextBounds,
+    BORDER, GuiGetAlpha, TEXT
 } from 'rayjs:raygui';
 import {BLANK,
     BeginDrawing, CheckCollisionPointRec,
@@ -29,18 +54,21 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
     const RAYGUI_VALUEBOX_MAX_CHARS = 32;
 
     let result = 0;
-    let state = guiState;
+    let state = STATE_NORMAL;
 
     let textValue = "";
 
     let textBounds = new Rectangle();
     if (text != null) {
-        textBounds.width = GetTextWidth(text) + 2;
+        textBounds.width = GuiGetTextWidth(text) + 2;
         textBounds.height = GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(VALUEBOX, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height / 2 - GuiGetStyle(DEFAULT, TEXT_SIZE) / 2;
         if (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(VALUEBOX, TEXT_PADDING);
     }
+    let guiLocked=GuiIsLocked();
+    let guiControlExclusiveMode = GuiIsExclusive();
+    let guiAlpha = GuiGetAlpha();
 
     // Update control
     //--------------------------------------------------------------------
@@ -48,9 +76,9 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
         let mousePoint = GetMousePosition();
 
         if (value[0] >= 0) {
-            textValue = TextFormat("+%.3f", value[0]);
-        } else {
             textValue = TextFormat("%.3f", value[0]);
+        } else {
+            textValue = TextFormat("-%.3f", value[0]);
         }
 
         let valueHasChanged = false;
@@ -62,9 +90,10 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
 
             // Only allow keys in range [48..57]
             if (keyCount < RAYGUI_VALUEBOX_MAX_CHARS) {
-                if (GetTextWidth(textValue) < bounds.width) {
+                if (GuiGetTextWidth(textValue) < bounds.width) {
                     let key = GetCharPressed();
                     if ((key >= 48) && (key <= 57) && guiFloatingPointIndex) {
+                        console.log(key,guiFloatingPointIndex,textValue);
                         if (guiFloatingPointIndex && guiFloatingPointIndex != 4) guiFloatingPointIndex--;
 
                         textValue = textValue.substring(0,keyCount)+String.fromCharCode(key);
@@ -77,7 +106,7 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
             // Delete text
             if (keyCount > 0) {
                 if (IsKeyPressed(KEY_BACKSPACE)) {
-                    if (guiFloatingPointIndex < 4) guiFloatingPointIndex++;
+                    if (guiFloatingPointIndex < 5) guiFloatingPointIndex++;
                     textValue = textValue.substring(0,keyCount-1);
                     keyCount--;
                     valueHasChanged = true;
@@ -130,7 +159,7 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
 
     if (state == STATE_PRESSED) {
         baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_PRESSED));
-        textValue = textValue.substring(0,textValue.length - guiFloatingPointIndex-1);
+        textValue = textValue.substring(0,textValue.length - guiFloatingPointIndex);
     } else if (state == STATE_DISABLED) {
         baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_DISABLED));
     }
@@ -143,7 +172,7 @@ function GuiFloatBox(bounds, text, value, minValue, maxValue, editMode) {
     // Draw cursor
     if (editMode) {
         // NOTE: ValueBox internal text is always centered
-        let cursor = new Rectangle( bounds.x + GetTextWidth(textValue) / 2 + bounds.width / 2 + 1, bounds.y + 2 * GuiGetStyle(VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4 * GuiGetStyle(VALUEBOX, BORDER_WIDTH) );
+        let cursor = new Rectangle( bounds.x + GuiGetTextWidth(textValue) / 2 + bounds.width / 2 + 1, bounds.y + 2 * GuiGetStyle(VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4 * GuiGetStyle(VALUEBOX, BORDER_WIDTH) );
         GuiDrawRectangle(cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER_COLOR_PRESSED)), guiAlpha));
     }
 

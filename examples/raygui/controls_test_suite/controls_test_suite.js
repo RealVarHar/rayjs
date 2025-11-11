@@ -82,18 +82,18 @@ import {BACKGROUND_COLOR, BUTTON, DEFAULT,
 //#include "gui_icons.h"          // External icons data provided, it can be generated with rGuiIcons tool
 
 // raygui embedded styles
-import {GuiLoadStyleCyber} from "../styles/style_cyber.js";       // raygui style: cyber
-import {GuiLoadStyleJungle} from "../styles/style_jungle.js";      // raygui style: jungle
-import {GuiLoadStyleLavanda} from "../styles/style_lavanda.js";     // raygui style: lavanda
-import {GuiLoadStyleDark} from "../styles/style_dark.js";        // raygui style: dark
-import {GuiLoadStyleBluish} from "../styles/style_bluish.js";      // raygui style: bluish
-import {GuiLoadStyleTerminal} from "../styles/style_terminal.js";    // raygui style: terminal
-import {GuiLoadStyleCandy} from "../styles/style_candy.js";
-import {GuiLoadStyleCherry} from "../styles/style_cherry.js";
-import {GuiLoadStyleAshes} from "../styles/style_ashes.js";
-import {GuiLoadStyleEnefete} from "../styles/style_enefete.js";
-import {GuiLoadStyleSunny} from "../styles/style_sunny.js";
-import {GuiLoadStyleAmber} from "../styles/style_amber.js";
+import {GuiLoadStyleCyber}    from "../styles/_style_cyber.js";       // raygui style: cyber
+import {GuiLoadStyleJungle}   from "../styles/_style_jungle.js";      // raygui style: jungle
+import {GuiLoadStyleLavanda}  from "../styles/_style_lavanda.js";     // raygui style: lavanda
+import {GuiLoadStyleDark}     from "../styles/_style_dark.js";        // raygui style: dark
+import {GuiLoadStyleBluish}   from "../styles/_style_bluish.js";      // raygui style: bluish
+import {GuiLoadStyleTerminal} from "../styles/_style_terminal.js";    // raygui style: terminal
+import {GuiLoadStyleCandy}    from "../styles/_style_candy.js";
+import {GuiLoadStyleCherry}   from "../styles/_style_cherry.js";
+import {GuiLoadStyleAshes}    from "../styles/_style_ashes.js";
+import {GuiLoadStyleEnefete}  from "../styles/_style_enefete.js";
+import {GuiLoadStyleSunny}    from "../styles/_style_sunny.js";
+import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
 
 //------------------------------------------------------------------------------------
 // Program main entry point

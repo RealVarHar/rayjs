@@ -60,6 +60,11 @@ const numMantissa = {
     "double":[64,32],
     "long double":[64,64]
 };
+var globallastFunctionContext;
+export function showError(){
+    console.log('fn '+globallastFunctionContext[0].name);
+    console.log(globallastFunctionContext[1].simpleToString(0));
+}
 const mantisaNum=Object.fromEntries(Object.entries(numMantissa).map(a=>[JSON.stringify(a[1]),a[0]]));//inverse
 
 //This class represents metadata of a single part of gen text
@@ -130,10 +135,6 @@ function subset(source,toRemove, leavegaps=false){
     }
 }
 export function getsubtype(type){
-    if(type==undefined){
-        debugger;
-        return '';
-    }
     if(type.endsWith(']')){
         return type.substring(0,type.lastIndexOf(' ['));
     }else if(type.endsWith('*')){
@@ -157,21 +158,25 @@ function cast(type,variable,targetType){
     }
     //handles numbers using casting
     //handles pointer differences
-    targetType=targetType.replaceAll('[','*').split(' *');
-    type=type.replaceAll('[','*').split(' *');
-    let refcountOrig=type.length-1;
-    let refcountNew=targetType.length-1;
-    if(type.join(' *')=='void *'){
+
+    let maintype;
+    let capture=[];
+    simpleregex(targetType,['nr+','*[',"r*",' *','os','['],0,capture);
+    let mainTargettype=capture[0].trimEnd();
+    let refcountNew=capture[1].countChar('*')+(capture[2]=='['?1:0);
+    targetType=capture[0]+' *'.repeat(refcountNew);
+
+    simpleregex(type,['nr+','*[',"r*",' *','os','['],0,capture=[]);
+    let mainType=capture[0].trimEnd();
+    let refcountOrig=capture[1].countChar('*')+(capture[2]=='['?1:0);
+    type=mainType+' *'.repeat(refcountOrig);
+    if(type=='void *'){
         if(refcountNew==0){
-            variable=`(${targetType[0]} *)${variable}`;
+            variable=`(${mainTargettype} *)${variable}`;
+            mainType=mainTargettype;
         }else{
-            for(let i=refcountOrig;i<refcountNew;i++){
-                type.push('');
-                refcountOrig++;
-            }
-            variable=`(${targetType.join(' *')})${variable}`;
+            return `(${targetType})${variable}`;
         }
-        type[0]=targetType[0];
     }
     while(refcountOrig<refcountNew){
         variable='&'+variable;
@@ -181,8 +186,8 @@ function cast(type,variable,targetType){
         variable='*'+variable;
         refcountOrig--;
     }
-    if(targetType[0]!=type[0]){
-        return `(${targetType.join(' *')})${variable}`;
+    if(mainTargettype!=mainType){
+        return `(${targetType})${variable}`;
     }
     return variable;
 }
@@ -198,10 +203,6 @@ function compilefunctionargs(fn,args,variables){
         //use resolveVariable to get implicit type if parameter is more complex
         let gettype=[];
         let arg=args[i];
-        if(!fn){
-            debugger;
-            return;
-        }
         if(arg=='NULL'||fn.args[i].type=='any'){
             ret.push(arg);
             continue;
@@ -211,7 +212,6 @@ function compilefunctionargs(fn,args,variables){
             }
             break;
         }
-        if(arg==undefined)debugger;
         const parts=getVariableParts(arg,variables);
         arg = resolveVariable(parts,gettype,variables);
         //before casting, check if target type includes a function type (callback) and transform it
@@ -235,35 +235,56 @@ export function getVariableParts(input,variables){
     switch(typeof(input)){
         case "number":return [{type:'number',name:String(input)}];
         case "boolean":return [{type:'string',name:String(input)}];
+        case 'undefined':throw new Error("empty input");
     }
     //TODO: direct string
+    let sourceparser=new source_parser('');
     let pos= 0;
     let parts= [];
     while(pos<input.length){
+        pos=simpleregex(input,['r*',' \t'],pos);
         let capture;
         while(input[pos]=='('){
-            pos=simpleregex(input,["nr*",")"],pos+1,capture=[]);
-            if(capture[0]!=''){
-                //First, check if last token was a function, actually
-                let lastpart=parts[parts.length-1];
-                let inner=capture[0].trim();
-                if(parts.length>0&&lastpart.type=='string'){
-                    let variable=variables[lastpart.name];
-                    if(variable!=undefined&&variable.type=='function'){
-                        lastpart.type='function';
-                        lastpart.args=inner.split(',').map(a=>a.trim());
-                        inner='';
+            let pos2=sourceparser.skipDepthf(input,pos);
+            //First, check if last token was a function, actually
+            let lastpart=parts[parts.length-1];
+            let inner=input.substring(pos+1,pos2).trim();
+            if(parts.length>0&&lastpart.type=='string' && variables[lastpart.name]!=undefined&&variables[lastpart.name].type=='function'){
+                lastpart.type='function';
+                lastpart.args=[];
+                let i=0,j=0;
+                while(i<inner.length){
+                    j=simpleregex(inner,['nr*',',('],j);
+                    if(j==inner.length){
+                        lastpart.args.push(inner.substring(i,j));
+                        break;
                     }
-                }else if(inner[inner.length-1]=='*'){//cast
-                }else if(simpleregex(inner,["nr*","+-*/^%"],0)!=inner.length){ //Is this a math stm?
-                    parts.push({type:'child',name:getVariableParts(inner,variables)});
-                    inner='';
+                    if(inner[j]=='(')j=sourceparser.skipDepthf(inner,j);
+                    if(inner[j]==','){
+                        lastpart.args.push(inner.substring(i,j));
+                        j++;
+                        i=j;
+                    }
                 }
-                if(inner!=''){
+                inner='';
+            }else if(inner[inner.length-1]=='*'){//cast
+                parts.push({type:'cast',name:inner});
+            }else{
+                //no simple solution, check if contains a type
+                let isType=true;
+                for(let part of inner.split(' ')){
+                    if(part==''||defaultTypeParts.includes(part))continue;
+                    let deftype=variables[part];
+                    if(deftype!=undefined && deftype.type=='type')continue;
+                    isType=false;break;
+                }
+                if(isType){
                     parts.push({type:'cast',name:inner});
+                }else{
+                    parts.push({type:'child',name:getVariableParts(inner,variables)});
                 }
             }
-            if(input[pos]==')')pos++;
+            pos=pos2+1;
         }
         capture=[];
         pos=simpleregex(input,["nr*","*/+-&%([{.'\""],pos,capture);
@@ -340,8 +361,6 @@ function resolvetype(typename,variableList){
         if(defaultTypeParts.includes(typename)){
             return [typename,[]];
         }
-        debugger;
-        return [typename,[]];
         throw new Error("variable "+typename+" undefined");
     }
     while(variable.type=='alias'){
@@ -428,11 +447,15 @@ export function resolveVariable(variableParts,targetType,variableList){
         //Returns what type results from applying math operations to two variables
         //adding any number to a pointer results in that poiner shifted
         if(typeA.endsWith('*'))return typeA;
+        if(typeA.endsWith(']'))return `${getsubtype(typeA)} *`;
         if(typeB.endsWith('*'))return typeB;
+        if(typeB.endsWith(']'))return `${getsubtype(typeB)} *`;
         //every number type has some mantisa and reminder value
         //the idea is to collect both and find the most appropariate casting at the end
         let typeinfoA=numMantissa[typeA];
-        if(typeinfoA==undefined)throw new Error("Unresolved numerical type "+typeA);//TODO: resolve more types
+        if(typeinfoA==undefined){
+            throw new Error("Unresolved numerical type "+typeA);
+        }//TODO: resolve more types
         let typeinfoB=numMantissa[typeB];
         if(typeinfoB==undefined)throw new Error("Unresolved numerical type "+typeB);
         typeinfoA[0]=Math.max(typeinfoA[0],typeinfoB[0]);
@@ -870,8 +893,13 @@ export class CodeScope {
                     str=`${txtIndend}while(${t['to']}){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}\n`;
                 }else{
                     //for
+                    let definevartype='';
+                    let prevtoken=this.tokenList[tokennum-3];
+                    if(prevtoken.type=='declare'&&t['var']==prevtoken.text.name){
+                        definevartype=`${prevtoken.text.subtype} `;
+                    }
                     const to=typeof(t['to'])!='string'?t['to']:resolveVariable(getVariableParts(t['to'],variables),[],variables);
-                    str=`${txtIndend}for(${t['var']}=${t['from']};${t['var']}<${to};${t['var']}++){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}\n`;
+                    str=`${txtIndend}for(${definevartype}${t['var']}=${t['from']};${t['var']}<${to};${t['var']}++){\n${nexttoken.toString(indent+1,variables)}${txtIndend}}\n`;
                 }
                 break;
             }
@@ -932,7 +960,11 @@ export class CodeScope {
                 let nexttoken=this.tokenList[tokennum];
                 if(nexttoken!==undefined && nexttoken.type=='assignlist'){
                     const nt=nexttoken.text;
-                    doAssign=`={\n${txtIndend}\t${nt.initial.join(`,\n${txtIndend}\t`)}\n${txtIndend}}`;
+                    let cast='';
+                    if(!doDefine){
+                        cast=`(${t.subtype})`;
+                    }
+                    doAssign=`=${cast}{\n${txtIndend}\t${nt.initial.join(`,\n${txtIndend}\t`)}\n${txtIndend}}`;
                     tokennum++;
                 }else if(nexttoken!==undefined && nexttoken.type=='assign'  && nexttoken.text.name==t.name){
                     const nt=nexttoken.text;
@@ -973,6 +1005,9 @@ export class CodeScope {
                     const args = compilefunctionargs(fn,nt.args,variables);
                     doAssign=`=${castedName}(${args.join(',')})`;
                     tokennum++;
+                }else if(nexttoken!==undefined && nexttoken.type=='loop' && nexttoken.text.var==t.name){
+                    str=undefined;//inline
+                    break;
                 }
                 if(doDefine){
                     let size='';
@@ -1003,8 +1038,6 @@ export class CodeScope {
                 const t=token.text;
                 const fn = variables[t.name];
                 globalThis.fnc=globalThis.fnc!=undefined?globalThis.fnc+1:0;
-                //console.log(globalThis.fnc);
-                if(t.args.includes('da_dataSize'))debugger;
                 const args = compilefunctionargs(fn,t.args,variables);
                 str=`${txtIndend}${t.name}(${args.join(',')});\n`;
                 break;
@@ -1024,8 +1057,7 @@ export class CodeScope {
                     }
 
                 }
-                //console.log('fn '+t.name);
-                //console.log(nexttoken.simpleToString(0));
+                globallastFunctionContext=[t,nexttoken];
                 let scope_innerText=nexttoken.toString(indent+1,variables);
                 if(scope_innerText!=''){
                     scope_innerText=`{\n${scope_innerText+txtIndend}}`;
@@ -1081,7 +1113,6 @@ export class CodeScope {
      */
     addToken(token,offset){
         //insert token at the end
-        if(token.type=='declare'&&typeof(token.text.type)!='string')debugger;
         if(offset==undefined){
             this.tokenList.push(token);
             return;
@@ -1321,6 +1352,10 @@ export class CodeScope {
         for(let define of defines){
             this.addToken(new CodeToken('line',`#define ${define} `));
         }
+        //Make a shallow repackage to stop adding nes keys but not waste additional memory and allow async changes
+        let internalVars=new Array(vars.length);
+        for(let i=0;i<vars.length;i++)internalVars[i]=Object.fromEntries(Object.entries(vars[i]));
+        vars=internalVars;
         this.addToken(new CodeToken('include',{name,vars,implicit}));
         //After add token to allow for backwards resolve
         let varsmap={};
@@ -1399,7 +1434,7 @@ export class CodeScope {
      * @param {(ctx:CodeScope)=>{}} fn
      */
     function(returnType,name,args,isStatic=false,fn){
-        this.addToken(new CodeToken('function',{type:'function',returnType,name,args,isStatic}));
+        this.addToken(new CodeToken('function',{type:'function',returnType,name,args,isStatic}));//this.addToken(new CodeToken('function',{type:'function',returnType,name,args:args.map(a=>{return {type:a.type,name:a.name};}),isStatic}));
         let scope= new CodeScope(this,'scope');
         //Implicitly declare parameters as first tokens of its scope
         for(let arg of args){

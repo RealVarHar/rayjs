@@ -596,11 +596,11 @@ export function GuiLoadStyleCherry() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(cherryFontRecs);
+    font.recs = cherryFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(cherryFontGlyphs);
+    font.glyphs = cherryFontGlyphs;
 
     GuiSetFont(font);
 

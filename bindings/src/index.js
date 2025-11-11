@@ -36,6 +36,11 @@ if(globalThis.structuredClone==undefined){
         return obj;
     }
 }
+String.prototype.countChar=function(c) {
+    var result = 0, i = 0;
+    for(i;i<this.length;i++)if(this[i]==c)result++;
+    return result;
+};
 let modules= {};//name=>api
 let ignored=0;
 function attachGetters(api){
@@ -136,6 +141,7 @@ function sourceToVars(source){
         varsMap[en.name] = ({type:'type',subtype:'enum',name:en.name,fields:en.fields});
     }
     for(let st of source.structs){
+        //varsMap[st.name] = ({type:'type',subtype:'struct',name:st.name,fields:st.fields.map(a=>{return {type:a.type,name:a.name};}),props:st.props});
         varsMap[st.name] = ({type:'type',subtype:'struct',name:st.name,fields:st.fields,props:st.props});
     }
     for(let al of source.aliases){
@@ -143,11 +149,7 @@ function sourceToVars(source){
     }
     for(let value of source.staticData){
         let type=value.type;
-        let props={};
-        if(type.startsWith('static ')){
-            props.static=true;
-            type=type.substring('static '.length).trim();
-        }
+        let props={static:true};
         varsMap[value.name] = ({type:'value',subtype:type,props,name:value.name});
     }
     for(let def of source.defines){
@@ -372,9 +374,10 @@ function main() {
     }
     att = modules['rlightmapper'].getStruct('Lightmapper');
     att.fields.find(a=>a.name=='data').binding.sizeVars=['ptr.w * ptr.h * 4'];
-    att = modules['rlightmapper'].getStruct('Lightmapper');
     att.fields.find(a=>a.name=='lm_handle').binding={};//Internal lightmapper context, no reason to bind this
+    att.props.copyFunction=false;
     att = modules['raylib'].getStruct("Image");//destructor: "UnloadImage"
+    att.props.copyFunction='ImageCopy';
     att = att.fields.find(a=>a.name=='data').binding;
     att.sizeVars=['GetPixelDataSize(ptr.width,ptr.height,ptr.format)'];
     att.typeCast="unsigned char *";
@@ -401,6 +404,7 @@ function main() {
     att.typeCast='short *';
     //modules['raylib'].getStruct("Sound");//destructor: "UnloadSound"
     att = modules['raylib'].getStruct("Music");//destructor: "UnloadMusicStream"
+    att.props.copyFunction=false;
     att = att.fields.find(a=>a.name=='ctxData');att.binding.get=false;att.binding.set=false;//internal use only
     att = modules['raylib'].getStruct("Model");//destructor: "UnloadModel"
     att.fields.find(a=>a.name=='meshes').binding.sizeVars=['ptr.meshCount'];
@@ -470,6 +474,7 @@ function main() {
         header.jsToC(gen,"Shader","shader", "argv[0]");
         header.jsToC(gen,"int","locIndex", "argv[1]");
         header.jsToC(gen,"int","uniformType", "argv[3]");
+        gen.call('memoryClear',['ctx']);
         let cases={
             "SHADER_UNIFORM_FLOAT":['float *','float &'],
             "SHADER_UNIFORM_VEC2":["Vector2 *",'Vector2 &'],
@@ -496,6 +501,7 @@ function main() {
             }
         });
         gen.call("SetShaderValue", ["shader", "locIndex", "value", "uniformType"]);
+        gen.call('memoryClear',['ctx']);
         gen.return("JS_UNDEFINED");
     };
     modules['raylib'].getFunction("SetShaderValueV").binding.body = (gen,header) => {
@@ -526,16 +532,16 @@ function main() {
                 ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
                 ctx.return("JS_EXCEPTION");
             }else{
-                header.jsToC(ctx,cases[i][1],"val", "argv[2]",[cases[i][2]]);
+                header.jsToC(ctx,cases[i][1],"val", "argv[2]",{sizeVars:[cases[i][2]]});
                 ctx.assign("value",'val(void *)');
             }
         });
         gen.call("SetShaderValueV", ["shader", "locIndex", "value", "uniformType",'count']);
+        gen.call('memoryClear',['ctx']);
         gen.return("JS_UNDEFINED");
     };
     modules['rlgl'].getFunction("rlSetUniform").binding.body = (gen,header) => {
         header.jsToC(gen,"int","count","argv[3]");
-        gen.declare('bool','error',0);
         gen.declare("void *", "value", "NULL");
         header.jsToC(gen,"int","locIndex", "argv[0]");
         header.jsToC(gen,"int","uniformType", "argv[2]");
@@ -560,11 +566,12 @@ function main() {
                 ctx.call('JS_ThrowTypeError',['ctx',`"unknown uniformType"`]);
                 ctx.return("JS_EXCEPTION");
             }else{
-                header.jsToC(ctx,cases[i][1],"val", "argv[1]",[cases[i][2]]);
+                header.jsToC(ctx,cases[i][1],"val", "argv[1]",{sizeVars:[cases[i][2]]});
                 ctx.assign("value",'val(void *)');
             }
         });
         gen.call("rlSetUniform", ["locIndex", "value", "uniformType",'count']);
+        gen.call('memoryClear',['ctx']);
         gen.return("JS_UNDEFINED");
     };
     modules['raylib'].getFunction("SetShaderValueV").args.find(a=>a.name=='value').name='values';
@@ -576,6 +583,7 @@ function main() {
     modules['raylib'].ignore("MemAlloc");
     modules['raylib'].ignore("MemRealloc");
     modules['raylib'].ignore("MemFree");
+    modules['raylib'].ignore("UnloadCodepoints");
     // JS User should never freeze process using sleep (no async will fire)
     modules['raylib'].ignore("WaitTime");
     // Right now, it is not usefull to users to get native window handler address
@@ -585,6 +593,12 @@ function main() {
     // SetTraceLogCallback uses va_list and as such needs custom any[] implementation
     modules['raylib'].getFunction("ComputeMD5").returnSizeVars = [4];
     modules['raylib'].getFunction("ComputeSHA1").returnSizeVars = [5];
+    modules['raylib'].getFunction("LoadTextLines").returnSizeVars = ['count[0]'];
+    modules['raylib'].getFunction("TextSplit").returnSizeVars = ['count[0]'];
+    modules['raygui'].getFunction("GuiGetIcons").returnSizeVars = ['RAYGUI_ICON_MAX_ICONS*RAYGUI_ICON_DATA_ELEMENTS'];
+    modules['raygui'].getFunction("GuiLoadIcons").returnType = "void";//returns null or unknown size buffer
+    modules['raygui'].getFunction("GuiTextSplit").returnSizeVars = ["count[0]"];
+    modules['raygui'].getFunction("GuiLoadIconsFromMemory").returnType = "void";//returns null or unknown size buffer
     modules['raylib'].ignore("TraceLogCallback");
     modules['raylib'].ignore("SetTraceLogCallback");
     // Files management functions
@@ -615,7 +629,7 @@ function main() {
         body: (gen,header) => {
             header.jsToC(gen,"const char *", "dirPath", "argv[0]");
             createFileList(gen, "LoadDirectoryFiles", "UnloadDirectoryFiles", ["dirPath"]);
-            gen.call('JS_FreeCString',['ctx','dirPath']);
+            gen.call('memoryClear',['ctx']);
             gen.return("ret");
         }
     };
@@ -626,8 +640,7 @@ function main() {
             header.jsToC(gen,"const char *", "filter", "argv[1]");
             header.jsToC(gen,"bool", "scanSubdirs", "argv[2]");
             createFileList(gen, "LoadDirectoryFilesEx", "UnloadDirectoryFiles", ["basePath", "filter", "scanSubdirs"]);
-            gen.call('JS_FreeCString',['ctx','basePath']);
-            gen.call('JS_FreeCString',['ctx','filter']);
+            gen.call('memoryClear',['ctx']);
             gen.return("ret");
         }
     };
@@ -647,6 +660,7 @@ function main() {
             gen.call("LoadImageColors", ["image"], { name: "colors", type: "Color *" });
             gen.call('JS_NewArrayBufferCopy',['ctx','colors','image.width*image.height*sizeof(Color)'],{type:'JSValue',name:'retVal'});
             gen.call("UnloadImageColors", ["colors"]);
+            gen.call('memoryClear',['ctx']);
             gen.return("retVal");
         }
     };
@@ -656,23 +670,25 @@ function main() {
     if(!config.bindText){
         //Text functions are enabled for compatibility
         modules['raylib'].functions.filter(x => x.name.startsWith("Text")).forEach(x => modules['raylib'].ignore(x.name));
+        let att=modules['raygui'].getFunction("GuiTextSplit");
+        att.returnSizeVars = ["count[0]","returnVal[i+1])-returnVal[i]"];
+        att.returnType="unsigned char";
     }else{
         /*******OPINION*********/
         //Using textCopy is more cumbersome than doing it natively, due to not supporting C string offsets
         modules['raylib'].ignore("TextCopy");
+        modules['raygui'].ignore("GetTextLines");//handled natively, dont use
         /*******OPINION*********/
         //modules['raylib'].getFunction("TextCopy").args.find(parm => parm.name === 'dst').type='char * &';
         modules['raylib'].getFunction("TextFormat").binding.body=(gen,header)=>{
             //TODO: Can improve performance by reusing buffers (static)
             let bufferdefined=false;
             const errorCleanupFn =(ctx)=>{
-                ctx.call('memoryClear',['ctx','memoryHead']);
+                ctx.call('memoryClear',['ctx']);
                 ctx.call('js_free',['ctx','char_ptr']);
                 if(bufferdefined)ctx.call('js_free',['ctx','buffer']);
             };
             let flags={dynamicAlloc:true};//reduces code size
-            gen.call('calloc',[1,'sizeof(memoryNode)'],{type:'memoryNode *',name:'memoryHead'});
-            gen.declare('memoryNode *', 'memoryCurrent','memoryHead');
 
             gen.declare('size_t','char_ptrlen',10);
             gen.call('js_calloc',['ctx', 'char_ptrlen', 'sizeof(char)'],{type:'char *',name:'char_ptr'});
@@ -875,6 +891,7 @@ function main() {
     att.binding.after = gen => gen.call("UnloadWaveSamples", ["returnVal"]);
     // requires returning pointer
     att = modules['rlgl'].getFunction("rlReadTexturePixels");
+    att.returnType="unsigned char *";
     if(config.defined['GRAPHICS_API_OPENGL_11'] || config.defined['GRAPHICS_API_OPENGL_33']){
         att.returnSizeVars = ['GetPixelDataSize(width, height, format)'];
     }else if(config.defined['GRAPHICS_API_OPENGL_ES2']){
@@ -951,7 +968,7 @@ function main() {
 
     att = modules['raylib'].getFunction('LoadFontData');
     att.args[3].binding.allowNull=true;
-    att.returnSizeVars=[['codepointCount > 0','codepointCount','','95']];//New functionality, sizevars need to accept (nested) conditionals
+    att.returnSizeVars=[['codepointCount > 0','','codepointCount','95']];//New functionality, sizevars need to accept (nested) conditionals
     modules['raylib'].getFunction('LoadShader').args[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiSpinner').args[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiValueBox').args[1].binding.allowNull=true;
@@ -966,11 +983,28 @@ function main() {
     modules['raygui'].getFunction('GuiColorBarAlpha').args[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiTextInputBox').args[6].binding.allowNull=true;
     modules['raylib'].getFunction('LoadAutomationEventList').args[0].binding.allowNull=true;
+    modules['raygui'].functions.push({
+        returnType:'float', name:'GuiGetAlpha', args:[], props:{}, binding:{body:(gen,header)=>{
+                (new QuickJsGenerator(gen)).cToJs('float','ret','guiAlpha');
+                gen.return('ret');
+            }}
+    });
+    modules['raygui'].functions.push({
+        returnType:'bool', name:'GuiIsExclusive', args:[], props:{}, binding:{body:(gen,header)=>{
+            (new QuickJsGenerator(gen)).cToJs('bool','ret','guiControlExclusiveMode');
+            gen.return('ret');
+        }}
+    });
 
     modules['raylib'].ignore('bool');
     for(let key in modules){
         const module=modules[key];
         module.aliases.forEach(x => module.gen.registerAlias(x));
+    }
+    let guirefFuntions=["GuiSpinner", "GuiValueBox", "GuiValueBoxFloat", "GuiSlider", "GuiSliderBar", "GuiProgressBar", "GuiScrollBar"];
+    for(let fnname of guirefFuntions){
+        att=modules['raygui'].getFunction(fnname).args.find(a=>a.name=='value');
+        att.type=att.type.replaceAll('*','&');
     }
 
     //Generate Code
@@ -1055,15 +1089,20 @@ function main() {
         });
     }
     //Write to file
-    for(let key in modules){
-        const module=modules[key];
-        console.log("Writing module "+module.gen.name);
-        module.gen.writeTo(`src/modules/js_${module.gen.name}.h`);
-        module.gen.typings.writeTo(`bindings/typings/lib.js_${module.gen.name}.d.ts`,{variables:module.gen.definitions.cgen.getVariables(),includegen:module.gen.includeGen,modules});
+    try{
+        for(let key in modules){
+            const module=modules[key];
+            console.log("Writing module "+module.gen.name);
+            module.gen.writeTo(`src/modules/js_${module.gen.name}.h`);
+            module.gen.typings.writeTo(`bindings/typings/lib.js_${module.gen.name}.d.ts`,{variables:module.gen.definitions.cgen.getVariables(),includegen:module.gen.includeGen,modules});
+            const ignored = modules[key].functions.filter(x => x.binding.ignore).length;
+            console.log(`Converted ${modules[key].functions.length+modules[key].structs.length+modules[key].callbacks.length - ignored}, ${ignored} ignored.`);
+        }
+        console.log("Success!");
+    }catch(e){
+        cgen.showError();
+        console.log(e);
     }
-    const ignored = modules['raylib'].functions.filter(x => x.binding.ignore).length;
-    console.log(`Converted ${modules['raylib'].functions.length+modules['raylib'].structs.length+modules['raylib'].callbacks.length - ignored}, ${ignored} ignored.`);
-    console.log("Success!");
 }
 try{
     main();

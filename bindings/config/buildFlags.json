@@ -3,6 +3,9 @@
   "spreadSize": 4,
   "defined": {
     "GRAPHICS_API_OPENGL_33": true,
-    "QJS_USE_MIMALLOC": true
+    "QJS_USE_MIMALLOC": true,
+    "RAYGUI_IMPLEMENTATION": true,
+    "RLIGHTS_IMPLEMENTATION": true,
+    "RLIGHTMAPPER_IMPLEMENTATION": true
   }
 }

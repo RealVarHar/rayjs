@@ -586,11 +586,11 @@ export function GuiLoadStyleLavanda() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(lavandaFontRecs);
+    font.recs = lavandaFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(lavandaFontGlyphs);
+    font.glyphs = lavandaFontGlyphs;
 
     GuiSetFont(font);
 

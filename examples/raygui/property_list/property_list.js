@@ -15,7 +15,7 @@
 *
 **********************************************************************************************/
 
-import * as dpl from "./dm_property_list.js";
+import * as dpl from "./_dm_property_list.js";
 import {BeginDrawing, ClearBackground,
     CloseWindow,
     DrawText, EndDrawing, GetColor, GetFPS, InitWindow, Rectangle, SetTargetFPS, TextFormat, Vector2, WindowShouldClose } from 'rayjs:raylib';
@@ -79,8 +79,8 @@ import {BACKGROUND_COLOR, DEFAULT, GuiGetStyle,
             focus = focusptr[0];
             scroll = scrollptr[0];
         
-            if (prop[0].value.vbool >= 1) {
-                DrawText(TextFormat("FOCUS:%i | SCROLL:%i | FPS:%i", focus, scroll, GetFPS()), prop[8].value.v2.x, prop[8].value.v2.y, 20, prop[11].value.vcolor);
+            if (prop[0].vbool >= 1) {
+                DrawText(TextFormat("FOCUS:%i | SCROLL:%i | FPS:%i", focus, scroll, GetFPS()), prop[8].v2.x, prop[8].v2.y, 20, prop[11].vcolor);
             }
             
         EndDrawing();

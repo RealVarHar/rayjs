@@ -16,7 +16,7 @@
 **********************************************************************************************/
 
 import * as rg from 'rayjs:raygui';
-import std from "qjs:std";
+import * as std from "qjs:std";
 import {
     BeginDrawing,
     ClearBackground,
@@ -25,8 +25,8 @@ import {
     DrawTextureEx,
     EndDrawing,
     GetColor,
-    GetFileName,
-    GetMouseWheelMove, InitWindow,IsFileDropped,IsFileExtension,LOG_WARNING,LoadDroppedFiles,LoadImageRaw,LoadTextureFromImage,PIXELFORMAT_UNCOMPRESSED_GRAYSCALE,PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,PIXELFORMAT_UNCOMPRESSED_R32,PIXELFORMAT_UNCOMPRESSED_R32G32B32,PIXELFORMAT_UNCOMPRESSED_R32G32B32A32,PIXELFORMAT_UNCOMPRESSED_R8G8B8,PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,Rectangle,SetTargetFPS,TextFormat,TextJoin,Texture2D,
+    GetFileName,Texture as Texture2D,
+    GetMouseWheelMove, InitWindow,IsFileDropped,IsFileExtension,LOG_WARNING,LoadDroppedFiles,LoadImageRaw,LoadTextureFromImage,PIXELFORMAT_UNCOMPRESSED_GRAYSCALE,PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,PIXELFORMAT_UNCOMPRESSED_R32,PIXELFORMAT_UNCOMPRESSED_R32G32B32,PIXELFORMAT_UNCOMPRESSED_R32G32B32A32,PIXELFORMAT_UNCOMPRESSED_R8G8B8,PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,Rectangle,SetTargetFPS,TextFormat,TextJoin,
     TraceLog,
     UnloadImage,
     UnloadTexture, Vector2,
@@ -216,7 +216,7 @@ import {
                 heightValue = heightValueptr[0];
                 pixelFormatActive = pixelFormatActiveptr[0];
                 channelsActive = channelsActiveptr[0];
-                bitDepthActive = bitDepthActive[0];
+                bitDepthActive = bitDepthActiveptr[0];
                 headerSizeValue = headerSizeValueptr[0];
                 
                 btnLoadPressed = 1 == rg.GuiButton(new Rectangle( windowOffset.x + 10, windowOffset.y + 420, 180, 30 ), "Import RAW");

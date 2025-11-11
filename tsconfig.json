@@ -10,7 +10,9 @@
     "checkJs": true,
     "noEmit": true,
     "lib": ["esnext"],
-    "module": "nodenext"
+    "module": "nodenext",
+    "strict": false,
+    "noImplicitAny": false
   },
   "include": [
     "./bindings/typings",",./bindings/src", "./examples"

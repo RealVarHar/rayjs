@@ -66,7 +66,7 @@ if(['Andriod','iOS'].includes(os.platform)){
 
     // Set the texture tiling using a shader
     let tiling = [ 3, 3 ];
-    let shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/tiling.fs", GLSL_VERSION));
+    let shader = LoadShader(null, TextFormat("resources/shaders/glsl%i/tiling.fs", GLSL_VERSION));
     SetShaderValue(shader, GetShaderLocation(shader, "tiling"), tiling, SHADER_UNIFORM_VEC2);
     model.materials[0].shader = shader;
 

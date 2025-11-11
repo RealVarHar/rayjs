@@ -557,11 +557,11 @@ export function GuiLoadStyleJungle() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(jungleFontRecs);
+    font.recs = jungleFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(jungleFontGlyphs);
+    font.glyphs = jungleFontGlyphs;
 
     GuiSetFont(font);
 

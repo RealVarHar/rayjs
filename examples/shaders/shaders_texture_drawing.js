@@ -31,7 +31,7 @@ import {BLANK, BeginDrawing,
     SetShaderValue, SetTargetFPS, TextFormat, UnloadImage, UnloadShader, UnloadTexture, WHITE, WindowShouldClose } from 'rayjs:raylib';
 
 let GLSL_VERSION;
-if(['Andriod','iOS'].includes(os.platform){
+if(['Andriod','iOS'].includes(os.platform)){
     GLSL_VERSION = 100;
 }else{
     GLSL_VERSION = 330;
@@ -53,7 +53,7 @@ if(['Andriod','iOS'].includes(os.platform){
     UnloadImage(imBlank);
 
     // NOTE: Using GLSL 330 shader version, on OpenGL ES 2.0 use GLSL 100 shader version
-    let shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/cubes_panning.fs", GLSL_VERSION));
+    let shader = LoadShader(null, TextFormat("resources/shaders/glsl%i/cubes_panning.fs", GLSL_VERSION));
 
     let time = 0;
     let timeLoc = GetShaderLocation(shader, "uTime");

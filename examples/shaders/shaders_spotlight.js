@@ -121,7 +121,7 @@ class Star{
         let posName = "spots[x].pos".replace('[x]','['+i+']');
         let innerName = "spots[x].inner".replace('[x]','['+i+']');
         let radiusName = "spots[x].radius".replace('[x]','['+i+']');
-
+        spots[i]= new Star();
         spots[i].positionLoc = GetShaderLocation(shdrSpot, posName);
         spots[i].innerLoc = GetShaderLocation(shdrSpot, innerName);
         spots[i].radiusLoc = GetShaderLocation(shdrSpot, radiusName);
@@ -149,7 +149,7 @@ class Star{
         spots[i].inner = 28 * (i + 1);
         spots[i].radius = 48 * (i + 1);
 
-        SetShaderValue(shdrSpot, spots[i].positionLoc, spots[i].position.x, SHADER_UNIFORM_VEC2);
+        SetShaderValue(shdrSpot, spots[i].positionLoc, spots[i].position, SHADER_UNIFORM_VEC2);
         SetShaderValue(shdrSpot, spots[i].innerLoc, spots[i].inner, SHADER_UNIFORM_FLOAT);
         SetShaderValue(shdrSpot, spots[i].radiusLoc, spots[i].radius, SHADER_UNIFORM_FLOAT);
     }
@@ -182,7 +182,7 @@ class Star{
                 if (spots[i].position.y > (screenHeight - 64)) spots[i].speed.y = -spots[i].speed.y;
             }
 
-            SetShaderValue(shdrSpot, spots[i].positionLoc, spots[i].position.x, SHADER_UNIFORM_VEC2);
+            SetShaderValue(shdrSpot, spots[i].positionLoc, spots[i].position, SHADER_UNIFORM_VEC2);
         }
 
         // Draw

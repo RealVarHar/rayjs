@@ -74,12 +74,12 @@ import {BLUE, BeginDrawing,
 
     // Assign out lighting shader to model
     const matModel = LoadMaterialDefault()
-    matModel.shader = shader;console.log(1);
-    let materials = floor.materials;console.log(2);
-    materials[0]=matModel;console.log(3);//error here, [0] calls some internal set_value instead of setter
+    matModel.shader = shader;
+    let materials = floor.materials;
+    materials[0]=matModel;//error here, [0] calls some internal set_value instead of setter
     //needs p1->is_exotic
     //const JSClassExoticMethods *em = ctx->rt->class_array[p1->class_id].exotic;
-    floor.materials = materials;console.log(4);
+    floor.materials = materials;
     const matCube = LoadMaterialDefault()
     matCube.shader = shader
     materials = cube.materials;

@@ -796,7 +796,6 @@ function GetGlyphAtlasRec(font: Font, codepoint: number): Rectangle/** undefined
 function LoadUTF8(codepoints: number[], length: number): string/** undefined */
 function UnloadUTF8(text: string): void/** undefined */
 function LoadCodepoints(text: string, count: number | number[]): number[]/** undefined */
-function UnloadCodepoints(codepoints: number[]): void/** undefined */
 function GetCodepointCount(text: string): number/** undefined */
 function GetCodepoint(text: string, codepointSize: number | number[]): number/** undefined */
 function GetCodepointNext(text: string, codepointSize: number | number[]): number/** undefined */

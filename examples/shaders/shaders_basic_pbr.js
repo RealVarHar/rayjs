@@ -42,7 +42,7 @@ const MAX_LIGHTS = 4;           // Max dynamic lights supported by shader
 // Light type
 const LIGHT_DIRECTIONAL = 0;
 const LIGHT_POINT = 1;
-const LIGHT_SPOT = 1;
+const LIGHT_SPOT = 2;
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -107,7 +107,7 @@ function UpdateLight(shader, light) {
     const screenWidth = 800;
     const screenHeight = 450;
 
-    SetConfigFlags(FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_MSAA_4X_HINT);//0x00000020
     InitWindow(screenWidth, screenHeight, "raylib [shaders] example - basic pbr");
 
     // Define the camera to look into our 3d world
@@ -117,26 +117,26 @@ function UpdateLight(shader, light) {
     camera.up = new Vector3( 0, 1, 0 );          // Camera up vector (rotation towards target)
     camera.fovy = 45;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
-
+    //camera={position = {x = 2, y = 2, z = 6}, target = {x = 0, y = 0.5, z = 0}, up = {x = 0, y = 1, z = 0}, fovy = 45,projection = 0}
     // Load PBR shader and setup all required locations
     let shader = LoadShader(TextFormat("resources/shaders/glsl%i/pbr.vs", GLSL_VERSION),
                             TextFormat("resources/shaders/glsl%i/pbr.fs", GLSL_VERSION));
-    shader.locs[SHADER_LOC_MAP_ALBEDO] = GetShaderLocation(shader, "albedoMap");
+    shader.locs[SHADER_LOC_MAP_ALBEDO] = GetShaderLocation(shader, "albedoMap");//1
     // WARNING: Metalness, roughness, and ambient occlusion are all packed into a MRA texture
     // They are passed as to the SHADER_LOC_MAP_METALNESS location for convenience,
     // shader already takes care of it accordingly
-    shader.locs[SHADER_LOC_MAP_METALNESS] = GetShaderLocation(shader, "mraMap");
-    shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");
-    // WARNING: Similar to the MRA map, the emissive map packs different information 
+    shader.locs[SHADER_LOC_MAP_METALNESS] = GetShaderLocation(shader, "mraMap");//37
+    shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");//42
+    // WARNING: Similar to the MRA map, the emissive map packs different information
     // into a single texture: it stores height and emission data
     // It is binded to SHADER_LOC_MAP_EMISSION location an properly processed on shader
-    shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "emissiveMap");
-    shader.locs[SHADER_LOC_COLOR_DIFFUSE] = GetShaderLocation(shader, "albedoColor");
+    shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "emissiveMap");//6
+    shader.locs[SHADER_LOC_COLOR_DIFFUSE] = GetShaderLocation(shader, "albedoColor");//0
 
     // Setup additional required shader locations, including lights data
-    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
-    let lightCountLoc = GetShaderLocation(shader, "numOfLights");
-    SetShaderValue(shader, lightCountLoc, [MAX_LIGHTS], SHADER_UNIFORM_INT);
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");//50
+    let lightCountLoc = GetShaderLocation(shader, "numOfLights");//43
+    SetShaderValue(shader, lightCountLoc, [MAX_LIGHTS], SHADER_UNIFORM_INT);//[{id = 6, locs = 0x139249e0},43,4]
 
     // Setup ambient color and intensity parameters
     let ambientIntensity = 0.02;
@@ -146,6 +146,8 @@ function UpdateLight(shader, light) {
     SetShaderValue(shader, GetShaderLocation(shader, "ambient"), [ambientIntensity], SHADER_UNIFORM_FLOAT);
 
     // Get location for shader parameters that can be modified in real time
+    let metallicValueLoc = GetShaderLocation(shader, "metallicValue");
+    let roughnessValueLoc = GetShaderLocation(shader, "roughnessValue");
     let emissiveIntensityLoc = GetShaderLocation(shader, "emissivePower");
     let emissiveColorLoc = GetShaderLocation(shader, "emissiveColor");
     let textureTilingLoc = GetShaderLocation(shader, "tiling");
@@ -155,7 +157,7 @@ function UpdateLight(shader, light) {
     // that model.materials[0] is by default assigned to that mesh
     // There could be more complex models consisting of multiple meshes and
     // multiple materials defined for those meshes... but always 1 mesh = 1 material
-    let car = LoadModel("resources/models/old_car_new.glb");
+    let car = LoadModel("resources/models/old_car_new.glb")
 
     // Assign already setup PBR shader to model.materials[0], used by models.meshes[0]
     car.materials[0].shader = shader;
@@ -184,8 +186,8 @@ function UpdateLight(shader, light) {
     floor.materials[0].shader = shader;
     
     floor.materials[0].maps[MATERIAL_MAP_ALBEDO].color = WHITE;
-    floor.materials[0].maps[MATERIAL_MAP_METALNESS].value = 0;
-    floor.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value = 0;
+    floor.materials[0].maps[MATERIAL_MAP_METALNESS].value = 0.8;
+    floor.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value = 0.1;
     floor.materials[0].maps[MATERIAL_MAP_OCCLUSION].value = 1;
     floor.materials[0].maps[MATERIAL_MAP_EMISSION].color = BLACK;
 
@@ -249,6 +251,10 @@ function UpdateLight(shader, light) {
                 let floorEmissiveColor = ColorNormalize(floor.materials[0].maps[MATERIAL_MAP_EMISSION].color);
                 SetShaderValue(shader, emissiveColorLoc, floorEmissiveColor, SHADER_UNIFORM_VEC4);
 
+                // Set floor metallic and roughness values
+                SetShaderValue(shader, metallicValueLoc, [floor.materials[0].maps[MATERIAL_MAP_METALNESS].value], SHADER_UNIFORM_FLOAT);
+                SetShaderValue(shader, roughnessValueLoc, [floor.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value], SHADER_UNIFORM_FLOAT);
+
                 DrawModel(floor, new Vector3( 0, 0, 0 ), 5, WHITE);   // Draw floor model
 
                 // Set old car model texture tiling, emissive color and emissive intensity parameters on shader
@@ -296,4 +302,5 @@ function UpdateLight(shader, light) {
     
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+
 }

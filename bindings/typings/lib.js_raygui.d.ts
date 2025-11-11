@@ -30,7 +30,7 @@ function GuiSetTooltip(tooltip: string): void/** undefined */
 function GuiIconText(iconId: number, text: string): string/** undefined */
 function GuiSetIconScale(scale: number): void/** undefined */
 function GuiGetIcons(): number[]/** undefined */
-function GuiLoadIcons(fileName: string, loadIconsName: boolean): string[]/** undefined */
+function GuiLoadIcons(fileName: string, loadIconsName: boolean): void/** undefined */
 function GuiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void/** undefined */
 function GuiGetTextWidth(text: string): number/** undefined */
 function GuiWindowBox(bounds: Rectangle, title: string): number/** undefined */
@@ -48,13 +48,13 @@ function GuiToggleSlider(bounds: Rectangle, text: string, active: number | numbe
 function GuiCheckBox(bounds: Rectangle, text: string, checked: boolean | boolean[]): number/** undefined */
 function GuiComboBox(bounds: Rectangle, text: string, active: number | number[]): number/** undefined */
 function GuiDropdownBox(bounds: Rectangle, text: string, active: number | number[], editMode: boolean): number/** undefined */
-function GuiSpinner(bounds: Rectangle, text: string, value: number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBox(bounds: Rectangle, text: string, value: number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number[], editMode: boolean): number/** undefined */
+function GuiSpinner(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
+function GuiValueBox(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
+function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number | number[], editMode: boolean): number/** undefined */
 function GuiTextBox(bounds: Rectangle, text: string | string[], textSize: number, editMode: boolean): number/** undefined */
-function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
-function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
-function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number[], minValue: number, maxValue: number): number/** undefined */
+function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
+function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
+function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
 function GuiStatusBar(bounds: Rectangle, text: string): number/** undefined */
 function GuiDummyRec(bounds: Rectangle, text: string): number/** undefined */
 function GuiGrid(bounds: Rectangle, text: string, spacing: number, subdivs: number, mouseCell: Vector2): number/** undefined */
@@ -65,9 +65,24 @@ function GuiTextInputBox(bounds: Rectangle, title: string, message: string, butt
 function GuiColorPicker(bounds: Rectangle, text: string, color: Color): number/** undefined */
 function GuiColorPanel(bounds: Rectangle, text: string, color: Color): number/** undefined */
 function GuiColorBarAlpha(bounds: Rectangle, text: string, alpha: number | number[]): number/** undefined */
-function GuiColorBarHue(bounds: Rectangle, text: string, value: number[]): number/** undefined */
+function GuiColorBarHue(bounds: Rectangle, text: string, hue: number[]): number/** undefined */
 function GuiColorPickerHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** undefined */
-function GuiColorPanelHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/**  */
+function GuiColorPanelHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** undefined */
+function GuiLoadStyleFromMemory(fileData: number[], dataSize: number): void/** undefined */
+function GetTextBounds(control: number, bounds: Rectangle): Rectangle/** undefined */
+function GetTextIcon(text: string, iconId: number[]): string/** undefined */
+function GuiDrawText(text: string, textBounds: Rectangle, alignment: number, tint: Color): void/** undefined */
+function GuiDrawRectangle(rec: Rectangle, borderWidth: number, borderColor: Color, color: Color): void/** undefined */
+function GuiTextSplit(text: string, delimiter: string, count: number | number[], textRow: number[]): string[]/** undefined */
+function ConvertHSVtoRGB(hsv: Vector3): Vector3/** undefined */
+function ConvertRGBtoHSV(rgb: Vector3): Vector3/** undefined */
+function GuiScrollBar(bounds: Rectangle, value: number, minValue: number, maxValue: number): number/** undefined */
+function GuiTooltip(controlRec: Rectangle): void/** undefined */
+function GuiFade(color: Color, alpha: number): Color/** undefined */
+function GuiLoadIconsFromMemory(fileData: number[], dataSize: number, loadIconsName: boolean): void/** undefined */
+function GetNextSpaceWidth(text: string, nextSpaceIndex: number[]): number/** undefined */
+function GuiGetAlpha(): number/** undefined */
+function GuiIsExclusive(): boolean/**  */
 var STATE_NORMAL: number/**  */
 var STATE_FOCUSED: number/**  */
 var STATE_PRESSED: number/**  */
@@ -406,8 +421,18 @@ var ICON_252: number/**  */
 var ICON_253: number/**  */
 var ICON_254: number/**  */
 var ICON_255: number/**  */
+var BORDER: number/**  */
+var BASE: number/**  */
+var TEXT: number/**  */
+var OTHER: number/**  */
 var RAYGUI_VERSION_MAJOR: number/**  */
 var RAYGUI_VERSION_MINOR: number/**  */
 var RAYGUI_VERSION_PATCH: number/**  */
 var SCROLLBAR_LEFT_SIDE: number/**  */
-var SCROLLBAR_RIGHT_SIDE: number}
+var SCROLLBAR_RIGHT_SIDE: number/**  */
+var RAYGUI_ICON_SIZE: number/**  */
+var RAYGUI_ICON_MAX_ICONS: number/**  */
+var RAYGUI_ICON_MAX_NAME_LENGTH: number/**  */
+var RAYGUI_MAX_CONTROLS: number/**  */
+var RAYGUI_MAX_PROPS_BASE: number/**  */
+var RAYGUI_MAX_PROPS_EXTENDED: number}

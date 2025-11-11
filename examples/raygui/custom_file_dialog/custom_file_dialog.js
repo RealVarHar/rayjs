@@ -24,7 +24,7 @@ import {InitGuiWindowFileDialog, GuiWindowFileDialog} from "./gui_window_file_di
 import {
     BACKGROUND_COLOR, DEFAULT, GuiButton, GuiGetStyle, GuiIconText, GuiLock, GuiUnlock, ICON_FILE_OPEN
 } from "rayjs:raygui";
-import os from "qjs:os";
+import * as os from "qjs:os";
 
 
 //------------------------------------------------------------------------------------

@@ -12,50 +12,36 @@
 	
 	static float js_getfloat(JSContext * ctx,JSValue src,bool * error);
 	
-	static float * js_getfloat_arr(JSContext * ctx,JSValue src,bool * error);
+	static float * js_getfloat_arrnc(JSContext * ctx,JSValue src,bool * error);
 	
 	static unsigned char js_getunsignedchar(JSContext * ctx,JSValue src,bool * error);
 	
-	static unsigned char * js_getunsignedchar_arr(JSContext * ctx,JSValue src,bool * error);
+	static unsigned char * js_getunsignedchar_arrnc(JSContext * ctx,JSValue src,bool * error);
 	
 	static unsigned int js_getunsignedint(JSContext * ctx,JSValue src,bool * error);
 	
-	static unsigned int * js_getunsignedint_arr(JSContext * ctx,JSValue src,bool * error);
+	static unsigned int * js_getunsignedint_arrnc(JSContext * ctx,JSValue src,bool * error);
 	
-	static unsigned int * js_getunsignedint_arr5(JSContext * ctx,JSValue src,bool * error){
+	static unsigned int * js_getunsignedint_arr5nc(JSContext * ctx,JSValue src,bool * error){
 		unsigned int * ret;
 		bool is_arrayProxy=(bool)0;
 		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
 			is_arrayProxy =(bool)1;
 			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
-			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+			src =AP_fn.values(ctx,src,AP_fn.opaque,(int)0,(bool)false);
 		}
-		if(JS_IsNull(src)||JS_IsUndefined(src)){
-			ret =NULL;
-		}else if(JS_IsArrayBuffer(src)){
+		if(JS_IsArrayBuffer(src)){
 			int64_t size_ret;
-			ret =(unsigned int *)JS_GetArrayBuffer(ctx,(size_t *)&size_ret,src);
+			unsigned int * js_ret=(unsigned int  *)JS_GetArrayBuffer(ctx,(size_t  *)&size_ret,src);
+			ret =(unsigned int  *)jsc_malloc(ctx,(size_t)size_ret);
+			memcpy((void  *)ret,(const void  *)js_ret,(size_t)size_ret);
+			memoryStore(jsc_free,(void  *)ret);
 		}else if(js_IsArrayLength(ctx,src,(int64_t)5)){
-			int64_t size_ret;
-			if(JS_GetLength(ctx,src,&size_ret)==-1){
-				error[0]=(bool)1;
-				return NULL;
-			}
-			if(size_ret<5){
-				JS_ThrowTypeError(ctx,(const char *)"src too short (5)");
-				error[0]=(bool)1;
-				return NULL;
-			}
+			int64_t size_ret=(int64_t)5;
 			size_ret =(int64_t)5;
-			if(size_ret==0){
-				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
-				error[0]=(bool)1;
-				return NULL;
-			}
-			ret =(unsigned int *)js_malloc(ctx,size_ret*sizeof(unsigned int));
-			int i;
-			for(i=0;i<size_ret;i++){
+			ret =(unsigned int  *)jsc_malloc(ctx,size_ret*sizeof(unsigned int));
+			for(int i=0;i<size_ret;i++){
 				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				JS_FreeValue(ctx,src0);
 				if(JS_IsNumber(src0)){
@@ -63,23 +49,25 @@
 					JS_ToUint32(ctx,&long_reti,src0);
 					ret[i] =((unsigned int)long_reti);
 				}else{
-					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type unsigned int *");
+					JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type unsigned int *");
 					error[0]=(bool)1;
 					return NULL;
 				}
 			}
+			memoryStore(jsc_free,(void  *)ret);
 		}else if(JS_GetClassID(src)==JS_CLASS_UINT16_ARRAY){
 			size_t offset_ret;
 			size_t size_ret;
 			JSValue da_ret=JS_GetTypedArrayBuffer(ctx,src,&offset_ret,&size_ret,NULL);
-			ret =(unsigned int *)JS_GetArrayBuffer(ctx,&size_ret,da_ret);
+			unsigned int * js_ret=(unsigned int  *)JS_GetArrayBuffer(ctx,&size_ret,da_ret);
+			ret =(unsigned int  *)jsc_malloc(ctx,size_ret);
+			memcpy((void  *)ret,(const void  *)js_ret,size_ret);
+			memoryStore(jsc_free,(void  *)ret);
 			ret +=offset_ret;
 			size_ret -=offset_ret;
-			ret =(unsigned int *)js_malloc(ctx,size_ret);
-			memcpy((void *)ret,(const void *)ret,size_ret);
 			JS_FreeValuePtr(ctx,&da_ret);
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type unsigned int *");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type unsigned int *");
 			error[0]=(bool)1;
 			return NULL;
 		}
@@ -90,124 +78,94 @@
 	static rlVertexBuffer js_getrlVertexBuffer(JSContext * ctx,JSValue src,bool * error){
 		rlVertexBuffer ret;
 		if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
-			ret =*(rlVertexBuffer *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
+			opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
+			ret =*(rlVertexBuffer *)tmpshadow[0].ptr;
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlVertexBuffer");
 			error[0]=(bool)1;
 			return (rlVertexBuffer){0};
 		}
 		return ret;
 	}
 	
-	static rlVertexBuffer * js_getrlVertexBuffer_arr(JSContext * ctx,JSValue src,bool * error){
-		rlVertexBuffer * ret;
-		bool is_arrayProxy=(bool)0;
-		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
-			is_arrayProxy =(bool)1;
-			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
-			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+	static rlVertexBuffer rlVertexBuffer_copy(JSContext * ctx,rlVertexBuffer ptr){
+		rlVertexBuffer ret=ptr;
+		ret.vertices =(float  *)jsc_malloc(ctx,sizeof(float *)*ptr.elementCount*3*4);
+		for(int i=0;i<ptr.elementCount*3*4;i++){
 		}
-		if(JS_IsNull(src)||JS_IsUndefined(src)){
-			ret =NULL;
-		}else if(JS_IsArray(src)){
-			int64_t size_ret;
-			if(JS_GetLength(ctx,src,&size_ret)==-1){
-				error[0]=(bool)1;
-				return NULL;
-			}
-			if(size_ret==0){
-				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
-				error[0]=(bool)1;
-				return NULL;
-			}
-			ret =(rlVertexBuffer *)js_malloc(ctx,size_ret*sizeof(rlVertexBuffer));
-			int i;
-			for(i=0;i<size_ret;i++){
-				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
-				JS_FreeValue(ctx,src0);
-				if(JS_GetClassID(src0)==js_rlVertexBuffer_class_id){
-					ret[i] =*(rlVertexBuffer *)JS_GetOpaque(src0,js_rlVertexBuffer_class_id);
-				}else{
-					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlVertexBuffer *");
-					error[0]=(bool)1;
-					return NULL;
-				}
-			}
-		}else if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
-			if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
-				ret =(rlVertexBuffer *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
-			}else{
-				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer *");
-				error[0]=(bool)1;
-				return NULL;
-			}
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlVertexBuffer *");
-			error[0]=(bool)1;
-			return NULL;
+		ret.texcoords =(float  *)jsc_malloc(ctx,sizeof(float *)*ptr.elementCount*2*4);
+		for(int i0=0;i0<ptr.elementCount*2*4;i0++){
 		}
-		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		ret.normals =(float  *)jsc_malloc(ctx,sizeof(float *)*ptr.elementCount*3*4);
+		for(int i1=0;i1<ptr.elementCount*3*4;i1++){
+		}
+		ret.colors =(unsigned char  *)jsc_malloc(ctx,sizeof(unsigned char *)*ptr.elementCount*4*4);
+		for(int i2=0;i2<ptr.elementCount*4*4;i2++){
+		}
+		ret.indices =(unsigned int  *)jsc_malloc(ctx,sizeof(unsigned int *)*ptr.elementCount*6);
+		for(int i3=0;i3<ptr.elementCount*6;i3++){
+		}
 		return ret;
 	}
 	
 	static rlDrawCall js_getrlDrawCall(JSContext * ctx,JSValue src,bool * error){
 		rlDrawCall ret;
 		if(JS_GetClassID(src)==js_rlDrawCall_class_id){
-			ret =*(rlDrawCall *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+			opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+			ret =*(rlDrawCall *)tmpshadow[0].ptr;
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlDrawCall");
 			error[0]=(bool)1;
 			return (rlDrawCall){0};
 		}
 		return ret;
 	}
 	
-	static rlDrawCall * js_getrlDrawCall_arr(JSContext * ctx,JSValue src,bool * error){
-		rlDrawCall * ret;
+	static rlVertexBuffer * js_getrlVertexBuffer_arrnc(JSContext * ctx,JSValue src,bool * error){
+		rlVertexBuffer * ret;
 		bool is_arrayProxy=(bool)0;
 		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
 			is_arrayProxy =(bool)1;
 			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
-			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+			src =AP_fn.values(ctx,src,AP_fn.opaque,(int)0,(bool)false);
 		}
-		if(JS_IsNull(src)||JS_IsUndefined(src)){
-			ret =NULL;
-		}else if(JS_IsArray(src)){
+		if(JS_IsArray(src)){
 			int64_t size_ret;
 			if(JS_GetLength(ctx,src,&size_ret)==-1){
 				error[0]=(bool)1;
 				return NULL;
 			}
 			if(size_ret==0){
-				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				JS_ThrowTypeError(ctx,(const char  *)"Received empty array");
 				error[0]=(bool)1;
 				return NULL;
 			}
-			ret =(rlDrawCall *)js_malloc(ctx,size_ret*sizeof(rlDrawCall));
-			int i;
-			for(i=0;i<size_ret;i++){
+			ret =(rlVertexBuffer  *)jsc_malloc(ctx,size_ret*sizeof(rlVertexBuffer));
+			for(int i=0;i<size_ret;i++){
 				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				JS_FreeValue(ctx,src0);
-				if(JS_GetClassID(src0)==js_rlDrawCall_class_id){
-					ret[i] =*(rlDrawCall *)JS_GetOpaque(src0,js_rlDrawCall_class_id);
+				if(JS_GetClassID(src0)==js_rlVertexBuffer_class_id){
+					opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_rlVertexBuffer_class_id);
+					ret[i] =*(rlVertexBuffer *)tmpshadow[0].ptr;
 				}else{
-					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlDrawCall *");
+					JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type rlVertexBuffer *");
 					error[0]=(bool)1;
 					return NULL;
 				}
 			}
-		}else if(JS_GetClassID(src)==js_rlDrawCall_class_id){
-			if(JS_GetClassID(src)==js_rlDrawCall_class_id){
-				ret =(rlDrawCall *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+			memoryStore(jsc_free,(void  *)ret);
+		}else if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
+			if(JS_GetClassID(src)==js_rlVertexBuffer_class_id){
+				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlVertexBuffer_class_id);
+				ret =(rlVertexBuffer  *)tmpshadow[0].ptr;
 			}else{
-				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall *");
+				JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlVertexBuffer *");
 				error[0]=(bool)1;
 				return NULL;
 			}
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlDrawCall *");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlVertexBuffer *");
 			error[0]=(bool)1;
 			return NULL;
 		}
@@ -215,21 +173,89 @@
 		return ret;
 	}
 	
-	static double js_getdouble(JSContext * ctx,JSValue src,bool * error);
-	
-	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
+	static rlDrawCall * js_getrlDrawCall_arrnc(JSContext * ctx,JSValue src,bool * error){
+		rlDrawCall * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,src,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char  *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(rlDrawCall  *)jsc_malloc(ctx,size_ret*sizeof(rlDrawCall));
+			for(int i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_GetClassID(src0)==js_rlDrawCall_class_id){
+					opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_rlDrawCall_class_id);
+					ret[i] =*(rlDrawCall *)tmpshadow[0].ptr;
+				}else{
+					JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type rlDrawCall *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+			memoryStore(jsc_free,(void  *)ret);
+		}else if(JS_GetClassID(src)==js_rlDrawCall_class_id){
+			if(JS_GetClassID(src)==js_rlDrawCall_class_id){
+				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlDrawCall_class_id);
+				ret =(rlDrawCall  *)tmpshadow[0].ptr;
+			}else{
+				JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlDrawCall *");
+				error[0]=(bool)1;
+				return NULL;
+			}
+		}else{
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlDrawCall *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
 	
 	static rlRenderBatch js_getrlRenderBatch(JSContext * ctx,JSValue src,bool * error){
 		rlRenderBatch ret;
 		if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
-			ret =*(rlRenderBatch *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+			opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+			ret =*(rlRenderBatch *)tmpshadow[0].ptr;
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlRenderBatch");
 			error[0]=(bool)1;
 			return (rlRenderBatch){0};
 		}
 		return ret;
 	}
+	
+	static rlRenderBatch rlRenderBatch_copy(JSContext * ctx,rlRenderBatch ptr){
+		rlRenderBatch ret=ptr;
+		ret.vertexBuffer =(rlVertexBuffer  *)jsc_malloc(ctx,sizeof(rlVertexBuffer *)*ptr.bufferCount);
+		for(int i=0;i<ptr.bufferCount;i++){
+			ret.vertexBuffer[i] =rlVertexBuffer_copy(ctx,ptr.vertexBuffer[i]);
+		}
+		ret.draws =(rlDrawCall  *)jsc_malloc(ctx,sizeof(rlDrawCall *)*RL_DEFAULT_BATCH_DRAWCALLS);
+		for(int i0=0;i0<RL_DEFAULT_BATCH_DRAWCALLS;i0++){
+			ret.draws[i0] =ptr.draws[i0];
+		}
+		return ret;
+	}
+	
+	static float * js_getfloat_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static double js_getdouble(JSContext * ctx,JSValue src,bool * error);
+	
+	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
 	
 	static rlRenderBatch * js_getrlRenderBatch_arr(JSContext * ctx,JSValue src,bool * error){
 		rlRenderBatch * ret;
@@ -238,44 +264,44 @@
 			is_arrayProxy =(bool)1;
 			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
 			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
-			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+			src =AP_fn.values(ctx,src,AP_fn.opaque,(int)0,(bool)false);
 		}
-		if(JS_IsNull(src)||JS_IsUndefined(src)){
-			ret =NULL;
-		}else if(JS_IsArray(src)){
+		if(JS_IsArray(src)){
 			int64_t size_ret;
 			if(JS_GetLength(ctx,src,&size_ret)==-1){
 				error[0]=(bool)1;
 				return NULL;
 			}
 			if(size_ret==0){
-				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
+				JS_ThrowTypeError(ctx,(const char  *)"Received empty array");
 				error[0]=(bool)1;
 				return NULL;
 			}
-			ret =(rlRenderBatch *)js_malloc(ctx,size_ret*sizeof(rlRenderBatch));
-			int i;
-			for(i=0;i<size_ret;i++){
+			ret =(rlRenderBatch  *)js_malloc(ctx,size_ret*sizeof(rlRenderBatch));
+			for(int i=0;i<size_ret;i++){
 				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 				JS_FreeValue(ctx,src0);
 				if(JS_GetClassID(src0)==js_rlRenderBatch_class_id){
-					ret[i] =*(rlRenderBatch *)JS_GetOpaque(src0,js_rlRenderBatch_class_id);
+					opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_rlRenderBatch_class_id);
+					ret[i] =*(rlRenderBatch *)tmpshadow[0].ptr;
 				}else{
-					JS_ThrowTypeError(ctx,(const char *)"src0 does not match type rlRenderBatch *");
+					JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type rlRenderBatch *");
 					error[0]=(bool)1;
 					return NULL;
 				}
 			}
+			memoryStore(js_free,(void  *)ret);
 		}else if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
 			if(JS_GetClassID(src)==js_rlRenderBatch_class_id){
-				ret =(rlRenderBatch *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_rlRenderBatch_class_id);
+				ret =(rlRenderBatch  *)tmpshadow[0].ptr;
 			}else{
-				JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch *");
+				JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlRenderBatch *");
 				error[0]=(bool)1;
 				return NULL;
 			}
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type rlRenderBatch *");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type rlRenderBatch *");
 			error[0]=(bool)1;
 			return NULL;
 		}
@@ -284,6 +310,87 @@
 	}
 	
 	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static void * js_getvoid_arrnull(JSContext * ctx,JSValue src,bool * error){
+		void * ret;
+		if(JS_IsArrayBuffer(src)){
+			int64_t size_ret;
+			ret =(void  *)JS_GetArrayBuffer(ctx,(size_t  *)&size_ret,src);
+		}else if(JS_IsString(src)){
+			ret =(void  *)JS_ToCStringLen(ctx,NULL,src);
+			memoryStore(JS_FreeCString,ret);
+		}else if(JS_GetTypedArrayType(src)!=-1){
+			size_t offset_ret;
+			size_t size_ret;
+			JSValue da_ret=JS_GetTypedArrayBuffer(ctx,src,&offset_ret,&size_ret,NULL);
+			ret =(void  *)JS_GetArrayBuffer(ctx,&size_ret,src);
+			ret +=offset_ret;
+			size_ret -=offset_ret;
+			JS_FreeValuePtr(ctx,&da_ret);
+		}else if(JS_IsNull(src)||JS_IsUndefined(src)){
+			ret =NULL;
+		}else{
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type void *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		return ret;
+	}
+	
+	static unsigned int * js_getunsignedint_arr(JSContext * ctx,JSValue src,bool * error){
+		unsigned int * ret;
+		bool is_arrayProxy=(bool)0;
+		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
+			is_arrayProxy =(bool)1;
+			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
+			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
+			src =AP_fn.values(ctx,src,AP_fn.opaque,(int)0,(bool)false);
+		}
+		if(JS_IsArrayBuffer(src)){
+			int64_t size_ret;
+			ret =(unsigned int  *)JS_GetArrayBuffer(ctx,(size_t  *)&size_ret,src);
+		}else if(JS_IsArray(src)){
+			int64_t size_ret;
+			if(JS_GetLength(ctx,src,&size_ret)==-1){
+				error[0]=(bool)1;
+				return NULL;
+			}
+			if(size_ret==0){
+				JS_ThrowTypeError(ctx,(const char  *)"Received empty array");
+				error[0]=(bool)1;
+				return NULL;
+			}
+			ret =(unsigned int  *)js_malloc(ctx,size_ret*sizeof(unsigned int));
+			for(int i=0;i<size_ret;i++){
+				JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)i);
+				JS_FreeValue(ctx,src0);
+				if(JS_IsNumber(src0)){
+					uint32_t long_reti;
+					JS_ToUint32(ctx,&long_reti,src0);
+					ret[i] =((unsigned int)long_reti);
+				}else{
+					JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type unsigned int *");
+					error[0]=(bool)1;
+					return NULL;
+				}
+			}
+			memoryStore(js_free,(void  *)ret);
+		}else if(JS_GetClassID(src)==JS_CLASS_UINT16_ARRAY){
+			size_t offset_ret;
+			size_t size_ret;
+			JSValue da_ret=JS_GetTypedArrayBuffer(ctx,src,&offset_ret,&size_ret,NULL);
+			ret =(unsigned int  *)JS_GetArrayBuffer(ctx,&size_ret,src);
+			ret +=offset_ret;
+			size_ret -=offset_ret;
+			JS_FreeValuePtr(ctx,&da_ret);
+		}else{
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type unsigned int *");
+			error[0]=(bool)1;
+			return NULL;
+		}
+		if(is_arrayProxy)JS_FreeValue(ctx,src);
+		return ret;
+	}
 	
 	static int * js_getint_arr(JSContext * ctx,JSValue src,bool * error);
 	
@@ -306,12 +413,13 @@
 	static Matrix * js_getMatrix_arr(JSContext * ctx,JSValue src,bool * error);
 	
 	static void js_rlVertexBuffer_finalizer(JSRuntime * rt,JSValue val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque(val,js_rlVertexBuffer_class_id);
-		if(ptr)js_free_rt(rt,(void *)ptr);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque(val,js_rlVertexBuffer_class_id);
+		deallocate_shadow(rt,shadow);
 	}
 	
 	static JSValue js_rlVertexBuffer_get_elementCount(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
 		int elementCount=ptr[0].elementCount;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)elementCount));
 		return ret;
@@ -319,20 +427,23 @@
 	
 	static JSValue js_rlVertexBuffer_set_elementCount(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].elementCount=value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_vertices_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].elementCount*3*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].vertices[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].elementCount*3*4;i++){
+			float src0=ptr[0].vertices[i];
+			JSValue ret1=JS_NewFloat64(ctx,((double)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -341,19 +452,18 @@
 	}
 	
 	static int js_rlVertexBuffer_vertices_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)ptr[0].elementCount*3*4;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_vertices_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*3*((long)4));
@@ -373,20 +483,27 @@
 	}
 	
 	static int js_rlVertexBuffer_vertices_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			float ret=js_getfloat(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].vertices[property] =ret;
+			if(property>=0&&property<ptr[0].elementCount*3*4){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				float ret=js_getfloat(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].vertices[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_vertices_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -403,28 +520,38 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_vertices(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_vertices_values,.keys = js_rlVertexBuffer_vertices_keys,.get = js_rlVertexBuffer_vertices_get,.set = js_rlVertexBuffer_vertices_set,.has = js_rlVertexBuffer_vertices_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_vertices_values,.keys = js_rlVertexBuffer_vertices_keys,.get = js_rlVertexBuffer_vertices_get,.set = js_rlVertexBuffer_vertices_set,.has = js_rlVertexBuffer_vertices_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_vertices(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value=js_getfloat_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		float * value=js_getfloat_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].vertices!=NULL)jsc_free(ctx,(void *)ptr[0].vertices);
+		local_memlock=(bool)false;
+		if(ptr[0].vertices!=NULL)jsc_free(ctx,(void  *)ptr[0].vertices);
 		ptr[0].vertices =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_texcoords_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].elementCount*2*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].texcoords[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].elementCount*2*4;i++){
+			float src0=ptr[0].texcoords[i];
+			JSValue ret1=JS_NewFloat64(ctx,((double)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -433,19 +560,18 @@
 	}
 	
 	static int js_rlVertexBuffer_texcoords_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)ptr[0].elementCount*2*4;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_texcoords_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*2*((long)4));
@@ -465,20 +591,27 @@
 	}
 	
 	static int js_rlVertexBuffer_texcoords_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			float ret=js_getfloat(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].texcoords[property] =ret;
+			if(property>=0&&property<ptr[0].elementCount*2*4){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				float ret=js_getfloat(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].texcoords[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_texcoords_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -495,28 +628,38 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_texcoords(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_texcoords_values,.keys = js_rlVertexBuffer_texcoords_keys,.get = js_rlVertexBuffer_texcoords_get,.set = js_rlVertexBuffer_texcoords_set,.has = js_rlVertexBuffer_texcoords_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_texcoords_values,.keys = js_rlVertexBuffer_texcoords_keys,.get = js_rlVertexBuffer_texcoords_get,.set = js_rlVertexBuffer_texcoords_set,.has = js_rlVertexBuffer_texcoords_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_texcoords(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value=js_getfloat_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		float * value=js_getfloat_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].texcoords!=NULL)jsc_free(ctx,(void *)ptr[0].texcoords);
+		local_memlock=(bool)false;
+		if(ptr[0].texcoords!=NULL)jsc_free(ctx,(void  *)ptr[0].texcoords);
 		ptr[0].texcoords =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_normals_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].elementCount*3*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].normals[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].elementCount*3*4;i++){
+			float src0=ptr[0].normals[i];
+			JSValue ret1=JS_NewFloat64(ctx,((double)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -525,19 +668,18 @@
 	}
 	
 	static int js_rlVertexBuffer_normals_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)ptr[0].elementCount*3*4;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_normals_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*3*((long)4));
@@ -557,20 +699,27 @@
 	}
 	
 	static int js_rlVertexBuffer_normals_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			float ret=js_getfloat(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].normals[property] =ret;
+			if(property>=0&&property<ptr[0].elementCount*3*4){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				float ret=js_getfloat(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].normals[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_normals_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -587,28 +736,38 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_normals(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_normals_values,.keys = js_rlVertexBuffer_normals_keys,.get = js_rlVertexBuffer_normals_get,.set = js_rlVertexBuffer_normals_set,.has = js_rlVertexBuffer_normals_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_normals_values,.keys = js_rlVertexBuffer_normals_keys,.get = js_rlVertexBuffer_normals_get,.set = js_rlVertexBuffer_normals_set,.has = js_rlVertexBuffer_normals_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_normals(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		float * value=js_getfloat_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		float * value=js_getfloat_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].normals!=NULL)jsc_free(ctx,(void *)ptr[0].normals);
+		local_memlock=(bool)false;
+		if(ptr[0].normals!=NULL)jsc_free(ctx,(void  *)ptr[0].normals);
 		ptr[0].normals =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_colors_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].elementCount*4*4;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].colors[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].elementCount*4*4;i++){
+			unsigned char src0=ptr[0].colors[i];
+			JSValue ret1=JS_NewUint32(ctx,(uint32_t)((unsigned long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -617,19 +776,18 @@
 	}
 	
 	static int js_rlVertexBuffer_colors_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)ptr[0].elementCount*4*4;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_colors_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*4*((long)4));
@@ -649,20 +807,27 @@
 	}
 	
 	static int js_rlVertexBuffer_colors_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			unsigned char ret=js_getunsignedchar(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].colors[property] =ret;
+			if(property>=0&&property<ptr[0].elementCount*4*4){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				unsigned char ret=js_getunsignedchar(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].colors[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_colors_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -679,28 +844,38 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_colors(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_colors_values,.keys = js_rlVertexBuffer_colors_keys,.get = js_rlVertexBuffer_colors_get,.set = js_rlVertexBuffer_colors_set,.has = js_rlVertexBuffer_colors_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_colors_values,.keys = js_rlVertexBuffer_colors_keys,.get = js_rlVertexBuffer_colors_get,.set = js_rlVertexBuffer_colors_set,.has = js_rlVertexBuffer_colors_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_colors(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned char * value=js_getunsignedchar_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		unsigned char * value=js_getunsignedchar_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].colors!=NULL)jsc_free(ctx,(void *)ptr[0].colors);
+		local_memlock=(bool)false;
+		if(ptr[0].colors!=NULL)jsc_free(ctx,(void  *)ptr[0].colors);
 		ptr[0].colors =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_indices_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].elementCount*6;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].indices[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].elementCount*6;i++){
+			unsigned int src0=ptr[0].indices[i];
+			JSValue ret1=JS_NewUint32(ctx,(uint32_t)((unsigned long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -709,19 +884,18 @@
 	}
 	
 	static int js_rlVertexBuffer_indices_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)ptr[0].elementCount*6;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_indices_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].elementCount*((long)6));
@@ -741,20 +915,27 @@
 	}
 	
 	static int js_rlVertexBuffer_indices_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			unsigned int ret=js_getunsignedint(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].indices[property] =ret;
+			if(property>=0&&property<ptr[0].elementCount*6){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				unsigned int ret=js_getunsignedint(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].indices[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_indices_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -771,23 +952,34 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_indices(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_indices_values,.keys = js_rlVertexBuffer_indices_keys,.get = js_rlVertexBuffer_indices_get,.set = js_rlVertexBuffer_indices_set,.has = js_rlVertexBuffer_indices_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_indices_values,.keys = js_rlVertexBuffer_indices_keys,.get = js_rlVertexBuffer_indices_get,.set = js_rlVertexBuffer_indices_set,.has = js_rlVertexBuffer_indices_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_indices(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned int * value=js_getunsignedint_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		unsigned int * value=js_getunsignedint_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].indices!=NULL)jsc_free(ctx,(void *)ptr[0].indices);
+		local_memlock=(bool)false;
+		if(ptr[0].indices!=NULL)jsc_free(ctx,(void  *)ptr[0].indices);
 		ptr[0].indices =value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlVertexBuffer_get_vaoId(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
 		unsigned int vaoId=ptr[0].vaoId;
 		JSValue ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)vaoId));
 		return ret;
@@ -795,20 +987,23 @@
 	
 	static JSValue js_rlVertexBuffer_set_vaoId(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		unsigned int value=js_getunsignedint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].vaoId=value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlVertexBuffer_vboId_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_vboId_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<5;i++){
-			JSValue js_ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)ptr[0].vboId[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<5;i++){
+			unsigned int src0=ptr[0].vboId[i];
+			JSValue ret1=JS_NewUint32(ctx,(uint32_t)((unsigned long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -817,19 +1012,18 @@
 	}
 	
 	static int js_rlVertexBuffer_vboId_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		int length=(int)5;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlVertexBuffer_vboId_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+	static JSValue js_rlVertexBuffer_vboId_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)5));
@@ -849,20 +1043,27 @@
 	}
 	
 	static int js_rlVertexBuffer_vboId_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			unsigned int ret=js_getunsignedint(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].vboId[property] =ret;
+			if(property>=0&&property<5){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				unsigned int ret=js_getunsignedint(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].vboId[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlVertexBuffer_vboId_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)ptr_u;
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -879,17 +1080,27 @@
 	}
 	
 	static JSValue js_rlVertexBuffer_get_vboId(JSContext * ctx,JSValue this_val){
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlVertexBuffer_vboId_values,.keys = js_rlVertexBuffer_vboId_keys,.get = js_rlVertexBuffer_vboId_get,.set = js_rlVertexBuffer_vboId_set,.has = js_rlVertexBuffer_vboId_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlVertexBuffer_vboId_values,.keys = js_rlVertexBuffer_vboId_keys,.get = js_rlVertexBuffer_vboId_get,.set = js_rlVertexBuffer_vboId_set,.has = js_rlVertexBuffer_vboId_has});
 		return ret;
 	}
 	
 	static JSValue js_rlVertexBuffer_set_vboId(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlVertexBuffer * ptr=(rlVertexBuffer *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
-		unsigned int * value=js_getunsignedint_arr5(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlVertexBuffer_class_id);
+		rlVertexBuffer * ptr=(rlVertexBuffer  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		unsigned int * value=js_getunsignedint_arr5nc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		memcpy((void *)ptr[0].vboId,(const void *)value,5*sizeof(unsigned int));
+		local_memlock=(bool)false;
+		memcpy((void  *)ptr[0].vboId,(const void  *)value,5*sizeof(unsigned int));
 		return JS_UNDEFINED;
 	}
 	static const JSCFunctionListEntry js_rlVertexBuffer_proto_funcs[]={
@@ -908,7 +1119,7 @@
 		JSRuntime * rt=JS_GetRuntime(ctx);
 		JS_NewClassID(rt,&js_rlVertexBuffer_class_id);
 		JSClassDef js_rlVertexBuffer_def={ .class_name = "rlVertexBuffer", .finalizer = js_rlVertexBuffer_finalizer };
-		JS_NewClass(rt,js_rlVertexBuffer_class_id,(const JSClassDef *)&js_rlVertexBuffer_def);
+		JS_NewClass(rt,js_rlVertexBuffer_class_id,(const JSClassDef  *)&js_rlVertexBuffer_def);
 		JSValue proto=JS_NewObject(ctx);
 		JS_SetPropertyFunctionList(ctx,proto,js_rlVertexBuffer_proto_funcs,(int)countof(js_rlVertexBuffer_proto_funcs));
 		JS_SetClassProto(ctx,js_rlVertexBuffer_class_id,proto);
@@ -916,12 +1127,13 @@
 	}
 	
 	static void js_rlDrawCall_finalizer(JSRuntime * rt,JSValue val){
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque(val,js_rlDrawCall_class_id);
-		if(ptr)js_free_rt(rt,(void *)ptr);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque(val,js_rlDrawCall_class_id);
+		deallocate_shadow(rt,shadow);
 	}
 	
 	static JSValue js_rlDrawCall_get_mode(JSContext * ctx,JSValue this_val){
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
 		int mode=ptr[0].mode;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)mode));
 		return ret;
@@ -929,15 +1141,19 @@
 	
 	static JSValue js_rlDrawCall_set_mode(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].mode=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawCall_get_vertexCount(JSContext * ctx,JSValue this_val){
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
 		int vertexCount=ptr[0].vertexCount;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)vertexCount));
 		return ret;
@@ -945,15 +1161,19 @@
 	
 	static JSValue js_rlDrawCall_set_vertexCount(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].vertexCount=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawCall_get_vertexAlignment(JSContext * ctx,JSValue this_val){
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
 		int vertexAlignment=ptr[0].vertexAlignment;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)vertexAlignment));
 		return ret;
@@ -961,15 +1181,19 @@
 	
 	static JSValue js_rlDrawCall_set_vertexAlignment(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].vertexAlignment=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawCall_get_textureId(JSContext * ctx,JSValue this_val){
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
 		unsigned int textureId=ptr[0].textureId;
 		JSValue ret=JS_NewUint32(ctx,(uint32_t)((unsigned long)textureId));
 		return ret;
@@ -977,9 +1201,12 @@
 	
 	static JSValue js_rlDrawCall_set_textureId(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlDrawCall * ptr=(rlDrawCall *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlDrawCall_class_id);
+		rlDrawCall * ptr=(rlDrawCall  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		unsigned int value=js_getunsignedint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].textureId=value;
 		return JS_UNDEFINED;
 	}
@@ -995,7 +1222,7 @@
 		JSRuntime * rt=JS_GetRuntime(ctx);
 		JS_NewClassID(rt,&js_rlDrawCall_class_id);
 		JSClassDef js_rlDrawCall_def={ .class_name = "rlDrawCall", .finalizer = js_rlDrawCall_finalizer };
-		JS_NewClass(rt,js_rlDrawCall_class_id,(const JSClassDef *)&js_rlDrawCall_def);
+		JS_NewClass(rt,js_rlDrawCall_class_id,(const JSClassDef  *)&js_rlDrawCall_def);
 		JSValue proto=JS_NewObject(ctx);
 		JS_SetPropertyFunctionList(ctx,proto,js_rlDrawCall_proto_funcs,(int)countof(js_rlDrawCall_proto_funcs));
 		JS_SetClassProto(ctx,js_rlDrawCall_class_id,proto);
@@ -1003,12 +1230,13 @@
 	}
 	
 	static void js_rlRenderBatch_finalizer(JSRuntime * rt,JSValue val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque(val,js_rlRenderBatch_class_id);
-		if(ptr)js_free_rt(rt,(void *)ptr);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque(val,js_rlRenderBatch_class_id);
+		deallocate_shadow(rt,shadow);
 	}
 	
 	static JSValue js_rlRenderBatch_get_bufferCount(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
 		int bufferCount=ptr[0].bufferCount;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)bufferCount));
 		return ret;
@@ -1016,15 +1244,19 @@
 	
 	static JSValue js_rlRenderBatch_set_bufferCount(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].bufferCount=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlRenderBatch_get_currentBuffer(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
 		int currentBuffer=ptr[0].currentBuffer;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)currentBuffer));
 		return ret;
@@ -1032,23 +1264,26 @@
 	
 	static JSValue js_rlRenderBatch_set_currentBuffer(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].currentBuffer=value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+	static JSValue js_rlRenderBatch_vertexBuffer_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].bufferCount;i++){
-			rlVertexBuffer * ptr_js_ret=(rlVertexBuffer *)js_malloc(ctx,sizeof(rlVertexBuffer));
-			ptr_js_ret[0]=ptr[0].vertexBuffer[i];
-			JSValue js_ret=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
-			JS_SetOpaque(js_ret,(void *)ptr_js_ret);
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].bufferCount;i++){
+			rlVertexBuffer * src0=(ptr[0].vertexBuffer+i);
+			JS_DupValue(ctx,anchor);
+			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
+			JSValue ret1=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
+			JS_SetOpaque(ret1,(void  *)ptr_ret1);
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -1057,19 +1292,18 @@
 	}
 	
 	static int js_rlRenderBatch_vertexBuffer_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		int length=ptr[0].bufferCount;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+	static JSValue js_rlRenderBatch_vertexBuffer_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)ptr[0].bufferCount));
@@ -1079,11 +1313,11 @@
 			}
 		}else{
 			if(property>=0&&property<ptr[0].bufferCount){
-				rlVertexBuffer src=ptr[0].vertexBuffer[property];
-				rlVertexBuffer * ptr_ret=(rlVertexBuffer *)js_malloc(ctx,sizeof(rlVertexBuffer));
-				ptr_ret[0]=src;
+				rlVertexBuffer * src=(ptr[0].vertexBuffer+property);
+				JS_DupValue(ctx,anchor);
+				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
 				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
-				JS_SetOpaque(ret,(void *)ptr_ret);
+				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
 				return JS_UNDEFINED;
@@ -1092,20 +1326,27 @@
 	}
 	
 	static int js_rlRenderBatch_vertexBuffer_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			rlVertexBuffer ret=js_getrlVertexBuffer(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].vertexBuffer[property] =ret;
+			if(property>=0&&property<ptr[0].bufferCount){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				rlVertexBuffer ret=js_getrlVertexBuffer(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].vertexBuffer[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlRenderBatch_vertexBuffer_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -1122,31 +1363,41 @@
 	}
 	
 	static JSValue js_rlRenderBatch_get_vertexBuffer(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlRenderBatch_vertexBuffer_values,.keys = js_rlRenderBatch_vertexBuffer_keys,.get = js_rlRenderBatch_vertexBuffer_get,.set = js_rlRenderBatch_vertexBuffer_set,.has = js_rlRenderBatch_vertexBuffer_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlRenderBatch_vertexBuffer_values,.keys = js_rlRenderBatch_vertexBuffer_keys,.get = js_rlRenderBatch_vertexBuffer_get,.set = js_rlRenderBatch_vertexBuffer_set,.has = js_rlRenderBatch_vertexBuffer_has});
 		return ret;
 	}
 	
 	static JSValue js_rlRenderBatch_set_vertexBuffer(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		rlVertexBuffer * value=js_getrlVertexBuffer_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		rlVertexBuffer * value=js_getrlVertexBuffer_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].vertexBuffer!=NULL)jsc_free(ctx,(void *)ptr[0].vertexBuffer);
+		local_memlock=(bool)false;
+		if(ptr[0].vertexBuffer!=NULL)jsc_free(ctx,(void  *)ptr[0].vertexBuffer);
 		ptr[0].vertexBuffer =value;
 		return JS_UNDEFINED;
 	}
 	
-	static JSValue js_rlRenderBatch_draws_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+	static JSValue js_rlRenderBatch_draws_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<RL_DEFAULT_BATCH_DRAWCALLS;i++){
-			rlDrawCall * ptr_js_ret=(rlDrawCall *)js_malloc(ctx,sizeof(rlDrawCall));
-			ptr_js_ret[0]=ptr[0].draws[i];
-			JSValue js_ret=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
-			JS_SetOpaque(js_ret,(void *)ptr_js_ret);
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<RL_DEFAULT_BATCH_DRAWCALLS;i++){
+			rlDrawCall * src0=(ptr[0].draws+i);
+			JS_DupValue(ctx,anchor);
+			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
+			JSValue ret1=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
+			JS_SetOpaque(ret1,(void  *)ptr_ret1);
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -1155,19 +1406,18 @@
 	}
 	
 	static int js_rlRenderBatch_draws_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		int length=RL_DEFAULT_BATCH_DRAWCALLS;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_rlRenderBatch_draws_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+	static JSValue js_rlRenderBatch_draws_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)((long)RL_DEFAULT_BATCH_DRAWCALLS));
@@ -1177,11 +1427,11 @@
 			}
 		}else{
 			if(property>=0&&property<RL_DEFAULT_BATCH_DRAWCALLS){
-				rlDrawCall src=ptr[0].draws[property];
-				rlDrawCall * ptr_ret=(rlDrawCall *)js_malloc(ctx,sizeof(rlDrawCall));
-				ptr_ret[0]=src;
+				rlDrawCall * src=(ptr[0].draws+property);
+				JS_DupValue(ctx,anchor);
+				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
 				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
-				JS_SetOpaque(ret,(void *)ptr_ret);
+				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
 				return JS_UNDEFINED;
@@ -1190,20 +1440,27 @@
 	}
 	
 	static int js_rlRenderBatch_draws_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			rlDrawCall ret=js_getrlDrawCall(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].draws[property] =ret;
+			if(property>=0&&property<RL_DEFAULT_BATCH_DRAWCALLS){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				rlDrawCall ret=js_getrlDrawCall(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].draws[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_rlRenderBatch_draws_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		rlRenderBatch * ptr=(rlRenderBatch *)ptr_u;
+		rlRenderBatch * ptr=(rlRenderBatch  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -1220,23 +1477,34 @@
 	}
 	
 	static JSValue js_rlRenderBatch_get_draws(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_rlRenderBatch_draws_values,.keys = js_rlRenderBatch_draws_keys,.get = js_rlRenderBatch_draws_get,.set = js_rlRenderBatch_draws_set,.has = js_rlRenderBatch_draws_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_rlRenderBatch_draws_values,.keys = js_rlRenderBatch_draws_keys,.get = js_rlRenderBatch_draws_get,.set = js_rlRenderBatch_draws_set,.has = js_rlRenderBatch_draws_has});
 		return ret;
 	}
 	
 	static JSValue js_rlRenderBatch_set_draws(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
-		rlDrawCall * value=js_getrlDrawCall_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		rlDrawCall * value=js_getrlDrawCall_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].draws!=NULL)jsc_free(ctx,(void *)ptr[0].draws);
+		local_memlock=(bool)false;
+		if(ptr[0].draws!=NULL)jsc_free(ctx,(void  *)ptr[0].draws);
 		ptr[0].draws =value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlRenderBatch_get_drawCounter(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
 		int drawCounter=ptr[0].drawCounter;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)drawCounter));
 		return ret;
@@ -1244,15 +1512,19 @@
 	
 	static JSValue js_rlRenderBatch_set_drawCounter(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].drawCounter=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlRenderBatch_get_currentDepth(JSContext * ctx,JSValue this_val){
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
 		float currentDepth=ptr[0].currentDepth;
 		JSValue ret=JS_NewFloat64(ctx,((double)currentDepth));
 		return ret;
@@ -1260,9 +1532,12 @@
 	
 	static JSValue js_rlRenderBatch_set_currentDepth(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		rlRenderBatch * ptr=(rlRenderBatch *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_rlRenderBatch_class_id);
+		rlRenderBatch * ptr=(rlRenderBatch  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].currentDepth=value;
 		return JS_UNDEFINED;
 	}
@@ -1280,7 +1555,7 @@
 		JSRuntime * rt=JS_GetRuntime(ctx);
 		JS_NewClassID(rt,&js_rlRenderBatch_class_id);
 		JSClassDef js_rlRenderBatch_def={ .class_name = "rlRenderBatch", .finalizer = js_rlRenderBatch_finalizer };
-		JS_NewClass(rt,js_rlRenderBatch_class_id,(const JSClassDef *)&js_rlRenderBatch_def);
+		JS_NewClass(rt,js_rlRenderBatch_class_id,(const JSClassDef  *)&js_rlRenderBatch_def);
 		JSValue proto=JS_NewObject(ctx);
 		JS_SetPropertyFunctionList(ctx,proto,js_rlRenderBatch_proto_funcs,(int)countof(js_rlRenderBatch_proto_funcs));
 		JS_SetClassProto(ctx,js_rlRenderBatch_class_id,proto);
@@ -1289,106 +1564,136 @@
 	
 	static JSValue js_rlVertexBuffer_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
-			rlVertexBuffer * ptr__return=(rlVertexBuffer *)js_calloc(ctx,(size_t)1,sizeof(rlVertexBuffer));
+			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlVertexBuffer));
 			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
-			JS_SetOpaque(_return,(void *)ptr__return);
+			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
 		bool error=(bool)0;
-		int elementCount=js_getint(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		float * vertices=js_getfloat_arr(ctx,argv[1],&error);
-		if(error==1)return JS_EXCEPTION;
-		float * texcoords=js_getfloat_arr(ctx,argv[2],&error);
-		if(error==1)return JS_EXCEPTION;
-		float * normals=js_getfloat_arr(ctx,argv[3],&error);
-		if(error==1)return JS_EXCEPTION;
-		unsigned char * colors=js_getunsignedchar_arr(ctx,argv[4],&error);
-		if(error==1)return JS_EXCEPTION;
-		unsigned int * indices=js_getunsignedint_arr(ctx,argv[5],&error);
-		if(error==1)return JS_EXCEPTION;
-		unsigned int vaoId=js_getunsignedint(ctx,argv[6],&error);
-		if(error==1)return JS_EXCEPTION;
-		unsigned int * vboId=js_getunsignedint_arr5(ctx,argv[7],&error);
-		if(error==1)return JS_EXCEPTION;
-		rlVertexBuffer _struct={
-			elementCount,
-			vertices,
-			texcoords,
-			normals,
-			colors,
-			indices,
-			vaoId,
-			{vboId[0],vboId[1],vboId[2],vboId[3],vboId[4]}
-		};
-		rlVertexBuffer * ptr__return=(rlVertexBuffer *)js_malloc(ctx,sizeof(rlVertexBuffer));
-		ptr__return[0]=_struct;
+		local_memlock=(bool)true;
+		rlVertexBuffer _struct;
+		if(argc==1&&JS_GetClassID(argv[0])==js_rlVertexBuffer_class_id){
+			rlVertexBuffer ptr=js_getrlVertexBuffer(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =rlVertexBuffer_copy(ctx,ptr);
+		}else{
+			int elementCount=js_getint(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			float * vertices=js_getfloat_arrnc(ctx,argv[1],&error);
+			if(error==1)return JS_EXCEPTION;
+			float * texcoords=js_getfloat_arrnc(ctx,argv[2],&error);
+			if(error==1)return JS_EXCEPTION;
+			float * normals=js_getfloat_arrnc(ctx,argv[3],&error);
+			if(error==1)return JS_EXCEPTION;
+			unsigned char * colors=js_getunsignedchar_arrnc(ctx,argv[4],&error);
+			if(error==1)return JS_EXCEPTION;
+			unsigned int * indices=js_getunsignedint_arrnc(ctx,argv[5],&error);
+			if(error==1)return JS_EXCEPTION;
+			unsigned int vaoId=js_getunsignedint(ctx,argv[6],&error);
+			if(error==1)return JS_EXCEPTION;
+			unsigned int * vboId=js_getunsignedint_arr5nc(ctx,argv[7],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =(rlVertexBuffer){
+				elementCount,
+				vertices,
+				texcoords,
+				normals,
+				colors,
+				indices,
+				vaoId,
+				{vboId[0],vboId[1],vboId[2],vboId[3],vboId[4]}
+			};
+		}
+		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlVertexBuffer));
+		rlVertexBuffer * _returnptr=((rlVertexBuffer *)(_structShadow+1));
+		_returnptr[0]=_struct;
 		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
-		JS_SetOpaque(_return,(void *)ptr__return);
+		JS_SetOpaque(_return,(void  *)_structShadow);
+		local_memlock=(bool)false;
 		return _return;
 	}
 	
 	static JSValue js_rlDrawCall_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
-			rlDrawCall * ptr__return=(rlDrawCall *)js_calloc(ctx,(size_t)1,sizeof(rlDrawCall));
+			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlDrawCall));
 			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
-			JS_SetOpaque(_return,(void *)ptr__return);
+			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
 		bool error=(bool)0;
-		int mode=js_getint(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		int vertexCount=js_getint(ctx,argv[1],&error);
-		if(error==1)return JS_EXCEPTION;
-		int vertexAlignment=js_getint(ctx,argv[2],&error);
-		if(error==1)return JS_EXCEPTION;
-		unsigned int textureId=js_getunsignedint(ctx,argv[3],&error);
-		if(error==1)return JS_EXCEPTION;
-		rlDrawCall _struct={
-			mode,
-			vertexCount,
-			vertexAlignment,
-			textureId
-		};
-		rlDrawCall * ptr__return=(rlDrawCall *)js_malloc(ctx,sizeof(rlDrawCall));
-		ptr__return[0]=_struct;
+		local_memlock=(bool)true;
+		rlDrawCall _struct;
+		if(argc==1&&JS_GetClassID(argv[0])==js_rlDrawCall_class_id){
+			rlDrawCall ptr=js_getrlDrawCall(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =ptr;
+		}else{
+			int mode=js_getint(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			int vertexCount=js_getint(ctx,argv[1],&error);
+			if(error==1)return JS_EXCEPTION;
+			int vertexAlignment=js_getint(ctx,argv[2],&error);
+			if(error==1)return JS_EXCEPTION;
+			unsigned int textureId=js_getunsignedint(ctx,argv[3],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =(rlDrawCall){
+				mode,
+				vertexCount,
+				vertexAlignment,
+				textureId
+			};
+		}
+		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlDrawCall));
+		rlDrawCall * _returnptr=((rlDrawCall *)(_structShadow+1));
+		_returnptr[0]=_struct;
 		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
-		JS_SetOpaque(_return,(void *)ptr__return);
+		JS_SetOpaque(_return,(void  *)_structShadow);
+		local_memlock=(bool)false;
 		return _return;
 	}
 	
 	static JSValue js_rlRenderBatch_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
-			rlRenderBatch * ptr__return=(rlRenderBatch *)js_calloc(ctx,(size_t)1,sizeof(rlRenderBatch));
+			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlRenderBatch));
 			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
-			JS_SetOpaque(_return,(void *)ptr__return);
+			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
 		bool error=(bool)0;
-		int bufferCount=js_getint(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		int currentBuffer=js_getint(ctx,argv[1],&error);
-		if(error==1)return JS_EXCEPTION;
-		rlVertexBuffer * vertexBuffer=js_getrlVertexBuffer_arr(ctx,argv[2],&error);
-		if(error==1)return JS_EXCEPTION;
-		rlDrawCall * draws=js_getrlDrawCall_arr(ctx,argv[3],&error);
-		if(error==1)return JS_EXCEPTION;
-		int drawCounter=js_getint(ctx,argv[4],&error);
-		if(error==1)return JS_EXCEPTION;
-		float currentDepth=js_getfloat(ctx,argv[5],&error);
-		if(error==1)return JS_EXCEPTION;
-		rlRenderBatch _struct={
-			bufferCount,
-			currentBuffer,
-			vertexBuffer,
-			draws,
-			drawCounter,
-			currentDepth
-		};
-		rlRenderBatch * ptr__return=(rlRenderBatch *)js_malloc(ctx,sizeof(rlRenderBatch));
-		ptr__return[0]=_struct;
+		local_memlock=(bool)true;
+		rlRenderBatch _struct;
+		if(argc==1&&JS_GetClassID(argv[0])==js_rlRenderBatch_class_id){
+			rlRenderBatch ptr=js_getrlRenderBatch(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =rlRenderBatch_copy(ctx,ptr);
+		}else{
+			int bufferCount=js_getint(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			int currentBuffer=js_getint(ctx,argv[1],&error);
+			if(error==1)return JS_EXCEPTION;
+			rlVertexBuffer * vertexBuffer=js_getrlVertexBuffer_arrnc(ctx,argv[2],&error);
+			if(error==1)return JS_EXCEPTION;
+			rlDrawCall * draws=js_getrlDrawCall_arrnc(ctx,argv[3],&error);
+			if(error==1)return JS_EXCEPTION;
+			int drawCounter=js_getint(ctx,argv[4],&error);
+			if(error==1)return JS_EXCEPTION;
+			float currentDepth=js_getfloat(ctx,argv[5],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =(rlRenderBatch){
+				bufferCount,
+				currentBuffer,
+				vertexBuffer,
+				draws,
+				drawCounter,
+				currentDepth
+			};
+		}
+		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlRenderBatch));
+		rlRenderBatch * _returnptr=((rlRenderBatch *)(_structShadow+1));
+		_returnptr[0]=_struct;
 		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
-		JS_SetOpaque(_return,(void *)ptr__return);
+		JS_SetOpaque(_return,(void  *)_structShadow);
+		local_memlock=(bool)false;
 		return _return;
 	}
 	
@@ -1401,19 +1706,16 @@
 	}
 	
 	static JSValue js_rlPushMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlPushMatrix();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlPopMatrix(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlPopMatrix();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadIdentity(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlLoadIdentity();
 		return JS_UNDEFINED;
 	}
@@ -1460,7 +1762,7 @@
 		bool error=(bool)0;
 		float * matf=js_getfloat_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlMultMatrixf((const float *)matf);
+		rlMultMatrixf((const float  *)matf);
 		return JS_UNDEFINED;
 	}
 	
@@ -1525,14 +1827,12 @@
 	}
 	
 	static JSValue js_rlGetCullDistanceNear(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		double returnVal=rlGetCullDistanceNear();
 		JSValue ret=JS_NewFloat64(ctx,returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlGetCullDistanceFar(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		double returnVal=rlGetCullDistanceFar();
 		JSValue ret=JS_NewFloat64(ctx,returnVal);
 		return ret;
@@ -1547,7 +1847,6 @@
 	}
 	
 	static JSValue js_rlEnd(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnd();
 		return JS_UNDEFINED;
 	}
@@ -1656,7 +1955,6 @@
 	}
 	
 	static JSValue js_rlDisableVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableVertexArray();
 		return JS_UNDEFINED;
 	}
@@ -1670,7 +1968,6 @@
 	}
 	
 	static JSValue js_rlDisableVertexBuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableVertexBuffer();
 		return JS_UNDEFINED;
 	}
@@ -1684,7 +1981,6 @@
 	}
 	
 	static JSValue js_rlDisableVertexBufferElement(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableVertexBufferElement();
 		return JS_UNDEFINED;
 	}
@@ -1722,7 +2018,6 @@
 	}
 	
 	static JSValue js_rlDisableTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableTexture();
 		return JS_UNDEFINED;
 	}
@@ -1736,7 +2031,6 @@
 	}
 	
 	static JSValue js_rlDisableTextureCubemap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableTextureCubemap();
 		return JS_UNDEFINED;
 	}
@@ -1774,7 +2068,6 @@
 	}
 	
 	static JSValue js_rlDisableShader(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableShader();
 		return JS_UNDEFINED;
 	}
@@ -1788,13 +2081,11 @@
 	}
 	
 	static JSValue js_rlDisableFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableFramebuffer();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetActiveFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetActiveFramebuffer();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
@@ -1843,49 +2134,41 @@
 	}
 	
 	static JSValue js_rlEnableColorBlend(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableColorBlend();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableColorBlend(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableColorBlend();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableDepthTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableDepthTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableDepthTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableDepthTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableDepthMask(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableDepthMask();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableDepthMask(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableDepthMask();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableBackfaceCulling(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableBackfaceCulling();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableBackfaceCulling(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableBackfaceCulling();
 		return JS_UNDEFINED;
 	}
@@ -1913,13 +2196,11 @@
 	}
 	
 	static JSValue js_rlEnableScissorTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableScissorTest();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableScissorTest(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableScissorTest();
 		return JS_UNDEFINED;
 	}
@@ -1939,25 +2220,21 @@
 	}
 	
 	static JSValue js_rlEnablePointMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnablePointMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisablePointMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisablePointMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableWireMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableWireMode();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableWireMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableWireMode();
 		return JS_UNDEFINED;
 	}
@@ -1971,38 +2248,32 @@
 	}
 	
 	static JSValue js_rlGetLineWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		float returnVal=rlGetLineWidth();
 		JSValue ret=JS_NewFloat64(ctx,((double)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlEnableSmoothLines(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableSmoothLines();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableSmoothLines(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableSmoothLines();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlEnableStereoRender(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlEnableStereoRender();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDisableStereoRender(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDisableStereoRender();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlIsStereoRenderEnabled(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		bool returnVal=rlIsStereoRenderEnabled();
 		JSValue ret=JS_NewBool(ctx,returnVal);
 		return ret;
@@ -2023,13 +2294,11 @@
 	}
 	
 	static JSValue js_rlClearScreenBuffers(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlClearScreenBuffers();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlCheckErrors(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlCheckErrors();
 		return JS_UNDEFINED;
 	}
@@ -2083,13 +2352,11 @@
 	}
 	
 	static JSValue js_rlglClose(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlglClose();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetVersion(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetVersion();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
@@ -2104,7 +2371,6 @@
 	}
 	
 	static JSValue js_rlGetFramebufferWidth(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetFramebufferWidth();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
@@ -2119,34 +2385,30 @@
 	}
 	
 	static JSValue js_rlGetFramebufferHeight(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetFramebufferHeight();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetTextureIdDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetTextureIdDefault();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetShaderIdDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlGetShaderIdDefault();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
 	
 	static JSValue js_rlGetShaderLocsDefault(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int * returnVal=rlGetShaderLocsDefault();
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<32;i++){
-			JSValue js_ret=JS_NewInt32(ctx,(int32_t)((long)returnVal[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<32;i++){
+			int src0=returnVal[i];
+			JSValue ret1=JS_NewInt32(ctx,(int32_t)((long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		return ret;
 	}
@@ -2158,10 +2420,11 @@
 		int bufferElements=js_getint(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
 		rlRenderBatch returnVal=rlLoadRenderBatch(numBuffers,bufferElements);
-		rlRenderBatch * ptr_ret=(rlRenderBatch *)js_malloc(ctx,sizeof(rlRenderBatch));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(rlRenderBatch));
+		rlRenderBatch * ptr2_ret=((rlRenderBatch *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -2178,6 +2441,7 @@
 		rlRenderBatch * batch=js_getrlRenderBatch_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		rlDrawRenderBatch(batch);
+		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
 	
@@ -2186,11 +2450,11 @@
 		rlRenderBatch * batch=js_getrlRenderBatch_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		rlSetRenderBatchActive(batch);
+		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlDrawRenderBatchActive(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlDrawRenderBatchActive();
 		return JS_UNDEFINED;
 	}
@@ -2213,7 +2477,6 @@
 	}
 	
 	static JSValue js_rlLoadVertexArray(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlLoadVertexArray();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
@@ -2227,7 +2490,7 @@
 		if(error==1)return JS_EXCEPTION;
 		bool dynamic=js_getbool(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadVertexBuffer((const void *)buffer,size,dynamic);
+		int returnVal=rlLoadVertexBuffer((const void  *)buffer,size,dynamic);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2240,7 +2503,7 @@
 		if(error==1)return JS_EXCEPTION;
 		bool dynamic=js_getbool(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadVertexBufferElement((const void *)buffer,size,dynamic);
+		int returnVal=rlLoadVertexBufferElement((const void  *)buffer,size,dynamic);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2255,7 +2518,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int offset=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlUpdateVertexBuffer(bufferId,(const void *)data,dataSize,offset);
+		rlUpdateVertexBuffer(bufferId,(const void  *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
@@ -2269,7 +2532,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int offset=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlUpdateVertexBufferElements(id,(const void *)data,dataSize,offset);
+		rlUpdateVertexBufferElements(id,(const void  *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
@@ -2335,7 +2598,7 @@
 		if(error==1)return JS_EXCEPTION;
 		void * buffer=js_getvoid_arr(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlDrawVertexArrayElements(offset,count,(const void *)buffer);
+		rlDrawVertexArrayElements(offset,count,(const void  *)buffer);
 		return JS_UNDEFINED;
 	}
 	
@@ -2361,13 +2624,13 @@
 		if(error==1)return JS_EXCEPTION;
 		int instances=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlDrawVertexArrayElementsInstanced(offset,count,(const void *)buffer,instances);
+		rlDrawVertexArrayElementsInstanced(offset,count,(const void  *)buffer,instances);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadTexture(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
-		void * data=js_getvoid_arr(ctx,argv[0],&error);
+		void * data=js_getvoid_arrnull(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		int width=js_getint(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
@@ -2377,8 +2640,9 @@
 		if(error==1)return JS_EXCEPTION;
 		int mipmapCount=js_getint(ctx,argv[4],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadTexture((const void *)data,width,height,format,mipmapCount);
+		int returnVal=rlLoadTexture((const void  *)data,width,height,format,mipmapCount);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
 		return ret;
 	}
 	
@@ -2405,7 +2669,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int mipmapCount=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadTextureCubemap((const void *)data,size,format,mipmapCount);
+		int returnVal=rlLoadTextureCubemap((const void  *)data,size,format,mipmapCount);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2426,14 +2690,12 @@
 		if(error==1)return JS_EXCEPTION;
 		void * data=js_getvoid_arr(ctx,argv[6],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlUpdateTexture(id,offsetX,offsetY,width,height,format,(const void *)data);
+		rlUpdateTexture(id,offsetX,offsetY,width,height,format,(const void  *)data);
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlGetGlTextureFormats(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
-		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
-		memoryNode * memoryCurrent=memoryHead;
 		int format=js_getint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		unsigned int * glInternalFormat=js_getunsignedint_arr(ctx,argv[1],&error);
@@ -2443,7 +2705,7 @@
 		unsigned int * glType=js_getunsignedint_arr(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
 		rlGetGlTextureFormats(format,glInternalFormat,glFormat,glType);
-		memoryClear(ctx,memoryHead);
+		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
 	
@@ -2451,8 +2713,8 @@
 		bool error=(bool)0;
 		unsigned int format=js_getunsignedint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * returnVal=(char *)rlGetPixelFormatName(format);
-		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
+		char * returnVal=(char  *)rlGetPixelFormatName(format);
+		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
 		return ret;
 	}
 	
@@ -2490,9 +2752,13 @@
 		if(error==1)return JS_EXCEPTION;
 		int format=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		void * returnVal=rlReadTexturePixels(id,width,height,format);
+		unsigned char * returnVal=(unsigned char  *)rlReadTexturePixels(id,width,height,format);
 		JSValue ret=JS_NewArray(ctx);
-		ret =JS_NewArrayBufferCopy(ctx,(const uint8_t *)returnVal,(size_t)GetPixelDataSize(width,height,format));
+		for(int i=0;i<GetPixelDataSize(width,height,format);i++){
+			unsigned char src0=returnVal[i];
+			JSValue ret1=JS_NewUint32(ctx,(uint32_t)((unsigned long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
+		}
 		return ret;
 	}
 	
@@ -2503,12 +2769,11 @@
 		int height=js_getint(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
 		char * returnVal=rlReadScreenPixels(width,height);
-		JSValue ret=JS_NewString(ctx,(const char *)returnVal);
+		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
 		return ret;
 	}
 	
 	static JSValue js_rlLoadFramebuffer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		int returnVal=rlLoadFramebuffer();
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
@@ -2549,15 +2814,12 @@
 	
 	static JSValue js_rlLoadShaderCode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
-		memoryNode * memoryHead=(memoryNode *)calloc((size_t)1,sizeof(memoryNode));
-		memoryNode * memoryCurrent=memoryHead;
 		char * vsCode=js_getchar_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		char * fsCode=js_getchar_arr(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadShaderCode((const char *)vsCode,(const char *)fsCode);
+		int returnVal=rlLoadShaderCode((const char  *)vsCode,(const char  *)fsCode);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
-		memoryClear(ctx,memoryHead);
 		return ret;
 	}
 	
@@ -2567,7 +2829,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int type=js_getint(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlCompileShader((const char *)shaderCode,type);
+		int returnVal=rlCompileShader((const char  *)shaderCode,type);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2597,7 +2859,7 @@
 		if(error==1)return JS_EXCEPTION;
 		char * uniformName=js_getchar_arr(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlGetLocationUniform(shaderId,(const char *)uniformName);
+		int returnVal=rlGetLocationUniform(shaderId,(const char  *)uniformName);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2608,7 +2870,7 @@
 		if(error==1)return JS_EXCEPTION;
 		char * attribName=js_getchar_arr(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlGetLocationAttrib(shaderId,(const char *)attribName);
+		int returnVal=rlGetLocationAttrib(shaderId,(const char  *)attribName);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2617,7 +2879,6 @@
 		bool error=(bool)0;
 		int count=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		error =(bool)0;
 		void * value=NULL;
 		int locIndex=js_getint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
@@ -2672,10 +2933,11 @@
 			if(error==1)return JS_EXCEPTION;
 			value=((void *)val);
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"unknown uniformType");
+			JS_ThrowTypeError(ctx,(const char  *)"unknown uniformType");
 			return JS_EXCEPTION;
 		}
-		rlSetUniform(locIndex,(const void *)value,uniformType,count);
+		rlSetUniform(locIndex,(const void  *)value,uniformType,count);
+		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
 	
@@ -2697,7 +2959,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int count=js_getint(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlSetUniformMatrices(locIndex,(const Matrix *)mat,count);
+		rlSetUniformMatrices(locIndex,(const Matrix  *)mat,count);
 		return JS_UNDEFINED;
 	}
 	
@@ -2750,7 +3012,7 @@
 		if(error==1)return JS_EXCEPTION;
 		int usageHint=js_getint(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=rlLoadShaderBuffer(size,(const void *)data,usageHint);
+		int returnVal=rlLoadShaderBuffer(size,(const void  *)data,usageHint);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		return ret;
 	}
@@ -2773,7 +3035,7 @@
 		if(error==1)return JS_EXCEPTION;
 		unsigned int offset=js_getunsignedint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		rlUpdateShaderBuffer(id,(const void *)data,dataSize,offset);
+		rlUpdateShaderBuffer(id,(const void  *)data,dataSize,offset);
 		return JS_UNDEFINED;
 	}
 	
@@ -2841,32 +3103,32 @@
 	}
 	
 	static JSValue js_rlGetMatrixModelview(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixModelview();
-		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
+		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
 	static JSValue js_rlGetMatrixProjection(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixProjection();
-		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
+		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
 	static JSValue js_rlGetMatrixTransform(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		Matrix returnVal=rlGetMatrixTransform();
-		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
+		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -2875,10 +3137,11 @@
 		int eye=js_getint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		Matrix returnVal=rlGetMatrixProjectionStereo(eye);
-		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
+		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -2887,10 +3150,11 @@
 		int eye=js_getint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		Matrix returnVal=rlGetMatrixViewOffsetStereo(eye);
-		Matrix * ptr_ret=(Matrix *)js_malloc(ctx,sizeof(Matrix));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
+		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -2931,13 +3195,11 @@
 	}
 	
 	static JSValue js_rlLoadDrawCube(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlLoadDrawCube();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_rlLoadDrawQuad(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		rlLoadDrawQuad();
 		return JS_UNDEFINED;
 	}
@@ -3101,198 +3363,198 @@
 		size_t listcount=countof(jsrlgl_funcs);
 		JS_SetModuleExportList(ctx,m,jsrlgl_funcs,(int)listcount);
 		js_declare_rlVertexBuffer(ctx,m);
-		JSValue rlVertexBuffer_constr=JS_NewCFunction2(ctx,js_rlVertexBuffer_constructor,(const char *)"rlVertexBuffer",(int)8,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
-		JS_SetModuleExport(ctx,m,(const char *)"rlVertexBuffer",rlVertexBuffer_constr);
+		JSValue rlVertexBuffer_constr=JS_NewCFunction2(ctx,js_rlVertexBuffer_constructor,(const char  *)"rlVertexBuffer",(int)8,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
+		JS_SetModuleExport(ctx,m,(const char  *)"rlVertexBuffer",rlVertexBuffer_constr);
 		js_declare_rlDrawCall(ctx,m);
-		JSValue rlDrawCall_constr=JS_NewCFunction2(ctx,js_rlDrawCall_constructor,(const char *)"rlDrawCall",(int)4,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
-		JS_SetModuleExport(ctx,m,(const char *)"rlDrawCall",rlDrawCall_constr);
+		JSValue rlDrawCall_constr=JS_NewCFunction2(ctx,js_rlDrawCall_constructor,(const char  *)"rlDrawCall",(int)4,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
+		JS_SetModuleExport(ctx,m,(const char  *)"rlDrawCall",rlDrawCall_constr);
 		js_declare_rlRenderBatch(ctx,m);
-		JSValue rlRenderBatch_constr=JS_NewCFunction2(ctx,js_rlRenderBatch_constructor,(const char *)"rlRenderBatch",(int)6,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
-		JS_SetModuleExport(ctx,m,(const char *)"rlRenderBatch",rlRenderBatch_constr);
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_11",JS_NewInt32(ctx,(int32_t)RL_OPENGL_11));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_21",JS_NewInt32(ctx,(int32_t)RL_OPENGL_21));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_33",JS_NewInt32(ctx,(int32_t)RL_OPENGL_33));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_43",JS_NewInt32(ctx,(int32_t)RL_OPENGL_43));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_ES_20",JS_NewInt32(ctx,(int32_t)RL_OPENGL_ES_20));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_OPENGL_ES_30",JS_NewInt32(ctx,(int32_t)RL_OPENGL_ES_30));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_ALL",JS_NewInt32(ctx,(int32_t)RL_LOG_ALL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_TRACE",JS_NewInt32(ctx,(int32_t)RL_LOG_TRACE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_DEBUG",JS_NewInt32(ctx,(int32_t)RL_LOG_DEBUG));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_INFO",JS_NewInt32(ctx,(int32_t)RL_LOG_INFO));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_WARNING",JS_NewInt32(ctx,(int32_t)RL_LOG_WARNING));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_ERROR",JS_NewInt32(ctx,(int32_t)RL_LOG_ERROR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_FATAL",JS_NewInt32(ctx,(int32_t)RL_LOG_FATAL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LOG_NONE",JS_NewInt32(ctx,(int32_t)RL_LOG_NONE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT1_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC1_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC1_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC2_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC2_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_PVRT_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_POINT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_POINT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_BILINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_BILINEAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_TRILINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_TRILINEAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_4X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_4X));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_8X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_8X));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_16X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_16X));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_ADDITIVE",JS_NewInt32(ctx,(int32_t)RL_BLEND_ADDITIVE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_MULTIPLIED",JS_NewInt32(ctx,(int32_t)RL_BLEND_MULTIPLIED));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_ADD_COLORS",JS_NewInt32(ctx,(int32_t)RL_BLEND_ADD_COLORS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_SUBTRACT_COLORS",JS_NewInt32(ctx,(int32_t)RL_BLEND_SUBTRACT_COLORS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_ALPHA_PREMULTIPLY",JS_NewInt32(ctx,(int32_t)RL_BLEND_ALPHA_PREMULTIPLY));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_CUSTOM",JS_NewInt32(ctx,(int32_t)RL_BLEND_CUSTOM));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_CUSTOM_SEPARATE",JS_NewInt32(ctx,(int32_t)RL_BLEND_CUSTOM_SEPARATE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_POSITION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_POSITION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TEXCOORD01",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TEXCOORD01));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TEXCOORD02",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TEXCOORD02));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_NORMAL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TANGENT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TANGENT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_COLOR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_MVP",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_MVP));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_VIEW",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_VIEW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_PROJECTION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_PROJECTION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_MODEL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_MODEL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_NORMAL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VECTOR_VIEW",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VECTOR_VIEW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_DIFFUSE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_DIFFUSE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_SPECULAR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_SPECULAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_AMBIENT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_AMBIENT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_ALBEDO",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_ALBEDO));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_METALNESS",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_METALNESS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_NORMAL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_ROUGHNESS",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_ROUGHNESS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_OCCLUSION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_OCCLUSION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_EMISSION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_EMISSION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_HEIGHT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_HEIGHT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_CUBEMAP",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_CUBEMAP));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_IRRADIANCE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_IRRADIANCE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_PREFILTER",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_PREFILTER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_BRDF",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_BRDF));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_DIFFUSE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_DIFFUSE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_SPECULAR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_SPECULAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_FLOAT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_FLOAT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC2));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC3));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_INT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_INT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC2));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC3));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UINT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UINT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC2));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC3));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_SAMPLER2D",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_SAMPLER2D));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_FLOAT",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_FLOAT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC2));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC3));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL0",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL0));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL1",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL1));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL2",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL2));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL3",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL3));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL4",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL4));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL5",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL5));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL6",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL6));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL7",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL7));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_DEPTH",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_DEPTH));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_STENCIL",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_STENCIL));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_X",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_X));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_X",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_X));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Y",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_Y));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Z",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_Z));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_TEXTURE2D",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_TEXTURE2D));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_RENDERBUFFER",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_RENDERBUFFER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_CULL_FACE_FRONT",JS_NewInt32(ctx,(int32_t)RL_CULL_FACE_FRONT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_CULL_FACE_BACK",JS_NewInt32(ctx,(int32_t)RL_CULL_FACE_BACK));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DEFAULT_BATCH_BUFFER_ELEMENTS",JS_NewInt32(ctx,(int32_t)RL_DEFAULT_BATCH_BUFFER_ELEMENTS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_S",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_S));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_T",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_T));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_MAG_FILTER",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MAG_FILTER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_MIN_FILTER",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MIN_FILTER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_NEAREST));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_LINEAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_MIP_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_MIP_NEAREST));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_MIP_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_MIP_LINEAR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_MIPMAP_BIAS_RATIO",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MIPMAP_BIAS_RATIO));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_REPEAT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_REPEAT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_CLAMP",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_CLAMP));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_MIRROR_REPEAT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_MIRROR_REPEAT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_MIRROR_CLAMP",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_MIRROR_CLAMP));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_MODELVIEW",JS_NewInt32(ctx,(int32_t)RL_MODELVIEW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_PROJECTION",JS_NewInt32(ctx,(int32_t)RL_PROJECTION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TEXTURE",JS_NewInt32(ctx,(int32_t)RL_TEXTURE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_LINES",JS_NewInt32(ctx,(int32_t)RL_LINES));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_TRIANGLES",JS_NewInt32(ctx,(int32_t)RL_TRIANGLES));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_QUADS",JS_NewInt32(ctx,(int32_t)RL_QUADS));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_UNSIGNED_BYTE",JS_NewInt32(ctx,(int32_t)RL_UNSIGNED_BYTE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_FLOAT",JS_NewInt32(ctx,(int32_t)RL_FLOAT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STREAM_DRAW",JS_NewInt32(ctx,(int32_t)RL_STREAM_DRAW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STREAM_READ",JS_NewInt32(ctx,(int32_t)RL_STREAM_READ));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STREAM_COPY",JS_NewInt32(ctx,(int32_t)RL_STREAM_COPY));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STATIC_DRAW",JS_NewInt32(ctx,(int32_t)RL_STATIC_DRAW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STATIC_READ",JS_NewInt32(ctx,(int32_t)RL_STATIC_READ));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_STATIC_COPY",JS_NewInt32(ctx,(int32_t)RL_STATIC_COPY));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DYNAMIC_DRAW",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_DRAW));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DYNAMIC_READ",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_READ));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DYNAMIC_COPY",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_COPY));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_FRAGMENT_SHADER",JS_NewInt32(ctx,(int32_t)RL_FRAGMENT_SHADER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_VERTEX_SHADER",JS_NewInt32(ctx,(int32_t)RL_VERTEX_SHADER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_COMPUTE_SHADER",JS_NewInt32(ctx,(int32_t)RL_COMPUTE_SHADER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ZERO",JS_NewInt32(ctx,(int32_t)RL_ZERO));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE",JS_NewInt32(ctx,(int32_t)RL_ONE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SRC_COLOR",JS_NewInt32(ctx,(int32_t)RL_SRC_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_SRC_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_SRC_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_SRC_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_SRC_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_DST_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_DST_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DST_COLOR",JS_NewInt32(ctx,(int32_t)RL_DST_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_DST_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_DST_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_SRC_ALPHA_SATURATE",JS_NewInt32(ctx,(int32_t)RL_SRC_ALPHA_SATURATE));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_CONSTANT_COLOR",JS_NewInt32(ctx,(int32_t)RL_CONSTANT_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_CONSTANT_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_CONSTANT_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_CONSTANT_ALPHA",JS_NewInt32(ctx,(int32_t)RL_CONSTANT_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_CONSTANT_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_CONSTANT_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_FUNC_ADD",JS_NewInt32(ctx,(int32_t)RL_FUNC_ADD));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_MIN",JS_NewInt32(ctx,(int32_t)RL_MIN));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_MAX",JS_NewInt32(ctx,(int32_t)RL_MAX));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_FUNC_SUBTRACT",JS_NewInt32(ctx,(int32_t)RL_FUNC_SUBTRACT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_FUNC_REVERSE_SUBTRACT",JS_NewInt32(ctx,(int32_t)RL_FUNC_REVERSE_SUBTRACT));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_DST_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_DST_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_SRC_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_SRC_RGB));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_DST_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_SRC_ALPHA));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_BLEND_COLOR",JS_NewInt32(ctx,(int32_t)RL_BLEND_COLOR));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_READ_FRAMEBUFFER",JS_NewInt32(ctx,(int32_t)RL_READ_FRAMEBUFFER));
-		JS_SetModuleExport(ctx,m,(const char *)"RL_DRAW_FRAMEBUFFER",JS_NewInt32(ctx,(int32_t)RL_DRAW_FRAMEBUFFER));
+		JSValue rlRenderBatch_constr=JS_NewCFunction2(ctx,js_rlRenderBatch_constructor,(const char  *)"rlRenderBatch",(int)6,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
+		JS_SetModuleExport(ctx,m,(const char  *)"rlRenderBatch",rlRenderBatch_constr);
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_11",JS_NewInt32(ctx,(int32_t)RL_OPENGL_11));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_21",JS_NewInt32(ctx,(int32_t)RL_OPENGL_21));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_33",JS_NewInt32(ctx,(int32_t)RL_OPENGL_33));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_43",JS_NewInt32(ctx,(int32_t)RL_OPENGL_43));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_ES_20",JS_NewInt32(ctx,(int32_t)RL_OPENGL_ES_20));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_ES_30",JS_NewInt32(ctx,(int32_t)RL_OPENGL_ES_30));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_ALL",JS_NewInt32(ctx,(int32_t)RL_LOG_ALL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_TRACE",JS_NewInt32(ctx,(int32_t)RL_LOG_TRACE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_DEBUG",JS_NewInt32(ctx,(int32_t)RL_LOG_DEBUG));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_INFO",JS_NewInt32(ctx,(int32_t)RL_LOG_INFO));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_WARNING",JS_NewInt32(ctx,(int32_t)RL_LOG_WARNING));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_ERROR",JS_NewInt32(ctx,(int32_t)RL_LOG_ERROR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_FATAL",JS_NewInt32(ctx,(int32_t)RL_LOG_FATAL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LOG_NONE",JS_NewInt32(ctx,(int32_t)RL_LOG_NONE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT1_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC1_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC1_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC2_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC2_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGB",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_PVRT_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA",JS_NewInt32(ctx,(int32_t)RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_POINT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_POINT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_BILINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_BILINEAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_TRILINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_TRILINEAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_4X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_4X));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_8X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_8X));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_16X",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC_16X));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_ADDITIVE",JS_NewInt32(ctx,(int32_t)RL_BLEND_ADDITIVE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_MULTIPLIED",JS_NewInt32(ctx,(int32_t)RL_BLEND_MULTIPLIED));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_ADD_COLORS",JS_NewInt32(ctx,(int32_t)RL_BLEND_ADD_COLORS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_SUBTRACT_COLORS",JS_NewInt32(ctx,(int32_t)RL_BLEND_SUBTRACT_COLORS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_ALPHA_PREMULTIPLY",JS_NewInt32(ctx,(int32_t)RL_BLEND_ALPHA_PREMULTIPLY));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_CUSTOM",JS_NewInt32(ctx,(int32_t)RL_BLEND_CUSTOM));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_CUSTOM_SEPARATE",JS_NewInt32(ctx,(int32_t)RL_BLEND_CUSTOM_SEPARATE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_POSITION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_POSITION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TEXCOORD01",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TEXCOORD01));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TEXCOORD02",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TEXCOORD02));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_NORMAL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TANGENT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_TANGENT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_COLOR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VERTEX_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_MVP",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_MVP));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_VIEW",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_VIEW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_PROJECTION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_PROJECTION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_MODEL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_MODEL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MATRIX_NORMAL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VECTOR_VIEW",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_VECTOR_VIEW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_DIFFUSE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_DIFFUSE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_SPECULAR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_SPECULAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_AMBIENT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_COLOR_AMBIENT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_ALBEDO",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_ALBEDO));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_METALNESS",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_METALNESS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_NORMAL",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_NORMAL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_ROUGHNESS",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_ROUGHNESS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_OCCLUSION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_OCCLUSION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_EMISSION",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_EMISSION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_HEIGHT",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_HEIGHT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_CUBEMAP",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_CUBEMAP));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_IRRADIANCE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_IRRADIANCE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_PREFILTER",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_PREFILTER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_BRDF",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_BRDF));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_DIFFUSE",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_DIFFUSE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_SPECULAR",JS_NewInt32(ctx,(int32_t)RL_SHADER_LOC_MAP_SPECULAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_FLOAT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_FLOAT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC2));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC3));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_VEC4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_INT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_INT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC2));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC3));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_IVEC4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UINT",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UINT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC2));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC3));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_UIVEC4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_SAMPLER2D",JS_NewInt32(ctx,(int32_t)RL_SHADER_UNIFORM_SAMPLER2D));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_FLOAT",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_FLOAT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC2",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC2));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC3",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC3));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC4",JS_NewInt32(ctx,(int32_t)RL_SHADER_ATTRIB_VEC4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL0",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL0));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL1",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL1));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL2",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL2));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL3",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL3));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL4",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL4));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL5",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL5));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL6",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL6));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL7",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_COLOR_CHANNEL7));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_DEPTH",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_DEPTH));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_STENCIL",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_STENCIL));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_X",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_X));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_X",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_X));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Y",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_Y));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Z",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_POSITIVE_Z));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_TEXTURE2D",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_TEXTURE2D));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_RENDERBUFFER",JS_NewInt32(ctx,(int32_t)RL_ATTACHMENT_RENDERBUFFER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_CULL_FACE_FRONT",JS_NewInt32(ctx,(int32_t)RL_CULL_FACE_FRONT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_CULL_FACE_BACK",JS_NewInt32(ctx,(int32_t)RL_CULL_FACE_BACK));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DEFAULT_BATCH_BUFFER_ELEMENTS",JS_NewInt32(ctx,(int32_t)RL_DEFAULT_BATCH_BUFFER_ELEMENTS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_S",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_S));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_T",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_T));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MAG_FILTER",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MAG_FILTER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MIN_FILTER",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MIN_FILTER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_NEAREST));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_LINEAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_MIP_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_MIP_NEAREST));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_MIP_LINEAR",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_MIP_LINEAR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_FILTER_ANISOTROPIC));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MIPMAP_BIAS_RATIO",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_MIPMAP_BIAS_RATIO));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_REPEAT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_REPEAT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_CLAMP",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_CLAMP));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_MIRROR_REPEAT",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_MIRROR_REPEAT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_MIRROR_CLAMP",JS_NewInt32(ctx,(int32_t)RL_TEXTURE_WRAP_MIRROR_CLAMP));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_MODELVIEW",JS_NewInt32(ctx,(int32_t)RL_MODELVIEW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_PROJECTION",JS_NewInt32(ctx,(int32_t)RL_PROJECTION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TEXTURE",JS_NewInt32(ctx,(int32_t)RL_TEXTURE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_LINES",JS_NewInt32(ctx,(int32_t)RL_LINES));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_TRIANGLES",JS_NewInt32(ctx,(int32_t)RL_TRIANGLES));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_QUADS",JS_NewInt32(ctx,(int32_t)RL_QUADS));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_UNSIGNED_BYTE",JS_NewInt32(ctx,(int32_t)RL_UNSIGNED_BYTE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_FLOAT",JS_NewInt32(ctx,(int32_t)RL_FLOAT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STREAM_DRAW",JS_NewInt32(ctx,(int32_t)RL_STREAM_DRAW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STREAM_READ",JS_NewInt32(ctx,(int32_t)RL_STREAM_READ));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STREAM_COPY",JS_NewInt32(ctx,(int32_t)RL_STREAM_COPY));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STATIC_DRAW",JS_NewInt32(ctx,(int32_t)RL_STATIC_DRAW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STATIC_READ",JS_NewInt32(ctx,(int32_t)RL_STATIC_READ));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_STATIC_COPY",JS_NewInt32(ctx,(int32_t)RL_STATIC_COPY));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_DRAW",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_DRAW));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_READ",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_READ));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_COPY",JS_NewInt32(ctx,(int32_t)RL_DYNAMIC_COPY));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_FRAGMENT_SHADER",JS_NewInt32(ctx,(int32_t)RL_FRAGMENT_SHADER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_VERTEX_SHADER",JS_NewInt32(ctx,(int32_t)RL_VERTEX_SHADER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_COMPUTE_SHADER",JS_NewInt32(ctx,(int32_t)RL_COMPUTE_SHADER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ZERO",JS_NewInt32(ctx,(int32_t)RL_ZERO));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE",JS_NewInt32(ctx,(int32_t)RL_ONE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SRC_COLOR",JS_NewInt32(ctx,(int32_t)RL_SRC_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_SRC_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_SRC_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_SRC_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_SRC_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_DST_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_DST_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DST_COLOR",JS_NewInt32(ctx,(int32_t)RL_DST_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_DST_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_DST_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_SRC_ALPHA_SATURATE",JS_NewInt32(ctx,(int32_t)RL_SRC_ALPHA_SATURATE));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_CONSTANT_COLOR",JS_NewInt32(ctx,(int32_t)RL_CONSTANT_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_CONSTANT_COLOR",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_CONSTANT_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_CONSTANT_ALPHA",JS_NewInt32(ctx,(int32_t)RL_CONSTANT_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_CONSTANT_ALPHA",JS_NewInt32(ctx,(int32_t)RL_ONE_MINUS_CONSTANT_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_FUNC_ADD",JS_NewInt32(ctx,(int32_t)RL_FUNC_ADD));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_MIN",JS_NewInt32(ctx,(int32_t)RL_MIN));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_MAX",JS_NewInt32(ctx,(int32_t)RL_MAX));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_FUNC_SUBTRACT",JS_NewInt32(ctx,(int32_t)RL_FUNC_SUBTRACT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_FUNC_REVERSE_SUBTRACT",JS_NewInt32(ctx,(int32_t)RL_FUNC_REVERSE_SUBTRACT));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_EQUATION_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_DST_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_DST_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_SRC_RGB",JS_NewInt32(ctx,(int32_t)RL_BLEND_SRC_RGB));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_DST_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_DST_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_SRC_ALPHA",JS_NewInt32(ctx,(int32_t)RL_BLEND_SRC_ALPHA));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_BLEND_COLOR",JS_NewInt32(ctx,(int32_t)RL_BLEND_COLOR));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_READ_FRAMEBUFFER",JS_NewInt32(ctx,(int32_t)RL_READ_FRAMEBUFFER));
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_DRAW_FRAMEBUFFER",JS_NewInt32(ctx,(int32_t)RL_DRAW_FRAMEBUFFER));
 		return 0;
 	}
 	
@@ -3301,193 +3563,193 @@
 		if(!m)return NULL;
 		size_t listcount=countof(jsrlgl_funcs);
 		JS_AddModuleExportList(ctx,m,jsrlgl_funcs,(int)listcount);
-		JS_AddModuleExport(ctx,m,(const char *)"rlVertexBuffer");
-		JS_AddModuleExport(ctx,m,(const char *)"rlDrawCall");
-		JS_AddModuleExport(ctx,m,(const char *)"rlRenderBatch");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_11");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_21");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_33");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_43");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_ES_20");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_OPENGL_ES_30");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_ALL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_TRACE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_DEBUG");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_INFO");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_WARNING");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_ERROR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_FATAL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LOG_NONE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC1_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC2_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_POINT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_BILINEAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_TRILINEAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_4X");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_8X");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC_16X");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_ADDITIVE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_MULTIPLIED");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_ADD_COLORS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_SUBTRACT_COLORS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_ALPHA_PREMULTIPLY");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_CUSTOM");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_CUSTOM_SEPARATE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_POSITION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TEXCOORD01");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TEXCOORD02");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_NORMAL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_TANGENT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VERTEX_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_MVP");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_VIEW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_PROJECTION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_MODEL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MATRIX_NORMAL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_VECTOR_VIEW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_DIFFUSE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_SPECULAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_COLOR_AMBIENT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_ALBEDO");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_METALNESS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_NORMAL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_ROUGHNESS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_OCCLUSION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_EMISSION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_HEIGHT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_CUBEMAP");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_IRRADIANCE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_PREFILTER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_BRDF");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_DIFFUSE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_LOC_MAP_SPECULAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_FLOAT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC2");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC3");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_VEC4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_INT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC2");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC3");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_IVEC4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UINT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC2");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC3");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_UIVEC4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_UNIFORM_SAMPLER2D");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_FLOAT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC2");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC3");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SHADER_ATTRIB_VEC4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL0");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL1");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL2");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL3");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL4");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL5");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL6");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_COLOR_CHANNEL7");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_DEPTH");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_STENCIL");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_X");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_X");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Y");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Z");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_TEXTURE2D");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ATTACHMENT_RENDERBUFFER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_CULL_FACE_FRONT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_CULL_FACE_BACK");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DEFAULT_BATCH_BUFFER_ELEMENTS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_S");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_T");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_MAG_FILTER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_MIN_FILTER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_NEAREST");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_LINEAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_MIP_NEAREST");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_MIP_LINEAR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_FILTER_ANISOTROPIC");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_MIPMAP_BIAS_RATIO");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_REPEAT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_CLAMP");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_MIRROR_REPEAT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE_WRAP_MIRROR_CLAMP");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_MODELVIEW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_PROJECTION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TEXTURE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_LINES");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_TRIANGLES");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_QUADS");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_UNSIGNED_BYTE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_FLOAT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STREAM_DRAW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STREAM_READ");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STREAM_COPY");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STATIC_DRAW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STATIC_READ");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_STATIC_COPY");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DYNAMIC_DRAW");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DYNAMIC_READ");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DYNAMIC_COPY");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_FRAGMENT_SHADER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_VERTEX_SHADER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_COMPUTE_SHADER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ZERO");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SRC_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_SRC_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SRC_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_SRC_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DST_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_DST_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DST_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_DST_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_SRC_ALPHA_SATURATE");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_CONSTANT_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_CONSTANT_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_CONSTANT_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_ONE_MINUS_CONSTANT_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_FUNC_ADD");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_MIN");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_MAX");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_FUNC_SUBTRACT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_FUNC_REVERSE_SUBTRACT");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_EQUATION_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_DST_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_SRC_RGB");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_DST_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_SRC_ALPHA");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_BLEND_COLOR");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_READ_FRAMEBUFFER");
-		JS_AddModuleExport(ctx,m,(const char *)"RL_DRAW_FRAMEBUFFER");
+		JS_AddModuleExport(ctx,m,(const char  *)"rlVertexBuffer");
+		JS_AddModuleExport(ctx,m,(const char  *)"rlDrawCall");
+		JS_AddModuleExport(ctx,m,(const char  *)"rlRenderBatch");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_11");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_21");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_33");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_43");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_ES_20");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_ES_30");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_ALL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_TRACE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_DEBUG");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_INFO");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_WARNING");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_ERROR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_FATAL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LOG_NONE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC1_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC2_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_POINT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_BILINEAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_TRILINEAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_4X");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_8X");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC_16X");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_ADDITIVE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_MULTIPLIED");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_ADD_COLORS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_SUBTRACT_COLORS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_ALPHA_PREMULTIPLY");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_CUSTOM");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_CUSTOM_SEPARATE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_POSITION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TEXCOORD01");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TEXCOORD02");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_NORMAL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_TANGENT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VERTEX_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_MVP");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_VIEW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_PROJECTION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_MODEL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MATRIX_NORMAL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_VECTOR_VIEW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_DIFFUSE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_SPECULAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_COLOR_AMBIENT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_ALBEDO");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_METALNESS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_NORMAL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_ROUGHNESS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_OCCLUSION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_EMISSION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_HEIGHT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_CUBEMAP");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_IRRADIANCE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_PREFILTER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_BRDF");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_DIFFUSE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_LOC_MAP_SPECULAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_FLOAT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC2");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC3");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_VEC4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_INT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC2");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC3");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_IVEC4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UINT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC2");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC3");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_UIVEC4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_UNIFORM_SAMPLER2D");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_FLOAT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC2");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC3");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SHADER_ATTRIB_VEC4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL0");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL1");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL2");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL3");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL4");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL5");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL6");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_COLOR_CHANNEL7");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_DEPTH");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_STENCIL");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_X");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_X");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Y");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_POSITIVE_Z");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_TEXTURE2D");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ATTACHMENT_RENDERBUFFER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_CULL_FACE_FRONT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_CULL_FACE_BACK");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DEFAULT_BATCH_BUFFER_ELEMENTS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_S");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_T");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MAG_FILTER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MIN_FILTER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_NEAREST");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_LINEAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_MIP_NEAREST");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_MIP_LINEAR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_FILTER_ANISOTROPIC");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_MIPMAP_BIAS_RATIO");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_REPEAT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_CLAMP");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_MIRROR_REPEAT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE_WRAP_MIRROR_CLAMP");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_MODELVIEW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_PROJECTION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TEXTURE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_LINES");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_TRIANGLES");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_QUADS");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_UNSIGNED_BYTE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_FLOAT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STREAM_DRAW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STREAM_READ");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STREAM_COPY");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STATIC_DRAW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STATIC_READ");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_STATIC_COPY");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_DRAW");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_READ");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DYNAMIC_COPY");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_FRAGMENT_SHADER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_VERTEX_SHADER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_COMPUTE_SHADER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ZERO");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SRC_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_SRC_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SRC_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_SRC_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DST_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_DST_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DST_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_DST_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_SRC_ALPHA_SATURATE");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_CONSTANT_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_CONSTANT_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_CONSTANT_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_ONE_MINUS_CONSTANT_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_FUNC_ADD");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_MIN");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_MAX");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_FUNC_SUBTRACT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_FUNC_REVERSE_SUBTRACT");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_EQUATION_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_DST_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_SRC_RGB");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_DST_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_SRC_ALPHA");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_BLEND_COLOR");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_READ_FRAMEBUFFER");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_DRAW_FRAMEBUFFER");
 		return m;
 	}
 

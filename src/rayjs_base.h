@@ -15,7 +15,7 @@ enum {
 //define an allocation linked list
 typedef struct memoryNode{
     int length;
-    void * pointers[6];
+    void * pointers[10];
     struct memoryNode * next;
 } memoryNode;
 //Define a struct to store in a trampoline
@@ -26,8 +26,13 @@ typedef struct trampolineContext {
 } trampolineContext;
 
 static JSClassID js_ArrayProxy_class_id;
+//JSClasses offer too little, to combat this, a catch all class is created to store information about objects
+typedef struct opaqueShadow {
+    JSValue anchor;//pointer to js controlled object keeping track of lifetime, if null, ptr is freeable
+    void * ptr;//pointer to actual object in memory, sometimes part of another object
+} opaqueShadow;
 typedef int (*ArrayProxy_has)(JSContext *,void *,int,bool);// (ctx,opaque,set_to,property,as_sting?)
-typedef JSValue (*ArrayProxy_get)(JSContext *,void *,int,bool);// (ctx,opaque,property,is_sting?)
+typedef JSValue (*ArrayProxy_get)(JSContext *,JSValue,void *,int,bool);// (ctx,opaque,property,is_sting?)
 typedef int (*ArrayProxy_set)(JSContext *,void *,JSValue,int,bool);// (ctx,opaque,set_to,property,as_sting?)
 typedef int (*ArrayProxy_keys)(JSContext *,void *,JSPropertyEnum **);// (ctx,opaque,set_to,&(* JSPropertyEnum))
 typedef struct ArrayProxy_class {
@@ -64,6 +69,9 @@ static JSCFunctionListEntry argv0;
 static int qjs__argc;
 static char **qjs__argv;
 static int default_dump;
+static _Thread_local memoryNode local_memhead;
+static _Thread_local memoryNode * local_memtop;
+static _Thread_local bool local_memlock;//Allow blocking saving in memoryStore()
 
 static JSValue js_navigator_get_userAgent(JSContext *ctx, JSValue this_val);
 
@@ -102,9 +110,13 @@ static int app_update_quickjs(JSContext *ctx);
 /* also used to initialize the worker context */
 static JSContext *JS_NewCustomContext(JSRuntime *rt);
 static JSValue copyFunction(JSContext *from_ctx, JSContext *to_ctx, JSValue fn);
-static memoryNode* memoryStore(memoryNode *current, void * clarfunc, void * memoryptr);
-static void memoryClear(JSContext * ctx, memoryNode *head);
+static void memoryStore(void * clearfunc, void * memoryptr);
+static void memoryClear(JSContext * ctx);
 static void JS_FreeValuePtr(JSContext *ctx, JSValue * v);
 static char * asnprintf(JSContext * ctx, char * buffer, size_t * maxsize, const char * format, int skip_args, ...);
 static JSValue js_NewArrayProxy(JSContext * ctx,ArrayProxy_class AP);
 static int64_t js_IsArrayLength(JSContext * ctx, JSValueConst obj, int64_t len);
+static inline opaqueShadow *create_shadow_with_data(size_t data_size);
+static inline opaqueShadow *create_shadow_with_data0(size_t data_size);
+static inline opaqueShadow *create_shadow_with_external(void * external_ptr,JSValue anchor);
+static inline void deallocate_shadow(JSRuntime * rt,opaqueShadow * shadow);

@@ -598,11 +598,11 @@ export function GuiLoadStyleBluish() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(bluishFontRecs);
+    font.recs = bluishFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(bluishFontGlyphs);
+    font.glyphs = bluishFontGlyphs;
 
     GuiSetFont(font);
 

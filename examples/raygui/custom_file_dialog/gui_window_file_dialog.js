@@ -276,7 +276,6 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 
 // Read files in new path
 function ReloadDirectoryFiles(state) {
-    UnloadDirectoryFiles(state.dirFiles);
 
     state.dirFiles = LoadDirectoryFilesEx(state.dirPathText, (state.filterExt[0] == '\0')? null : state.filterExt, false);
     state.itemFocused = 0;
@@ -354,6 +353,7 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
 
         // Load current directory files
         if (state.dirFiles == null) ReloadDirectoryFiles(state);
+        console.log(JSON.stringify([dirFilesIcons]));
         //----------------------------------------------------------------------------------------
 
         // Draw window and controls
@@ -374,7 +374,7 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
         }
 
         // Draw current directory text box info + path editing logic
-        if (GuiTextBox(new Rectangle( state.windowBounds.x + 8, state.windowBounds.y + 24 + 12, state.windowBounds.width - 48 - 16, 24 ), state.dirPathText, 1024, state.dirPathEditMode)){
+        if (GuiTextBox(new Rectangle( state.windowBounds.x + 8, state.windowBounds.y + 24 + 12, state.windowBounds.width - 48 - 16, 24 ), [state.dirPathText], 1024, state.dirPathEditMode)){
             if (state.dirPathEditMode) {
                 // Verify if a valid path has been introduced
                 if (DirectoryExists(state.dirPathText)) {
@@ -402,8 +402,9 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
             let filesListScrollIndex = [state.filesListScrollIndex];
             let filesListActive = [state.filesListActive];
             let itemFocused = [state.itemFocused];
+            console.log(JSON.stringify([dirFilesIcons]));
             GuiListViewEx(new Rectangle( state.windowBounds.x + 8, state.windowBounds.y + 48 + 20, state.windowBounds.width - 16, state.windowBounds.height - 60 - 16 - 68 ),
-            dirFilesIcons, state.dirFiles.length, filesListScrollIndex, filesListActive, itemFocused);
+            [dirFilesIcons], state.dirFiles.length, filesListScrollIndex, filesListActive, itemFocused);
             state.filesListScrollIndex = filesListScrollIndex[0];
             state.filesListActive = filesListActive[0];
             state.itemFocused = itemFocused[0];

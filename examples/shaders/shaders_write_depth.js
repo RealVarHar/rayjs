@@ -16,7 +16,9 @@
 ********************************************************************************************/
 
 import * as os from 'qjs:os';
-import {InitWindow, LOG_INFO, LOG_WARNING, LoadShader, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, TextFormat, TraceLog, Camera3D as Camera, Vector3, CAMERA_PERSPECTIVE, SetTargetFPS, WindowShouldClose, UpdateCamera, CAMERA_ORBITAL, BeginTextureMode, ClearBackground, WHITE, BeginMode3D, BeginShaderMode, DrawCubeWiresV, DrawCubeV, DrawGrid, RED, PURPLE, DARKGREEN, YELLOW, EndShaderMode, EndMode3D, EndTextureMode, BeginDrawing, RAYWHITE, DrawTextureRec, Rectangle, Vector2, DrawFPS, EndDrawing, UnloadShader, CloseWindow } from 'rayjs:raylib';
+import {InitWindow, LOG_INFO, LOG_WARNING, LoadShader, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, TextFormat, TraceLog, Camera3D as Camera, Vector3, CAMERA_PERSPECTIVE, SetTargetFPS, WindowShouldClose, UpdateCamera, CAMERA_ORBITAL, BeginTextureMode, ClearBackground, WHITE, BeginMode3D, BeginShaderMode, DrawCubeWiresV, DrawCubeV, DrawGrid, RED, PURPLE, DARKGREEN, YELLOW, EndShaderMode, EndMode3D, EndTextureMode, BeginDrawing, RAYWHITE, DrawTextureRec, Rectangle, Vector2, DrawFPS, EndDrawing, UnloadShader, CloseWindow
+    ,RenderTexture as RenderTexture2D
+} from 'rayjs:raylib';
 import * as rg from 'rayjs:rlgl';
 
 let GLSL_VERSION;
@@ -39,7 +41,7 @@ function LoadRenderTextureDepthTex(width, height) {
         rg.rlEnableFramebuffer(target.id);
 
         // Create color texture (default to RGBA)
-        target.texture.id = rg.rlLoadTexture(0, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+        target.texture.id = rg.rlLoadTexture(null, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
         target.texture.width = width;
         target.texture.height = height;
         target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
@@ -53,12 +55,15 @@ function LoadRenderTextureDepthTex(width, height) {
         target.depth.mipmaps = 1;
 
         // Attach color texture and depth texture to FBO
+        console.log(1);
         rg.rlFramebufferAttach(target.id, target.texture.id, rg.RL_ATTACHMENT_COLOR_CHANNEL0, rg.RL_ATTACHMENT_TEXTURE2D, 0);
+        console.log(2);
         rg.rlFramebufferAttach(target.id, target.depth.id, rg.RL_ATTACHMENT_DEPTH, rg.RL_ATTACHMENT_TEXTURE2D, 0);
+        console.log(3);
 
         // Check if fbo is complete with attachments (valid)
         if (rg.rlFramebufferComplete(target.id)) TraceLog(LOG_INFO, "FBO: [ID "+target.id+"] Framebuffer object created successfully");
-
+        console.log(4);
         rg.rlDisableFramebuffer();
     }
     else TraceLog(LOG_WARNING, "FBO: Framebuffer object can not be created");

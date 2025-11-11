@@ -34,15 +34,28 @@
 *
 **********************************************************************************************/
 
-import std from "qjs:std";
-import {ARROWS_VISIBLE, BACKGROUND_COLOR, BASE_COLOR_DISABLED, BASE_COLOR_PRESSED,
+import * as std from "qjs:std";
+import {
+    ARROWS_VISIBLE,
+    BACKGROUND_COLOR,
+    BASE_COLOR_DISABLED,
+    BASE_COLOR_PRESSED,
     BORDER_COLOR_DISABLED,
-    BORDER_COLOR_PRESSED, BORDER_WIDTH, BUTTON, DEFAULT, GuiButton, GuiCheckBox, GuiGetState, GuiGetStyle,
+    BORDER_COLOR_PRESSED,
+    BORDER_WIDTH,
+    BUTTON,
+    DEFAULT,
+    GuiButton,
+    GuiCheckBox,
+    GuiGetState,
+    GuiGetStyle,
     GuiIconText,
     GuiLock,
-    GuiSetState,
-    GuiSetStyle,
     GuiUnlock,
+    GuiIsLocked,
+    GuiSetState,
+    GuiGetTextWidth,
+    GuiSetStyle,
     LISTVIEW,
     LIST_ITEMS_HEIGHT,
     LIST_ITEMS_SPACING,
@@ -54,10 +67,29 @@ import {ARROWS_VISIBLE, BACKGROUND_COLOR, BASE_COLOR_DISABLED, BASE_COLOR_PRESSE
     SCROLL_SLIDER_PADDING,
     SCROLL_SLIDER_SIZE,
     SPINNER_BUTTON_SPACING,
-    SPINNER_BUTTON_WIDTH, STATE_DISABLED, STATE_FOCUSED, STATE_NORMAL, STATE_PRESSED,
+    SPINNER_BUTTON_WIDTH,
+    STATE_DISABLED,
+    STATE_FOCUSED,
+    STATE_NORMAL,
+    STATE_PRESSED,
     TEXT_ALIGNMENT,
     TEXT_ALIGN_CENTER,
-    TEXT_ALIGN_LEFT, TEXT_COLOR_DISABLED, TEXT_COLOR_FOCUSED, TEXT_COLOR_NORMAL, TEXT_COLOR_PRESSED, VALUEBOX } from "rayjs:raygui";
+    TEXT_ALIGN_LEFT,
+    ICON_ARROW_LEFT_FILL,
+    ICON_ARROW_RIGHT_FILL,
+    TEXT_COLOR_DISABLED,
+    TEXT_COLOR_FOCUSED,
+    TEXT_COLOR_NORMAL,
+    TEXT_COLOR_PRESSED,
+    VALUEBOX,
+    BORDER,
+    TEXT,
+    GuiTextBox,
+    GuiDrawText,
+    GuiScrollBar,
+    GuiComboBox,
+    GuiGetAlpha
+} from "rayjs:raygui";
 import {BeginScissorMode, CheckCollisionPointRec, Color,
     ColorToInt,
     DrawLineEx,
@@ -86,6 +118,8 @@ const GUI_PROP_RECT = 8;
 const GUI_PROP_COLOR = 9;
 const GUI_PROP_SECTION = 10;
 
+let guiAlpha=GuiGetAlpha();
+
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -111,10 +145,10 @@ const GUI_PFLAG_DISABLED = 1 << 1; // is this property disabled or enabled?
 // Create a bool property with name `N`, flags `F` and value `V`
 export function PBOOL(name, flags, V) {return {name, type:GUI_PROP_BOOL, flags, vbool: V};};
 // Create a int property with name `N`, flags `F` and value `V`
-export function PINT(name, flags, V) {return {name, type:GUI_PROP_BOOL, flags, vint: {val:V,min:0,max:0,step:1}};}
+export function PINT(name, flags, V) {return {name, type:GUI_PROP_INT, flags, vint: {val:V,min:0,max:0,step:1}};}
 // Create a ranged int property within `MIN` and `MAX` with name `N`, flags `F` value `V`. 
 // Pressing the spinner buttons will increase/decrease the value by `S`.
-export function PINT_RANGE(name, flags, V, S, min, max) {return {name, type:GUI_PROP_BOOL, flags, vint: {val:V,min,max,step:S}};}
+export function PINT_RANGE(name, flags, V, S, min, max) {return {name, type:GUI_PROP_INT, flags, vint: {val:V,min,max,step:S}};}
 // Create a float property with name `N`, flags `F` and value `V`
 export function PFLOAT(name, flags, V) {return {name, type:GUI_PROP_FLOAT, flags, vfloat: {val:V,min:0,max:0,step:1,precision:3}};};
 // Create a ranged float property within `MIN` and `MAX` with name `N`, flags `F` value `V` with `P` decimal digits to show. 
@@ -160,10 +194,10 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
         if(value > maxValue) value = maxValue;
     }
 
-    let textValue = "";
-    console.log(TextFormat("%.*f", precision, value));
+    let textValue = TextFormat(`%.${precision}f`, value);
 
     let valueHasChanged = false;
+    let guiLocked=GuiIsLocked();
 
     // Update control
     //--------------------------------------------------------------------
@@ -174,7 +208,6 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
             if(cursor < 0) cursor = 0;
 
             state = STATE_PRESSED;
-            framesCounter++;
 
             if(IsKeyPressed(KEY_RIGHT) || (IsKeyDown(KEY_RIGHT) && (framesCounter%cursorTimer == 0))) {
                 // MOVE CURSOR TO RIGHT
@@ -188,7 +221,7 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
                 // HANDLE BACKSPACE
                 if(cursor > 0) {
                     if(textValue[cursor-1] != '.') {
-                        if(cursor < textValue.length ){
+                        if(cursor <= textValue.length ){
                             textValue = textValue.substring(0,cursor-1)+textValue.substring(cursor);
                         }
                         valueHasChanged = true;
@@ -230,13 +263,13 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
                 if( ((textValue.length < maxChars) && (key >= 48) && (key <= 57)) || (key == 46) || (key == 45)  ) { // only allow 0..9, minus(-) and dot(.)
 
                     if(precision != 0 && cursor < textValue.length) { // insert
-                        textValue = textValue.substring(0,cursor)+textValue.substring(cursor);
+                        textValue = textValue.substring(0,cursor)+String.fromCodePoint(key)+textValue.substring(cursor);
                         valueHasChanged = true;
                     }
                     else if(precision == 0) {
                         //cursor can not be bigger than len
                         if(cursor < textValue.length) {
-                            textValue = textValue.substring(0,cursor)+String.fromCodePoint(key)+textValue.substring(cursor+1);
+                            textValue = textValue.substring(0,cursor)+String.fromCodePoint(key)+textValue.substring(cursor);
                         }else{
                             textValue += String.fromCodePoint(key);
                         }
@@ -265,7 +298,7 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
     let textBounds = new Rectangle(bounds.x + GuiGetStyle(VALUEBOX, BORDER_WIDTH) + textPadding, bounds.y + GuiGetStyle(VALUEBOX, BORDER_WIDTH),
         bounds.width - 2*(GuiGetStyle(VALUEBOX, BORDER_WIDTH) + textPadding), bounds.height - 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH));
 
-    let textWidth = GetTextWidth(textValue);
+    let textWidth = GuiGetTextWidth(textValue);
     if(textWidth > textBounds.width) textBounds.width = textWidth;
 
     if (state == STATE_PRESSED) {
@@ -273,11 +306,11 @@ function GuiDMValueBox(bounds, value, minValue, maxValue, precision, editMode) {
 
         // Draw blinking cursor
         // NOTE: ValueBox internal text is always centered
-        if (editMode && ((framesCounter/20)%2 == 0)) {
+        if (editMode && (Math.floor(framesCounter/20)%2 == 0)) {
             // Measure text until the cursor
             let textWidthCursor = -2;
             if(cursor > 0) {
-                textWidthCursor = GetTextWidth(textValue.substring(0,cursor));
+                textWidthCursor = GuiGetTextWidth(textValue.substring(0,cursor));
             }
             //DrawRectangle(bounds.x + textWidthCursor + textPadding + 2, bounds.y + 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH), 1, bounds.height - 4*GuiGetStyle(VALUEBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER_COLOR_PRESSED)), guiAlpha));
             DrawRectangle(bounds.x + textWidthCursor + Math.floor((bounds.width - textWidth - textPadding)/2) + 2, bounds.y + 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH), 1, bounds.height - 4*GuiGetStyle(VALUEBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER_COLOR_PRESSED)), guiAlpha));
@@ -310,6 +343,7 @@ function GuiDMSpinner(bounds, value, minValue, maxValue, step, precision, editMo
     let leftButtonBound = new Rectangle( bounds.x, bounds.y, GuiGetStyle(VALUEBOX, SPINNER_BUTTON_WIDTH), bounds.height );
     let rightButtonBound = new Rectangle( bounds.x + bounds.width - GuiGetStyle(VALUEBOX, SPINNER_BUTTON_WIDTH),
         bounds.y, GuiGetStyle(VALUEBOX, SPINNER_BUTTON_WIDTH), bounds.height );
+    let guiLocked=GuiIsLocked();
 
     // Update control
     //--------------------------------------------------------------------
@@ -334,8 +368,8 @@ function GuiDMSpinner(bounds, value, minValue, maxValue, step, precision, editMo
     GuiSetStyle(BUTTON, BORDER_WIDTH, GuiGetStyle(VALUEBOX, BORDER_WIDTH));
     GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
-    if (GuiButton(leftButtonBound, GuiIconText(RICON_ARROW_LEFT_FILL, null))) value -= step;
-    if (GuiButton(rightButtonBound, GuiIconText(RICON_ARROW_RIGHT_FILL, null))) value += step;
+    if (GuiButton(leftButtonBound, GuiIconText(ICON_ARROW_LEFT_FILL, null))) value -= step;
+    if (GuiButton(rightButtonBound, GuiIconText(ICON_ARROW_RIGHT_FILL, null))) value += step;
 
     GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlign);
     GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
@@ -347,6 +381,7 @@ function GuiDMSpinner(bounds, value, minValue, maxValue, step, precision, editMo
 
 // Works just like `GuiListViewEx()` but with an array of properties instead of text.
 export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
+    framesCounter++;
     const PROPERTY_COLLAPSED_ICON = "#120#";
     const PROPERTY_EXPANDED_ICON = "#121#";
 
@@ -396,6 +431,7 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
     }
 
     let maxScroll = absoluteBounds.height + 2*(GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH))-bounds.height;
+    let guiLocked=GuiIsLocked();
 
     // Update control
     //--------------------------------------------------------------------
@@ -466,7 +502,9 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
                     // draw property value
                     const locked = guiLocked;
                     GuiLock(); // lock the checkbox since we changed the value manually
-                    GuiCheckBox(new Rectangle(propBounds.x+propBounds.width/2, propBounds.y + height/4, height/2, height/2), props[p].vbool? "Yes" : "No", props[p].vbool);
+                    let vbool=[props[p].vbool];
+                    GuiCheckBox(new Rectangle(propBounds.x+propBounds.width/2, propBounds.y + height/4, height/2, height/2), props[p].vbool? "Yes" : "No", vbool);
+                    props[p].vbool=vbool[0];
                     if(!locked) GuiUnlock(); // only unlock when needed
                 } break;
 
@@ -500,7 +538,9 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
 
                     // draw property value
                     if(!PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED)) {
-                        GuiTextBox(new Rectangle(propBounds.x, propBounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2), props[p].vtext.val, props[p].vtext.size, (propState == STATE_FOCUSED));
+                        let text=[props[p].vtext.val];
+                        GuiTextBox(new Rectangle(propBounds.x, propBounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2), text, props[p].vtext.size, (propState == STATE_FOCUSED));
+                        props[p].vtext.val=text[0];
                     }
                 } break;
 
@@ -514,47 +554,48 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
                 } break;
 
                 case GUI_PROP_VECTOR2: case GUI_PROP_VECTOR3: case GUI_PROP_VECTOR4: {
-                let titleBounds = new Rectangle( propBounds.x, propBounds.y, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) );
-                // Collapse/Expand property on click
-                if((propState == STATE_PRESSED) && CheckCollisionPointRec(mousePos, titleBounds))
-                    PROP_TOGGLE_FLAG(props[p], GUI_PFLAG_COLLAPSED);
+                    let val=props[p].type==GUI_PROP_VECTOR2?props[p].v2:(props[p].type==GUI_PROP_VECTOR3?props[p].v3:props[p].v4);
+                    let titleBounds = new Rectangle( propBounds.x, propBounds.y, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) );
+                    // Collapse/Expand property on click
+                    if((propState == STATE_PRESSED) && CheckCollisionPointRec(mousePos, titleBounds))
+                        PROP_TOGGLE_FLAG(props[p], GUI_PFLAG_COLLAPSED);
 
-                let fmt = "";
-                if(props[p].type == GUI_PROP_VECTOR2) fmt = TextFormat("[%.0f, %.0f]", props[p].v2.x, props[p].v2.y);
-                else if(props[p].type == GUI_PROP_VECTOR3) fmt = TextFormat("[%.0f, %.0f, %.0f]", props[p].v3.x, props[p].v3.y, props[p].v3.z);
-                else fmt = TextFormat("[%.0f, %.0f, %.0f, %.0f]", props[p].v4.x, props[p].v4.y, props[p].v4.z, props[p].v4.w);
+                    let fmt = "";
+                    if(props[p].type == GUI_PROP_VECTOR2) fmt = TextFormat("[%.0f, %.0f]", val.x, val.y);
+                    else if(props[p].type == GUI_PROP_VECTOR3) fmt = TextFormat("[%.0f, %.0f, %.0f]", val.x, val.y, val.z);
+                    else fmt = TextFormat("[%.0f, %.0f, %.0f, %.0f]", val.x, val.y, val.z, val.w);
 
-                // draw property name
-                GuiDrawText(PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED) ? PROPERTY_COLLAPSED_ICON : PROPERTY_EXPANDED_ICON, titleBounds, TEXT_ALIGN_LEFT, textColor);
-                GuiDrawText(props[p].name, new Rectangle( propBounds.x+PROPERTY_ICON_SIZE+PROPERTY_PADDING, propBounds.y, propBounds.width-PROPERTY_ICON_SIZE-PROPERTY_PADDING, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)), TEXT_ALIGN_LEFT, textColor);
-                GuiDrawText(fmt, new Rectangle(propBounds.x+propBounds.width/2, propBounds.y + 1, propBounds.width/2, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) - 2), TEXT_ALIGN_LEFT, textColor);
+                    // draw property name
+                    GuiDrawText(PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED) ? PROPERTY_COLLAPSED_ICON : PROPERTY_EXPANDED_ICON, titleBounds, TEXT_ALIGN_LEFT, textColor);
+                    GuiDrawText(props[p].name, new Rectangle( propBounds.x+PROPERTY_ICON_SIZE+PROPERTY_PADDING, propBounds.y, propBounds.width-PROPERTY_ICON_SIZE-PROPERTY_PADDING, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)), TEXT_ALIGN_LEFT, textColor);
+                    GuiDrawText(fmt, new Rectangle(propBounds.x+propBounds.width/2, propBounds.y + 1, propBounds.width/2, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) - 2), TEXT_ALIGN_LEFT, textColor);
 
-                // draw X, Y, Z, W values (only when expanded)
-                if(!PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED)) {
-                    let slotBounds = new Rectangle( propBounds.x, propBounds.y+GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2);
-                    let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GetTextWidth("A"), slotBounds.height);
-                    let valBounds = new Rectangle( lblBounds.x+lblBounds.width+PROPERTY_PADDING, slotBounds.y, propBounds.width-lblBounds.width-2*PROPERTY_PADDING, slotBounds.height);
-                    GuiDrawText("X", lblBounds, TEXT_ALIGN_LEFT, textColor);
-                    props[p].v2.x = GuiDMSpinner(valBounds, props[p].v2.x, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
-                    slotBounds.y += GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
-                    lblBounds.y = valBounds.y = slotBounds.y;
-                    GuiDrawText("Y", lblBounds, TEXT_ALIGN_LEFT, textColor);
-                    props[p].v2.y = GuiDMSpinner(valBounds, props[p].v2.y, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
-                    slotBounds.y += GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
-                    lblBounds.y = valBounds.y = slotBounds.y;
-                    if(props[p].type >= GUI_PROP_VECTOR3) {
-                        GuiDrawText("Z", lblBounds, TEXT_ALIGN_LEFT, textColor);
-                        props[p].v3.z = GuiDMSpinner(valBounds, props[p].v3.z, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
+                    // draw X, Y, Z, W values (only when expanded)
+                    if(!PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED)) {
+                        let slotBounds = new Rectangle( propBounds.x, propBounds.y+GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2);
+                        let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GuiGetTextWidth("A"), slotBounds.height);
+                        let valBounds = new Rectangle( lblBounds.x+lblBounds.width+PROPERTY_PADDING, slotBounds.y, propBounds.width-lblBounds.width-2*PROPERTY_PADDING, slotBounds.height);
+                        GuiDrawText("X", lblBounds, TEXT_ALIGN_LEFT, textColor);
+                        val.x = GuiDMSpinner(valBounds, val.x, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
                         slotBounds.y += GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
                         lblBounds.y = valBounds.y = slotBounds.y;
-                    }
+                        GuiDrawText("Y", lblBounds, TEXT_ALIGN_LEFT, textColor);
+                        val.y = GuiDMSpinner(valBounds, val.y, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
+                        slotBounds.y += GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
+                        lblBounds.y = valBounds.y = slotBounds.y;
+                        if(props[p].type >= GUI_PROP_VECTOR3) {
+                            GuiDrawText("Z", lblBounds, TEXT_ALIGN_LEFT, textColor);
+                            val.z = GuiDMSpinner(valBounds, val.z, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
+                            slotBounds.y += GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
+                            lblBounds.y = valBounds.y = slotBounds.y;
+                        }
 
-                    if(props[p].type >= GUI_PROP_VECTOR4) {
-                        GuiDrawText("W", lblBounds, TEXT_ALIGN_LEFT, textColor);
-                        props[p].v4.w = GuiDMSpinner(valBounds, props[p].v4.w, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
+                        if(props[p].type >= GUI_PROP_VECTOR4) {
+                            GuiDrawText("W", lblBounds, TEXT_ALIGN_LEFT, textColor);
+                            val.w = GuiDMSpinner(valBounds, val.w, 0.0, 0.0, 1.0, PROPERTY_DECIMAL_DIGITS, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
+                        }
                     }
-                }
-            }   break;
+                }   break;
 
                 case GUI_PROP_RECT:{
                     let titleBounds = new Rectangle( propBounds.x, propBounds.y, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) );
@@ -571,7 +612,7 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
                     // draw X, Y, Width, Height values (only when expanded)
                     if(!PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED)) {
                         let slotBounds = new Rectangle( propBounds.x, propBounds.y+GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2);
-                        let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GetTextWidth("Height"), slotBounds.height);
+                        let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GuiGetTextWidth("Height"), slotBounds.height);
                         let valBounds = new Rectangle( lblBounds.x+lblBounds.width+PROPERTY_PADDING, slotBounds.y, propBounds.width-lblBounds.width-2*PROPERTY_PADDING, slotBounds.height);
                         GuiDrawText("X", lblBounds, TEXT_ALIGN_LEFT, textColor);
                         props[p].vrect.x = GuiDMSpinner(valBounds, props[p].vrect.x, 0.0, 0.0, 1.0, 0, (propState == STATE_FOCUSED) && CheckCollisionPointRec(mousePos, slotBounds) );
@@ -608,8 +649,8 @@ export function GuiDMPropertyList( bounds, props, count, focus, scrollIndex) {
                     // draw R, G, B, A values (only when expanded)
                     if(!PROP_CHECK_FLAG(props[p], GUI_PFLAG_COLLAPSED)) {
                         let slotBounds = new Rectangle( propBounds.x, propBounds.y+GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)+1, propBounds.width, GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2);
-                        let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GetTextWidth("A"), slotBounds.height);
-                        let valBounds = new Rectangle( lblBounds.x+lblBounds.width+PROPERTY_PADDING, slotBounds.y, GetTextWidth("000000"), slotBounds.height);
+                        let lblBounds = new Rectangle( propBounds.x+PROPERTY_PADDING, slotBounds.y, GuiGetTextWidth("A"), slotBounds.height);
+                        let valBounds = new Rectangle( lblBounds.x+lblBounds.width+PROPERTY_PADDING, slotBounds.y, GuiGetTextWidth("000000"), slotBounds.height);
                         let sbarBounds = new Rectangle( valBounds.x + valBounds.width + PROPERTY_PADDING, slotBounds.y, slotBounds.width - 3*PROPERTY_PADDING - lblBounds.width - valBounds.width, slotBounds.height );
 
                         if(sbarBounds.width <= GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT)-2) valBounds.width = propBounds.width-lblBounds.width-2*PROPERTY_PADDING; // hide slider when no space

@@ -60,7 +60,10 @@ static const int trailer_size = TRAILER_SIZE;
 #include <GLFW/glfw3.h>
 #include "rayjs_base.c"
 #include "rayjs_base.h"
-#include <raylib.h>
+static _Thread_local memoryNode local_memhead = {};
+static _Thread_local memoryNode * local_memtop;
+static _Thread_local bool local_memlock=false;
+
 
 static bool is_standalone(const char *exe)
 {
@@ -516,6 +519,7 @@ start:
     default_dump=dump_flags;
     if (trace_memory) {
         js_trace_malloc_init(&trace_data);
+        local_memtop=&local_memhead;//Initialize local tmp memory
         rt = JS_NewRuntime2(&trace_mf, &trace_data);
         js_declare_ArrayProxy_RT(rt);
         if (dump_flags != 0)

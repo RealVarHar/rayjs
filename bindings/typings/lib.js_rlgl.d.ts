@@ -152,7 +152,7 @@ function rlGetGlTextureFormats(format: number, glInternalFormat: number[], glFor
 function rlGetPixelFormatName(format: number): string/** undefined */
 function rlUnloadTexture(id: number): void/** undefined */
 function rlGenTextureMipmaps(id: number, width: number, height: number, format: number, mipmaps: number[]): void/** undefined */
-function rlReadTexturePixels(id: number, width: number, height: number, format: number): ArrayBuffer/** undefined */
+function rlReadTexturePixels(id: number, width: number, height: number, format: number): number[]/** undefined */
 function rlReadScreenPixels(width: number, height: number): string/** undefined */
 function rlLoadFramebuffer(): number/** undefined */
 function rlFramebufferAttach(fboId: number, texId: number, attachType: number, texType: number, mipLevel: number): void/** undefined */

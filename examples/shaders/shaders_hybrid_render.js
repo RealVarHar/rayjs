@@ -100,6 +100,7 @@ class RayLocs{
     InitWindow(screenWidth, screenHeight, "raylib [shaders] example - write depth buffer");
 
     // This Shader calculates pixel depth and color using raymarch
+    console.log(TextFormat("resources/shaders/glsl%i/hybrid_raymarch.fs", GLSL_VERSION));
     let shdrRaymarch = LoadShader(null, TextFormat("resources/shaders/glsl%i/hybrid_raymarch.fs", GLSL_VERSION));
 
     // This Shader is a standard rasterization fragment shader with the addition of depth writing

@@ -1,4 +1,4 @@
-import {GuiLoadStyleDark} from "../styles/style_dark.js";
+import {GuiLoadStyleDark} from "../styles/_style_dark.js";
 import {BeginDrawing,
     BeginScissorMode, CheckCollisionPointRec,
     ClearBackground,

@@ -141,6 +141,7 @@ static JSRuntime* JS_NewRuntime3(){
     if (default_dump != 0)
         JS_SetDumpFlags(rt, default_dump);
     js_declare_ArrayProxy_RT(rt);
+    local_memtop=&local_memhead;//Initialize local tmp memory
     return rt;
 }
 
@@ -151,26 +152,36 @@ static JSValue copyFunction(JSContext *from_ctx, JSContext *to_ctx, JSValue fn){
     //WHAT can be used to write data from JSValue function?
 }
 //define store function
-static memoryNode* memoryStore(memoryNode *current, void * clarfunc, void * memoryptr) {
+static void memoryStore(void * clearfunc, void * memoryptr) {
    // Saves memory for de-allocation
-   if(current->length < 6) {
-        current->pointers[current->length] = clarfunc;
-        current->pointers[current->length + 1] = memoryptr;
-        current->length += 2;
-        return current;
+   if(local_memlock)return;
+   if(local_memtop->length < 10) {
+        local_memtop->pointers[local_memtop->length] = clearfunc;
+        local_memtop->pointers[local_memtop->length + 1] = memoryptr;
+        local_memtop->length += 2;
+        return;
    } else {
         // This one is full, write to a new one
-        memoryNode *new_node = (memoryNode *)malloc(sizeof(memoryNode));
+        memoryNode *new_node = (memoryNode *)mi_malloc(sizeof(memoryNode));
         new_node->length = 2;
-        new_node->pointers[0] = clarfunc;
+        new_node->pointers[0] = clearfunc;
         new_node->pointers[1] = memoryptr;
         new_node->next = NULL;
-        current->next = new_node;
-        return new_node;
+        local_memtop->next = new_node;
+        local_memtop = new_node;
+        return;
    }
 }
 //define clear function
-static void memoryClear(JSContext * ctx, memoryNode *head) {
+static void memoryClear(JSContext * ctx) {
+    for (int i = 0; i < local_memhead.length; i += 2) {
+        void (*free_func) (JSContext *,void *) = local_memhead.pointers[i];
+        void * ptr_to_free = local_memhead.pointers[i + 1];
+        free_func(ctx, ptr_to_free);
+    }
+    local_memhead.length=0;
+    if(local_memhead.next == NULL)return;
+    memoryNode * head=local_memhead.next;
     memoryNode * prev_node;
     while (head != NULL) {
         for (int i = 0; i < head->length; i += 2) {
@@ -180,8 +191,11 @@ static void memoryClear(JSContext * ctx, memoryNode *head) {
         }
         prev_node = head;
         head = head->next;
-        free(prev_node);
+        mi_free(prev_node);
     }
+    local_memhead.next=NULL;
+    local_memtop=&local_memhead;
+
 }
 //define a proxy for FreeValue
 static void JS_FreeValuePtr(JSContext *ctx, JSValue * v){
@@ -252,10 +266,10 @@ static JSValue js_create_ArrayProxy_iterator(JSContext * ctx, JSValueConst this_
     ArrayProxy_class AP = *(ArrayProxy_class *)JS_GetOpaque2(ctx, this_val, js_ArrayProxy_class_id);
     if (magic & 4) {
         /* string iterator case */
-        arr = AP.values(ctx,AP.opaque,0,true);
+        arr = AP.values(ctx,this_val,AP.opaque,0,true);
         class_id = JS_CLASS_STRING_ITERATOR;
     } else {
-        arr = AP.values(ctx,AP.opaque,0,false);
+        arr = AP.values(ctx,this_val,AP.opaque,0,false);
         class_id = JS_CLASS_ARRAY_ITERATOR;
     }
     if (JS_IsException(arr))
@@ -294,12 +308,12 @@ static inline uint32_t JS_AtomToUInt32(JSAtom atom){return atom & ~JS_ATOM_TAG_I
 static JSValue js_ArrayProxy_get(JSContext *ctx, JSValue obj, JSAtom atom, JSValue receiver){
     ArrayProxy_class AP = *(ArrayProxy_class *)JS_GetOpaque2(ctx, obj, js_ArrayProxy_class_id);
     if (JS_AtomIsTaggedInt(atom)) {
-        return AP.get(ctx,AP.opaque,JS_AtomToUInt32(atom),false);
+        return AP.get(ctx,obj,AP.opaque,JS_AtomToUInt32(atom),false);
     }else{
         if(atom==JS_ATOM_Symbol_iterator){
             return JS_NewCFunctionMagic(ctx,js_create_ArrayProxy_iterator,"values",0,JS_CFUNC_generic_magic,JS_ITERATOR_KIND_VALUE);
         }
-        return AP.get(ctx,AP.opaque,(uint32_t)atom,true);
+        return AP.get(ctx,obj,AP.opaque,(uint32_t)atom,true);
     }
 
 }
@@ -423,6 +437,71 @@ static int64_t js_IsArrayLength(JSContext * ctx, JSValueConst obj, int64_t len){
     if(ret<0)return false;
     return ret==len;
 }
+
+static int memArena_top=0;
+static opaqueShadow * memArena[200];
+//TODO: experimient if keeping a own area would be faster than current implementation
+static void addtoArena(opaqueShadow * shadow){
+    memArena[memArena_top]=shadow;
+    memArena_top++;
+}
+static void deltoArena(opaqueShadow * shadow){
+    for(int i=memArena_top-1;i>=0;i--){
+        if(shadow!=memArena[i])continue;
+        for(int j=i;j<memArena_top-1;j++){
+            memArena[j]=memArena[j+1];
+        }
+        memArena_top--;
+        return;
+    }
+    exit(1);
+}
+
+static inline opaqueShadow *create_shadow_with_data(size_t data_size) {
+    // Skip multiple allocations by attaching data
+    opaqueShadow *shadow = mi_malloc(sizeof(opaqueShadow) + data_size);
+    if (!shadow) return NULL;
+    shadow->ptr = (void *)(shadow + 1);
+    shadow->anchor = JS_UNDEFINED;
+    //addtoArena(shadow);
+    return shadow;
+}
+
+static inline opaqueShadow *create_shadow_with_data0(size_t data_size) {
+    // Skip multiple allocations by attaching data
+    opaqueShadow *shadow = mi_calloc(sizeof(opaqueShadow) + data_size,1);
+    if (!shadow) return NULL;
+    shadow->ptr = (void *)(shadow + 1);
+    shadow->anchor = JS_UNDEFINED;
+    //addtoArena(shadow);
+    return shadow;
+}
+
+static inline opaqueShadow *create_shadow_with_external(void * external_ptr,JSValue anchor) {
+    // Allocate only the shadow struct
+    opaqueShadow *shadow = mi_malloc(sizeof(opaqueShadow));
+    if (!shadow) return NULL;
+    shadow->ptr = external_ptr;
+    shadow->anchor = anchor;//put 1 if its memory externally allocated instead
+    //addtoArena(shadow);
+    return shadow;
+}
+
+
+static inline void deallocate_shadow(JSRuntime * rt,opaqueShadow * shadow){
+    if(!shadow)return;
+    JSValue anchor=shadow->anchor;
+    if(JS_IsUndefined(anchor)){
+
+    }else if(JS_IsNull(anchor)){
+        mi_free(shadow->ptr);
+    }else{
+        JS_FreeValueRT(rt, anchor);
+    }
+    //deltoArena(shadow);
+    mi_free(shadow);
+}
+
 /*
 Target will be just parent, and handle is called:
 

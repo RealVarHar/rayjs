@@ -16,7 +16,7 @@
 ********************************************************************************************/
 
 import * as rg from 'rayjs:raygui';
-import std from "qjs:std";
+import * as std from "qjs:std";
 import {BeginDrawing,
     CheckCollisionPointRec,
     ClearBackground,
@@ -24,7 +24,7 @@ import {BeginDrawing,
     DARKGRAY,
     DrawRectangle,
     DrawRectangleLinesEx,
-    DrawText,
+    DrawText,Texture as Texture2D,
     DrawTextureEx, EndDrawing, ExportImage, ExportImageAsCode, Fade, GetColor, GetFileExtension,
     GetMousePosition, GetMouseWheelMove, GetPixelDataSize, Image,
     ImageFormat, InitWindow, IsFileDropped,
@@ -102,13 +102,16 @@ import {BeginDrawing,
                 let imageptr = [image];
                 ImageFormat(imageptr, pixelFormatActive + 1);
                 image = imageptr[0];
+                console.log(fileName);
                 
                 if (fileFormatActive == 0) {       // PNG
+                    if(!fileName.includes('.'))fileName=fileName+'.';
                     if ((GetFileExtension(fileName) == null) || (!IsFileExtension(fileName, ".png"))){
                         fileName+= ".png"; // No extension provided
                     }
                     ExportImage(image, fileName);
                 } else if (fileFormatActive == 1) {  // RAW
+                    if(!fileName.includes('.'))fileName=fileName+'.';
                     if ((GetFileExtension(fileName) == null) || (!IsFileExtension(fileName, ".raw"))) {
                         fileName+= ".raw"; // No extension provided
                     }
@@ -173,7 +176,7 @@ import {BeginDrawing,
                 fileFormatActive = fileFormatActiveptr[0];
                 pixelFormatActive = pixelFormatActiveptr[0];
                 rg.GuiLabel(new Rectangle( windowBoxRec.x + 10, windowBoxRec.y + 105, 50, 25 ), "File name:");
-                if (rg.GuiTextBox(new Rectangle( windowBoxRec.x + 80, windowBoxRec.y + 105, 130, 25 ), fileName, 64, textBoxEditMode)) textBoxEditMode = !textBoxEditMode;
+                if (rg.GuiTextBox(new Rectangle( windowBoxRec.x + 80, windowBoxRec.y + 105, 130, 25 ), [fileName], 64, textBoxEditMode)) textBoxEditMode = !textBoxEditMode;
 
                 btnExportPressed = 1 == rg.GuiButton(new Rectangle( windowBoxRec.x + 10, windowBoxRec.y + 145, 200, 30 ), "Export Image");
             } else {

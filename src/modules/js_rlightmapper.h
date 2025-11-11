@@ -11,103 +11,87 @@
 	
 	static float js_getfloat(JSContext * ctx,JSValue src,bool * error);
 	
-	static float * js_getfloat_arr(JSContext * ctx,JSValue src,bool * error);
+	static float * js_getfloat_arrnc(JSContext * ctx,JSValue src,bool * error);
 	
 	static int js_getint(JSContext * ctx,JSValue src,bool * error);
-	
-	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
-	
-	static Color js_getColor(JSContext * ctx,JSValue src,bool * error);
-	
-	static Mesh js_getMesh(JSContext * ctx,JSValue src,bool * error);
-	
-	static LightmapperConfig js_getLightmapperConfig(JSContext * ctx,JSValue src,bool * error){
-		LightmapperConfig ret;
-		if(JS_GetClassID(src)==js_LightmapperConfig_class_id){
-			ret =*(LightmapperConfig *)JS_GetOpaque(src,js_LightmapperConfig_class_id);
-		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type LightmapperConfig");
-			error[0]=(bool)1;
-			return (LightmapperConfig){0};
-		}
-		return ret;
-	}
 	
 	static Lightmapper js_getLightmapper(JSContext * ctx,JSValue src,bool * error){
 		Lightmapper ret;
 		if(JS_GetClassID(src)==js_Lightmapper_class_id){
-			ret =*(Lightmapper *)JS_GetOpaque(src,js_Lightmapper_class_id);
+			opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_Lightmapper_class_id);
+			ret =*(Lightmapper *)tmpshadow[0].ptr;
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type Lightmapper");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type Lightmapper");
 			error[0]=(bool)1;
 			return (Lightmapper){0};
 		}
 		return ret;
 	}
 	
-	static Lightmapper * js_getLightmapper_ptr(JSContext * ctx,JSValue src,bool * error){
-		Lightmapper * ret;
-		bool is_arrayProxy=(bool)0;
-		if(JS_GetClassID(src)==js_ArrayProxy_class_id){
-			is_arrayProxy =(bool)1;
-			void * AP_opaque=JS_GetOpaque(src,js_ArrayProxy_class_id);
-			ArrayProxy_class AP_fn=((ArrayProxy_class *)AP_opaque)[0];
-			src =AP_fn.values(ctx,AP_fn.opaque,(int)0,(bool)false);
+	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
+	
+	static Color js_getColor(JSContext * ctx,JSValue src,bool * error);
+	
+	static LightmapperConfig js_getLightmapperConfig(JSContext * ctx,JSValue src,bool * error){
+		LightmapperConfig ret;
+		if(JS_GetClassID(src)==js_LightmapperConfig_class_id){
+			opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_LightmapperConfig_class_id);
+			ret =*(LightmapperConfig *)tmpshadow[0].ptr;
+		}else{
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type LightmapperConfig");
+			error[0]=(bool)1;
+			return (LightmapperConfig){0};
 		}
+		return ret;
+	}
+	
+	static Mesh js_getMesh(JSContext * ctx,JSValue src,bool * error);
+	
+	static Lightmapper * js_getLightmapper_ptr(JSContext * ctx,JSValue src,bool * error,bool * isptr){
+		Lightmapper * ret;
 		if(js_IsArrayLength(ctx,src,(int64_t)1)){
-			int64_t size_ret;
-			if(JS_GetLength(ctx,src,&size_ret)==-1){
-				error[0]=(bool)1;
-				return NULL;
-			}
-			if(size_ret<1){
-				JS_ThrowTypeError(ctx,(const char *)"src too short (1)");
-				error[0]=(bool)1;
-				return NULL;
-			}
-			if(size_ret==0){
-				JS_ThrowTypeError(ctx,(const char *)"Received empty array");
-				error[0]=(bool)1;
-				return NULL;
-			}
+			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
+			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Lightmapper_class_id){
-				ret =(Lightmapper *)JS_GetOpaque(src0,js_Lightmapper_class_id);
+				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Lightmapper_class_id);
+				ret =(Lightmapper  *)tmpshadow[0].ptr;
 			}else{
-				JS_ThrowTypeError(ctx,(const char *)"src0 does not match type Lightmapper *");
+				JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type Lightmapper *");
 				error[0]=(bool)1;
 				return NULL;
 			}
 		}else if(JS_GetClassID(src)==js_Lightmapper_class_id){
+			isptr[0]=(bool)true;
 			if(JS_GetClassID(src)==js_Lightmapper_class_id){
-				ret =(Lightmapper *)JS_GetOpaque(src,js_Lightmapper_class_id);
+				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src,js_Lightmapper_class_id);
+				ret =(Lightmapper  *)tmpshadow[0].ptr;
 			}else{
-				JS_ThrowTypeError(ctx,(const char *)"src does not match type Lightmapper *");
+				JS_ThrowTypeError(ctx,(const char  *)"src does not match type Lightmapper *");
 				error[0]=(bool)1;
 				return NULL;
 			}
 		}else{
-			JS_ThrowTypeError(ctx,(const char *)"src does not match type Lightmapper *");
+			JS_ThrowTypeError(ctx,(const char  *)"src does not match type Lightmapper *");
 			error[0]=(bool)1;
 			return NULL;
 		}
-		if(is_arrayProxy)JS_FreeValue(ctx,src);
 		return ret;
 	}
 	
 	static void js_Lightmapper_finalizer(JSRuntime * rt,JSValue val){
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque(val,js_Lightmapper_class_id);
-		if(ptr)js_free_rt(rt,(void *)ptr);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque(val,js_Lightmapper_class_id);
+		deallocate_shadow(rt,shadow);
 	}
 	
-	static JSValue js_Lightmapper_data_values(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		Lightmapper * ptr=(Lightmapper *)ptr_u;
+	static JSValue js_Lightmapper_data_values(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper  *)ptr_u;
 		JSValue ret=JS_NewArray(ctx);
-		int i;
-		for(i=0;i<ptr[0].w*ptr[0].h*4;i++){
-			JSValue js_ret=JS_NewFloat64(ctx,((double)ptr[0].data[i]));
-			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,js_ret,JS_PROP_C_W_E);
+		for(int i=0;i<ptr[0].w*ptr[0].h*4;i++){
+			float src0=ptr[0].data[i];
+			JSValue ret1=JS_NewFloat64(ctx,((double)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
 		if(as_sting==true){
 			ret =JS_JSONStringify(ctx,ret,JS_UNDEFINED,JS_UNDEFINED);
@@ -116,19 +100,18 @@
 	}
 	
 	static int js_Lightmapper_data_keys(JSContext * ctx,void * ptr_u,JSPropertyEnum * * keys){
-		Lightmapper * ptr=(Lightmapper *)ptr_u;
+		Lightmapper * ptr=(Lightmapper  *)ptr_u;
 		int length=(int)ptr[0].w*ptr[0].h*4;
-		keys[0] =(JSPropertyEnum *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
-		int i;
-		for(i=0;i<length;i++){
+		keys[0] =(JSPropertyEnum  *)js_malloc(ctx,(length+1)*sizeof(JSPropertyEnum));
+		for(int i=0;i<length;i++){
 			keys[0][i] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_NewAtomUInt32(ctx,i)};
 		}
 		keys[0][length] =(JSPropertyEnum){.is_enumerable=false, .atom=JS_ATOM_length};
 		return true;
 	}
 	
-	static JSValue js_Lightmapper_data_get(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		Lightmapper * ptr=(Lightmapper *)ptr_u;
+	static JSValue js_Lightmapper_data_get(JSContext * ctx,JSValue anchor,void * ptr_u,int property,bool as_sting){
+		Lightmapper * ptr=(Lightmapper  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				JSValue ret=JS_NewInt32(ctx,(int32_t)ptr[0].w*ptr[0].h*((long)4));
@@ -148,20 +131,27 @@
 	}
 	
 	static int js_Lightmapper_data_set(JSContext * ctx,void * ptr_u,JSValue set_to,int property,bool as_sting){
-		Lightmapper * ptr=(Lightmapper *)ptr_u;
+		Lightmapper * ptr=(Lightmapper  *)ptr_u;
 		if(as_sting==true){
 			return false;
 		}else{
-			bool error=(bool)0;
-			float ret=js_getfloat(ctx,set_to,&error);
-			if(error==1)return 0;
-			ptr[0].data[property] =ret;
+			if(property>=0&&property<ptr[0].w*ptr[0].h*4){
+				bool error=(bool)0;
+				local_memlock=(bool)true;
+				float ret=js_getfloat(ctx,set_to,&error);
+				if(error==1)return 0;
+				local_memlock=(bool)false;
+				ptr[0].data[property]=ret;
+				return true;
+			}else{
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	static int js_Lightmapper_data_has(JSContext * ctx,void * ptr_u,int property,bool as_sting){
-		Lightmapper * ptr=(Lightmapper *)ptr_u;
+		Lightmapper * ptr=(Lightmapper  *)ptr_u;
 		if(as_sting==true){
 			if(property==JS_ATOM_length){
 				return true;
@@ -178,23 +168,34 @@
 	}
 	
 	static JSValue js_Lightmapper_get_data(JSContext * ctx,JSValue this_val){
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = this_val,.opaque = ptr,.values = js_Lightmapper_data_values,.keys = js_Lightmapper_data_keys,.get = js_Lightmapper_data_get,.set = js_Lightmapper_data_set,.has = js_Lightmapper_data_has});
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_Lightmapper_data_values,.keys = js_Lightmapper_data_keys,.get = js_Lightmapper_data_get,.set = js_Lightmapper_data_set,.has = js_Lightmapper_data_has});
 		return ret;
 	}
 	
 	static JSValue js_Lightmapper_set_data(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
-		float * value=js_getfloat_arr(ctx,v,&error);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
+		local_memlock=(bool)true;
+		float * value=js_getfloat_arrnc(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
-		if(ptr[0].data!=NULL)jsc_free(ctx,(void *)ptr[0].data);
+		local_memlock=(bool)false;
+		if(ptr[0].data!=NULL)jsc_free(ctx,(void  *)ptr[0].data);
 		ptr[0].data =value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_Lightmapper_get_w(JSContext * ctx,JSValue this_val){
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
 		int w=ptr[0].w;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)w));
 		return ret;
@@ -202,15 +203,19 @@
 	
 	static JSValue js_Lightmapper_set_w(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].w=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_Lightmapper_get_h(JSContext * ctx,JSValue this_val){
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
 		int h=ptr[0].h;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)h));
 		return ret;
@@ -218,15 +223,19 @@
 	
 	static JSValue js_Lightmapper_set_h(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].h=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_Lightmapper_get_progress(JSContext * ctx,JSValue this_val){
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
 		float progress=ptr[0].progress;
 		JSValue ret=JS_NewFloat64(ctx,((double)progress));
 		return ret;
@@ -234,9 +243,12 @@
 	
 	static JSValue js_Lightmapper_set_progress(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		Lightmapper * ptr=(Lightmapper *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_Lightmapper_class_id);
+		Lightmapper * ptr=(Lightmapper  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].progress=value;
 		return JS_UNDEFINED;
 	}
@@ -253,7 +265,7 @@
 		JSRuntime * rt=JS_GetRuntime(ctx);
 		JS_NewClassID(rt,&js_Lightmapper_class_id);
 		JSClassDef js_Lightmapper_def={ .class_name = "Lightmapper", .finalizer = js_Lightmapper_finalizer };
-		JS_NewClass(rt,js_Lightmapper_class_id,(const JSClassDef *)&js_Lightmapper_def);
+		JS_NewClass(rt,js_Lightmapper_class_id,(const JSClassDef  *)&js_Lightmapper_def);
 		JSValue proto=JS_NewObject(ctx);
 		JS_SetPropertyFunctionList(ctx,proto,js_Lightmapper_proto_funcs,(int)countof(js_Lightmapper_proto_funcs));
 		JS_SetClassProto(ctx,js_Lightmapper_class_id,proto);
@@ -261,12 +273,13 @@
 	}
 	
 	static void js_LightmapperConfig_finalizer(JSRuntime * rt,JSValue val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque(val,js_LightmapperConfig_class_id);
-		if(ptr)js_free_rt(rt,(void *)ptr);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque(val,js_LightmapperConfig_class_id);
+		deallocate_shadow(rt,shadow);
 	}
 	
 	static JSValue js_LightmapperConfig_get_hemisphereSize(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		int hemisphereSize=ptr[0].hemisphereSize;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)hemisphereSize));
 		return ret;
@@ -274,15 +287,19 @@
 	
 	static JSValue js_LightmapperConfig_set_hemisphereSize(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].hemisphereSize=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_zNear(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		float zNear=ptr[0].zNear;
 		JSValue ret=JS_NewFloat64(ctx,((double)zNear));
 		return ret;
@@ -290,15 +307,19 @@
 	
 	static JSValue js_LightmapperConfig_set_zNear(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].zNear=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_zFar(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		float zFar=ptr[0].zFar;
 		JSValue ret=JS_NewFloat64(ctx,((double)zFar));
 		return ret;
@@ -306,34 +327,48 @@
 	
 	static JSValue js_LightmapperConfig_set_zFar(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].zFar=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_backgroundColor(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
-		Color backgroundColor=ptr[0].backgroundColor;
-		Color * ptr_ret=(Color *)js_malloc(ctx,sizeof(Color));
-		ptr_ret[0]=backgroundColor;
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		JSValue anchor;
+		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
+			anchor=this_val;
+		}else{
+			anchor=shadow[0].anchor;
+		}
+		Color * backgroundColor=&ptr[0].backgroundColor;
+		JS_DupValue(ctx,anchor);
+		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)backgroundColor,anchor);
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
 	static JSValue js_LightmapperConfig_set_backgroundColor(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		Color value=js_getColor(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].backgroundColor=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_interpolationPasses(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		int interpolationPasses=ptr[0].interpolationPasses;
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)interpolationPasses));
 		return ret;
@@ -341,15 +376,19 @@
 	
 	static JSValue js_LightmapperConfig_set_interpolationPasses(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		int value=js_getint(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].interpolationPasses=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_interpolationThreshold(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		float interpolationThreshold=ptr[0].interpolationThreshold;
 		JSValue ret=JS_NewFloat64(ctx,((double)interpolationThreshold));
 		return ret;
@@ -357,15 +396,19 @@
 	
 	static JSValue js_LightmapperConfig_set_interpolationThreshold(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].interpolationThreshold=value;
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_LightmapperConfig_get_cameraToSurfaceDistanceModifier(JSContext * ctx,JSValue this_val){
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
 		float cameraToSurfaceDistanceModifier=ptr[0].cameraToSurfaceDistanceModifier;
 		JSValue ret=JS_NewFloat64(ctx,((double)cameraToSurfaceDistanceModifier));
 		return ret;
@@ -373,9 +416,12 @@
 	
 	static JSValue js_LightmapperConfig_set_cameraToSurfaceDistanceModifier(JSContext * ctx,JSValue this_val,JSValue v){
 		bool error=(bool)0;
-		LightmapperConfig * ptr=(LightmapperConfig *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_LightmapperConfig_class_id);
+		LightmapperConfig * ptr=(LightmapperConfig  *)shadow[0].ptr;
+		local_memlock=(bool)true;
 		float value=js_getfloat(ctx,v,&error);
 		if(error==1)return JS_EXCEPTION;
+		local_memlock=(bool)false;
 		ptr[0].cameraToSurfaceDistanceModifier=value;
 		return JS_UNDEFINED;
 	}
@@ -394,7 +440,7 @@
 		JSRuntime * rt=JS_GetRuntime(ctx);
 		JS_NewClassID(rt,&js_LightmapperConfig_class_id);
 		JSClassDef js_LightmapperConfig_def={ .class_name = "LightmapperConfig", .finalizer = js_LightmapperConfig_finalizer };
-		JS_NewClass(rt,js_LightmapperConfig_class_id,(const JSClassDef *)&js_LightmapperConfig_def);
+		JS_NewClass(rt,js_LightmapperConfig_class_id,(const JSClassDef  *)&js_LightmapperConfig_def);
 		JSValue proto=JS_NewObject(ctx);
 		JS_SetPropertyFunctionList(ctx,proto,js_LightmapperConfig_proto_funcs,(int)countof(js_LightmapperConfig_proto_funcs));
 		JS_SetClassProto(ctx,js_LightmapperConfig_class_id,proto);
@@ -403,81 +449,100 @@
 	
 	static JSValue js_Lightmapper_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
-			Lightmapper * ptr__return=(Lightmapper *)js_calloc(ctx,(size_t)1,sizeof(Lightmapper));
+			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Lightmapper));
 			JSValue _return=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
-			JS_SetOpaque(_return,(void *)ptr__return);
+			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
 		bool error=(bool)0;
-		void * lm_handle=js_getvoid_arr(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		float * data=js_getfloat_arr(ctx,argv[1],&error);
-		if(error==1)return JS_EXCEPTION;
-		int w=js_getint(ctx,argv[2],&error);
-		if(error==1)return JS_EXCEPTION;
-		int h=js_getint(ctx,argv[3],&error);
-		if(error==1)return JS_EXCEPTION;
-		float progress=js_getfloat(ctx,argv[4],&error);
-		if(error==1)return JS_EXCEPTION;
-		Lightmapper _struct={
-			lm_handle,
-			data,
-			w,
-			h,
-			progress
-		};
-		Lightmapper * ptr__return=(Lightmapper *)js_malloc(ctx,sizeof(Lightmapper));
-		ptr__return[0]=_struct;
+		local_memlock=(bool)true;
+		Lightmapper _struct;
+		if(argc==1&&JS_GetClassID(argv[0])==js_Lightmapper_class_id){
+			Lightmapper ptr=js_getLightmapper(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+		}else{
+			void * lm_handle=js_getvoid_arr(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			float * data=js_getfloat_arrnc(ctx,argv[1],&error);
+			if(error==1)return JS_EXCEPTION;
+			int w=js_getint(ctx,argv[2],&error);
+			if(error==1)return JS_EXCEPTION;
+			int h=js_getint(ctx,argv[3],&error);
+			if(error==1)return JS_EXCEPTION;
+			float progress=js_getfloat(ctx,argv[4],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =(Lightmapper){
+				lm_handle,
+				data,
+				w,
+				h,
+				progress
+			};
+		}
+		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Lightmapper));
+		Lightmapper * _returnptr=((Lightmapper *)(_structShadow+1));
+		_returnptr[0]=_struct;
 		JSValue _return=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
-		JS_SetOpaque(_return,(void *)ptr__return);
+		JS_SetOpaque(_return,(void  *)_structShadow);
+		local_memlock=(bool)false;
 		return _return;
 	}
 	
 	static JSValue js_LightmapperConfig_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
-			LightmapperConfig * ptr__return=(LightmapperConfig *)js_calloc(ctx,(size_t)1,sizeof(LightmapperConfig));
+			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(LightmapperConfig));
 			JSValue _return=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
-			JS_SetOpaque(_return,(void *)ptr__return);
+			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
 		bool error=(bool)0;
-		int hemisphereSize=js_getint(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		float zNear=js_getfloat(ctx,argv[1],&error);
-		if(error==1)return JS_EXCEPTION;
-		float zFar=js_getfloat(ctx,argv[2],&error);
-		if(error==1)return JS_EXCEPTION;
-		Color backgroundColor=js_getColor(ctx,argv[3],&error);
-		if(error==1)return JS_EXCEPTION;
-		int interpolationPasses=js_getint(ctx,argv[4],&error);
-		if(error==1)return JS_EXCEPTION;
-		float interpolationThreshold=js_getfloat(ctx,argv[5],&error);
-		if(error==1)return JS_EXCEPTION;
-		float cameraToSurfaceDistanceModifier=js_getfloat(ctx,argv[6],&error);
-		if(error==1)return JS_EXCEPTION;
-		LightmapperConfig _struct={
-			hemisphereSize,
-			zNear,
-			zFar,
-			backgroundColor,
-			interpolationPasses,
-			interpolationThreshold,
-			cameraToSurfaceDistanceModifier
-		};
-		LightmapperConfig * ptr__return=(LightmapperConfig *)js_malloc(ctx,sizeof(LightmapperConfig));
-		ptr__return[0]=_struct;
+		local_memlock=(bool)true;
+		LightmapperConfig _struct;
+		if(argc==1&&JS_GetClassID(argv[0])==js_LightmapperConfig_class_id){
+			LightmapperConfig ptr=js_getLightmapperConfig(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =ptr;
+		}else{
+			int hemisphereSize=js_getint(ctx,argv[0],&error);
+			if(error==1)return JS_EXCEPTION;
+			float zNear=js_getfloat(ctx,argv[1],&error);
+			if(error==1)return JS_EXCEPTION;
+			float zFar=js_getfloat(ctx,argv[2],&error);
+			if(error==1)return JS_EXCEPTION;
+			Color backgroundColor=js_getColor(ctx,argv[3],&error);
+			if(error==1)return JS_EXCEPTION;
+			int interpolationPasses=js_getint(ctx,argv[4],&error);
+			if(error==1)return JS_EXCEPTION;
+			float interpolationThreshold=js_getfloat(ctx,argv[5],&error);
+			if(error==1)return JS_EXCEPTION;
+			float cameraToSurfaceDistanceModifier=js_getfloat(ctx,argv[6],&error);
+			if(error==1)return JS_EXCEPTION;
+			_struct =(LightmapperConfig){
+				hemisphereSize,
+				zNear,
+				zFar,
+				backgroundColor,
+				interpolationPasses,
+				interpolationThreshold,
+				cameraToSurfaceDistanceModifier
+			};
+		}
+		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(LightmapperConfig));
+		LightmapperConfig * _returnptr=((LightmapperConfig *)(_structShadow+1));
+		_returnptr[0]=_struct;
 		JSValue _return=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
-		JS_SetOpaque(_return,(void *)ptr__return);
+		JS_SetOpaque(_return,(void  *)_structShadow);
+		local_memlock=(bool)false;
 		return _return;
 	}
 	
 	static JSValue js_GetDefaultLightmapperConfig(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		LightmapperConfig returnVal=GetDefaultLightmapperConfig();
-		LightmapperConfig * ptr_ret=(LightmapperConfig *)js_malloc(ctx,sizeof(LightmapperConfig));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(LightmapperConfig));
+		LightmapperConfig * ptr2_ret=((LightmapperConfig *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -492,10 +557,11 @@
 		LightmapperConfig cfg=js_getLightmapperConfig(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
 		Lightmapper returnVal=LoadLightmapper(w,h,mesh,cfg);
-		Lightmapper * ptr_ret=(Lightmapper *)js_malloc(ctx,sizeof(Lightmapper));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Lightmapper));
+		Lightmapper * ptr2_ret=((Lightmapper *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -506,10 +572,11 @@
 		float intensity=js_getfloat(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
 		Material returnVal=LoadMaterialLightmapper(emissiveColor,intensity);
-		Material * ptr_ret=(Material *)js_malloc(ctx,sizeof(Material));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Material));
+		Material * ptr2_ret=((Material *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Material_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	
@@ -522,33 +589,49 @@
 	}
 	
 	static JSValue js_BeginLightmap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		BeginLightmap();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_EndLightmap(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
 		EndLightmap();
 		return JS_UNDEFINED;
 	}
 	
 	static JSValue js_BeginLightmapFragment(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
-		Lightmapper * lm=js_getLightmapper_ptr(ctx,argv[0],&error);
+		bool lm_isptr=(bool)false;
+		Lightmapper * lm=js_getLightmapper_ptr(ctx,argv[0],&error,&lm_isptr);
 		if(error==1)return JS_EXCEPTION;
 		bool returnVal=BeginLightmapFragment(lm);
-		JS_SetOpaque(argv[0],(void *)lm);
+		if(lm_isptr==0){
+			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Lightmapper));
+			Lightmapper * ptr2_src=((Lightmapper *)(ptr_src+1));
+			ptr2_src[0]=lm[0];
+			JSValue src=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+			JS_SetOpaque(src,(void  *)ptr_src);
+			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
+		}
 		JSValue ret=JS_NewBool(ctx,returnVal);
+		memoryClear(ctx);
 		return ret;
 	}
 	
 	static JSValue js_EndLightmapFragment(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
-		Lightmapper * lm=js_getLightmapper_ptr(ctx,argv[0],&error);
+		bool lm_isptr=(bool)false;
+		Lightmapper * lm=js_getLightmapper_ptr(ctx,argv[0],&error,&lm_isptr);
 		if(error==1)return JS_EXCEPTION;
 		EndLightmapFragment(lm);
-		JS_SetOpaque(argv[0],(void *)lm);
+		if(lm_isptr==0){
+			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Lightmapper));
+			Lightmapper * ptr2_src=((Lightmapper *)(ptr_src+1));
+			ptr2_src[0]=lm[0];
+			JSValue src=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+			JS_SetOpaque(src,(void  *)ptr_src);
+			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
+		}
+		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
 	
@@ -557,10 +640,11 @@
 		Lightmapper lm=js_getLightmapper(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
 		Image returnVal=LoadImageFromLightmapper(lm);
-		Image * ptr_ret=(Image *)js_malloc(ctx,sizeof(Image));
-		ptr_ret[0]=returnVal;
+		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
+		Image * ptr2_ret=((Image *)(ptr_ret+1));
+		ptr2_ret[0]=returnVal;
 		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
-		JS_SetOpaque(ret,(void *)ptr_ret);
+		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
 	static const JSCFunctionListEntry jsrlightmapper_funcs[]={
@@ -579,11 +663,11 @@
 		size_t listcount=countof(jsrlightmapper_funcs);
 		JS_SetModuleExportList(ctx,m,jsrlightmapper_funcs,(int)listcount);
 		js_declare_Lightmapper(ctx,m);
-		JSValue Lightmapper_constr=JS_NewCFunction2(ctx,js_Lightmapper_constructor,(const char *)"Lightmapper",(int)5,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
-		JS_SetModuleExport(ctx,m,(const char *)"Lightmapper",Lightmapper_constr);
+		JSValue Lightmapper_constr=JS_NewCFunction2(ctx,js_Lightmapper_constructor,(const char  *)"Lightmapper",(int)5,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
+		JS_SetModuleExport(ctx,m,(const char  *)"Lightmapper",Lightmapper_constr);
 		js_declare_LightmapperConfig(ctx,m);
-		JSValue LightmapperConfig_constr=JS_NewCFunction2(ctx,js_LightmapperConfig_constructor,(const char *)"LightmapperConfig",(int)7,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
-		JS_SetModuleExport(ctx,m,(const char *)"LightmapperConfig",LightmapperConfig_constr);
+		JSValue LightmapperConfig_constr=JS_NewCFunction2(ctx,js_LightmapperConfig_constructor,(const char  *)"LightmapperConfig",(int)7,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
+		JS_SetModuleExport(ctx,m,(const char  *)"LightmapperConfig",LightmapperConfig_constr);
 		return 0;
 	}
 	
@@ -592,8 +676,8 @@
 		if(!m)return NULL;
 		size_t listcount=countof(jsrlightmapper_funcs);
 		JS_AddModuleExportList(ctx,m,jsrlightmapper_funcs,(int)listcount);
-		JS_AddModuleExport(ctx,m,(const char *)"Lightmapper");
-		JS_AddModuleExport(ctx,m,(const char *)"LightmapperConfig");
+		JS_AddModuleExport(ctx,m,(const char  *)"Lightmapper");
+		JS_AddModuleExport(ctx,m,(const char  *)"LightmapperConfig");
 		return m;
 	}
 

@@ -23,17 +23,17 @@ import * as rg from 'rayjs:raygui';
 // raygui embedded styles
 // NOTE: Included in the same order as selector
 const MAX_GUI_STYLES_AVAILABLE = 12;          // NOTE: Included light style
-import {GuiLoadStyleJungle}   from "../styles/style_jungle.js";   // raygui style: jungle
-import {GuiLoadStyleCandy}    from "../styles/style_candy.js";    // raygui style: candy
-import {GuiLoadStyleLavanda}  from "../styles/style_lavanda.js";  // raygui style: lavanda
-import {GuiLoadStyleCyber}    from "../styles/style_cyber.js";    // raygui style: cyber
-import {GuiLoadStyleTerminal} from "../styles/style_terminal.js" ; // raygui style: terminal
-import {GuiLoadStyleAshes}    from "../styles/style_ashes.js";    // raygui style: ashes
-import {GuiLoadStyleBluish}   from "../styles/style_bluish.js";   // raygui style: bluish
-import {GuiLoadStyleDark}     from "../styles/style_dark.js";     // raygui style: dark
-import {GuiLoadStyleCherry}   from "../styles/style_cherry.js";   // raygui style: cherry
-import {GuiLoadStyleSunny}    from "../styles/style_sunny.js";    // raygui style: sunny
-import {GuiLoadStyleEnefete}  from "../styles/style_enefete.js";  // raygui style: enefete
+import {GuiLoadStyleJungle}   from "../styles/_style_jungle.js";   // raygui style: jungle
+import {GuiLoadStyleCandy}    from "../styles/_style_candy.js";    // raygui style: candy
+import {GuiLoadStyleLavanda}  from "../styles/_style_lavanda.js";  // raygui style: lavanda
+import {GuiLoadStyleCyber}    from "../styles/_style_cyber.js";    // raygui style: cyber
+import {GuiLoadStyleTerminal} from "../styles/_style_terminal.js" ; // raygui style: terminal
+import {GuiLoadStyleAshes}    from "../styles/_style_ashes.js";    // raygui style: ashes
+import {GuiLoadStyleBluish}   from "../styles/_style_bluish.js";   // raygui style: bluish
+import {GuiLoadStyleDark}     from "../styles/_style_dark.js";     // raygui style: dark
+import {GuiLoadStyleCherry}   from "../styles/_style_cherry.js";   // raygui style: cherry
+import {GuiLoadStyleSunny}    from "../styles/_style_sunny.js";    // raygui style: sunny
+import {GuiLoadStyleEnefete}  from "../styles/_style_enefete.js";  // raygui style: enefete
 import {
     BLACK,
     BeginDrawing, ClearBackground,
@@ -63,7 +63,7 @@ import {
     let showMessageBox = false;
 
     // Load default style
-    GuiLoadStyleBluish();
+    GuiLoadStyleCyber();
     let visualStyleActive = 4;
     let prevVisualStyleActive = 4;
 

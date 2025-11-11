@@ -579,11 +579,11 @@ export function GuiLoadStyleEnefete() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(enefeteFontRecs);
+    font.recs = enefeteFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(enefeteFontGlyphs);
+    font.glyphs = enefeteFontGlyphs;
 
     GuiSetFont(font);
 

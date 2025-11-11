@@ -548,11 +548,11 @@ export function GuiLoadStyleTerminal() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(terminalFontRecs);
+    font.recs = terminalFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(terminalFontGlyphs);
+    font.glyphs = terminalFontGlyphs;
 
     GuiSetFont(font);
 

@@ -595,11 +595,11 @@ export function GuiLoadStyleSunny() {
 
     // Copy char recs data from global fontRecs
     // NOTE: Required to avoid issues if trying to free font
-    font.recs = structuredClone(sunnyFontRecs);
+    font.recs = sunnyFontRecs;
 
     // Copy font char info data from global fontChars
     // NOTE: Required to avoid issues if trying to free font
-    font.glyphs = structuredClone(sunnyFontGlyphs);
+    font.glyphs = sunnyFontGlyphs;
 
     GuiSetFont(font);
 
