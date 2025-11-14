@@ -200,7 +200,7 @@ export class RayJsHeader {
             let arg={ type: callback.args[i].type, name: "arg_"+callback.args[i].name, sizeVars:callback.args[i].sizeVars||[] };
             args.push(arg);
         }
-        this.typings.addCallback(callback.name, args);
+        this.typings.addCallback(callback.name, args,callback.binding.comment);
     }
 
     /** Package JSValue to c equivalent using reusable functions
@@ -513,7 +513,7 @@ export class RayJsHeader {
         const binding = renum.binding || {};
         if (binding.ignore) return;
         console.log("Binding enum " + renum.name);
-        renum.values.forEach(x => this.exportGlobalInt(x.name, x.description));
+        renum.values.forEach(x => this.exportGlobalInt(x.name, x.comment));
     }
     registerAlias(alias){
         this.typings.addAlias(alias.name, alias.type);
@@ -858,7 +858,7 @@ export class RayJsHeader {
             });
         });
     }
-    exportGlobalStruct(structName, exportName, values, description) {
+    exportGlobalStruct(structName, exportName, values, comment) {
         this.moduleInit.declare(structName,exportName+"_struct",values);
         const variables = this.includeGen.getVariables();
         if (!variables[structName]){
@@ -874,19 +874,19 @@ export class RayJsHeader {
         this.moduleInit.call("JS_SetOpaque", [exportName+"_js", `ptr_${exportName}_js`]);
         this.moduleInit.call("JS_SetModuleExport", ["ctx", "m", `"${exportName}"`, exportName + "_js"]);
         this.moduleEntry.call("JS_AddModuleExport", ["ctx", "m", `"${exportName}"`]);
-        this.typings.addConstant(exportName, structName, description);
+        this.typings.addConstant(exportName, structName, comment);
         this.exported[structName]='struct';
     }
-    exportGlobalInt(name, description='') {
+    exportGlobalInt(name, comment='') {
         this.moduleInit.call('JS_SetModuleExport',['ctx', 'm',`"${name}"`, `JS_NewInt32(ctx,${name})`]);
         this.moduleEntry.call('JS_AddModuleExport',['ctx','m',`"${name}"`]);
-        this.typings.addConstant(name, "number", description);
+        this.typings.addConstant(name, "number", comment);
         this.exported[name]='int';
     }
-    exportGlobalDouble(name, description='') {
+    exportGlobalDouble(name, comment='') {
         this.moduleInit.call('JS_SetModuleExport',['ctx','m',`"${name}"`, `JS_NewFloat64(ctx,${name})`]);
         this.moduleEntry.call('JS_AddModuleExport',['ctx','m',`"${name}"`]);
-        this.typings.addConstant(name, "number", description);
+        this.typings.addConstant(name, "number", comment);
         this.exported[name]='float';
     }
 }

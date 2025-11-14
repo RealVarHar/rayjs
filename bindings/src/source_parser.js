@@ -207,7 +207,7 @@ export class source_parser {
         }
         return ret;
     }
-    removeTrap(input,removeString=true,removeComment=true){
+    removeTrap(input,removeString=true,removeComment=true,linecount=0){
         //Filter out strings or comments
         let ret='';
         let start=0;
@@ -228,7 +228,7 @@ export class source_parser {
                     break;
                 }
                 case "/":{
-                    let tmp=this.parseComment(input,pos);
+                    let tmp=this.parseComment(input,pos,true,linecount);
                     if(removeComment){
                         ret+=input.substring(start,pos);
                     }else{
@@ -238,6 +238,7 @@ export class source_parser {
                     pos=tmp;
                     break;
                 }
+                case "\n":linecount++;break;
             }
             if(lastpos===pos)pos++;
         }
@@ -389,7 +390,7 @@ export class source_parser {
         return false;
     }
     //Parsers
-    parseES(input, pos=0, save=true){
+    parseES(input, pos=0, save=true,linecount=[0]){
         //Resolve Encountering enum or struct (not typedef)
         let mode=input[pos]=='e'?'enum':'struct';
         let capture=[];
@@ -410,32 +411,34 @@ export class source_parser {
         if(ret===false)return pos;
         if(capture[5]!='')name=capture[5];
         if(save){
+            let comment='';
+            if(this.comments[linecount[0]-1]!=undefined)comment=this.comments[linecount[0]-1];
             if(mode=='struct'){
                 this.defineName(name,'structs',{
                     name,
-                    fields: this.parseStructValues(capture[3]),
+                    fields: this.parseStructValues(capture[3],linecount),
+                    binding:{comment,line:linecount[0]}
                 });
             }else{
                 this.defineName(name,'enums',{
                     name,
-                    values: this.parseEnumValues(capture[3]),
+                    values: this.parseEnumValues(capture[3],linecount),
+                    binding:{comment,line:linecount[0]}
                 });
             }
         }
         return ret;
     }
-    parseEnumValues(input) {
-        //TODO: can enum have #if?
+    parseEnumValues(input,linecount=[0]) {
         let lastNumber = 0;
-        input=this.removeTrap(input,false);
+        input=this.removeTrap(input,false,true,linecount[0]);
         let values = [];//{name: en[0].trim(),value: val}
         let start=0;
         while(start<input.length-1){
             let capture=[];
             let ret=simpleregex(input,['nr*','#,('],start,capture);
-            if(ret===false){
-                return values;
-            }
+            if(ret===false)return values;
+            linecount[0]+=capture[0].countChar("\n");
             if(input[ret]==','||ret==input.length){
                 let v=capture[0].split('=');
                 let val=lastNumber+1;
@@ -446,6 +449,8 @@ export class source_parser {
                         let def=defined[v[1]];
                         if(def!=undefined){
                             val=def.content.body;
+                        }else{
+                            val=this.safeEval(v[1],{});
                         }
                     }
                 }
@@ -457,6 +462,9 @@ export class source_parser {
                 const value={
                     name: v[0].trim(),
                     value: val
+                }
+                if(this.comments[linecount[0]]!==undefined){
+                    value.comment=this.comments[linecount[0]];
                 }
                 values.push(value);
                 defined[value.name]={type:'integer',content:{name:value.name,body:value.value}};
@@ -481,7 +489,7 @@ export class source_parser {
                 continue;
             }else if(input[ret]=='#'){
                 //We dont have the whole information, parse if, replace, continue
-                ret=this.ifselect(input,ret);
+                ret=this.ifselect(input,ret,linecount[0]);
                 input=this.removeTrap(ret[1],false)+input.substring(ret[0]);
                 start=0;
                 continue;
@@ -489,32 +497,33 @@ export class source_parser {
         }
         return values;
     }
-    parseStructValues(input) {
-        input=this.removeTrap(input);
+    parseStructValues(input,linecount=[0]) {
+        input=this.removeTrap(input,false,true,linecount[0]);
         let values = [];
         let start=0;
         while(start<input.length-1){
             let capture=[];
             let ret=simpleregex(input,['nr+','#{;'],start,capture);
             if(ret===false)return values;
+            linecount[0]+=capture[0].countChar("\n");
             if(input[ret]=='{'){
                 let end=this.skipDepth(input,ret);
                 start=simpleregex(input,['nr+',';'],ret,capture);
                 values.push({
                     type:'struct',
                     name: capture[1].trim(),
-                    child:this.parseStructValues(input.substring(ret,end))
+                    child:this.parseStructValues(input.substring(ret,end),linecount)
                 });
                 continue;
             }else if(lookForward(input,'#if',ret)){
                 //We dont have the whole information, parse if, replace, continue
-                ret=this.ifselect(input,ret);
+                ret=this.ifselect(input,ret,linecount[0]);
                 input=ret[1]+input.substring(ret[0]);
                 start=0;
                 continue;
             }else if(input[ret]=='#'){
                 debugger;
-                ret=this.ifselect(input,ret);
+                ret=this.ifselect(input,ret,linecount[0]);
                 input=ret[1]+input.substring(ret[0]);
                 start=0;
                 continue;
@@ -532,11 +541,15 @@ export class source_parser {
             }
             if(ret===false)return values;
             let type=this.normalizeType(parts[0].substring(0,ret+1));
-            values.push({
+            let val={
                 type:type+capture[1],
                 name: capture[2],
                 child:undefined
-            });
+            };
+            if(this.comments[linecount[0]]!==undefined){
+                val.comment=this.comments[linecount[0]];
+            }
+            values.push(val);
             for(let i=1;i<parts.length;i++){
                 let capture=[];
                 if(parts[0].endsWith(']')){
@@ -558,7 +571,7 @@ export class source_parser {
         }
         return values;
     }
-    parseTypedef(input, pos=0, save=true){
+    parseTypedef(input, pos=0, save=true,linecount=[0]){
         //Resolve Encountering top level !typedef struct or !typedef enum
         let capture=[];
         let ret=simpleregex(input,['s','typedef ','os','const ','os','struct','os','enum','os','union','r*',' \t\r\n','r*',azZ0,'r*',' \t\r\n','os','{'],pos,capture);
@@ -590,20 +603,25 @@ export class source_parser {
                 structName=capture[11];
             }
             if(save){
+                let comment='';
+                if(thiz.comments[linecount[0]-1]!=undefined)comment=thiz.comments[linecount[0]-1];
                 if(capture[2]!==''){
                     thiz.defineName(structName,'structs',{
                         name: structName,
-                        fields: thiz.parseStructValues(capture[9]),
+                        fields: thiz.parseStructValues(capture[9],linecount),
+                        binding:{comment,line:linecount[0]}
                     });
                 }else if(capture[3]!==''){
                     thiz.defineName(structName,'enums',{
                         name: structName,
-                        values: thiz.parseEnumValues(capture[9]),
+                        values: thiz.parseEnumValues(capture[9],linecount),
+                        binding:{comment,line:linecount[0]}
                     });
                 }else if(capture[4]!==''){
                     thiz.defineName(structName,'unions',{
                         name: structName,
-                        fields: thiz.parseStructValues(capture[9]),
+                        fields: thiz.parseStructValues(capture[9],linecount),
+                        binding:{comment,line:linecount[0]}
                     });
                 }
             }
@@ -619,18 +637,20 @@ export class source_parser {
             // typedef JSValue JSCFunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv);
             if(capture[6]=='')return pos;
             ret=pos+'typedef '.length;
-            ret=simpleregex(input,['os','static ','os','unsigned ','os','const ','r+',azZ0,'r*',' *'],ret,capture=[]);//TODO: reallign capture
+            ret=simpleregex(input,['os','static ','os','unsigned ','os','const ','r+',azZ0,'r*',' *'],ret,capture=[]);
             if(ret===false)return pos;
             ret=simpleregex(input,['os','(','r*',' *','r+',azZ0,'r*',' ','os',')','r*',' ','s','(','r+',', \n*[]'+azZ0,'os','...','r*',' ','s',')','r*',' ','s',';'],ret,capture);
             if(ret===false)return pos;
             if(save){
+                let comment='';
+                if(thiz.comments[linecount[0]-1]!=undefined)comment=thiz.comments[linecount[0]-1];
                 const type=capture[6]==''?'void':'void *';
                 thiz.defineName(capture[7],'callbacks',{
                     returnType: thiz.normalizeType(capture[1]+capture[2]+capture[3]+capture[4]),
                     name: capture[7],
                     args: thiz.parseFunctionArgs(capture[12]+capture[13]),
                     type,
-                    binding:{}
+                    binding:{comment,line:linecount[0]}
                 });
             }
             return ret+1;//+1 to eat ;
@@ -666,7 +686,7 @@ export class source_parser {
         let args=input.substring(pos+1,pos3).split(',').map((a,i)=>{a=a.trim();return [def.content.args[i],a.trim()]});
         return {from:pos-name.length,to:pos3+1,replace:this.safeEval(def.content.body,Object.fromEntries(args))};
     }
-    parseFunction(input, pos=0, save=true){
+    parseFunction(input, pos=0, save=true,linecount=[0]){
         if(lookBackward(input,'JS_IsModule',pos))debugger;
         //Resolve Encountering top level !(){
         //((?:\/\/.+\n)+)^[A-Z]+ (.+?)(\w+)\(([^\)]+)\)
@@ -701,8 +721,11 @@ export class source_parser {
             capture.push(input.substring(ret,tmp));
             ret=tmp;
         }
+
         if(save){
             console.log("defined fn "+capture[0]);
+            let comment='';
+            if(this.comments[linecount[0]-1]!=undefined)comment=this.comments[linecount[0]-1];
             if(capture[5]=="inline ")props.inline=true;
             if(capture[6]=="static ")props.static=true;
             this.defineName(capture[0],'functions',{
@@ -710,7 +733,7 @@ export class source_parser {
                 name: capture[0],
                 args: this.parseFunctionArgs(capture[3]+capture[4]),
                 props,
-                binding:{}
+                binding:{comment,line:linecount[0]}
             });
         }
         return ret;
@@ -741,7 +764,7 @@ export class source_parser {
             return { name: name, type: frags.filter(a=>a!='').join(' '), binding:{},sizeVars:[] };
         });
     }
-    parseComment(input,pos=0,save=true){
+    parseComment(input,pos=0,save=true,linecount=0){
         //Resolve Encountering !// or !/*
         if(input.length<=pos+1)return false;
         let next=input[pos+1];
@@ -754,7 +777,20 @@ export class source_parser {
             return pos;
         }
         if(save){
-            this.comments.push(input.substring(pos,ret));
+            let comment=input.substring(pos+2,ret).trim();
+            if(this.comments[linecount]){
+                comment=this.comments[linecount]+input.substring(pos,ret);
+            }
+            //No real standard for comments, inline seem to be more direct than comment before
+            let lastfn;
+            if((lastfn=this.functions.at(-1))&&lastfn.binding.line==linecount){
+                lastfn.binding.comment=comment;
+            }else if((lastfn=this.callbacks.at(-1))&&lastfn.binding.line==linecount){
+                lastfn.binding.comment=comment;
+            }else{
+                //Save comments only if not assigned, to not reuse inline comments
+                this.comments[linecount]=comment;
+            }
         }
         return ret;
     }
@@ -961,7 +997,7 @@ export class source_parser {
         let pos=0;
         //Tokenizer
         while(pos<input.length){
-            pos=simpleregex(input,['nr*','({-+*/^#<>,|&'],pos,capture=[]);
+            pos=simpleregex(input,['nr*','({-+*/^#<>,|&!'],pos,capture=[]);
             if(pos==input.length){
                 ret.push(capture[0].trim());
                 break;
@@ -1018,6 +1054,10 @@ export class source_parser {
                         pos++;
                     }
                 }break;
+                case "!":{
+                    ret.push(input[pos]);
+                    pos++;
+                }break;
                 case "+":
                 case "-":
                 case "*":
@@ -1065,8 +1105,22 @@ export class source_parser {
             }
             return variable;
         }
-        //implement passes
+        //Negation pass (!)
+        for(let i=0;i<ret.length;i++){
+            if(ret[i]!=='!')continue;
+            if(i+1>=ret.length){
+                ret[i-1]='!'+ret[i-1];
+            }else{
+                const right=resolve(ret[i+1]);
+                ret[i]=(!Number(right))?1:0;
+            }
+            ret.splice(i+1,1);
+            i--;
+        }
+
+        //implement 2arg passes
         let passes=[
+            ['!',[(a,b)=>(!Number(b))?1:0]],
             [['##'],[(a,b)=>String(a)+String(b)]],
             [['<<','>>'],[(a,b)=>a<<b,(a,b)=>a>>b]],
             [['&','|'],[(a,b)=>a&b,(a,b)=>a|b]],
@@ -1094,7 +1148,7 @@ export class source_parser {
         }
         return ret.length==1?ret[0]:ret.join('');
     }
-    parseDefine(input,save){
+    parseDefine(input,save,linecount=0){
         //Parse #define and register poperly
         let thiz=this;
         function getStack(input,pos,capture=[]){
@@ -1112,7 +1166,12 @@ export class source_parser {
         }
         function setDefine(name,content){
             if(!save)return true;
-            //console.log({name, type, content});
+            if(content!==undefined){
+                content.binding={
+                    comment:thiz.comments[linecount]||thiz.comments[linecount-1]||'',
+                    line:linecount
+                };
+            }
             defined[name]=content;
             thiz.defineName(name,'defines',content);
             return true;
@@ -1202,7 +1261,7 @@ export class source_parser {
         }
         return setDefine(name,{type,name,content:{body}});
     }
-    ifselect(input,pos=0){
+    ifselect(input,pos=0,linecount=0){
         //This function returns the processed code #if end where #if ends or handle random #declare
 
         let ifDepth=0;
@@ -1317,6 +1376,7 @@ export class source_parser {
                         start=pos+1;
                         ifDepth++;
                     }
+                    linecount++;
                     break;
                 }
                 case "'":case '"':pos=this.parseString(input,pos);break;
@@ -1409,6 +1469,7 @@ export class source_parser {
         let parseBody=true;
         let start=0;
         let pos=0;
+        let linecount=[0];//does not represent actual line in the file, just as much is convinient for comment parsing
         this.sourcefiles=sourcefiles;
         while(pos<input.length){
             let lastpos=pos;
@@ -1486,22 +1547,13 @@ export class source_parser {
                     if(input[pos-1]=='\\'||input.substring(pos-2,pos)=="\\\r") break;//handle multiline if
                     if(inDefine){
                         ifStatement+=input.substring(start,pos);
-                        if(this.parseDefine(ifStatement,parseBody)){
+                        if(this.parseDefine(ifStatement,parseBody,linecount[0])){
                             pos++;
                             start=pos;
                         }
                         inDefine=false;
                     }else
-                    if(ifBody){
-                        //In this case, look backwards at slice from (start,pos)
-                        /*
-                        let tmpstr=input.substring(start,Math.max(start,pos-1));
-                        if(tmpstr.trim()!=''){
-                            this.println(input,pos-1);
-                            console.log(tmpstr);
-                            debugger;
-                        }*/
-                    }else{
+                    if(!ifBody){
                         ifStatement+=input.substring(start,pos);
                         if(!ifpassed && ifOkDepth===ifDepth &&this.parseIfHeader(ifStatement)){
                             ifOkDepth++;
@@ -1513,6 +1565,7 @@ export class source_parser {
                         start=pos;
                         ifDepth++;
                     }
+                    linecount[0]++;
                     break;
                 }
                 case "'":case '"':
@@ -1521,7 +1574,7 @@ export class source_parser {
                 case "t":{
                     //todo: handle callbacks
                     //example: raylib.h line 953
-                    let pos2=this.parseTypedef(input,pos,parseBody);
+                    let pos2=this.parseTypedef(input,pos,parseBody,linecount);
                     if(pos2>pos){
                         pos=pos2;
                         start=pos;
@@ -1534,7 +1587,7 @@ export class source_parser {
                         pos+=12;
                         start=pos;
                     }else if(!inDefine){
-                        let pos2=this.parseES(input, pos,parseBody);
+                        let pos2=this.parseES(input, pos,parseBody, linecount);
                         if(pos2>pos){
                             pos=pos2;
                             start=pos;
@@ -1544,7 +1597,7 @@ export class source_parser {
                 }
                 case "s":{
                     if(inDefine)break;
-                    let pos2=this.parseES(input, pos);//struct
+                    let pos2=this.parseES(input, pos, parseBody, linecount);//struct
                     if(pos2==pos){
                         pos2=this.parseStaticVal(input, pos);//static
                     }
@@ -1560,7 +1613,7 @@ export class source_parser {
                         ifStatement+=input.substring(start,pos);
                     }
                     //Skip comments
-                    let pos2=this.parseComment(input,pos,parseBody);
+                    let pos2=this.parseComment(input,pos,parseBody,linecount[0]);
                     if(pos2>pos){
                         pos=pos2;
                         start=pos;
@@ -1581,7 +1634,7 @@ export class source_parser {
                         break;
                     }
                     if(input.substring(start,pos).trim().startsWith('JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(2, 3)'))debugger;
-                    let pos2=this.parseFunction(input,pos,parseBody);
+                    let pos2=this.parseFunction(input,pos,parseBody,linecount);
                     if(pos2==pos){
                         pos=this.skipDepthf(input,pos);
                     }else{

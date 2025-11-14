@@ -23,13 +23,13 @@ var LightmapperConfig: {
 prototype: LightmapperConfig
 new(hemisphereSize?: number, zNear?: number, zFar?: number, backgroundColor?: Color, interpolationPasses?: number, interpolationThreshold?: number, cameraToSurfaceDistanceModifier?: number): LightmapperConfig
 }
-/** undefined */
-function GetDefaultLightmapperConfig(): LightmapperConfig/** undefined */
-function LoadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper/** undefined */
-function LoadMaterialLightmapper(emissiveColor: Color, intensity: number): Material/** undefined */
-function UnloadLightmapper(lm: Lightmapper): void/** undefined */
-function BeginLightmap(): void/** undefined */
-function EndLightmap(): void/** undefined */
-function BeginLightmapFragment(lm: Lightmapper): boolean/** undefined */
-function EndLightmapFragment(lm: Lightmapper): void/** undefined */
+/** ... */
+function GetDefaultLightmapperConfig(): LightmapperConfig/** ... */
+function LoadLightmapper(w: number, h: number, mesh: Mesh, cfg: LightmapperConfig): Lightmapper/** ... */
+function LoadMaterialLightmapper(emissiveColor: Color, intensity: number): Material/** ... */
+function UnloadLightmapper(lm: Lightmapper): void/** ... */
+function BeginLightmap(): void/** ... */
+function EndLightmap(): void/** .. */
+function BeginLightmapFragment(lm: Lightmapper): boolean/** ... */
+function EndLightmapFragment(lm: Lightmapper): void/** ... */
 function LoadImageFromLightmapper(lm: Lightmapper): Image}

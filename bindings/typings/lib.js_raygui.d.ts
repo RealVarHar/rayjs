@@ -1,85 +1,88 @@
 declare module "rayjs:raygui" {
 import type {Font,Color,Rectangle,Vector2,Vector3} from 'rayjs:raylib';
 interface GuiStyleProp {
+/** Control identifier */
 controlId: number,
+/** Property identifier */
 propertyId: number,
+/** Property value */
 propertyValue: number,
 }
 var GuiStyleProp: {
 prototype: GuiStyleProp
 new(controlId?: number, propertyId?: number, propertyValue?: number): GuiStyleProp
 }
-/** undefined */
-function GuiEnable(): void/** undefined */
-function GuiDisable(): void/** undefined */
-function GuiLock(): void/** undefined */
-function GuiUnlock(): void/** undefined */
-function GuiIsLocked(): boolean/** undefined */
-function GuiSetAlpha(alpha: number): void/** undefined */
-function GuiSetState(state: number): void/** undefined */
-function GuiGetState(): number/** undefined */
-function GuiSetFont(font: Font): void/** undefined */
-function GuiGetFont(): Font/** undefined */
-function GuiSetStyle(control: number, property: number, value: number): void/** undefined */
-function GuiGetStyle(control: number, property: number): number/** undefined */
-function GuiLoadStyle(fileName: string): void/** undefined */
-function GuiLoadStyleDefault(): void/** undefined */
-function GuiEnableTooltip(): void/** undefined */
-function GuiDisableTooltip(): void/** undefined */
-function GuiSetTooltip(tooltip: string): void/** undefined */
-function GuiIconText(iconId: number, text: string): string/** undefined */
-function GuiSetIconScale(scale: number): void/** undefined */
-function GuiGetIcons(): number[]/** undefined */
-function GuiLoadIcons(fileName: string, loadIconsName: boolean): void/** undefined */
-function GuiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void/** undefined */
-function GuiGetTextWidth(text: string): number/** undefined */
-function GuiWindowBox(bounds: Rectangle, title: string): number/** undefined */
-function GuiGroupBox(bounds: Rectangle, text: string): number/** undefined */
-function GuiLine(bounds: Rectangle, text: string): number/** undefined */
-function GuiPanel(bounds: Rectangle, text: string): number/** undefined */
-function GuiTabBar(bounds: Rectangle, text: string[], count: number, active: number | number[]): number/** undefined */
-function GuiScrollPanel(bounds: Rectangle, text: string, content: Rectangle, scroll: Vector2, view: Rectangle): number/** undefined */
-function GuiLabel(bounds: Rectangle, text: string): number/** undefined */
-function GuiButton(bounds: Rectangle, text: string): number/** undefined */
-function GuiLabelButton(bounds: Rectangle, text: string): number/** undefined */
-function GuiToggle(bounds: Rectangle, text: string, active: boolean | boolean[]): number/** undefined */
-function GuiToggleGroup(bounds: Rectangle, text: string, active: number | number[]): number/** undefined */
-function GuiToggleSlider(bounds: Rectangle, text: string, active: number | number[]): number/** undefined */
-function GuiCheckBox(bounds: Rectangle, text: string, checked: boolean | boolean[]): number/** undefined */
-function GuiComboBox(bounds: Rectangle, text: string, active: number | number[]): number/** undefined */
-function GuiDropdownBox(bounds: Rectangle, text: string, active: number | number[], editMode: boolean): number/** undefined */
-function GuiSpinner(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBox(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** undefined */
-function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number | number[], editMode: boolean): number/** undefined */
-function GuiTextBox(bounds: Rectangle, text: string | string[], textSize: number, editMode: boolean): number/** undefined */
-function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
-function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
-function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** undefined */
-function GuiStatusBar(bounds: Rectangle, text: string): number/** undefined */
-function GuiDummyRec(bounds: Rectangle, text: string): number/** undefined */
-function GuiGrid(bounds: Rectangle, text: string, spacing: number, subdivs: number, mouseCell: Vector2): number/** undefined */
-function GuiListView(bounds: Rectangle, text: string, scrollIndex: number | number[], active: number | number[]): number/** undefined */
-function GuiListViewEx(bounds: Rectangle, text: string[], count: number, scrollIndex: number | number[], active: number | number[], focus: number[]): number/** undefined */
-function GuiMessageBox(bounds: Rectangle, title: string, message: string, buttons: string): number/** undefined */
-function GuiTextInputBox(bounds: Rectangle, title: string, message: string, buttons: string, text: string, textMaxSize: number, secretViewActive: boolean[]): number/** undefined */
-function GuiColorPicker(bounds: Rectangle, text: string, color: Color): number/** undefined */
-function GuiColorPanel(bounds: Rectangle, text: string, color: Color): number/** undefined */
-function GuiColorBarAlpha(bounds: Rectangle, text: string, alpha: number | number[]): number/** undefined */
-function GuiColorBarHue(bounds: Rectangle, text: string, hue: number[]): number/** undefined */
-function GuiColorPickerHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** undefined */
-function GuiColorPanelHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** undefined */
-function GuiLoadStyleFromMemory(fileData: number[], dataSize: number): void/** undefined */
-function GetTextBounds(control: number, bounds: Rectangle): Rectangle/** undefined */
-function GetTextIcon(text: string, iconId: number[]): string/** undefined */
-function GuiDrawText(text: string, textBounds: Rectangle, alignment: number, tint: Color): void/** undefined */
-function GuiDrawRectangle(rec: Rectangle, borderWidth: number, borderColor: Color, color: Color): void/** undefined */
-function GuiTextSplit(text: string, delimiter: string, count: number | number[], textRow: number[]): string[]/** undefined */
-function ConvertHSVtoRGB(hsv: Vector3): Vector3/** undefined */
-function ConvertRGBtoHSV(rgb: Vector3): Vector3/** undefined */
-function GuiScrollBar(bounds: Rectangle, value: number, minValue: number, maxValue: number): number/** undefined */
-function GuiTooltip(controlRec: Rectangle): void/** undefined */
-function GuiFade(color: Color, alpha: number): Color/** undefined */
-function GuiLoadIconsFromMemory(fileData: number[], dataSize: number, loadIconsName: boolean): void/** undefined */
+/** NOTE: We check for STATE_DISABLED to avoid messing custom global state setups */
+function GuiEnable(): void/** NOTE: We check for STATE_NORMAL to avoid messing custom global state setups */
+function GuiDisable(): void/** Lock gui global state */
+function GuiLock(): void/** Unlock gui global state */
+function GuiUnlock(): void/** Check if gui is locked (global state) */
+function GuiIsLocked(): boolean/** Set gui controls alpha global state */
+function GuiSetAlpha(alpha: number): void/** Set gui state (global state) */
+function GuiSetState(state: number): void/** Get gui state (global state) */
+function GuiGetState(): number/** NOTE: Font loading/unloading is external to raygui */
+function GuiSetFont(font: Font): void/** Get custom gui font */
+function GuiGetFont(): Font/** Set control style property value */
+function GuiSetStyle(control: number, property: number, value: number): void/** Get control style property value */
+function GuiGetStyle(control: number, property: number): number/** in that case, custom font image atlas is GRAY+ALPHA and pixel data can be compressed (DEFLATE) */
+function GuiLoadStyle(fileName: string): void/** Load style default over global style */
+function GuiLoadStyleDefault(): void/** Enable gui tooltips (global state) */
+function GuiEnableTooltip(): void/** Disable gui tooltips (global state) */
+function GuiDisableTooltip(): void/** Set tooltip string */
+function GuiSetTooltip(tooltip: string): void/** a number that can change between ricon versions */
+function GuiIconText(iconId: number, text: string): string/** Set icon drawing size */
+function GuiSetIconScale(scale: number): void/** Get full icons data pointer */
+function GuiGetIcons(): number[]/** WARNING: guiIconsName[]][] memory should be manually freed! */
+function GuiLoadIcons(fileName: string, loadIconsName: boolean): void/** Draw selected icon using rectangles pixel-by-pixel */
+function GuiDrawIcon(iconId: number, posX: number, posY: number, pixelSize: number, color: Color): void/** Get text width considering gui style and icon size (if required) */
+function GuiGetTextWidth(text: string): number/** Window Box control */
+function GuiWindowBox(bounds: Rectangle, title: string): number/** Group Box control with text name */
+function GuiGroupBox(bounds: Rectangle, text: string): number/** Line control */
+function GuiLine(bounds: Rectangle, text: string): number/** Panel control */
+function GuiPanel(bounds: Rectangle, text: string): number/** NOTE: Using GuiToggle() for the TABS */
+function GuiTabBar(bounds: Rectangle, text: string[], count: number, active: number | number[]): number/** Scroll Panel control */
+function GuiScrollPanel(bounds: Rectangle, text: string, content: Rectangle, scroll: Vector2, view: Rectangle): number/** Label control */
+function GuiLabel(bounds: Rectangle, text: string): number/** Button control, returns true when clicked */
+function GuiButton(bounds: Rectangle, text: string): number/** Label button control */
+function GuiLabelButton(bounds: Rectangle, text: string): number/** Toggle Button control */
+function GuiToggle(bounds: Rectangle, text: string, active: boolean | boolean[]): number/** Toggle Group control */
+function GuiToggleGroup(bounds: Rectangle, text: string, active: number | number[]): number/** Toggle Slider control extended */
+function GuiToggleSlider(bounds: Rectangle, text: string, active: number | number[]): number/** Check Box control, returns 1 when state changed */
+function GuiCheckBox(bounds: Rectangle, text: string, checked: boolean | boolean[]): number/** Combo Box control */
+function GuiComboBox(bounds: Rectangle, text: string, active: number | number[]): number/** NOTE: Returns mouse click */
+function GuiDropdownBox(bounds: Rectangle, text: string, active: number | number[], editMode: boolean): number/** Spinner control, returns selected value */
+function GuiSpinner(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** NOTE: Requires static variables: frameCounter */
+function GuiValueBox(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** NOTE: Requires static variables: frameCounter */
+function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number | number[], editMode: boolean): number/** NOTE: Returns true on ENTER pressed (useful for data validation) */
+function GuiTextBox(bounds: Rectangle, text: string | string[], textSize: number, editMode: boolean): number/** NOTE: Other GuiSlider*() controls use this one */
+function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** Slider Bar control extended, returns selected value */
+function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** Progress Bar control extended, shows current progress value */
+function GuiProgressBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** Status Bar control */
+function GuiStatusBar(bounds: Rectangle, text: string): number/** Dummy rectangle control, intended for placeholding */
+function GuiDummyRec(bounds: Rectangle, text: string): number/** https://stackoverflow.com/questions/4435450/2d-opengl-drawing-lines-that-dont-exactly-fit-pixel-raster */
+function GuiGrid(bounds: Rectangle, text: string, spacing: number, subdivs: number, mouseCell: Vector2): number/** List View control */
+function GuiListView(bounds: Rectangle, text: string, scrollIndex: number | number[], active: number | number[]): number/** List View control with extended parameters */
+function GuiListViewEx(bounds: Rectangle, text: string[], count: number, scrollIndex: number | number[], active: number | number[], focus: number[]): number/** Message Box control */
+function GuiMessageBox(bounds: Rectangle, title: string, message: string, buttons: string): number/** Text Input Box control, ask for text */
+function GuiTextInputBox(bounds: Rectangle, title: string, message: string, buttons: string, text: string, textMaxSize: number, secretViewActive: boolean[]): number/** NOTE: this picker converts RGB to HSV, which can cause the Hue control to jump. If you have this problem, consider using the HSV variant instead */
+function GuiColorPicker(bounds: Rectangle, text: string, color: Color): number/** Color Panel control - Color (RGBA) variant */
+function GuiColorPanel(bounds: Rectangle, text: string, color: Color): number/** NOTE: Returns alpha value normalized [0..1] */
+function GuiColorBarAlpha(bounds: Rectangle, text: string, alpha: number | number[]): number/** float GuiColorBarLuminance() [BLACK->WHITE] */
+function GuiColorBarHue(bounds: Rectangle, text: string, hue: number[]): number/** NOTE: bounds define GuiColorPanelHSV() size */
+function GuiColorPickerHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** Color Panel control - HSV variant */
+function GuiColorPanelHSV(bounds: Rectangle, text: string, colorHsv: Vector3): number/** WARNING: Binary files only */
+function GuiLoadStyleFromMemory(fileData: number[], dataSize: number): void/** Get text bounds considering control bounds */
+function GetTextBounds(control: number, bounds: Rectangle): Rectangle/** NOTE: We support up to 999 values for iconId */
+function GetTextIcon(text: string, iconId: number[]): string/** Gui draw text using default font */
+function GuiDrawText(text: string, textBounds: Rectangle, alignment: number, tint: Color): void/** Gui draw rectangle using default raygui plain style with borders */
+function GuiDrawRectangle(rec: Rectangle, borderWidth: number, borderColor: Color, color: Color): void/** Also check for multiple columns (required by GuiToggleGroup()) */
+function GuiTextSplit(text: string, delimiter: string, count: number | number[], textRow: number[]): string[]/** NOTE: Color data should be passed normalized */
+function ConvertHSVtoRGB(hsv: Vector3): Vector3/** NOTE: Color data should be passed normalized */
+function ConvertRGBtoHSV(rgb: Vector3): Vector3/** Scroll bar control (used by GuiScrollPanel()) */
+function GuiScrollBar(bounds: Rectangle, value: number, minValue: number, maxValue: number): number/** Draw tooltip using control bounds */
+function GuiTooltip(controlRec: Rectangle): void/** WARNING: It multiplies current alpha by alpha scale factor */
+function GuiFade(color: Color, alpha: number): Color/** WARNING: Binary files only */
+function GuiLoadIconsFromMemory(fileData: number[], dataSize: number, loadIconsName: boolean): void/** Get text width to next space for provided string */
 function GetNextSpaceWidth(text: string, nextSpaceIndex: number[]): number/** undefined */
 function GuiGetAlpha(): number/** undefined */
 function GuiIsExclusive(): boolean/**  */
@@ -96,73 +99,73 @@ var TEXT_ALIGN_BOTTOM: number/**  */
 var TEXT_WRAP_NONE: number/**  */
 var TEXT_WRAP_CHAR: number/**  */
 var TEXT_WRAP_WORD: number/**  */
-var DEFAULT: number/**  */
+var DEFAULT: number/** Used also for: LABELBUTTON */
 var LABEL: number/**  */
-var BUTTON: number/**  */
-var TOGGLE: number/**  */
+var BUTTON: number/** Used also for: TOGGLEGROUP */
+var TOGGLE: number/** Used also for: SLIDERBAR, TOGGLESLIDER */
 var SLIDER: number/**  */
 var PROGRESSBAR: number/**  */
 var CHECKBOX: number/**  */
 var COMBOBOX: number/**  */
-var DROPDOWNBOX: number/**  */
+var DROPDOWNBOX: number/** Used also for: TEXTBOXMULTI */
 var TEXTBOX: number/**  */
 var VALUEBOX: number/**  */
 var CONTROL11: number/**  */
 var LISTVIEW: number/**  */
 var COLORPICKER: number/**  */
 var SCROLLBAR: number/**  */
-var STATUSBAR: number/**  */
-var BORDER_COLOR_NORMAL: number/**  */
-var BASE_COLOR_NORMAL: number/**  */
-var TEXT_COLOR_NORMAL: number/**  */
-var BORDER_COLOR_FOCUSED: number/**  */
-var BASE_COLOR_FOCUSED: number/**  */
-var TEXT_COLOR_FOCUSED: number/**  */
-var BORDER_COLOR_PRESSED: number/**  */
-var BASE_COLOR_PRESSED: number/**  */
-var TEXT_COLOR_PRESSED: number/**  */
-var BORDER_COLOR_DISABLED: number/**  */
-var BASE_COLOR_DISABLED: number/**  */
-var TEXT_COLOR_DISABLED: number/**  */
-var BORDER_WIDTH: number/**  */
-var TEXT_PADDING: number/**  */
-var TEXT_ALIGNMENT: number/**  */
-var TEXT_SIZE: number/**  */
-var TEXT_SPACING: number/**  */
-var LINE_COLOR: number/**  */
-var BACKGROUND_COLOR: number/**  */
-var TEXT_LINE_SPACING: number/**  */
+var STATUSBAR: number/** Control border color in STATE_NORMAL */
+var BORDER_COLOR_NORMAL: number/** Control base color in STATE_NORMAL */
+var BASE_COLOR_NORMAL: number/** Control text color in STATE_NORMAL */
+var TEXT_COLOR_NORMAL: number/** Control border color in STATE_FOCUSED */
+var BORDER_COLOR_FOCUSED: number/** Control base color in STATE_FOCUSED */
+var BASE_COLOR_FOCUSED: number/** Control text color in STATE_FOCUSED */
+var TEXT_COLOR_FOCUSED: number/** Control border color in STATE_PRESSED */
+var BORDER_COLOR_PRESSED: number/** Control base color in STATE_PRESSED */
+var BASE_COLOR_PRESSED: number/** Control text color in STATE_PRESSED */
+var TEXT_COLOR_PRESSED: number/** Control border color in STATE_DISABLED */
+var BORDER_COLOR_DISABLED: number/** Control base color in STATE_DISABLED */
+var BASE_COLOR_DISABLED: number/** Control text color in STATE_DISABLED */
+var TEXT_COLOR_DISABLED: number/** Control border size, 0 for no border */
+var BORDER_WIDTH: number/** Control text padding, not considering border */
+var TEXT_PADDING: number/** Control text horizontal alignment inside control text bound (after border and padding) */
+var TEXT_ALIGNMENT: number/** Text size (glyphs max height) */
+var TEXT_SIZE: number/** Text spacing between glyphs */
+var TEXT_SPACING: number/** Line control color */
+var LINE_COLOR: number/** Background color */
+var BACKGROUND_COLOR: number/** Text spacing between lines */
+var TEXT_LINE_SPACING: number/** Text vertical alignment inside text bounds (after border and padding) */
 var TEXT_ALIGNMENT_VERTICAL: number/**  */
-var TEXT_WRAP_MODE: number/**  */
-var GROUP_PADDING: number/**  */
+var TEXT_WRAP_MODE: number/** ToggleGroup separation between toggles */
+var GROUP_PADDING: number/** Slider size of internal bar */
 var SLIDER_WIDTH: number/**  */
-var SLIDER_PADDING: number/**  */
-var PROGRESS_PADDING: number/**  */
-var ARROWS_SIZE: number/**  */
-var ARROWS_VISIBLE: number/**  */
-var SCROLL_SLIDER_PADDING: number/**  */
-var SCROLL_SLIDER_SIZE: number/**  */
-var SCROLL_PADDING: number/**  */
+var SLIDER_PADDING: number/** ProgressBar internal padding */
+var PROGRESS_PADDING: number/** ScrollBar arrows size */
+var ARROWS_SIZE: number/** ScrollBar arrows visible */
+var ARROWS_VISIBLE: number/** ScrollBar slider internal padding */
+var SCROLL_SLIDER_PADDING: number/** ScrollBar slider size */
+var SCROLL_SLIDER_SIZE: number/** ScrollBar scroll padding from arrows */
+var SCROLL_PADDING: number/** ScrollBar scrolling speed */
 var SCROLL_SPEED: number/**  */
-var CHECK_PADDING: number/**  */
+var CHECK_PADDING: number/** ComboBox right button width */
 var COMBO_BUTTON_WIDTH: number/**  */
-var COMBO_BUTTON_SPACING: number/**  */
-var ARROW_PADDING: number/**  */
-var DROPDOWN_ITEMS_SPACING: number/**  */
+var COMBO_BUTTON_SPACING: number/** DropdownBox arrow separation from border and items */
+var ARROW_PADDING: number/** DropdownBox items separation */
+var DROPDOWN_ITEMS_SPACING: number/** DropdownBox arrow hidden */
 var DROPDOWN_ARROW_HIDDEN: number/**  */
-var DROPDOWN_ROLL_UP: number/**  */
-var TEXT_READONLY: number/**  */
-var SPINNER_BUTTON_WIDTH: number/**  */
-var SPINNER_BUTTON_SPACING: number/**  */
-var LIST_ITEMS_HEIGHT: number/**  */
-var LIST_ITEMS_SPACING: number/**  */
-var SCROLLBAR_WIDTH: number/**  */
-var SCROLLBAR_SIDE: number/**  */
+var DROPDOWN_ROLL_UP: number/** TextBox in read-only mode: 0-text editable, 1-text no-editable */
+var TEXT_READONLY: number/** Spinner left/right buttons width */
+var SPINNER_BUTTON_WIDTH: number/** Spinner buttons separation */
+var SPINNER_BUTTON_SPACING: number/** ListView items height */
+var LIST_ITEMS_HEIGHT: number/** ListView items separation */
+var LIST_ITEMS_SPACING: number/** ListView scrollbar size (usually width) */
+var SCROLLBAR_WIDTH: number/** ListView scrollbar side (0-SCROLLBAR_LEFT_SIDE, 1-SCROLLBAR_RIGHT_SIDE) */
+var SCROLLBAR_SIDE: number/** ListView items border enabled in normal state */
 var LIST_ITEMS_BORDER_NORMAL: number/**  */
 var LIST_ITEMS_BORDER_WIDTH: number/**  */
-var COLOR_SELECTOR_SIZE: number/**  */
-var HUEBAR_WIDTH: number/**  */
-var HUEBAR_PADDING: number/**  */
+var COLOR_SELECTOR_SIZE: number/** ColorPicker right hue bar width */
+var HUEBAR_WIDTH: number/** ColorPicker right hue bar separation from panel */
+var HUEBAR_PADDING: number/** ColorPicker right hue bar selector height */
 var HUEBAR_SELECTOR_HEIGHT: number/**  */
 var HUEBAR_SELECTOR_OVERFLOW: number/**  */
 var ICON_NONE: number/**  */
@@ -429,10 +432,10 @@ var RAYGUI_VERSION_MAJOR: number/**  */
 var RAYGUI_VERSION_MINOR: number/**  */
 var RAYGUI_VERSION_PATCH: number/**  */
 var SCROLLBAR_LEFT_SIDE: number/**  */
-var SCROLLBAR_RIGHT_SIDE: number/**  */
-var RAYGUI_ICON_SIZE: number/**  */
-var RAYGUI_ICON_MAX_ICONS: number/**  */
-var RAYGUI_ICON_MAX_NAME_LENGTH: number/**  */
-var RAYGUI_MAX_CONTROLS: number/**  */
-var RAYGUI_MAX_PROPS_BASE: number/**  */
+var SCROLLBAR_RIGHT_SIDE: number/** Size of icons in pixels (squared) */
+var RAYGUI_ICON_SIZE: number/** Maximum number of icons */
+var RAYGUI_ICON_MAX_ICONS: number/** Maximum length of icon name id */
+var RAYGUI_ICON_MAX_NAME_LENGTH: number/** Maximum number of controls */
+var RAYGUI_MAX_CONTROLS: number/** Maximum number of base properties */
+var RAYGUI_MAX_PROPS_BASE: number/** Maximum number of extended properties */
 var RAYGUI_MAX_PROPS_EXTENDED: number}

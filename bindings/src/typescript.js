@@ -15,9 +15,9 @@ export class TypeScriptDeclaration {
         this.aliases=[];
         this.constants=[];
     }
-    addConstant(name, type, description){
+    addConstant(name, type, comment){
         this.defined[name]=true;
-        this.constants.push([name, type, description]);
+        this.constants.push([name, type, comment]);
     }
     addFunction(api) {
         this.defined[api.name]=true;
@@ -28,10 +28,10 @@ export class TypeScriptDeclaration {
         if(api.fields==undefined)debugger;
         this.structs.push(api);
     }
-    addCallback(name, parameters){
+    addCallback(name, parameters, comment){
         if(this.defined[name])return;
         this.defined[name]=true;
-        this.callbacks.push({name, parameters});
+        this.callbacks.push({name, parameters, comment});
     }
     addAlias(name, aliasof){
         this.defined[name]=true;
@@ -149,7 +149,7 @@ export class TypeScriptDeclaration {
         //Structs
         for(let struct of this.structs){
             const options = struct.binding || {};
-            var fields = struct.fields.filter(x => x.binding.get).map(x => ({ name: x.name, description: x.description, type: this.toJsType(x.type) }));
+            var fields = struct.fields.filter(x => x.binding.get).map(x => ({ name: x.name, comment: x.comment, type: this.toJsType(x.type) }));
             this.structsGen.tsDeclareInterface(struct.name, fields);
             this.structsGen.tsDeclareType(struct.name, !!(options.createConstructor), fields);
         }
@@ -168,7 +168,7 @@ export class TypeScriptDeclaration {
             }else{
                 inlinefn = `(${callback.parameters.map(a=>`${a.name}:${this.toJsType(a.type.replaceAll('&', '*'),lookups)}`).join(',')})=>${ret}`;
             }
-            this.structsGen.tsAliasType(callback.name, inlinefn);
+            this.structsGen.tsAliasType(callback.name, inlinefn, callback.comment);
         }
         //Aliases
         for(let alias of this.aliases){
@@ -184,7 +184,7 @@ export class TypeScriptDeclaration {
             const options = fn.binding || {};
             const arg = fn.args.filter(x => !x.binding.ignore).map(x => ({ name: (x.type=='...'?'...':'')+x.name, type: x.binding.jsType ?? this.toJsType(x.type,lookups) }));
             const returnType = options.jsReturns ?? this.toJsType(fn.returnType,lookups);
-            this.functionsGen.tsDeclareFunction(fn.name, arg, returnType, fn.description);
+            this.functionsGen.tsDeclareFunction(fn.name, arg, returnType, fn.binding.comment);
         }
 
         for(let key in this.includeList){
@@ -226,14 +226,14 @@ class TypescriptGenerator {
     child(){const c=new TypescriptGenerator();c.initdepth=this.depth;this.tokenList.push(c);return c;}
     indent(){this.tokenList.push(1);}
     unindent(){this.tokenList.push(-1);}
-    tsDeclareFunction(name, parameters, returnType, description) {
+    tsDeclareFunction(name, parameters, returnType, comment) {
         let declare =this.tags.module?'':'declare ';
-        this.tsDocComment(description);
+        this.tsDocComment(comment);
         this.line(`${declare}function ${name}(${parameters.map(x => x.name + ': ' + x.type).join(', ')}): ${returnType}`);
     }
-    tsDeclareConstant(name, type, description) {
+    tsDeclareConstant(name, type, comment) {
         let declare =this.tags.module?'':'declare ';
-        this.tsDocComment(description);
+        this.tsDocComment(comment);
         this.line(`${declare}var ${name}: ${type}`);
     }
     tsDeclareType(name, hasConstructor, parameters) {
@@ -255,8 +255,8 @@ class TypescriptGenerator {
         this.line(`interface ${name} {\n`);
         this.indent();
         for (const field of fields) {
-            if (field.description)
-                this.tsDocComment(field.description);
+            if (field.comment)
+                this.tsDocComment(field.comment);
             this.line(field.name + ": " + field.type + ",\n");
         }
         this.unindent();
@@ -274,7 +274,9 @@ class TypescriptGenerator {
         this.line("}\n");
         return child;
     }
-    tsAliasType(name, aliasof){
+    tsAliasType(name, aliasof,comment){
+        if (comment)
+            this.tsDocComment(comment);
         this.line(`type ${name} = ${aliasof};\n`);
     }
     tsDocComment(comment) {

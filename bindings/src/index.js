@@ -1070,20 +1070,20 @@ function main() {
         module.defines.forEach(x => {
             if(x.type=='bool' && x.name.endsWith('_H'))return;//GUARD
             if(x.type=='int'){
-                module.gen.exportGlobalInt(x.name,x.description);
+                module.gen.exportGlobalInt(x.name,x.binding.comment);
             }
             if(x.type=='float' || x.type=='double'){
-                module.gen.exportGlobalDouble(x.name,x.description);
+                module.gen.exportGlobalDouble(x.name,x.binding.comment);
             }
             if(x.type=='struct'){
-                module.gen.exportGlobalStruct(x.content.body.type, x.name, x.content.body.values, x.description);
+                module.gen.exportGlobalStruct(x.content.body.type, x.name, x.content.body.values, x.binding.comment);
             }
             if(x.type=='undefined' && module.gen.exported[x.content]!=undefined){
                 const aliasof=module.gen.exported[x.content];
                 if(aliasof=='int'){
-                    module.gen.exportGlobalInt(x.name,x.description);
+                    module.gen.exportGlobalInt(x.name,x.binding.comment);
                 }else if(aliasof=='float'){
-                    module.gen.exportGlobalDouble(x.name,x.description);
+                    module.gen.exportGlobalDouble(x.name,x.binding.comment);
                 }
             }
         });
