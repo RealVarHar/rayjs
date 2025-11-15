@@ -192,7 +192,7 @@ position: Vector3,
 target: Vector3,
 /** Camera up vector (rotation over its axis) */
 up: Vector3,
-/** Camera field-of-view aperture in Y (degrees) in perspective, used as near plane width in orthographic */
+/** Camera field-of-view aperture in Y (degrees) in perspective, used as near plane height in world units in orthographic */
 fovy: number,
 /** Camera projection: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC */
 projection: number,
@@ -661,11 +661,18 @@ function LoadFileData(fileName: string, dataSize: number | number[]): number[]/*
 function SaveFileData(fileName: string, data: ArrayBuffer, dataSize: number): boolean/** Export data to code (.h), returns true on success */
 function ExportDataAsCode(data: number[], dataSize: number, fileName: string): boolean/** Load text data from file (read), returns a '\0' terminated string */
 function LoadFileText(fileName: string): string/** Save text data to file (write), string must be '\0' terminated, returns true on success */
-function SaveFileText(fileName: string, text: string): boolean/** Check if file exists */
+function SaveFileText(fileName: string, text: string): boolean/** Rename file (if exists) */
+function FileRename(fileName: string, fileRename: string): number/** Remove file (if exists) */
+function FileRemove(fileName: string): number/** Copy file from one path to another, dstPath created if it doesn't exist */
+function FileCopy(srcPath: string, dstPath: string): number/** Move file from one directory to another, dstPath created if it doesn't exist */
+function FileMove(srcPath: string, dstPath: string): number/** Replace text in an existing file */
+function FileTextReplace(fileName: string, search: string, replacement: string): number/** Find text in existing file */
+function FileTextFindIndex(fileName: string, search: string): number/** Check if file exists */
 function FileExists(fileName: string): boolean/** Check if a directory path exists */
 function DirectoryExists(dirPath: string): boolean/** Check file extension (recommended include point: .png, .wav) */
 function IsFileExtension(fileName: string, ext: string): boolean/** Get file length in bytes (NOTE: GetFileSize() conflicts with windows.h) */
-function GetFileLength(fileName: string): number/** Get pointer to extension for a filename string (includes dot: '.png') */
+function GetFileLength(fileName: string): number/** Get file modification time (last write time) */
+function GetFileModTime(fileName: string): number/** Get pointer to extension for a filename string (includes dot: '.png') */
 function GetFileExtension(fileName: string): string/** Get pointer to filename for a path string */
 function GetFileName(filePath: string): string/** Get filename string without extension (uses static string) */
 function GetFileNameWithoutExt(filePath: string): string/** Get full path for a given fileName with path (uses static string) */
@@ -680,15 +687,15 @@ function IsFileNameValid(fileName: string): boolean/** undefined */
 function LoadDirectoryFiles(dirPath: string): string[]/** undefined */
 function LoadDirectoryFilesEx(basePath: string, filter: string, scanSubdirs: boolean): string[]/** Check if a file has been dropped into window */
 function IsFileDropped(): boolean/** undefined */
-function LoadDroppedFiles(): string[]/** Get file modification time (last write time) */
-function GetFileModTime(fileName: string): number/** Compress data (DEFLATE algorithm), memory must be MemFree() */
+function LoadDroppedFiles(): string[]/** Compress data (DEFLATE algorithm), memory must be MemFree() */
 function CompressData(data: number[], dataSize: number, compDataSize: number[]): string/** Decompress data (DEFLATE algorithm), memory must be MemFree() */
 function DecompressData(compData: number[], compDataSize: number, dataSize: number | number[]): string/** Encode data to Base64 string (includes NULL terminator), memory must be MemFree() */
 function EncodeDataBase64(data: number[], dataSize: number, outputSize: number[]): string/** Decode Base64 string (expected NULL terminated), memory must be MemFree() */
 function DecodeDataBase64(text: string, outputSize: number[]): string/** Compute CRC32 hash code */
 function ComputeCRC32(data: number[], dataSize: number): number/** Compute MD5 hash code, returns static int[4] (16 bytes) */
 function ComputeMD5(data: number[], dataSize: number): number[]/** Compute SHA1 hash code, returns static int[5] (20 bytes) */
-function ComputeSHA1(data: number[], dataSize: number): number[]/** Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS */
+function ComputeSHA1(data: number[], dataSize: number): number[]/** Compute SHA256 hash code, returns static int[8] (32 bytes) */
+function ComputeSHA256(data: number[], dataSize: number): number[]/** Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS */
 function LoadAutomationEventList(fileName: string): AutomationEventList/** Unload automation events list from file */
 function UnloadAutomationEventList(list: AutomationEventList): void/** Export automation events list as text file */
 function ExportAutomationEventList(list: AutomationEventList, fileName: string): boolean/** Set automation event list to record to */
@@ -755,7 +762,8 @@ function DrawLine(startPosX: number, startPosY: number, endPosX: number, endPosY
 function DrawLineV(startPos: Vector2, endPos: Vector2, color: Color): void/** Draw a line (using triangles/quads) */
 function DrawLineEx(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void/** Draw lines sequence (using gl lines) */
 function DrawLineStrip(points: Vector2[], pointCount: number, color: Color): void/** Draw line segment cubic-bezier in-out interpolation */
-function DrawLineBezier(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void/** Draw a color-filled circle */
+function DrawLineBezier(startPos: Vector2, endPos: Vector2, thick: number, color: Color): void/** Draw a dashed line */
+function DrawLineDashed(startPos: Vector2, endPos: Vector2, dashSize: number, spaceSize: number, color: Color): void/** Draw a color-filled circle */
 function DrawCircle(centerX: number, centerY: number, radius: number, color: Color): void/** Draw a piece of a circle */
 function DrawCircleSector(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void/** Draw circle sector outline */
 function DrawCircleSectorLines(center: Vector2, radius: number, startAngle: number, endAngle: number, segments: number, color: Color): void/** Draw a gradient-filled circle */
@@ -935,7 +943,7 @@ function LoadFontEx(fileName: string, fontSize: number, codepoints: number[], co
 function LoadFontFromImage(image: Image, key: Color, firstChar: number): Font/** Load font from memory buffer, fileType refers to extension: i.e. '.ttf' */
 function LoadFontFromMemory(fileType: string, fileData: number[], dataSize: number, fontSize: number, codepoints: number[], codepointCount: number): Font/** Check if a font is valid (font data loaded, WARNING: GPU texture not checked) */
 function IsFontValid(font: Font): boolean/** Load font data for further use */
-function LoadFontData(fileData: number[], dataSize: number, fontSize: number, codepoints: number[], codepointCount: number, type: number): GlyphInfo[]/** Generate image font atlas using chars info */
+function LoadFontData(fileData: number[], dataSize: number, fontSize: number, codepoints: number[], codepointCount: number, type: number, glyphCount: number[]): GlyphInfo[]/** Generate image font atlas using chars info */
 function GenImageFontAtlas(glyphs: GlyphInfo[], glyphRecs: Rectangle[] | Rectangle[][], glyphCount: number, fontSize: number, padding: number, packMethod: number): Image/** Unload font chars info data (RAM) */
 function UnloadFontData(glyphs: GlyphInfo[], glyphCount: number): void/** Unload font from GPU memory (VRAM) */
 function UnloadFont(font: Font): void/** Export font as code file, returns true on success */
@@ -961,17 +969,20 @@ function GetCodepointNext(text: string, codepointSize: number | number[]): numbe
 function GetCodepointPrevious(text: string, codepointSize: number | number[]): number/** Encode one codepoint into UTF-8 byte array (array length returned as parameter) */
 function CodepointToUTF8(codepoint: number, utf8Size: number[]): string/** Load text as separate lines ('\n') */
 function LoadTextLines(text: string, count: number | number[]): string[]/** Unload text lines */
-function UnloadTextLines(text: string[]): void/** Check if two text string are equal */
+function UnloadTextLines(text: string[], lineCount: number): void/** Check if two text string are equal */
 function TextIsEqual(text1: string, text2: string): boolean/** Get text length, checks for '\0' ending */
 function TextLength(text: string): number/** Text formatting with variables (sprintf() style) */
 function TextFormat(text: string, ...args: any): string/** Get a piece of a text string */
-function TextSubtext(text: string, position: number, length: number): string/** Replace text string (WARNING: memory must be freed!) */
-function TextReplace(text: string, replace: string, by: string): string/** Insert text in a position (WARNING: memory must be freed!) */
+function TextSubtext(text: string, position: number, length: number): string/** Remove text spaces, concat words */
+function TextRemoveSpaces(text: string): string/** Get text between two strings */
+function GetTextBetween(text: string, begin: string, end: string): string/** Replace text string (WARNING: memory must be freed!) */
+function TextReplace(text: string, search: string, replacement: string): string/** Replace text between two specific strings (WARNING: memory must be freed!) */
+function TextReplaceBetween(text: string, begin: string, end: string, replacement: string): string/** Insert text in a position (WARNING: memory must be freed!) */
 function TextInsert(text: string, insert: string, position: number): string/** Join text strings with delimiter */
 function TextJoin(textList: string[], count: number, delimiter: string): string/** Split text into multiple strings, using MAX_TEXTSPLIT_COUNT static strings */
-function TextSplit(text: string, delimiter: string, count: number | number[]): string[]/** Append text at specific position and move cursor! */
+function TextSplit(text: string, delimiter: string, count: number | number[]): string[]/** Append text at specific position and move cursor */
 function TextAppend(text: string, append: string, position: number | number[]): void/** Find first text occurrence within a string, -1 if not found */
-function TextFindIndex(text: string, find: string): number/** Get upper case version of provided string */
+function TextFindIndex(text: string, search: string): number/** Get upper case version of provided string */
 function TextToUpper(text: string): string/** Get lower case version of provided string */
 function TextToLower(text: string): string/** Get Pascal case notation version of provided string */
 function TextToPascal(text: string): string/** Get Snake case notation version of provided string */

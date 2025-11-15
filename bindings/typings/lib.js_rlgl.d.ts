@@ -85,7 +85,9 @@ function rlDisableVertexBuffer(): void/** Enable vertex buffer element (VBO elem
 function rlEnableVertexBufferElement(id: number): void/** Disable vertex buffer element (VBO element) */
 function rlDisableVertexBufferElement(): void/** Enable vertex attribute index */
 function rlEnableVertexAttribute(index: number): void/** Disable vertex attribute index */
-function rlDisableVertexAttribute(index: number): void/** Select and active a texture slot */
+function rlDisableVertexAttribute(index: number): void/** Enable attribute state pointer */
+function rlEnableStatePointer(vertexAttribType: number, buffer: ArrayBuffer): void/** Disable attribute state pointer */
+function rlDisableStatePointer(vertexAttribType: number): void/** Select and active a texture slot */
 function rlActiveTextureSlot(slot: number): void/** Enable texture */
 function rlEnableTexture(id: number): void/** Disable texture */
 function rlDisableTexture(): void/** Enable texture cubemap */
@@ -115,7 +117,9 @@ function rlEnableScissorTest(): void/** Disable scissor test */
 function rlDisableScissorTest(): void/** Scissor test */
 function rlScissor(x: number, y: number, width: number, height: number): void/** Enable point mode */
 function rlEnablePointMode(): void/** Disable point mode */
-function rlDisablePointMode(): void/** Enable wire mode */
+function rlDisablePointMode(): void/** Set the point drawing size */
+function rlSetPointSize(size: number): void/** Get the point drawing size */
+function rlGetPointSize(): number/** Enable wire mode */
 function rlEnableWireMode(): void/** Disable wire mode */
 function rlDisableWireMode(): void/** Set the line drawing width */
 function rlSetLineWidth(width: number): void/** Get the line drawing width */
@@ -178,8 +182,8 @@ function rlUnloadFramebuffer(id: number): void/** Load shader from code strings 
 function rlLoadShaderCode(vsCode: string, fsCode: string): number/** Compile custom shader and return shader id (type: RL_VERTEX_SHADER, RL_FRAGMENT_SHADER, RL_COMPUTE_SHADER) */
 function rlCompileShader(shaderCode: string, type: number): number/** Load custom shader program */
 function rlLoadShaderProgram(vShaderId: number, fShaderId: number): number/** Unload shader program */
-function rlUnloadShaderProgram(id: number): void/** Get shader location uniform */
-function rlGetLocationUniform(shaderId: number, uniformName: string): number/** Get shader location attribute */
+function rlUnloadShaderProgram(id: number): void/** Get shader location uniform, requires shader program id */
+function rlGetLocationUniform(shaderId: number, uniformName: string): number/** Get shader location attribute, requires shader program id */
 function rlGetLocationAttrib(shaderId: number, attribName: string): number/** Set shader value uniform */
 function rlSetUniform(locIndex: number, value: ArrayBuffer, uniformType: number, count: number): void/** Set shader value matrix */
 function rlSetUniformMatrix(locIndex: number, mat: Matrix): void/** Set shader value matrices */
@@ -206,7 +210,8 @@ function rlSetMatrixModelview(view: Matrix): void/** Set eyes projection matrice
 function rlSetMatrixProjectionStereo(right: Matrix, left: Matrix): void/** Set eyes view offsets matrices for stereo rendering */
 function rlSetMatrixViewOffsetStereo(right: Matrix, left: Matrix): void/** Load and draw a cube */
 function rlLoadDrawCube(): void/** Load and draw a quad */
-function rlLoadDrawQuad(): void/** OpenGL 1.1 */
+function rlLoadDrawQuad(): void/** Software rendering */
+var RL_OPENGL_11_SOFTWARE: number/** OpenGL 1.1 */
 var RL_OPENGL_11: number/** OpenGL 2.1 (GLSL 120) */
 var RL_OPENGL_21: number/** OpenGL 3.3 (GLSL 330) */
 var RL_OPENGL_33: number/** OpenGL 4.3 (using GLSL 330) */

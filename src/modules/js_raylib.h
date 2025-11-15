@@ -5951,7 +5951,7 @@
 		Texture * texture=&ptr[0].texture;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)texture,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -5980,7 +5980,7 @@
 		Texture * depth=&ptr[0].depth;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)depth,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6031,7 +6031,7 @@
 		Rectangle * source=&ptr[0].source;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)source,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6265,7 +6265,7 @@
 		Image * image=&ptr[0].image;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)image,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6378,7 +6378,7 @@
 		Texture2D * texture=&ptr[0].texture;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)texture,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6402,7 +6402,7 @@
 			Rectangle * src0=(ptr[0].recs+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -6437,7 +6437,7 @@
 				Rectangle * src=(ptr[0].recs+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -6516,7 +6516,7 @@
 			GlyphInfo * src0=(ptr[0].glyphs+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -6551,7 +6551,7 @@
 				GlyphInfo * src=(ptr[0].glyphs+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -6660,7 +6660,7 @@
 		Vector3 * position=&ptr[0].position;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)position,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6689,7 +6689,7 @@
 		Vector3 * target=&ptr[0].target;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)target,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6718,7 +6718,7 @@
 		Vector3 * up=&ptr[0].up;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)up,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6811,7 +6811,7 @@
 		Vector2 * offset=&ptr[0].offset;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)offset,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -6840,7 +6840,7 @@
 		Vector2 * target=&ptr[0].target;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)target,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -8155,7 +8155,7 @@
 			Matrix * src0=(ptr[0].boneMatrices+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Matrix_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -8190,7 +8190,7 @@
 				Matrix * src=(ptr[0].boneMatrices+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -8607,7 +8607,7 @@
 		Texture2D * texture=&ptr[0].texture;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)texture,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -8636,7 +8636,7 @@
 		Color * color=&ptr[0].color;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)color,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -8707,7 +8707,7 @@
 		Shader * shader=&ptr[0].shader;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)shader,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Shader_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Shader_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -8731,7 +8731,7 @@
 			MaterialMap * src0=(ptr[0].maps+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_MaterialMap_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_MaterialMap_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -8766,7 +8766,7 @@
 				MaterialMap * src=(ptr[0].maps+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_MaterialMap_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_MaterialMap_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -8979,7 +8979,7 @@
 		Vector3 * translation=&ptr[0].translation;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)translation,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -9008,7 +9008,7 @@
 		Quaternion * rotation=&ptr[0].rotation;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)rotation,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector4_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector4_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -9037,7 +9037,7 @@
 		Vector3 * scale=&ptr[0].scale;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)scale,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -9231,7 +9231,7 @@
 		Matrix * transform=&ptr[0].transform;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)transform,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -9295,7 +9295,7 @@
 			Mesh * src0=(ptr[0].meshes+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Mesh_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -9330,7 +9330,7 @@
 				Mesh * src=(ptr[0].meshes+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -9409,7 +9409,7 @@
 			Material * src0=(ptr[0].materials+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Material_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -9444,7 +9444,7 @@
 				Material * src=(ptr[0].materials+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Material_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -9651,7 +9651,7 @@
 			BoneInfo * src0=(ptr[0].bones+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -9686,7 +9686,7 @@
 				BoneInfo * src=(ptr[0].bones+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -9765,7 +9765,7 @@
 			Transform * src0=(ptr[0].bindPose+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Transform_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -9800,7 +9800,7 @@
 				Transform * src=(ptr[0].bindPose+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Transform_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -9947,7 +9947,7 @@
 			BoneInfo * src0=(ptr[0].bones+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -9982,7 +9982,7 @@
 				BoneInfo * src=(ptr[0].bones+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -10064,7 +10064,7 @@
 				Transform * src1=(src0+i0);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret2=create_shadow_with_external((void  *)src1,anchor);
-				JSValue ret2=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+				JSValue ret2=JS_NewObjectClass(ctx,js_Transform_class_id);
 				JS_SetOpaque(ret2,(void  *)ptr_ret2);
 				JS_DefinePropertyValueUint32(ctx,ret1,(uint32_t)i0,ret2,JS_PROP_C_W_E);
 			}
@@ -10104,7 +10104,7 @@
 					Transform * src0=(src+i);
 					JS_DupValue(ctx,anchor);
 					opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-					JSValue ret1=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+					JSValue ret1=JS_NewObjectClass(ctx,js_Transform_class_id);
 					JS_SetOpaque(ret1,(void  *)ptr_ret1);
 					JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 				}
@@ -10318,7 +10318,7 @@
 		Vector3 * position=&ptr[0].position;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)position,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10347,7 +10347,7 @@
 		Vector3 * direction=&ptr[0].direction;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)direction,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10437,7 +10437,7 @@
 		Vector3 * point=&ptr[0].point;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)point,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10466,7 +10466,7 @@
 		Vector3 * normal=&ptr[0].normal;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)normal,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10518,7 +10518,7 @@
 		Vector3 * min=&ptr[0].min;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)min,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10547,7 +10547,7 @@
 		Vector3 * max=&ptr[0].max;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)max,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -10932,7 +10932,7 @@
 		AudioStream * stream=&ptr[0].stream;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)stream,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_AudioStream_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_AudioStream_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -11002,7 +11002,7 @@
 		AudioStream * stream=&ptr[0].stream;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)stream,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_AudioStream_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_AudioStream_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -11492,7 +11492,7 @@
 			Matrix * src0=(ptr[0].projection+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Matrix_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -11527,7 +11527,7 @@
 				Matrix * src=(ptr[0].projection+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -11605,7 +11605,7 @@
 			Matrix * src0=(ptr[0].viewOffset+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_Matrix_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -11640,7 +11640,7 @@
 				Matrix * src=(ptr[0].viewOffset+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -12768,7 +12768,7 @@
 			AutomationEvent * src0=(ptr[0].events+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_AutomationEvent_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_AutomationEvent_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -12803,7 +12803,7 @@
 				AutomationEvent * src=(ptr[0].events+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_AutomationEvent_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_AutomationEvent_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -13094,7 +13094,7 @@
 	static JSValue js_Vector2_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Vector2));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Vector2_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13118,7 +13118,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * _returnptr=((Vector2 *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13127,7 +13127,7 @@
 	static JSValue js_Vector3_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Vector3));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Vector3_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13154,7 +13154,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Vector3));
 		Vector3 * _returnptr=((Vector3 *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13163,7 +13163,7 @@
 	static JSValue js_Vector4_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Vector4));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector4_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Vector4_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13193,7 +13193,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Vector4));
 		Vector4 * _returnptr=((Vector4 *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Vector4_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Vector4_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13202,7 +13202,7 @@
 	static JSValue js_Matrix_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Matrix));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Matrix_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13268,7 +13268,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Matrix));
 		Matrix * _returnptr=((Matrix *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13277,7 +13277,7 @@
 	static JSValue js_Color_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Color));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Color_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13307,7 +13307,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Color));
 		Color * _returnptr=((Color *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13316,7 +13316,7 @@
 	static JSValue js_Rectangle_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Rectangle));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13346,7 +13346,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * _returnptr=((Rectangle *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13355,7 +13355,7 @@
 	static JSValue js_Image_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Image));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13388,7 +13388,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Image));
 		Image * _returnptr=((Image *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13397,7 +13397,7 @@
 	static JSValue js_Texture_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Texture));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Texture_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13430,7 +13430,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Texture));
 		Texture * _returnptr=((Texture *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13439,7 +13439,7 @@
 	static JSValue js_RenderTexture_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(RenderTexture));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_RenderTexture_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_RenderTexture_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13466,7 +13466,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(RenderTexture));
 		RenderTexture * _returnptr=((RenderTexture *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_RenderTexture_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_RenderTexture_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13475,7 +13475,7 @@
 	static JSValue js_NPatchInfo_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(NPatchInfo));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_NPatchInfo_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_NPatchInfo_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13511,7 +13511,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(NPatchInfo));
 		NPatchInfo * _returnptr=((NPatchInfo *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_NPatchInfo_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_NPatchInfo_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13520,7 +13520,7 @@
 	static JSValue js_GlyphInfo_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(GlyphInfo));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13553,7 +13553,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(GlyphInfo));
 		GlyphInfo * _returnptr=((GlyphInfo *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13562,7 +13562,7 @@
 	static JSValue js_Font_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Font));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Font_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13598,7 +13598,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Font));
 		Font * _returnptr=((Font *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13607,7 +13607,7 @@
 	static JSValue js_Camera3D_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Camera3D));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Camera3D_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Camera3D_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13640,7 +13640,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Camera3D));
 		Camera3D * _returnptr=((Camera3D *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Camera3D_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Camera3D_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13649,7 +13649,7 @@
 	static JSValue js_Camera2D_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Camera2D));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Camera2D_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Camera2D_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13679,7 +13679,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Camera2D));
 		Camera2D * _returnptr=((Camera2D *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Camera2D_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Camera2D_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13688,7 +13688,7 @@
 	static JSValue js_Mesh_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Mesh));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Mesh_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13757,7 +13757,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Mesh));
 		Mesh * _returnptr=((Mesh *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13766,7 +13766,7 @@
 	static JSValue js_Shader_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Shader));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Shader_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Shader_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13790,7 +13790,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Shader));
 		Shader * _returnptr=((Shader *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Shader_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Shader_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13799,7 +13799,7 @@
 	static JSValue js_MaterialMap_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(MaterialMap));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_MaterialMap_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_MaterialMap_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13826,7 +13826,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(MaterialMap));
 		MaterialMap * _returnptr=((MaterialMap *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_MaterialMap_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_MaterialMap_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13835,7 +13835,7 @@
 	static JSValue js_Material_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Material));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Material_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13862,7 +13862,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Material));
 		Material * _returnptr=((Material *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Material_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13871,7 +13871,7 @@
 	static JSValue js_Transform_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Transform));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Transform_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13898,7 +13898,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Transform));
 		Transform * _returnptr=((Transform *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Transform_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Transform_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13907,7 +13907,7 @@
 	static JSValue js_BoneInfo_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(BoneInfo));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13931,7 +13931,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(BoneInfo));
 		BoneInfo * _returnptr=((BoneInfo *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_BoneInfo_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_BoneInfo_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13940,7 +13940,7 @@
 	static JSValue js_Model_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Model));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Model_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Model_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -13985,7 +13985,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Model));
 		Model * _returnptr=((Model *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Model_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Model_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -13994,7 +13994,7 @@
 	static JSValue js_ModelAnimation_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(ModelAnimation));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_ModelAnimation_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_ModelAnimation_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14027,7 +14027,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(ModelAnimation));
 		ModelAnimation * _returnptr=((ModelAnimation *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_ModelAnimation_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_ModelAnimation_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14036,7 +14036,7 @@
 	static JSValue js_Ray_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Ray));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Ray_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Ray_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14060,7 +14060,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Ray));
 		Ray * _returnptr=((Ray *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Ray_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Ray_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14069,7 +14069,7 @@
 	static JSValue js_RayCollision_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(RayCollision));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14099,7 +14099,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * _returnptr=((RayCollision *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14108,7 +14108,7 @@
 	static JSValue js_BoundingBox_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(BoundingBox));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_BoundingBox_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_BoundingBox_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14132,7 +14132,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(BoundingBox));
 		BoundingBox * _returnptr=((BoundingBox *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_BoundingBox_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_BoundingBox_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14141,7 +14141,7 @@
 	static JSValue js_Wave_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Wave));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Wave_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14174,7 +14174,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Wave));
 		Wave * _returnptr=((Wave *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Wave_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14183,7 +14183,7 @@
 	static JSValue js_AudioStream_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(AudioStream));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_AudioStream_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_AudioStream_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14218,7 +14218,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(AudioStream));
 		AudioStream * _returnptr=((AudioStream *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_AudioStream_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_AudioStream_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14227,7 +14227,7 @@
 	static JSValue js_Sound_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Sound));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Sound_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Sound_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14251,7 +14251,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Sound));
 		Sound * _returnptr=((Sound *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Sound_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Sound_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14260,7 +14260,7 @@
 	static JSValue js_Music_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Music));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Music_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Music_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14292,7 +14292,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Music));
 		Music * _returnptr=((Music *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Music_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Music_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14301,7 +14301,7 @@
 	static JSValue js_VrDeviceInfo_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(VrDeviceInfo));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_VrDeviceInfo_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_VrDeviceInfo_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14346,7 +14346,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(VrDeviceInfo));
 		VrDeviceInfo * _returnptr=((VrDeviceInfo *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_VrDeviceInfo_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_VrDeviceInfo_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14355,7 +14355,7 @@
 	static JSValue js_VrStereoConfig_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(VrStereoConfig));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_VrStereoConfig_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_VrStereoConfig_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14397,7 +14397,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(VrStereoConfig));
 		VrStereoConfig * _returnptr=((VrStereoConfig *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_VrStereoConfig_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_VrStereoConfig_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14406,7 +14406,7 @@
 	static JSValue js_FilePathList_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(FilePathList));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_FilePathList_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_FilePathList_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14433,7 +14433,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(FilePathList));
 		FilePathList * _returnptr=((FilePathList *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_FilePathList_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_FilePathList_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14442,7 +14442,7 @@
 	static JSValue js_AutomationEvent_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(AutomationEvent));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_AutomationEvent_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_AutomationEvent_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14469,7 +14469,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(AutomationEvent));
 		AutomationEvent * _returnptr=((AutomationEvent *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_AutomationEvent_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_AutomationEvent_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14478,7 +14478,7 @@
 	static JSValue js_AutomationEventList_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(AutomationEventList));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_AutomationEventList_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_AutomationEventList_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -14505,7 +14505,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(AutomationEventList));
 		AutomationEventList * _returnptr=((AutomationEventList *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_AutomationEventList_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_AutomationEventList_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -14760,7 +14760,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -14815,7 +14815,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -14825,7 +14825,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -14859,7 +14859,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15030,7 +15030,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(VrStereoConfig));
 		VrStereoConfig * ptr2_ret=((VrStereoConfig *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_VrStereoConfig_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_VrStereoConfig_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15053,7 +15053,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Shader));
 		Shader * ptr2_ret=((Shader *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Shader_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Shader_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -15069,7 +15069,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Shader));
 		Shader * ptr2_ret=((Shader *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Shader_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Shader_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -15293,7 +15293,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Ray));
 		Ray * ptr2_ret=((Ray *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Ray_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Ray_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15312,7 +15312,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Ray));
 		Ray * ptr2_ret=((Ray *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Ray_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Ray_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15327,7 +15327,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15346,7 +15346,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15361,7 +15361,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15376,7 +15376,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15389,7 +15389,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15402,7 +15402,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -15727,6 +15727,78 @@
 		return ret;
 	}
 	
+	static JSValue js_FileRename(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * fileRename=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileRename((const char  *)fileName,(const char  *)fileRename);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_FileRemove(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileRemove((const char  *)fileName);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_FileCopy(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * srcPath=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * dstPath=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileCopy((const char  *)srcPath,(const char  *)dstPath);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_FileMove(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * srcPath=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * dstPath=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileMove((const char  *)srcPath,(const char  *)dstPath);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_FileTextReplace(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * search=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * replacement=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileTextReplace((const char  *)fileName,(const char  *)search,(const char  *)replacement);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_FileTextFindIndex(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * search=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int returnVal=FileTextFindIndex((const char  *)fileName,(const char  *)search);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
 	static JSValue js_FileExists(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
 		char * fileName=js_getchar_arr(ctx,argv[0],&error);
@@ -15765,6 +15837,16 @@
 		if(error==1)return JS_EXCEPTION;
 		int returnVal=GetFileLength((const char  *)fileName);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_GetFileModTime(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * fileName=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		long returnVal=GetFileModTime((const char  *)fileName);
+		JSValue ret=JS_NewInt32(ctx,(int32_t)returnVal);
 		memoryClear(ctx);
 		return ret;
 	}
@@ -15922,16 +16004,6 @@
 		return ret;
 	}
 	
-	static JSValue js_GetFileModTime(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
-		bool error=(bool)0;
-		char * fileName=js_getchar_arr(ctx,argv[0],&error);
-		if(error==1)return JS_EXCEPTION;
-		long returnVal=GetFileModTime((const char  *)fileName);
-		JSValue ret=JS_NewInt32(ctx,(int32_t)returnVal);
-		memoryClear(ctx);
-		return ret;
-	}
-	
 	static JSValue js_CompressData(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
 		unsigned char * data=js_getunsignedchar_arr(ctx,argv[0],&error);
@@ -16037,6 +16109,23 @@
 		return ret;
 	}
 	
+	static JSValue js_ComputeSHA256(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		unsigned char * data=js_getunsignedchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dataSize=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int * returnVal=ComputeSHA256(data,dataSize);
+		JSValue ret=JS_NewArray(ctx);
+		for(int i=0;i<8;i++){
+			int src0=returnVal[i];
+			JSValue ret1=JS_NewInt32(ctx,(int32_t)((long)src0));
+			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
+		}
+		memoryClear(ctx);
+		return ret;
+	}
+	
 	static JSValue js_LoadAutomationEventList(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
 		char * fileName=js_getchar_arrnull(ctx,argv[0],&error);
@@ -16045,7 +16134,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(AutomationEventList));
 		AutomationEventList * ptr2_ret=((AutomationEventList *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_AutomationEventList_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_AutomationEventList_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -16345,7 +16434,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16355,7 +16444,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16401,7 +16490,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16434,7 +16523,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16488,7 +16577,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16504,7 +16593,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16527,7 +16616,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Camera));
 			Camera * ptr2_src=((Camera *)(ptr_src+1));
 			ptr2_src[0]=camera[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Camera3D_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Camera3D_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -16551,7 +16640,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Camera));
 			Camera * ptr2_src=((Camera *)(ptr_src+1));
 			ptr2_src[0]=camera[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Camera3D_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Camera3D_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -16574,7 +16663,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Texture2D));
 		Texture2D * ptr2_ret=((Texture2D *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16584,7 +16673,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * ptr2_ret=((Rectangle *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -16677,6 +16766,22 @@
 		Color color=js_getColor(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
 		DrawLineBezier(startPos,endPos,thick,color);
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_DrawLineDashed(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		Vector2 startPos=js_getVector2(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		Vector2 endPos=js_getVector2(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		int dashSize=js_getint(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		int spaceSize=js_getint(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		Color color=js_getColor(ctx,argv[4],&error);
+		if(error==1)return JS_EXCEPTION;
+		DrawLineDashed(startPos,endPos,dashSize,spaceSize,color);
 		return JS_UNDEFINED;
 	}
 	
@@ -17335,7 +17440,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17356,7 +17461,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17377,7 +17482,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17396,7 +17501,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17417,7 +17522,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17562,7 +17667,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Vector2));
 			Vector2 * ptr2_src=((Vector2 *)(ptr_src+1));
 			ptr2_src[0]=collisionPoint[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Vector2_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[4],(uint32_t)0,src);
 		}
@@ -17581,7 +17686,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * ptr2_ret=((Rectangle *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17594,7 +17699,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17616,7 +17721,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17637,7 +17742,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17662,7 +17767,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17680,7 +17785,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17694,7 +17799,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17704,7 +17809,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17781,7 +17886,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17802,7 +17907,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17823,7 +17928,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17844,7 +17949,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17867,7 +17972,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17884,7 +17989,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17905,7 +18010,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17922,7 +18027,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17939,7 +18044,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -17953,7 +18058,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17968,7 +18073,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -17983,7 +18088,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -18000,7 +18105,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -18022,7 +18127,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -18040,7 +18145,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18060,7 +18165,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18080,7 +18185,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18100,7 +18205,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18122,7 +18227,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18142,7 +18247,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18160,7 +18265,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18180,7 +18285,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18202,7 +18307,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18224,7 +18329,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18246,7 +18351,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18274,7 +18379,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18292,7 +18397,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18318,7 +18423,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18336,7 +18441,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18354,7 +18459,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18374,7 +18479,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18392,7 +18497,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18410,7 +18515,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18430,7 +18535,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18448,7 +18553,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18466,7 +18571,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18486,7 +18591,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18506,7 +18611,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18528,7 +18633,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=image[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18559,7 +18664,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color *));
 		Color * * ptr2_ret=((Color * *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -18593,7 +18698,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * ptr2_ret=((Rectangle *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -18610,7 +18715,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -18627,7 +18732,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18651,7 +18756,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18673,7 +18778,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18701,7 +18806,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18725,7 +18830,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18751,7 +18856,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18777,7 +18882,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18801,7 +18906,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18827,7 +18932,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18851,7 +18956,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18879,7 +18984,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18903,7 +19008,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18925,7 +19030,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18949,7 +19054,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -18975,7 +19080,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19005,7 +19110,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19031,7 +19136,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19055,7 +19160,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19079,7 +19184,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19105,7 +19210,7 @@
 			opaqueShadow * ptr_src0=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src0=((Image *)(ptr_src0+1));
 			ptr2_src0[0]=dst[0];
-			JSValue src0=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src0=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src0,(void  *)ptr_src0);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src0);
 		}
@@ -19133,7 +19238,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19163,7 +19268,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Image));
 			Image * ptr2_src=((Image *)(ptr_src+1));
 			ptr2_src[0]=dst[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Image_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19179,7 +19284,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Texture2D));
 		Texture2D * ptr2_ret=((Texture2D *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19193,7 +19298,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Texture2D));
 		Texture2D * ptr2_ret=((Texture2D *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19208,7 +19313,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(TextureCubemap));
 		TextureCubemap * ptr2_ret=((TextureCubemap *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Texture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19223,7 +19328,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RenderTexture2D));
 		RenderTexture2D * ptr2_ret=((RenderTexture2D *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RenderTexture_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RenderTexture_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19296,7 +19401,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Texture2D));
 			Texture2D * ptr2_src=((Texture2D *)(ptr_src+1));
 			ptr2_src[0]=texture[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Texture_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Texture_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -19437,7 +19542,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19459,7 +19564,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector4));
 		Vector4 * ptr2_ret=((Vector4 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector4_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector4_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19472,7 +19577,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19485,7 +19590,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector3));
 		Vector3 * ptr2_ret=((Vector3 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19502,7 +19607,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19517,7 +19622,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19532,7 +19637,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19547,7 +19652,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19562,7 +19667,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19579,7 +19684,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19596,7 +19701,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19609,7 +19714,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19624,7 +19729,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19661,7 +19766,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19674,7 +19779,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19690,11 +19795,11 @@
 		if(error==1)return JS_EXCEPTION;
 		int codepointCount=js_getint(ctx,argv[3],&error);
 		if(error==1)return JS_EXCEPTION;
-		Font returnVal=LoadFontEx((const char  *)fileName,fontSize,codepoints,codepointCount);
+		Font returnVal=LoadFontEx((const char  *)fileName,fontSize,(const int  *)codepoints,codepointCount);
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19712,7 +19817,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -19731,11 +19836,11 @@
 		if(error==1)return JS_EXCEPTION;
 		int codepointCount=js_getint(ctx,argv[5],&error);
 		if(error==1)return JS_EXCEPTION;
-		Font returnVal=LoadFontFromMemory((const char  *)fileType,(const unsigned char  *)fileData,dataSize,fontSize,codepoints,codepointCount);
+		Font returnVal=LoadFontFromMemory((const char  *)fileType,(const unsigned char  *)fileData,dataSize,fontSize,(const int  *)codepoints,codepointCount);
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19764,7 +19869,9 @@
 		if(error==1)return JS_EXCEPTION;
 		int type=js_getint(ctx,argv[5],&error);
 		if(error==1)return JS_EXCEPTION;
-		GlyphInfo * returnVal=LoadFontData((const unsigned char  *)fileData,dataSize,fontSize,codepoints,codepointCount,type);
+		int * glyphCount=js_getint_arr(ctx,argv[6],&error);
+		if(error==1)return JS_EXCEPTION;
+		GlyphInfo * returnVal=LoadFontData((const unsigned char  *)fileData,dataSize,fontSize,(const int  *)codepoints,codepointCount,type,glyphCount);
 		JSValue ret=JS_NewArray(ctx);
 		size_t size0;
 		if(codepointCount>0){
@@ -19777,7 +19884,7 @@
 			opaqueShadow * ptr_ret1=create_shadow_with_data(sizeof(GlyphInfo));
 			GlyphInfo * ptr2_ret1=((GlyphInfo *)(ptr_ret1+1));
 			ptr2_ret1[0]=src0;
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -19805,7 +19912,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Rectangle));
 			Rectangle * ptr2_src=((Rectangle *)(ptr_src+1));
 			ptr2_src[0]=glyphRecs[0][i];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[1],(uint32_t)i,src);
 		}
@@ -19813,7 +19920,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -19990,7 +20097,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector2));
 		Vector2 * ptr2_ret=((Vector2 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector2_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -20017,7 +20124,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(GlyphInfo));
 		GlyphInfo * ptr2_ret=((GlyphInfo *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_GlyphInfo_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_GlyphInfo_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -20032,7 +20139,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * ptr2_ret=((Rectangle *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -20179,7 +20286,9 @@
 		bool error=(bool)0;
 		char * * text=js_getchar_arr_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		UnloadTextLines(text);
+		int lineCount=js_getint(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		UnloadTextLines(text,lineCount);
 		memoryClear(ctx);
 		return JS_UNDEFINED;
 	}
@@ -20405,15 +20514,55 @@
 		return ret;
 	}
 	
+	static JSValue js_TextRemoveSpaces(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * text=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * returnVal=(char  *)TextRemoveSpaces((const char  *)text);
+		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_GetTextBetween(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * text=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * begin=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * end=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * returnVal=GetTextBetween((const char  *)text,(const char  *)begin,(const char  *)end);
+		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
+		memoryClear(ctx);
+		return ret;
+	}
+	
 	static JSValue js_TextReplace(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
 		char * text=js_getchar_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * replace=js_getchar_arr(ctx,argv[1],&error);
+		char * search=js_getchar_arr(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * by=js_getchar_arr(ctx,argv[2],&error);
+		char * replacement=js_getchar_arr(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * returnVal=TextReplace((const char  *)text,(const char  *)replace,(const char  *)by);
+		char * returnVal=TextReplace((const char  *)text,(const char  *)search,(const char  *)replacement);
+		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
+		memoryClear(ctx);
+		return ret;
+	}
+	
+	static JSValue js_TextReplaceBetween(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		char * text=js_getchar_arr(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * begin=js_getchar_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * end=js_getchar_arr(ctx,argv[2],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * replacement=js_getchar_arr(ctx,argv[3],&error);
+		if(error==1)return JS_EXCEPTION;
+		char * returnVal=TextReplaceBetween((const char  *)text,(const char  *)begin,(const char  *)end,(const char  *)replacement);
 		JSValue ret=JS_NewString(ctx,(const char  *)returnVal);
 		memoryClear(ctx);
 		return ret;
@@ -20493,9 +20642,9 @@
 		bool error=(bool)0;
 		char * text=js_getchar_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * find=js_getchar_arr(ctx,argv[1],&error);
+		char * search=js_getchar_arr(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
-		int returnVal=TextFindIndex((const char  *)text,(const char  *)find);
+		int returnVal=TextFindIndex((const char  *)text,(const char  *)search);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
 		memoryClear(ctx);
 		return ret;
@@ -20884,7 +21033,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Model));
 		Model * ptr2_ret=((Model *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Model_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Model_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -20898,7 +21047,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Model));
 		Model * ptr2_ret=((Model *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Model_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Model_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -20928,7 +21077,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(BoundingBox));
 		BoundingBox * ptr2_ret=((BoundingBox *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_BoundingBox_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_BoundingBox_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21109,7 +21258,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Mesh));
 			Mesh * ptr2_src=((Mesh *)(ptr_src+1));
 			ptr2_src[0]=mesh[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Mesh_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -21177,7 +21326,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(BoundingBox));
 		BoundingBox * ptr2_ret=((BoundingBox *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_BoundingBox_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_BoundingBox_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21192,7 +21341,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Mesh));
 			Mesh * ptr2_src=((Mesh *)(ptr_src+1));
 			ptr2_src[0]=mesh[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Mesh_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -21234,7 +21383,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21253,7 +21402,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21270,7 +21419,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21287,7 +21436,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21304,7 +21453,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21321,7 +21470,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21338,7 +21487,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21357,7 +21506,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21376,7 +21525,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21391,7 +21540,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21406,7 +21555,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Mesh));
 		Mesh * ptr2_ret=((Mesh *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Mesh_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Mesh_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21421,7 +21570,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Material *));
 		Material * * ptr2_ret=((Material * *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Material_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -21432,7 +21581,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Material));
 		Material * ptr2_ret=((Material *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Material_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21468,7 +21617,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Material));
 			Material * ptr2_src=((Material *)(ptr_src+1));
 			ptr2_src[0]=material[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Material_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -21490,7 +21639,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Model));
 			Model * ptr2_src=((Model *)(ptr_src+1));
 			ptr2_src[0]=model[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Model_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Model_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -21516,7 +21665,7 @@
 			opaqueShadow * ptr_ret1=create_shadow_with_data(sizeof(ModelAnimation));
 			ModelAnimation * ptr2_ret1=((ModelAnimation *)(ptr_ret1+1));
 			ptr2_ret1[0]=src0;
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_ModelAnimation_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_ModelAnimation_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -21629,7 +21778,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * ptr2_ret=((RayCollision *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21644,7 +21793,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * ptr2_ret=((RayCollision *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21661,7 +21810,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * ptr2_ret=((RayCollision *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21680,7 +21829,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * ptr2_ret=((RayCollision *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21701,7 +21850,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(RayCollision));
 		RayCollision * ptr2_ret=((RayCollision *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_RayCollision_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_RayCollision_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21744,7 +21893,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Wave));
 		Wave * ptr2_ret=((Wave *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Wave_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -21762,7 +21911,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Wave));
 		Wave * ptr2_ret=((Wave *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Wave_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -21785,7 +21934,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Sound));
 		Sound * ptr2_ret=((Sound *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Sound_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Sound_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -21799,7 +21948,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Sound));
 		Sound * ptr2_ret=((Sound *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Sound_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Sound_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21812,7 +21961,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Sound));
 		Sound * ptr2_ret=((Sound *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Sound_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Sound_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21966,7 +22115,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Wave));
 		Wave * ptr2_ret=((Wave *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Wave_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -21985,7 +22134,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Wave));
 			Wave * ptr2_src=((Wave *)(ptr_src+1));
 			ptr2_src[0]=wave[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Wave_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -22009,7 +22158,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Wave));
 			Wave * ptr2_src=((Wave *)(ptr_src+1));
 			ptr2_src[0]=wave[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Wave_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Wave_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -22049,7 +22198,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Music));
 		Music * ptr2_ret=((Music *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Music_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Music_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -22067,7 +22216,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Music));
 		Music * ptr2_ret=((Music *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Music_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Music_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		memoryClear(ctx);
 		return ret;
@@ -22209,7 +22358,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(AudioStream));
 		AudioStream * ptr2_ret=((AudioStream *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_AudioStream_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_AudioStream_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -22389,7 +22538,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Ray));
 		Ray * ptr2_ret=((Ray *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Ray_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Ray_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -22507,10 +22656,17 @@
 		JS_CFUNC_DEF("ExportDataAsCode",3,js_ExportDataAsCode),
 		JS_CFUNC_DEF("LoadFileText",1,js_LoadFileText),
 		JS_CFUNC_DEF("SaveFileText",2,js_SaveFileText),
+		JS_CFUNC_DEF("FileRename",2,js_FileRename),
+		JS_CFUNC_DEF("FileRemove",1,js_FileRemove),
+		JS_CFUNC_DEF("FileCopy",2,js_FileCopy),
+		JS_CFUNC_DEF("FileMove",2,js_FileMove),
+		JS_CFUNC_DEF("FileTextReplace",3,js_FileTextReplace),
+		JS_CFUNC_DEF("FileTextFindIndex",2,js_FileTextFindIndex),
 		JS_CFUNC_DEF("FileExists",1,js_FileExists),
 		JS_CFUNC_DEF("DirectoryExists",1,js_DirectoryExists),
 		JS_CFUNC_DEF("IsFileExtension",2,js_IsFileExtension),
 		JS_CFUNC_DEF("GetFileLength",1,js_GetFileLength),
+		JS_CFUNC_DEF("GetFileModTime",1,js_GetFileModTime),
 		JS_CFUNC_DEF("GetFileExtension",1,js_GetFileExtension),
 		JS_CFUNC_DEF("GetFileName",1,js_GetFileName),
 		JS_CFUNC_DEF("GetFileNameWithoutExt",1,js_GetFileNameWithoutExt),
@@ -22526,7 +22682,6 @@
 		JS_CFUNC_DEF("LoadDirectoryFilesEx",3,js_LoadDirectoryFilesEx),
 		JS_CFUNC_DEF("IsFileDropped",0,js_IsFileDropped),
 		JS_CFUNC_DEF("LoadDroppedFiles",0,js_LoadDroppedFiles),
-		JS_CFUNC_DEF("GetFileModTime",1,js_GetFileModTime),
 		JS_CFUNC_DEF("CompressData",3,js_CompressData),
 		JS_CFUNC_DEF("DecompressData",3,js_DecompressData),
 		JS_CFUNC_DEF("EncodeDataBase64",3,js_EncodeDataBase64),
@@ -22534,6 +22689,7 @@
 		JS_CFUNC_DEF("ComputeCRC32",2,js_ComputeCRC32),
 		JS_CFUNC_DEF("ComputeMD5",2,js_ComputeMD5),
 		JS_CFUNC_DEF("ComputeSHA1",2,js_ComputeSHA1),
+		JS_CFUNC_DEF("ComputeSHA256",2,js_ComputeSHA256),
 		JS_CFUNC_DEF("LoadAutomationEventList",1,js_LoadAutomationEventList),
 		JS_CFUNC_DEF("UnloadAutomationEventList",1,js_UnloadAutomationEventList),
 		JS_CFUNC_DEF("ExportAutomationEventList",2,js_ExportAutomationEventList),
@@ -22601,6 +22757,7 @@
 		JS_CFUNC_DEF("DrawLineEx",4,js_DrawLineEx),
 		JS_CFUNC_DEF("DrawLineStrip",3,js_DrawLineStrip),
 		JS_CFUNC_DEF("DrawLineBezier",4,js_DrawLineBezier),
+		JS_CFUNC_DEF("DrawLineDashed",5,js_DrawLineDashed),
 		JS_CFUNC_DEF("DrawCircle",4,js_DrawCircle),
 		JS_CFUNC_DEF("DrawCircleSector",6,js_DrawCircleSector),
 		JS_CFUNC_DEF("DrawCircleSectorLines",6,js_DrawCircleSectorLines),
@@ -22780,7 +22937,7 @@
 		JS_CFUNC_DEF("LoadFontFromImage",3,js_LoadFontFromImage),
 		JS_CFUNC_DEF("LoadFontFromMemory",6,js_LoadFontFromMemory),
 		JS_CFUNC_DEF("IsFontValid",1,js_IsFontValid),
-		JS_CFUNC_DEF("LoadFontData",6,js_LoadFontData),
+		JS_CFUNC_DEF("LoadFontData",7,js_LoadFontData),
 		JS_CFUNC_DEF("GenImageFontAtlas",6,js_GenImageFontAtlas),
 		JS_CFUNC_DEF("UnloadFontData",2,js_UnloadFontData),
 		JS_CFUNC_DEF("UnloadFont",1,js_UnloadFont),
@@ -22806,12 +22963,15 @@
 		JS_CFUNC_DEF("GetCodepointPrevious",2,js_GetCodepointPrevious),
 		JS_CFUNC_DEF("CodepointToUTF8",2,js_CodepointToUTF8),
 		JS_CFUNC_DEF("LoadTextLines",2,js_LoadTextLines),
-		JS_CFUNC_DEF("UnloadTextLines",1,js_UnloadTextLines),
+		JS_CFUNC_DEF("UnloadTextLines",2,js_UnloadTextLines),
 		JS_CFUNC_DEF("TextIsEqual",2,js_TextIsEqual),
 		JS_CFUNC_DEF("TextLength",1,js_TextLength),
 		JS_CFUNC_DEF("TextFormat",2,js_TextFormat),
 		JS_CFUNC_DEF("TextSubtext",3,js_TextSubtext),
+		JS_CFUNC_DEF("TextRemoveSpaces",1,js_TextRemoveSpaces),
+		JS_CFUNC_DEF("GetTextBetween",3,js_GetTextBetween),
 		JS_CFUNC_DEF("TextReplace",3,js_TextReplace),
+		JS_CFUNC_DEF("TextReplaceBetween",4,js_TextReplaceBetween),
 		JS_CFUNC_DEF("TextInsert",3,js_TextInsert),
 		JS_CFUNC_DEF("TextJoin",3,js_TextJoin),
 		JS_CFUNC_DEF("TextSplit",3,js_TextSplit),
@@ -23400,7 +23560,7 @@
 		opaqueShadow * ptr_LIGHTGRAY_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_LIGHTGRAY_js=((Color *)(ptr_LIGHTGRAY_js+1));
 		ptr2_LIGHTGRAY_js[0]=LIGHTGRAY_struct;
-		JSValue LIGHTGRAY_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue LIGHTGRAY_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(LIGHTGRAY_js,(void  *)ptr_LIGHTGRAY_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"LIGHTGRAY",LIGHTGRAY_js);
 		Color GRAY_struct={
@@ -23412,7 +23572,7 @@
 		opaqueShadow * ptr_GRAY_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_GRAY_js=((Color *)(ptr_GRAY_js+1));
 		ptr2_GRAY_js[0]=GRAY_struct;
-		JSValue GRAY_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue GRAY_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(GRAY_js,(void  *)ptr_GRAY_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"GRAY",GRAY_js);
 		Color DARKGRAY_struct={
@@ -23424,7 +23584,7 @@
 		opaqueShadow * ptr_DARKGRAY_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_DARKGRAY_js=((Color *)(ptr_DARKGRAY_js+1));
 		ptr2_DARKGRAY_js[0]=DARKGRAY_struct;
-		JSValue DARKGRAY_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue DARKGRAY_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(DARKGRAY_js,(void  *)ptr_DARKGRAY_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"DARKGRAY",DARKGRAY_js);
 		Color YELLOW_struct={
@@ -23436,7 +23596,7 @@
 		opaqueShadow * ptr_YELLOW_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_YELLOW_js=((Color *)(ptr_YELLOW_js+1));
 		ptr2_YELLOW_js[0]=YELLOW_struct;
-		JSValue YELLOW_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue YELLOW_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(YELLOW_js,(void  *)ptr_YELLOW_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"YELLOW",YELLOW_js);
 		Color GOLD_struct={
@@ -23448,7 +23608,7 @@
 		opaqueShadow * ptr_GOLD_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_GOLD_js=((Color *)(ptr_GOLD_js+1));
 		ptr2_GOLD_js[0]=GOLD_struct;
-		JSValue GOLD_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue GOLD_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(GOLD_js,(void  *)ptr_GOLD_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"GOLD",GOLD_js);
 		Color ORANGE_struct={
@@ -23460,7 +23620,7 @@
 		opaqueShadow * ptr_ORANGE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ORANGE_js=((Color *)(ptr_ORANGE_js+1));
 		ptr2_ORANGE_js[0]=ORANGE_struct;
-		JSValue ORANGE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ORANGE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ORANGE_js,(void  *)ptr_ORANGE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"ORANGE",ORANGE_js);
 		Color PINK_struct={
@@ -23472,7 +23632,7 @@
 		opaqueShadow * ptr_PINK_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_PINK_js=((Color *)(ptr_PINK_js+1));
 		ptr2_PINK_js[0]=PINK_struct;
-		JSValue PINK_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue PINK_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(PINK_js,(void  *)ptr_PINK_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"PINK",PINK_js);
 		Color RED_struct={
@@ -23484,7 +23644,7 @@
 		opaqueShadow * ptr_RED_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_RED_js=((Color *)(ptr_RED_js+1));
 		ptr2_RED_js[0]=RED_struct;
-		JSValue RED_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue RED_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(RED_js,(void  *)ptr_RED_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"RED",RED_js);
 		Color MAROON_struct={
@@ -23496,7 +23656,7 @@
 		opaqueShadow * ptr_MAROON_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_MAROON_js=((Color *)(ptr_MAROON_js+1));
 		ptr2_MAROON_js[0]=MAROON_struct;
-		JSValue MAROON_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue MAROON_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(MAROON_js,(void  *)ptr_MAROON_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"MAROON",MAROON_js);
 		Color GREEN_struct={
@@ -23508,7 +23668,7 @@
 		opaqueShadow * ptr_GREEN_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_GREEN_js=((Color *)(ptr_GREEN_js+1));
 		ptr2_GREEN_js[0]=GREEN_struct;
-		JSValue GREEN_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue GREEN_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(GREEN_js,(void  *)ptr_GREEN_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"GREEN",GREEN_js);
 		Color LIME_struct={
@@ -23520,7 +23680,7 @@
 		opaqueShadow * ptr_LIME_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_LIME_js=((Color *)(ptr_LIME_js+1));
 		ptr2_LIME_js[0]=LIME_struct;
-		JSValue LIME_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue LIME_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(LIME_js,(void  *)ptr_LIME_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"LIME",LIME_js);
 		Color DARKGREEN_struct={
@@ -23532,7 +23692,7 @@
 		opaqueShadow * ptr_DARKGREEN_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_DARKGREEN_js=((Color *)(ptr_DARKGREEN_js+1));
 		ptr2_DARKGREEN_js[0]=DARKGREEN_struct;
-		JSValue DARKGREEN_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue DARKGREEN_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(DARKGREEN_js,(void  *)ptr_DARKGREEN_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"DARKGREEN",DARKGREEN_js);
 		Color SKYBLUE_struct={
@@ -23544,7 +23704,7 @@
 		opaqueShadow * ptr_SKYBLUE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_SKYBLUE_js=((Color *)(ptr_SKYBLUE_js+1));
 		ptr2_SKYBLUE_js[0]=SKYBLUE_struct;
-		JSValue SKYBLUE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue SKYBLUE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(SKYBLUE_js,(void  *)ptr_SKYBLUE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"SKYBLUE",SKYBLUE_js);
 		Color BLUE_struct={
@@ -23556,7 +23716,7 @@
 		opaqueShadow * ptr_BLUE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_BLUE_js=((Color *)(ptr_BLUE_js+1));
 		ptr2_BLUE_js[0]=BLUE_struct;
-		JSValue BLUE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue BLUE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(BLUE_js,(void  *)ptr_BLUE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"BLUE",BLUE_js);
 		Color DARKBLUE_struct={
@@ -23568,7 +23728,7 @@
 		opaqueShadow * ptr_DARKBLUE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_DARKBLUE_js=((Color *)(ptr_DARKBLUE_js+1));
 		ptr2_DARKBLUE_js[0]=DARKBLUE_struct;
-		JSValue DARKBLUE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue DARKBLUE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(DARKBLUE_js,(void  *)ptr_DARKBLUE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"DARKBLUE",DARKBLUE_js);
 		Color PURPLE_struct={
@@ -23580,7 +23740,7 @@
 		opaqueShadow * ptr_PURPLE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_PURPLE_js=((Color *)(ptr_PURPLE_js+1));
 		ptr2_PURPLE_js[0]=PURPLE_struct;
-		JSValue PURPLE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue PURPLE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(PURPLE_js,(void  *)ptr_PURPLE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"PURPLE",PURPLE_js);
 		Color VIOLET_struct={
@@ -23592,7 +23752,7 @@
 		opaqueShadow * ptr_VIOLET_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_VIOLET_js=((Color *)(ptr_VIOLET_js+1));
 		ptr2_VIOLET_js[0]=VIOLET_struct;
-		JSValue VIOLET_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue VIOLET_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(VIOLET_js,(void  *)ptr_VIOLET_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"VIOLET",VIOLET_js);
 		Color DARKPURPLE_struct={
@@ -23604,7 +23764,7 @@
 		opaqueShadow * ptr_DARKPURPLE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_DARKPURPLE_js=((Color *)(ptr_DARKPURPLE_js+1));
 		ptr2_DARKPURPLE_js[0]=DARKPURPLE_struct;
-		JSValue DARKPURPLE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue DARKPURPLE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(DARKPURPLE_js,(void  *)ptr_DARKPURPLE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"DARKPURPLE",DARKPURPLE_js);
 		Color BEIGE_struct={
@@ -23616,7 +23776,7 @@
 		opaqueShadow * ptr_BEIGE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_BEIGE_js=((Color *)(ptr_BEIGE_js+1));
 		ptr2_BEIGE_js[0]=BEIGE_struct;
-		JSValue BEIGE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue BEIGE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(BEIGE_js,(void  *)ptr_BEIGE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"BEIGE",BEIGE_js);
 		Color BROWN_struct={
@@ -23628,7 +23788,7 @@
 		opaqueShadow * ptr_BROWN_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_BROWN_js=((Color *)(ptr_BROWN_js+1));
 		ptr2_BROWN_js[0]=BROWN_struct;
-		JSValue BROWN_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue BROWN_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(BROWN_js,(void  *)ptr_BROWN_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"BROWN",BROWN_js);
 		Color DARKBROWN_struct={
@@ -23640,7 +23800,7 @@
 		opaqueShadow * ptr_DARKBROWN_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_DARKBROWN_js=((Color *)(ptr_DARKBROWN_js+1));
 		ptr2_DARKBROWN_js[0]=DARKBROWN_struct;
-		JSValue DARKBROWN_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue DARKBROWN_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(DARKBROWN_js,(void  *)ptr_DARKBROWN_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"DARKBROWN",DARKBROWN_js);
 		Color WHITE_struct={
@@ -23652,7 +23812,7 @@
 		opaqueShadow * ptr_WHITE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_WHITE_js=((Color *)(ptr_WHITE_js+1));
 		ptr2_WHITE_js[0]=WHITE_struct;
-		JSValue WHITE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue WHITE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(WHITE_js,(void  *)ptr_WHITE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"WHITE",WHITE_js);
 		Color BLACK_struct={
@@ -23664,7 +23824,7 @@
 		opaqueShadow * ptr_BLACK_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_BLACK_js=((Color *)(ptr_BLACK_js+1));
 		ptr2_BLACK_js[0]=BLACK_struct;
-		JSValue BLACK_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue BLACK_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(BLACK_js,(void  *)ptr_BLACK_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"BLACK",BLACK_js);
 		Color BLANK_struct={
@@ -23676,7 +23836,7 @@
 		opaqueShadow * ptr_BLANK_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_BLANK_js=((Color *)(ptr_BLANK_js+1));
 		ptr2_BLANK_js[0]=BLANK_struct;
-		JSValue BLANK_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue BLANK_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(BLANK_js,(void  *)ptr_BLANK_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"BLANK",BLANK_js);
 		Color MAGENTA_struct={
@@ -23688,7 +23848,7 @@
 		opaqueShadow * ptr_MAGENTA_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_MAGENTA_js=((Color *)(ptr_MAGENTA_js+1));
 		ptr2_MAGENTA_js[0]=MAGENTA_struct;
-		JSValue MAGENTA_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue MAGENTA_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(MAGENTA_js,(void  *)ptr_MAGENTA_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"MAGENTA",MAGENTA_js);
 		Color RAYWHITE_struct={
@@ -23700,7 +23860,7 @@
 		opaqueShadow * ptr_RAYWHITE_js=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_RAYWHITE_js=((Color *)(ptr_RAYWHITE_js+1));
 		ptr2_RAYWHITE_js[0]=RAYWHITE_struct;
-		JSValue RAYWHITE_js=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue RAYWHITE_js=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(RAYWHITE_js,(void  *)ptr_RAYWHITE_js);
 		JS_SetModuleExport(ctx,m,(const char  *)"RAYWHITE",RAYWHITE_js);
 		return 0;

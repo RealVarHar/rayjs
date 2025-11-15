@@ -255,6 +255,8 @@
 	
 	static double js_getdouble(JSContext * ctx,JSValue src,bool * error);
 	
+	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
+	
 	static bool js_getbool(JSContext * ctx,JSValue src,bool * error);
 	
 	static rlRenderBatch * js_getrlRenderBatch_arr(JSContext * ctx,JSValue src,bool * error){
@@ -308,8 +310,6 @@
 		if(is_arrayProxy)JS_FreeValue(ctx,src);
 		return ret;
 	}
-	
-	static void * js_getvoid_arr(JSContext * ctx,JSValue src,bool * error);
 	
 	static void * js_getvoid_arrnull(JSContext * ctx,JSValue src,bool * error){
 		void * ret;
@@ -1281,7 +1281,7 @@
 			rlVertexBuffer * src0=(ptr[0].vertexBuffer+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_rlVertexBuffer_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -1316,7 +1316,7 @@
 				rlVertexBuffer * src=(ptr[0].vertexBuffer+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_rlVertexBuffer_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -1395,7 +1395,7 @@
 			rlDrawCall * src0=(ptr[0].draws+i);
 			JS_DupValue(ctx,anchor);
 			opaqueShadow * ptr_ret1=create_shadow_with_external((void  *)src0,anchor);
-			JSValue ret1=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
+			JSValue ret1=JS_NewObjectClass(ctx,js_rlDrawCall_class_id);
 			JS_SetOpaque(ret1,(void  *)ptr_ret1);
 			JS_DefinePropertyValueUint32(ctx,ret,(uint32_t)i,ret1,JS_PROP_C_W_E);
 		}
@@ -1430,7 +1430,7 @@
 				rlDrawCall * src=(ptr[0].draws+property);
 				JS_DupValue(ctx,anchor);
 				opaqueShadow * ptr_ret=create_shadow_with_external((void  *)src,anchor);
-				JSValue ret=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
+				JSValue ret=JS_NewObjectClass(ctx,js_rlDrawCall_class_id);
 				JS_SetOpaque(ret,(void  *)ptr_ret);
 				return ret;
 			}else{
@@ -1565,7 +1565,7 @@
 	static JSValue js_rlVertexBuffer_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlVertexBuffer));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_rlVertexBuffer_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -1607,7 +1607,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlVertexBuffer));
 		rlVertexBuffer * _returnptr=((rlVertexBuffer *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlVertexBuffer_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_rlVertexBuffer_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -1616,7 +1616,7 @@
 	static JSValue js_rlDrawCall_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlDrawCall));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_rlDrawCall_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -1646,7 +1646,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlDrawCall));
 		rlDrawCall * _returnptr=((rlDrawCall *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlDrawCall_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_rlDrawCall_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -1655,7 +1655,7 @@
 	static JSValue js_rlRenderBatch_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(rlRenderBatch));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_rlRenderBatch_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -1691,7 +1691,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(rlRenderBatch));
 		rlRenderBatch * _returnptr=((rlRenderBatch *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_rlRenderBatch_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -2001,6 +2001,24 @@
 		return JS_UNDEFINED;
 	}
 	
+	static JSValue js_rlEnableStatePointer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		int vertexAttribType=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		void * buffer=js_getvoid_arr(ctx,argv[1],&error);
+		if(error==1)return JS_EXCEPTION;
+		rlEnableStatePointer(vertexAttribType,buffer);
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_rlDisableStatePointer(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		int vertexAttribType=js_getint(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		rlDisableStatePointer(vertexAttribType);
+		return JS_UNDEFINED;
+	}
+	
 	static JSValue js_rlActiveTextureSlot(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		bool error=(bool)0;
 		int slot=js_getint(ctx,argv[0],&error);
@@ -2229,6 +2247,20 @@
 		return JS_UNDEFINED;
 	}
 	
+	static JSValue js_rlSetPointSize(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		bool error=(bool)0;
+		float size=js_getfloat(ctx,argv[0],&error);
+		if(error==1)return JS_EXCEPTION;
+		rlSetPointSize(size);
+		return JS_UNDEFINED;
+	}
+	
+	static JSValue js_rlGetPointSize(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
+		float returnVal=rlGetPointSize();
+		JSValue ret=JS_NewFloat64(ctx,((double)returnVal));
+		return ret;
+	}
+	
 	static JSValue js_rlEnableWireMode(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		rlEnableWireMode();
 		return JS_UNDEFINED;
@@ -2423,7 +2455,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(rlRenderBatch));
 		rlRenderBatch * ptr2_ret=((rlRenderBatch *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_rlRenderBatch_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_rlRenderBatch_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3107,7 +3139,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3117,7 +3149,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3127,7 +3159,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3140,7 +3172,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3153,7 +3185,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Matrix));
 		Matrix * ptr2_ret=((Matrix *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Matrix_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Matrix_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -3236,6 +3268,8 @@
 		JS_CFUNC_DEF("rlDisableVertexBufferElement",0,js_rlDisableVertexBufferElement),
 		JS_CFUNC_DEF("rlEnableVertexAttribute",1,js_rlEnableVertexAttribute),
 		JS_CFUNC_DEF("rlDisableVertexAttribute",1,js_rlDisableVertexAttribute),
+		JS_CFUNC_DEF("rlEnableStatePointer",2,js_rlEnableStatePointer),
+		JS_CFUNC_DEF("rlDisableStatePointer",1,js_rlDisableStatePointer),
 		JS_CFUNC_DEF("rlActiveTextureSlot",1,js_rlActiveTextureSlot),
 		JS_CFUNC_DEF("rlEnableTexture",1,js_rlEnableTexture),
 		JS_CFUNC_DEF("rlDisableTexture",0,js_rlDisableTexture),
@@ -3266,6 +3300,8 @@
 		JS_CFUNC_DEF("rlScissor",4,js_rlScissor),
 		JS_CFUNC_DEF("rlEnablePointMode",0,js_rlEnablePointMode),
 		JS_CFUNC_DEF("rlDisablePointMode",0,js_rlDisablePointMode),
+		JS_CFUNC_DEF("rlSetPointSize",1,js_rlSetPointSize),
+		JS_CFUNC_DEF("rlGetPointSize",0,js_rlGetPointSize),
 		JS_CFUNC_DEF("rlEnableWireMode",0,js_rlEnableWireMode),
 		JS_CFUNC_DEF("rlDisableWireMode",0,js_rlDisableWireMode),
 		JS_CFUNC_DEF("rlSetLineWidth",1,js_rlSetLineWidth),
@@ -3371,6 +3407,7 @@
 		js_declare_rlRenderBatch(ctx,m);
 		JSValue rlRenderBatch_constr=JS_NewCFunction2(ctx,js_rlRenderBatch_constructor,(const char  *)"rlRenderBatch",(int)6,(JSCFunctionEnum)JS_CFUNC_constructor,(int)0);
 		JS_SetModuleExport(ctx,m,(const char  *)"rlRenderBatch",rlRenderBatch_constr);
+		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_11_SOFTWARE",JS_NewInt32(ctx,(int32_t)RL_OPENGL_11_SOFTWARE));
 		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_11",JS_NewInt32(ctx,(int32_t)RL_OPENGL_11));
 		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_21",JS_NewInt32(ctx,(int32_t)RL_OPENGL_21));
 		JS_SetModuleExport(ctx,m,(const char  *)"RL_OPENGL_33",JS_NewInt32(ctx,(int32_t)RL_OPENGL_33));
@@ -3566,6 +3603,7 @@
 		JS_AddModuleExport(ctx,m,(const char  *)"rlVertexBuffer");
 		JS_AddModuleExport(ctx,m,(const char  *)"rlDrawCall");
 		JS_AddModuleExport(ctx,m,(const char  *)"rlRenderBatch");
+		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_11_SOFTWARE");
 		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_11");
 		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_21");
 		JS_AddModuleExport(ctx,m,(const char  *)"RL_OPENGL_33");

@@ -157,6 +157,7 @@ function QuaternionToAxisAngle(q: Quaternion, outAxis: Vector3[], outAngle: numb
 function QuaternionFromEuler(pitch: number, yaw: number, roll: number): Quaternion/** NOTE: Angles are returned in a Vector3 struct in radians */
 function QuaternionToEuler(q: Quaternion): Vector3/** Transform a quaternion given a transformation matrix */
 function QuaternionTransform(q: Quaternion, mat: Matrix): Quaternion/** Check whether two given quaternions are almost equal */
-function QuaternionEquals(p: Quaternion, q: Quaternion): number/** Decompose a transformation matrix into its rotational, translational and scaling components */
+function QuaternionEquals(p: Quaternion, q: Quaternion): number/** TODO: This function is not following raymath conventions defined in header: NOT self-contained */
+function MatrixCompose(translation: Vector3, rotation: Quaternion, scale: Vector3): Matrix/** TODO: This function is not following raymath conventions defined in header: NOT self-contained */
 function MatrixDecompose(mat: Matrix, translation: Vector3, rotation: Quaternion, scale: Vector3): void/**  */
 var EPSILON: number}

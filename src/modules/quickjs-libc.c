@@ -69,6 +69,7 @@
 #if defined(__APPLE__)
 typedef sig_t sighandler_t;
 #include <crt_externs.h>
+#include <TargetConditionals.h>
 #define environ (*_NSGetEnviron())
 #endif
 
@@ -3114,7 +3115,7 @@ static JSValue js_os_realpath(JSContext *ctx, JSValueConst this_val,
 }
 #endif
 
-#if !defined(_WIN32) && !defined(__wasi__)
+#if !defined(_WIN32) && !defined(__wasi__) && !(defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH))
 static JSValue js_os_symlink(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
 {
@@ -4199,7 +4200,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
 #if !defined(__wasi__)
     JS_CFUNC_DEF("realpath", 1, js_os_realpath ),
 #endif
-#if !defined(_WIN32) && !defined(__wasi__)
+#if !defined(_WIN32) && !defined(__wasi__) && !(defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH))
     JS_CFUNC_MAGIC_DEF("lstat", 1, js_os_stat, 1 ),
     JS_CFUNC_DEF("symlink", 2, js_os_symlink ),
     JS_CFUNC_DEF("readlink", 1, js_os_readlink ),
@@ -4475,7 +4476,7 @@ static void js_std_dump_error1(JSContext *ctx, JSValueConst exception_val)
     JSValue val;
     bool is_error;
 
-    is_error = JS_IsError(ctx, exception_val);
+    is_error = JS_IsError(exception_val);
     js_dump_obj(ctx, stderr, exception_val);
     if (is_error) {
         val = JS_GetPropertyStr(ctx, exception_val, "stack");
@@ -4637,6 +4638,7 @@ void js_std_eval_binary(JSContext *ctx, const uint8_t *buf, size_t buf_len,
             if (js_module_set_import_meta(ctx, obj, false, false) < 0)
                 goto exception;
         }
+        JS_FreeValue(ctx, obj);
     } else {
         if (JS_VALUE_GET_TAG(obj) == JS_TAG_MODULE) {
             if (JS_ResolveModule(ctx, obj) < 0) {

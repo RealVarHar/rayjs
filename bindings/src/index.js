@@ -195,11 +195,7 @@ function main() {
         "modules/quickjs-libc.h": "src/modules/quickjs-libc.h",
         "quickjs-atom.h": "thirdparty/quickjs/quickjs-atom.h",
         "rayjs_generated.h":"src/rayjs_generated.h",
-        "stdbool.h":false,"stdio.h":false,"stdint.h":false,"string.h":false,"math.h":false,"sal.h":false,"stdarg.h":false,"stdlib.h":false,"inttypes.h":false,"assert.h":false,"time.h":false,"sys/time.h":false,
-        "timezoneapi.h":false,"intrin.h":false,"fenv.h":false,"cutils.h":"src/cutils.h","libregexp.h":false,"quickjs-c-atomics.h":false,"builtin-array-fromasync.h":false,"mimalloc.h":false,"raymath.h":false,"raylib.h":false,
-        "ctype.h":false,"OpenGL/gl.h":false,"OpenGL/glext.h":false,"GL/gl.h":false,"external/glad.h":false,"GLES":false,"external/glad_gles":false,"rlgl.h":false,"lightmapper.h":false,"list.h":false,"xsum.h":false,
-        "quickjs-opcode.h":false,"winsock2.h":false,"malloc.h":false,"malloc/malloc.h":false,"malloc_np.h":false,"shadow_windows.h":false,"errno.h":false,"pthread.h":false,"limits.h":false,"unistd.h":false,"GLES3/gl3.h":false,
-        "GLES2/gl2ext.h":false,"external/glad_gles2.h":false,"GLES2/gl2.h":false
+        "default":false
     };
     let quickjsSource=new source_parser(fs.readFileSync("thirdparty/quickjs/quickjs.c", "utf8"),sourcefiles);
     let classEnum=quickjsSource.enums.find(a=>a.name===''&&a.values.some(b=>b.name==='JS_CLASS_OBJECT'));
@@ -414,6 +410,8 @@ function main() {
     att.fields.find(a=>a.name=='bindPose').binding.sizeVars=['ptr.boneCount'];
     att = modules['raylib'].getFunction("LoadCodepoints");
     att.returnSizeVars=['count[0]'];
+    att = modules['raylib'].getFunction("ComputeSHA256");
+    att.returnSizeVars=[8];
     att = modules['raylib'].getStruct("ModelAnimation");
     att.fields.find(a=>a.name=='bones').binding.sizeVars=['ptr.boneCount'];
     att.fields.find(a=>a.name=='framePoses').binding.sizeVars=['ptr.frameCount','ptr.boneCount'];

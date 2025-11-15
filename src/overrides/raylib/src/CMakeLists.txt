@@ -69,7 +69,7 @@ else()
 endif()
 
 if (${PLATFORM} MATCHES "Web")
-    target_link_options(raylib PUBLIC "-sUSE_GLFW=3")
+    target_link_options(raylib PUBLIC "-sUSE_GLFW=3" -sEXPORTED_RUNTIME_METHODS=ccall)
     if(${GRAPHICS} MATCHES "GRAPHICS_API_OPENGL_ES3")
         target_link_options(raylib PUBLIC "-sMIN_WEBGL_VERSION=2")
         target_link_options(raylib PUBLIC "-sMAX_WEBGL_VERSION=2")
@@ -87,13 +87,13 @@ if (WITH_PIC OR BUILD_SHARED_LIBS)
 endif ()
 
 @mimalloc.cmake@
-
 if (BUILD_SHARED_LIBS)
     # Hide raylib's symbols by default so RLAPI can expose them
     set_property(TARGET raylib PROPERTY C_VISIBILITY_PRESET hidden)
 endif ()
 
-target_link_libraries(raylib "${LIBS_PRIVATE}")
+target_link_libraries(raylib PRIVATE $<BUILD_INTERFACE:${LIBS_PRIVATE}>)
+target_link_libraries(raylib PUBLIC ${LIBS_PUBLIC})
 
 # Sets some compile time definitions for the pre-processor
 # If CUSTOMIZE_BUILD option is on you will not use config.h by default

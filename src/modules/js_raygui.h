@@ -6,7 +6,7 @@
 	#include <rayjs_base.h>
 	#include <config.h>
 	#include <raylib.h>
-#define RAYGUI_IMPLEMENTATION ;
+    #define RAYGUI_IMPLEMENTATION
 	#include <raygui.h>
 	
 	static unsigned short js_getunsignedshort(JSContext * ctx,JSValue src,bool * error);
@@ -557,7 +557,7 @@ else{
 	static JSValue js_GuiStyleProp_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(GuiStyleProp));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_GuiStyleProp_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_GuiStyleProp_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -584,7 +584,7 @@ else{
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(GuiStyleProp));
 		GuiStyleProp * _returnptr=((GuiStyleProp *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_GuiStyleProp_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_GuiStyleProp_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -651,7 +651,7 @@ else{
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Font));
 		Font * ptr2_ret=((Font *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Font_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Font_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -858,7 +858,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Vector2));
 			Vector2 * ptr2_src=((Vector2 *)(ptr_src+1));
 			ptr2_src[0]=scroll[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Vector2_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[3],(uint32_t)0,src);
 		}
@@ -866,7 +866,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Rectangle));
 			Rectangle * ptr2_src=((Rectangle *)(ptr_src+1));
 			ptr2_src[0]=view[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[4],(uint32_t)0,src);
 		}
@@ -1223,7 +1223,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Vector2));
 			Vector2 * ptr2_src=((Vector2 *)(ptr_src+1));
 			ptr2_src[0]=mouseCell[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Vector2_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Vector2_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[4],(uint32_t)0,src);
 		}
@@ -1336,7 +1336,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Color));
 			Color * ptr2_src=((Color *)(ptr_src+1));
 			ptr2_src[0]=color[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Color_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[2],(uint32_t)0,src);
 		}
@@ -1359,7 +1359,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Color));
 			Color * ptr2_src=((Color *)(ptr_src+1));
 			ptr2_src[0]=color[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Color_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[2],(uint32_t)0,src);
 		}
@@ -1413,7 +1413,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Vector3));
 			Vector3 * ptr2_src=((Vector3 *)(ptr_src+1));
 			ptr2_src[0]=colorHsv[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Vector3_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[2],(uint32_t)0,src);
 		}
@@ -1435,7 +1435,7 @@ else{
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Vector3));
 			Vector3 * ptr2_src=((Vector3 *)(ptr_src+1));
 			ptr2_src[0]=colorHsv[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Vector3_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[2],(uint32_t)0,src);
 		}
@@ -1463,7 +1463,7 @@ else{
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Rectangle));
 		Rectangle * ptr2_ret=((Rectangle *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Rectangle_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Rectangle_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -1540,7 +1540,7 @@ else{
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector3));
 		Vector3 * ptr2_ret=((Vector3 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -1553,7 +1553,7 @@ else{
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Vector3));
 		Vector3 * ptr2_ret=((Vector3 *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -1591,7 +1591,7 @@ else{
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Color));
 		Color * ptr2_ret=((Color *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -2026,22 +2026,22 @@ else{
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_SLICING",JS_NewInt32(ctx,(int32_t)ICON_SLICING));
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_MANUAL_CONTROL",JS_NewInt32(ctx,(int32_t)ICON_MANUAL_CONTROL));
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_COLLISION",JS_NewInt32(ctx,(int32_t)ICON_COLLISION));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_234",JS_NewInt32(ctx,(int32_t)ICON_234));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_235",JS_NewInt32(ctx,(int32_t)ICON_235));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_236",JS_NewInt32(ctx,(int32_t)ICON_236));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_237",JS_NewInt32(ctx,(int32_t)ICON_237));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_238",JS_NewInt32(ctx,(int32_t)ICON_238));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_239",JS_NewInt32(ctx,(int32_t)ICON_239));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_240",JS_NewInt32(ctx,(int32_t)ICON_240));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_241",JS_NewInt32(ctx,(int32_t)ICON_241));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_242",JS_NewInt32(ctx,(int32_t)ICON_242));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_243",JS_NewInt32(ctx,(int32_t)ICON_243));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_244",JS_NewInt32(ctx,(int32_t)ICON_244));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_245",JS_NewInt32(ctx,(int32_t)ICON_245));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_246",JS_NewInt32(ctx,(int32_t)ICON_246));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_247",JS_NewInt32(ctx,(int32_t)ICON_247));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_248",JS_NewInt32(ctx,(int32_t)ICON_248));
-		JS_SetModuleExport(ctx,m,(const char  *)"ICON_249",JS_NewInt32(ctx,(int32_t)ICON_249));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_ADD",JS_NewInt32(ctx,(int32_t)ICON_CIRCLE_ADD));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_ADD_FILL",JS_NewInt32(ctx,(int32_t)ICON_CIRCLE_ADD_FILL));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_WARNING",JS_NewInt32(ctx,(int32_t)ICON_CIRCLE_WARNING));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_WARNING_FILL",JS_NewInt32(ctx,(int32_t)ICON_CIRCLE_WARNING_FILL));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_BOX_MORE",JS_NewInt32(ctx,(int32_t)ICON_BOX_MORE));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_BOX_MORE_FILL",JS_NewInt32(ctx,(int32_t)ICON_BOX_MORE_FILL));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_BOX_MINUS",JS_NewInt32(ctx,(int32_t)ICON_BOX_MINUS));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_BOX_MINUS_FILL",JS_NewInt32(ctx,(int32_t)ICON_BOX_MINUS_FILL));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_UNION",JS_NewInt32(ctx,(int32_t)ICON_UNION));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_INTERSECTION",JS_NewInt32(ctx,(int32_t)ICON_INTERSECTION));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_DIFFERENCE",JS_NewInt32(ctx,(int32_t)ICON_DIFFERENCE));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_SPHERE",JS_NewInt32(ctx,(int32_t)ICON_SPHERE));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CYLINDER",JS_NewInt32(ctx,(int32_t)ICON_CYLINDER));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CONE",JS_NewInt32(ctx,(int32_t)ICON_CONE));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_ELLIPSOID",JS_NewInt32(ctx,(int32_t)ICON_ELLIPSOID));
+		JS_SetModuleExport(ctx,m,(const char  *)"ICON_CAPSULE",JS_NewInt32(ctx,(int32_t)ICON_CAPSULE));
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_250",JS_NewInt32(ctx,(int32_t)ICON_250));
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_251",JS_NewInt32(ctx,(int32_t)ICON_251));
 		JS_SetModuleExport(ctx,m,(const char  *)"ICON_252",JS_NewInt32(ctx,(int32_t)ICON_252));
@@ -2388,22 +2388,22 @@ else{
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_SLICING");
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_MANUAL_CONTROL");
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_COLLISION");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_234");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_235");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_236");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_237");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_238");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_239");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_240");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_241");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_242");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_243");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_244");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_245");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_246");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_247");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_248");
-		JS_AddModuleExport(ctx,m,(const char  *)"ICON_249");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_ADD");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_ADD_FILL");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_WARNING");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CIRCLE_WARNING_FILL");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_BOX_MORE");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_BOX_MORE_FILL");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_BOX_MINUS");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_BOX_MINUS_FILL");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_UNION");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_INTERSECTION");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_DIFFERENCE");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_SPHERE");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CYLINDER");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CONE");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_ELLIPSOID");
+		JS_AddModuleExport(ctx,m,(const char  *)"ICON_CAPSULE");
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_250");
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_251");
 		JS_AddModuleExport(ctx,m,(const char  *)"ICON_252");

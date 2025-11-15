@@ -91,7 +91,7 @@
 		Vector3 * position=&ptr[0].position;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)position,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -120,7 +120,7 @@
 		Vector3 * target=&ptr[0].target;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)target,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Vector3_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Vector3_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -149,7 +149,7 @@
 		Color * color=&ptr[0].color;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)color,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -335,7 +335,7 @@
 	static JSValue js_Light_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Light));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Light_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Light_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -389,7 +389,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Light));
 		Light * _returnptr=((Light *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Light_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Light_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -411,7 +411,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Light));
 		Light * ptr2_ret=((Light *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Light_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Light_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}

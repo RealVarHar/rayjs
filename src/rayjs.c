@@ -56,8 +56,10 @@ static const char trailer_magic[] = "quickjs2";
 static const int trailer_magic_size = sizeof(trailer_magic) - 1;
 static const int trailer_size = TRAILER_SIZE;
 
+//glad and glfw3 required for lightmapper
 #include <external/glad.h>
-#include <GLFW/glfw3.h>
+#include <glfw/include/GLFW/glfw3.h>
+
 #include "rayjs_base.c"
 #include "rayjs_base.h"
 static _Thread_local memoryNode local_memhead = {};

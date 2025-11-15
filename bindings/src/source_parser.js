@@ -1339,7 +1339,7 @@ export class source_parser {
                     }else if(lookForward(input,'#include',pos)){
                         let captureImport=[];
                         simpleregex(input,["r+"," \t","r+",'<"',"r*"," \t","r+",azZ+"-_.","r*"," \t","r+",'>"'],pos+8,captureImport);
-                        let path=this.sourcefiles[captureImport[3]];
+                        let path=this.sourcefiles[captureImport[3]] || this.sourcefiles.default;
                         let imported;
                         if(path==undefined){
                             throw new Error(`File ${captureImport[3]} can not be included`);
@@ -1526,7 +1526,7 @@ export class source_parser {
                     }else if(lookForward(input,'#include',pos)){
                         let capture=[];
                         simpleregex(input,["r+"," \t","r+",'<"',"r*"," \t","r+",azZ0+"/.","r*"," \t","r+",'>"'],pos+8,capture);
-                        let path=this.sourcefiles[capture[3]];
+                        let path=this.sourcefiles[capture[3]] || this.sourcefiles.default;;
                         let imported;
                         if(path==undefined){
                             //this.sourcefiles[capture[3]]=false;

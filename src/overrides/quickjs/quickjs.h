@@ -485,6 +485,7 @@ JS_EXTERN void JS_AddIntrinsicPromise(JSContext *ctx);
 JS_EXTERN void JS_AddIntrinsicBigInt(JSContext *ctx);
 JS_EXTERN void JS_AddIntrinsicWeakRef(JSContext *ctx);
 JS_EXTERN void JS_AddPerformance(JSContext *ctx);
+JS_EXTERN void JS_AddIntrinsicDOMException(JSContext *ctx);
 
 /* for equality comparisons and sameness */
 JS_EXTERN int JS_IsEqual(JSContext *ctx, JSValueConst op1, JSValueConst op2);
@@ -545,7 +546,7 @@ JS_EXTERN void JS_FreeAtomRT(JSRuntime *rt, JSAtom v);
 JS_EXTERN JSValue JS_AtomToValue(JSContext *ctx, JSAtom atom);
 JS_EXTERN JSValue JS_AtomToString(JSContext *ctx, JSAtom atom);
 JS_EXTERN const char *JS_AtomToCStringLen(JSContext *ctx, size_t *plen, JSAtom atom);
-static inline const char *JS_AtomToCString(JSContext *ctx, JSAtom atom) 
+static inline const char *JS_AtomToCString(JSContext *ctx, JSAtom atom)
 {
     return JS_AtomToCStringLen(ctx, NULL, atom);
 }
@@ -633,6 +634,8 @@ JS_EXTERN JSClassID JS_NewClassID(JSRuntime *rt, JSClassID *pclass_id);
 JS_EXTERN JSClassID JS_GetClassID(JSValueConst v);
 JS_EXTERN int JS_NewClass(JSRuntime *rt, JSClassID class_id, const JSClassDef *class_def);
 JS_EXTERN bool JS_IsRegisteredClass(JSRuntime *rt, JSClassID class_id);
+/* Returns the class name or JS_ATOM_NULL if `id` is not a registered class. Must be freed with JS_FreeAtom. */
+JS_EXTERN JSAtom JS_GetClassName(JSRuntime *rt, JSClassID class_id);
 
 /* value handling */
 
@@ -746,8 +749,8 @@ static inline bool JS_IsModule(JSValueConst v)
 JS_EXTERN JSValue JS_Throw(JSContext *ctx, JSValue obj);
 JS_EXTERN JSValue JS_GetException(JSContext *ctx);
 JS_EXTERN bool JS_HasException(JSContext *ctx);
-JS_EXTERN bool JS_IsError(JSContext *ctx, JSValueConst val);
-JS_EXTERN bool JS_IsUncatchableError(JSContext* ctx, JSValueConst val);
+JS_EXTERN bool JS_IsError(JSValueConst val);
+JS_EXTERN bool JS_IsUncatchableError(JSValueConst val);
 JS_EXTERN void JS_SetUncatchableError(JSContext *ctx, JSValueConst val);
 JS_EXTERN void JS_ClearUncatchableError(JSContext *ctx, JSValueConst val);
 // Shorthand for:
@@ -768,6 +771,7 @@ JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(2, 3) JS_ThrowRangeError(JSContext *ctx,
 JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(2, 3) JS_ThrowReferenceError(JSContext *ctx, JS_PRINTF_FORMAT const char *fmt, ...);
 JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(2, 3) JS_ThrowSyntaxError(JSContext *ctx, JS_PRINTF_FORMAT const char *fmt, ...);
 JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(2, 3) JS_ThrowTypeError(JSContext *ctx, JS_PRINTF_FORMAT const char *fmt, ...);
+JS_EXTERN JSValue JS_PRINTF_FORMAT_ATTR(3, 4) JS_ThrowDOMException(JSContext *ctx, const char *name, JS_PRINTF_FORMAT const char *fmt, ...);
 JS_EXTERN JSValue JS_ThrowOutOfMemory(JSContext *ctx);
 JS_EXTERN void JS_FreeValue(JSContext *ctx, JSValue v);
 JS_EXTERN void JS_FreeValueRT(JSRuntime *rt, JSValue v);
@@ -817,7 +821,7 @@ JS_EXTERN void JS_FreeCString(JSContext *ctx, const char *ptr);
 
 JS_EXTERN JSValue JS_NewObjectProtoClass(JSContext *ctx, JSValueConst proto,
                                          JSClassID class_id);
-JS_EXTERN JSValue JS_NewObjectClass(JSContext *ctx, int class_id);
+JS_EXTERN JSValue JS_NewObjectClass(JSContext *ctx, JSClassID class_id);
 JS_EXTERN JSValue JS_NewObjectProto(JSContext *ctx, JSValueConst proto);
 JS_EXTERN JSValue JS_NewObject(JSContext *ctx);
 // takes ownership of the values
@@ -880,7 +884,7 @@ JS_EXTERN int JS_HasProperty(JSContext *ctx, JSValueConst this_obj, JSAtom prop)
 JS_EXTERN int JS_IsExtensible(JSContext *ctx, JSValueConst obj);
 JS_EXTERN int JS_PreventExtensions(JSContext *ctx, JSValueConst obj);
 JS_EXTERN int JS_DeleteProperty(JSContext *ctx, JSValueConst obj, JSAtom prop, int flags);
-JS_EXTERN int JS_SetPrototype(JSContext *ctx, JSValueConst obj, JSValue proto_val);
+JS_EXTERN int JS_SetPrototype(JSContext *ctx, JSValueConst obj, JSValueConst proto_val);
 JS_EXTERN JSValue JS_GetPrototype(JSContext *ctx, JSValueConst val);
 JS_EXTERN int JS_GetLength(JSContext *ctx, JSValueConst obj, int64_t *pres);
 JS_EXTERN int JS_SetLength(JSContext *ctx, JSValueConst obj, int64_t len);
@@ -1158,6 +1162,10 @@ JS_EXTERN JSValue JS_NewCFunction3(JSContext *ctx, JSCFunction *func,
 JS_EXTERN JSValue JS_NewCFunctionData(JSContext *ctx, JSCFunctionData *func,
                                       int length, int magic, int data_len,
                                       JSValueConst *data);
+JS_EXTERN JSValue JS_NewCFunctionData2(JSContext *ctx, JSCFunctionData *func,
+                                       const char *name,
+                                       int length, int magic, int data_len,
+                                       JSValueConst *data);
 
 static inline JSValue JS_NewCFunction(JSContext *ctx, JSCFunction *func,
                                       const char *name, int length)
@@ -1263,8 +1271,8 @@ JS_EXTERN int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
 /* Version */
 
 #define QJS_VERSION_MAJOR 0
-#define QJS_VERSION_MINOR 10
-#define QJS_VERSION_PATCH 1
+#define QJS_VERSION_MINOR 11
+#define QJS_VERSION_PATCH 0
 #define QJS_VERSION_SUFFIX ""
 
 JS_EXTERN const char* JS_GetVersion(void);

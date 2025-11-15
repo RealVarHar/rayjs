@@ -67,9 +67,9 @@ set(quickjs_sources
 	${quickjs_sources_root}/quickjs-atom.h
 	${quickjs_sources_root}/libregexp.c
 	${quickjs_sources_root}/libunicode.c
-	${quickjs_sources_root}/xsum.c
 	${quickjs_sources_root}/cutils.c
 	${quickjs_sources_root}/cutils.h
+	${quickjs_sources_root}/dtoa.c
 	${quickjs_sources_root}/gen/repl.c
 	${quickjs_sources_root}/gen/standalone.c
 )
@@ -82,7 +82,7 @@ if(RAYJS_USE_MIMALLOC)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mimalloc.cmake" mimalloc.cmake)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mimalloc.h" mimalloc.h)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/stb_mimalloc.h" stb_mimalloc.h)
-	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mamalloc_gui.h" mimalloc_gui.h)
+	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mimalloc_gui.h" mimalloc_gui.h)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/CMakeLists.txt ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/CMakeLists.txt @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/raylib.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/raylib.h @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/stb_truetype.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external/stb_truetype.h @ONLY)
@@ -105,10 +105,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib EXCLUDE_FROM_ALL)
 message("=== Bind files together ===")
 file(GLOB files src/*.c)
 add_executable(${CMAKE_PROJECT_NAME} ${files})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raygui/src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/shaders)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/others)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external)
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raygui/src)
 set_target_properties(${CMAKE_PROJECT_NAME}
     PROPERTIES
     COMPILE_DEFINITIONS GRAPHICS_API_OPENGL_33=1

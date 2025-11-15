@@ -349,7 +349,7 @@
 		Color * backgroundColor=&ptr[0].backgroundColor;
 		JS_DupValue(ctx,anchor);
 		opaqueShadow * ptr_ret=create_shadow_with_external((void  *)backgroundColor,anchor);
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Color_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Color_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -450,7 +450,7 @@
 	static JSValue js_Lightmapper_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(Lightmapper));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_Lightmapper_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -482,7 +482,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(Lightmapper));
 		Lightmapper * _returnptr=((Lightmapper *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_Lightmapper_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -491,7 +491,7 @@
 	static JSValue js_LightmapperConfig_constructor(JSContext * ctx,JSValue this_val,int argc,JSValue * argv){
 		if(argc==0){
 			opaqueShadow * ptr__return=create_shadow_with_data0(sizeof(LightmapperConfig));
-			JSValue _return=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
+			JSValue _return=JS_NewObjectClass(ctx,js_LightmapperConfig_class_id);
 			JS_SetOpaque(_return,(void  *)ptr__return);
 			return _return;
 		}
@@ -530,7 +530,7 @@
 		opaqueShadow * _structShadow=create_shadow_with_data(sizeof(LightmapperConfig));
 		LightmapperConfig * _returnptr=((LightmapperConfig *)(_structShadow+1));
 		_returnptr[0]=_struct;
-		JSValue _return=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
+		JSValue _return=JS_NewObjectClass(ctx,js_LightmapperConfig_class_id);
 		JS_SetOpaque(_return,(void  *)_structShadow);
 		local_memlock=(bool)false;
 		return _return;
@@ -541,7 +541,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(LightmapperConfig));
 		LightmapperConfig * ptr2_ret=((LightmapperConfig *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_LightmapperConfig_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_LightmapperConfig_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -560,7 +560,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Lightmapper));
 		Lightmapper * ptr2_ret=((Lightmapper *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Lightmapper_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -575,7 +575,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Material));
 		Material * ptr2_ret=((Material *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Material_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Material_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
@@ -608,7 +608,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Lightmapper));
 			Lightmapper * ptr2_src=((Lightmapper *)(ptr_src+1));
 			ptr2_src[0]=lm[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Lightmapper_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -627,7 +627,7 @@
 			opaqueShadow * ptr_src=create_shadow_with_data(sizeof(Lightmapper));
 			Lightmapper * ptr2_src=((Lightmapper *)(ptr_src+1));
 			ptr2_src[0]=lm[0];
-			JSValue src=JS_NewObjectClass(ctx,(int)js_Lightmapper_class_id);
+			JSValue src=JS_NewObjectClass(ctx,js_Lightmapper_class_id);
 			JS_SetOpaque(src,(void  *)ptr_src);
 			JS_SetPropertyUint32(ctx,argv[0],(uint32_t)0,src);
 		}
@@ -643,7 +643,7 @@
 		opaqueShadow * ptr_ret=create_shadow_with_data(sizeof(Image));
 		Image * ptr2_ret=((Image *)(ptr_ret+1));
 		ptr2_ret[0]=returnVal;
-		JSValue ret=JS_NewObjectClass(ctx,(int)js_Image_class_id);
+		JSValue ret=JS_NewObjectClass(ctx,js_Image_class_id);
 		JS_SetOpaque(ret,(void  *)ptr_ret);
 		return ret;
 	}
