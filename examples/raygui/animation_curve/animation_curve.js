@@ -27,8 +27,8 @@ import {GuiLoadStyleLavanda}  from "../styles/_style_lavanda.js";     // raygui 
 import {GuiLoadStyleDark}     from "../styles/_style_dark.js";        // raygui style: dark
 import {GuiLoadStyleBluish}   from "../styles/_style_bluish.js";      // raygui style: bluish
 import {GuiLoadStyleTerminal} from "../styles/_style_terminal.js";    // raygui style: terminal
-_
-import {GuiCurveEval, GuiCurveEditor} from ".//gui_curve_editor.js";
+
+import {GuiCurveEval, GuiCurveEditor} from "./_gui_curve_editor.js";
 
 //------------------------------------------------------------------------------------
 // Helper function
@@ -42,10 +42,10 @@ function LoadCurveDefaults(curves) {
     curves[0].editLeftTangent = false;
     curves[0].editRightTangent = false;
     curves[0].points = new Array(4);
-    curves[0].points[0] = {position: new rl.Vector2(0.000000, 0.000000), tangents: new rl.Vector2(0.000000,  1.515101), leftLinear: 1, rightLinear: 1};
-    curves[0].points[1] = {position: new rl.Vector2(0.422414, 0.640000), tangents: new rl.Vector2(-2.824348,-4.494999), leftLinear: 0, rightLinear: 0};
-    curves[0].points[2] = {position: new rl.Vector2(0.732759, 0.210000), tangents: new rl.Vector2(0.000000,  2.956133), leftLinear: 0, rightLinear: 1};
-    curves[0].points[3] = {position: new rl.Vector2(1.000000, 1.000000), tangents: new rl.Vector2(2.956133,  0.000000), leftLinear: 1, rightLinear: 1};
+    curves[0].points[0] = {position: new rl.Vector2(0.000000, 0.000000), tangents: new rl.Vector2(0.000000,  1.515101), leftLinear: true, rightLinear: true};
+    curves[0].points[1] = {position: new rl.Vector2(0.422414, 0.640000), tangents: new rl.Vector2(-2.824348,-4.494999), leftLinear: false, rightLinear: false};
+    curves[0].points[2] = {position: new rl.Vector2(0.732759, 0.210000), tangents: new rl.Vector2(0.000000,  2.956133), leftLinear: false, rightLinear: true};
+    curves[0].points[3] = {position: new rl.Vector2(1.000000, 1.000000), tangents: new rl.Vector2(2.956133,  0.000000), leftLinear: true, rightLinear: true};
 
     // Y pos
     curves[1].start = 405;
@@ -55,13 +55,13 @@ function LoadCurveDefaults(curves) {
     curves[1].editLeftTangent = false;
     curves[1].editRightTangent = false;
     curves[1].points = new Array(7);
-    curves[1].points[0] = {position: new rl.Vector2(0.000000, 1.000000), tangents: new rl.Vector2( 0.000000  , 0.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[1] = {position: new rl.Vector2(0.140000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[2] = {position: new rl.Vector2(0.450000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[3] = {position: new rl.Vector2(0.670000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[4] = {position: new rl.Vector2(0.830000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[5] = {position: new rl.Vector2(0.940000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: 0, rightLinear: 0};
-    curves[1].points[6] = {position: new rl.Vector2(1.000000, 0.000000), tangents: new rl.Vector2(-10.000000 , 0.000000), leftLinear: 0, rightLinear: 0};
+    curves[1].points[0] = {position: new rl.Vector2(0.000000, 1.000000), tangents: new rl.Vector2( 0.000000  , 0.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[1] = {position: new rl.Vector2(0.140000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[2] = {position: new rl.Vector2(0.450000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[3] = {position: new rl.Vector2(0.670000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[4] = {position: new rl.Vector2(0.830000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[5] = {position: new rl.Vector2(0.940000, 0.000000), tangents: new rl.Vector2(-10.000000 ,10.000000), leftLinear: false, rightLinear: false};
+    curves[1].points[6] = {position: new rl.Vector2(1.000000, 0.000000), tangents: new rl.Vector2(-10.000000 , 0.000000), leftLinear: false, rightLinear: false};
 
     // X size
     curves[2].start = 1;
@@ -71,22 +71,22 @@ function LoadCurveDefaults(curves) {
     curves[2].editLeftTangent = false;
     curves[2].editRightTangent = false;
     curves[2].points = new Array(16);
-    curves[2].points[0]  = {position: new rl.Vector2(0.000000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[1]  = {position: new rl.Vector2(0.130000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[2]  = {position: new rl.Vector2(0.140000, 0.746032), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[3]  = {position: new rl.Vector2(0.150000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[4]  = {position: new rl.Vector2(0.440000, 0.490000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[5]  = {position: new rl.Vector2(0.450000, 0.682540), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[6]  = {position: new rl.Vector2(0.460000, 0.480000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[7]  = {position: new rl.Vector2(0.660000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[8]  = {position: new rl.Vector2(0.670000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[9]  = {position: new rl.Vector2(0.680000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[10] = {position: new rl.Vector2(0.820000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[11] = {position: new rl.Vector2(0.830000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[12] = {position: new rl.Vector2(0.840000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[13] = {position: new rl.Vector2(0.930000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[14] = {position: new rl.Vector2(0.940000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[2].points[15] = {position: new rl.Vector2(0.950000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
+    curves[2].points[0]  = {position: new rl.Vector2(0.000000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[1]  = {position: new rl.Vector2(0.130000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[2]  = {position: new rl.Vector2(0.140000, 0.746032), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[3]  = {position: new rl.Vector2(0.150000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[4]  = {position: new rl.Vector2(0.440000, 0.490000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[5]  = {position: new rl.Vector2(0.450000, 0.682540), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[6]  = {position: new rl.Vector2(0.460000, 0.480000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[7]  = {position: new rl.Vector2(0.660000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[8]  = {position: new rl.Vector2(0.670000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[9]  = {position: new rl.Vector2(0.680000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[10] = {position: new rl.Vector2(0.820000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[11] = {position: new rl.Vector2(0.830000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[12] = {position: new rl.Vector2(0.840000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[13] = {position: new rl.Vector2(0.930000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[14] = {position: new rl.Vector2(0.940000, 0.619048), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[2].points[15] = {position: new rl.Vector2(0.950000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
 
     // Y Size
     curves[3].start = 1;
@@ -96,22 +96,22 @@ function LoadCurveDefaults(curves) {
     curves[3].editLeftTangent = false;
     curves[3].editRightTangent = false;
     curves[3].points = new Array(16);
-    curves[3].points[0]  = {position: new rl.Vector2(0.000000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[1]  = {position: new rl.Vector2(0.130000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[2]  = {position: new rl.Vector2(0.140000, 0.238095), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[3]  = {position: new rl.Vector2(0.150000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[4]  = {position: new rl.Vector2(0.440000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[5]  = {position: new rl.Vector2(0.450000, 0.301587), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[6]  = {position: new rl.Vector2(0.460000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[7]  = {position: new rl.Vector2(0.660000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[8]  = {position: new rl.Vector2(0.670000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[9]  = {position: new rl.Vector2(0.680000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[10] = {position: new rl.Vector2(0.820000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[11] = {position: new rl.Vector2(0.830000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[12] = {position: new rl.Vector2(0.840000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[13] = {position: new rl.Vector2(0.930000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[14] = {position: new rl.Vector2(0.940000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[3].points[15] = {position: new rl.Vector2(0.950000, 0.507937), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
+    curves[3].points[0]  = {position: new rl.Vector2(0.000000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[1]  = {position: new rl.Vector2(0.130000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[2]  = {position: new rl.Vector2(0.140000, 0.238095), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[3]  = {position: new rl.Vector2(0.150000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[4]  = {position: new rl.Vector2(0.440000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[5]  = {position: new rl.Vector2(0.450000, 0.301587), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[6]  = {position: new rl.Vector2(0.460000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[7]  = {position: new rl.Vector2(0.660000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[8]  = {position: new rl.Vector2(0.670000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[9]  = {position: new rl.Vector2(0.680000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[10] = {position: new rl.Vector2(0.820000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[11] = {position: new rl.Vector2(0.830000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[12] = {position: new rl.Vector2(0.840000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[13] = {position: new rl.Vector2(0.930000, 0.492063), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[14] = {position: new rl.Vector2(0.940000, 0.365079), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[3].points[15] = {position: new rl.Vector2(0.950000, 0.507937), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
 
     // Rotation
     curves[4].start = -360;
@@ -121,15 +121,15 @@ function LoadCurveDefaults(curves) {
     curves[4].editLeftTangent = false;
     curves[4].editRightTangent = false;
     curves[4].points = new Array(9);
-    curves[4].points[0] = {position: new rl.Vector2(0.140000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[1] = {position: new rl.Vector2(0.450000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[2] = {position: new rl.Vector2(0.670000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[3] = {position: new rl.Vector2(0.830000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[4] = {position: new rl.Vector2(0.940000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[5] = {position: new rl.Vector2(1.000000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[6] = {position: new rl.Vector2(0.000000, 0.472222), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[7] = {position: new rl.Vector2(0.302752, 0.527778), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
-    curves[4].points[8] = {position: new rl.Vector2(0.577982, 0.472222), tangents: new rl.Vector2(0,0), leftLinear: 0, rightLinear: 0};
+    curves[4].points[0] = {position: new rl.Vector2(0.140000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[1] = {position: new rl.Vector2(0.450000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[2] = {position: new rl.Vector2(0.670000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[3] = {position: new rl.Vector2(0.830000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[4] = {position: new rl.Vector2(0.940000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[5] = {position: new rl.Vector2(1.000000, 0.500000), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[6] = {position: new rl.Vector2(0.000000, 0.472222), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[7] = {position: new rl.Vector2(0.302752, 0.527778), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
+    curves[4].points[8] = {position: new rl.Vector2(0.577982, 0.472222), tangents: new rl.Vector2(0,0), leftLinear: false, rightLinear: false};
 }
 
 //------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ function LoadCurveDefaults(curves) {
     let scrollOffset = new rl.Vector2( 0, 0 );
     let contentRect = new rl.Rectangle( 0, 0, 0, 0 );
     let moveSlider = false;
-    let sectionActive = new Array(5);
+    let sectionActive = new Array(5).fill(false);
     sectionActive[0] = true;
     const sectionNames = [ "X Position", "Y Position", "Width", "Height", "Rotation" ];
     let editValueBox = new Array(5);
@@ -166,7 +166,7 @@ function LoadCurveDefaults(curves) {
     }
     let valTextBox = new Array(5);
     for(let i=0;i<5;i++){
-        valTextBox[0] = new Array(4).fill(" ".repeat(20));
+        valTextBox[i] = new Array(4).fill(" ".repeat(20));
     }
     let playAnimation = true;
     let showHelp = true;
@@ -179,7 +179,7 @@ function LoadCurveDefaults(curves) {
     // 2 -> Ball Width
     // 3 -> Ball Height
     // 4 -> Ball rotation
-    let curves = new Array(5);
+    let curves = new Array(5).fill().map(a=>{return {};});
     LoadCurveDefaults(curves);
 
     // Animation time
@@ -353,8 +353,8 @@ function LoadCurveDefaults(curves) {
                 if (!editValueBox[i][1]) valTextBox[i][1] = String(curves[i].start + (curves[i].end-curves[i].start)*p.position.y); // Transform y position to string
 
                 // X pos
-                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2-margin, 1.5*fontSize ), valTextBox[i][0], 20, editValueBox[i][0])) {
-                    editValueBox[i][0] = !editValueBox[i][0];
+                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2-margin, 1.5*fontSize ), valTextBox[i][0], 20, editValueBox[i][0]==1)) {
+                    editValueBox[i][0] = !editValueBox[i][0]?1:0;
 
                     // Input ended
                     if (!editValueBox[i][0]) {
@@ -365,8 +365,8 @@ function LoadCurveDefaults(curves) {
                 }
 
                 // Y pos
-                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x + contentRect.width/2, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2, 1.5*fontSize ), valTextBox[i][1], 20, editValueBox[i][1])) {
-                    editValueBox[i][1] = !editValueBox[i][1];
+                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x + contentRect.width/2, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2, 1.5*fontSize ), valTextBox[i][1], 20, editValueBox[i][1]==1)) {
+                    editValueBox[i][1] = !editValueBox[i][1]?1:0;
 
                     // Input ended
                     if (!editValueBox[i][1]) {
@@ -391,8 +391,8 @@ function LoadCurveDefaults(curves) {
                 if (!editValueBox[i][3]) valTextBox[i][2] = rl.TextFormat("%.6g", p.tangents.y); // Transform right tangent to string
 
                 // Left tan
-                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2 - margin, 1.5*fontSize ), valTextBox[i][2], 20, editValueBox[i][2])) {
-                    editValueBox[i][2] = !editValueBox[i][2];
+                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2 - margin, 1.5*fontSize ), valTextBox[i][2], 20, editValueBox[i][2]==1)) {
+                    editValueBox[i][2] = !editValueBox[i][2]?1:0;
 
                     // Input ended
                     if (!editValueBox[i][2]) {
@@ -403,8 +403,8 @@ function LoadCurveDefaults(curves) {
                 }
 
                 // Right tan
-                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x + contentRect.width/2, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2, 1.5*fontSize ), valTextBox[i][3], 20, editValueBox[i][3])) {
-                    editValueBox[i][3] = !editValueBox[i][3];
+                if (rg.GuiTextBox(new rl.Rectangle( contentRect.x + contentRect.width/2, contentRect.y + contentRect.height + scrollOffset.y, contentRect.width/2, 1.5*fontSize ), valTextBox[i][3], 20, editValueBox[i][3]==1)) {
+                    editValueBox[i][3] = !editValueBox[i][3]?1:0;
 
                     // Input ended
                     if (!editValueBox[i][3]) {

@@ -108,17 +108,11 @@ import {Vector2Add, Vector2Length, Vector2Scale, Vector2Subtract} from "rayjs:ra
         const fractionSpeed = 0.8;
         try{
             camera.offset = new Vector2(width/2, height/2);
-            console.log("1");
             const diff = Vector2Subtract(player.position, camera.target);
-            console.log("12");
             const length = Vector2Length(diff);
-            console.log("2");
             if (length > minEffectLength) {
-                console.log("3");
                 const speed = Math.max(fractionSpeed*length, minSpeed);
-                console.log("4");
                 camera.target = Vector2Add(camera.target, Vector2Scale(diff, speed*delta/length));
-                console.log("5");
             }
         }catch(e){
             console.log("ERROR");

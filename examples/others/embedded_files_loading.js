@@ -26,8 +26,8 @@ import {
     Wave, WHITE,
     WindowShouldClose
 } from "rayjs:raylib";
-import { AUDIO_FRAME_COUNT, AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_SIZE, AUDIO_CHANNELS, AUDIO_DATA } from "./resources/audio_data.js"; // Wave file exported with ExportWaveAsCode()
-import { IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_FORMAT, IMAGE_DATA } from "./resources/image_data.js";
+import { AUDIO_FRAME_COUNT, AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_SIZE, AUDIO_CHANNELS, _audio_data } from "./resources/_audio_data.js"; // Wave file exported with ExportWaveAsCode()
+import { IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_FORMAT, _image_data } from "./resources/_image_data.js";
 
  // Image file exported with ExportImageAsCode()
 
@@ -47,7 +47,7 @@ import { IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_FORMAT, IMAGE_DATA } from "./resources
     // Loaded in CPU memory (RAM) from header file (audio_data.h)
     // Same as: Wave wave = LoadWave("sound.wav");
     let wave = new Wave();
-    wave.data = AUDIO_DATA,
+    wave.data = _audio_data,
     wave.frameCount = AUDIO_FRAME_COUNT,
     wave.sampleRate = AUDIO_SAMPLE_RATE,
     wave.sampleSize = AUDIO_SAMPLE_SIZE,
@@ -64,7 +64,7 @@ import { IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_FORMAT, IMAGE_DATA } from "./resources
     // Loaded in CPU memory (RAM) from header file (image_data.h)
     // Same as: Image image = LoadImage("raylib_logo.png");
     let image = new Image();
-    image.data = IMAGE_DATA;
+    image.data = _image_data;
     image.width = IMAGE_WIDTH;
     image.height = IMAGE_HEIGHT;
     image.format = IMAGE_FORMAT;

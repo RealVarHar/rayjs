@@ -53,7 +53,7 @@ function GuiComboBox(bounds: Rectangle, text: string, active: number | number[])
 function GuiDropdownBox(bounds: Rectangle, text: string, active: number | number[], editMode: boolean): number/** Spinner control, returns selected value */
 function GuiSpinner(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** NOTE: Requires static variables: frameCounter */
 function GuiValueBox(bounds: Rectangle, text: string, value: number | number[], minValue: number, maxValue: number, editMode: boolean): number/** NOTE: Requires static variables: frameCounter */
-function GuiValueBoxFloat(bounds: Rectangle, text: string, textValue: string, value: number | number[], editMode: boolean): number/** NOTE: Returns true on ENTER pressed (useful for data validation) */
+function GuiValueBoxFloat(bounds: Rectangle, text: string | string[], textValue: string, value: number | number[], editMode: boolean): number/** NOTE: Returns true on ENTER pressed (useful for data validation) */
 function GuiTextBox(bounds: Rectangle, text: string | string[], textSize: number, editMode: boolean): number/** NOTE: Other GuiSlider*() controls use this one */
 function GuiSlider(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** Slider Bar control extended, returns selected value */
 function GuiSliderBar(bounds: Rectangle, textLeft: string, textRight: string, value: number | number[], minValue: number, maxValue: number): number/** Progress Bar control extended, shows current progress value */

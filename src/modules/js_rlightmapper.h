@@ -53,7 +53,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Lightmapper_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Lightmapper_class_id);
 				ret =(Lightmapper  *)tmpshadow[0].ptr;

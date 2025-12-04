@@ -104,15 +104,15 @@ function GuiWindowFloating(position, size, minimized, moving, resizing, draw_con
 
         // scissor and draw content within a scroll panel
         if(draw_content != null) {
-            let scissor = new Rectangle();
+            let scissor = [new Rectangle()];
             GuiScrollPanel(new Rectangle( position.x, position.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, size.x, size.y - RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT ),
                 null, new Rectangle( position.x, position.y, content_size.x, content_size.y ),
-                scroll, scissor[0]);
+                scroll, scissor);
 
             let require_scissor = size.x < content_size.x || size.y < content_size.y;
 
             if(require_scissor) {
-                BeginScissorMode(scissor.x, scissor.y, scissor.width, scissor.height);
+                BeginScissorMode(scissor[0].x, scissor[0].y, scissor[0].width, scissor[0].height);
             }
 
             draw_content(position, scroll);
@@ -121,7 +121,6 @@ function GuiWindowFloating(position, size, minimized, moving, resizing, draw_con
                 EndScissorMode();
             }
         }
-
         // draw the resize button/icon
         GuiDrawIcon(71, position.x + size.x - 20, position.y + size.y - 20, 1, WHITE);
     }

@@ -43,6 +43,7 @@ function SaveStorageValue( position, value ) {
     let newFileData = null;
 
     if (fileData != null) {
+        console.log(fileData.length,dataSize);
         if (fileData.length <= position) {
             // Increase data size up to position and store value
             let newFileData = new Int32Array(position + 1);
@@ -127,8 +128,10 @@ function LoadStorageValue(position) {
 
         } else if (IsKeyPressed(KEY_SPACE)) {
             // NOTE: If requested position could not be found, value 0 is returned
-            score = LoadStorageValue(STORAGE_POSITION_SCORE);
-            hiscore = LoadStorageValue(STORAGE_POSITION_HISCORE);
+            let tmpscore = LoadStorageValue(STORAGE_POSITION_SCORE);
+            if(tmpscore!=undefined)score=tmpscore;
+            let tmphiscore = LoadStorageValue(STORAGE_POSITION_HISCORE);
+            if(tmphiscore!=undefined)hiscore=tmphiscore;
         }
 
         framesCounter++;

@@ -40,12 +40,18 @@
 import * as os from "qjs:os";
 import {BACKGROUND_COLOR,
     BASE_COLOR_DISABLED,
-    BORDER_COLOR_DISABLED, BORDER_WIDTH, DEFAULT,
+    BASE_COLOR_FOCUSED,
+    BASE_COLOR_PRESSED,
+    BORDER,
+    BORDER_COLOR_DISABLED, BORDER_COLOR_FOCUSED, BORDER_COLOR_PRESSED, BORDER_WIDTH, DEFAULT,
+    GetTextBounds,
     GuiButton,
-    GuiComboBox, GuiGetStyle,
+    GuiComboBox, GuiDrawText, GuiGetState, GuiGetStyle,
+    GuiIsLocked,
     GuiLabel,
-    GuiListViewEx, GuiSetStyle, GuiTextBox, GuiWindowBox, LISTVIEW, LIST_ITEMS_HEIGHT,
-    SCROLLBAR, SCROLLBAR_WIDTH, SLIDER_WIDTH, TEXT_ALIGNMENT,
+    GuiListViewEx, GuiScrollBar, GuiSetStyle, GuiTextBox, GuiWindowBox, LISTVIEW, LIST_ITEMS_HEIGHT,
+    LIST_ITEMS_SPACING,
+    SCROLLBAR, SCROLLBAR_WIDTH, SCROLL_SPEED, SLIDER_WIDTH, STATE_DISABLED, TEXT_ALIGNMENT,
     TEXT_ALIGN_LEFT, TEXT_COLOR_DISABLED,
     TEXT_COLOR_FOCUSED,
     TEXT_COLOR_NORMAL, TEXT_COLOR_PRESSED } from "rayjs:raygui";
@@ -70,8 +76,10 @@ import {CheckCollisionPointRec, DirectoryExists,
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
+const RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT = 24;
 const MAX_DIRECTORY_FILES = 2048;
 const MAX_ICON_PATH_LENGTH = 512;
+const guiAlpha=1;
 let PATH_SEPERATOR = "/";
 if(os.platform == "win32"){
     PATH_SEPERATOR = "\\";
@@ -134,7 +142,7 @@ export function InitGuiWindowFileDialog(initPath) {
 // List View control for files info with extended parameters
 function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active=[]) {
     let result = 0;
-    let state = guiState;
+    let state = GuiGetState();
     let itemFocused = (focus.length==0)? -1 : focus[0];
     let itemSelected = active[0];
 
@@ -145,14 +153,14 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 
     // Define base item rectangle [0]
     let itemBounds = new Rectangle();
-    itemBounds.x = bounds.x + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING);
-    itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    itemBounds.width = bounds.width - 2*GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) - GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    itemBounds.x = bounds.x + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING);
+    itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    itemBounds.width = bounds.width - 2*GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) - GuiGetStyle(DEFAULT, BORDER_WIDTH);
     itemBounds.height = GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
     if (useScrollBar) itemBounds.width -= GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH);
 
     // Get items on the list
-    let visibleItems = bounds.height/(GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
+    let visibleItems = bounds.height/(GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
     if (visibleItems > count) visibleItems = count;
 
     let startIndex = (scrollIndex.length==0)? 0 : scrollIndex[0];
@@ -161,12 +169,12 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != GUI_STATE_DISABLED) && !guiLocked) {
+    if ((state != STATE_DISABLED) && !GuiIsLocked()) {
         let mousePoint = GetMousePosition();
 
         // Check mouse inside list view
         if (CheckCollisionPointRec(mousePoint, bounds)) {
-            state = GUI_STATE_FOCUSED;
+            state = STATE_DISABLED;
 
             // Check focused and selected item
             for (let i = 0; i < visibleItems; i++) {
@@ -177,7 +185,7 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
                 }
 
                 // Update item rectangle y position for next item
-                itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
+                itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
             }
 
             if (useScrollBar) {
@@ -195,7 +203,7 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
         }
 
         // Reset item rectangle y to [0]
-        itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
+        itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
     }
     //--------------------------------------------------------------------
 
@@ -208,7 +216,7 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 
     // Draw visible items
     for (let i = 0; i < visibleItems; i++) {
-        if (state == GUI_STATE_DISABLED) {
+        if (state == STATE_DISABLED) {
             if ((startIndex + i) == itemSelected) {
                 DrawRectangleRec(itemBounds, Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_DISABLED)), guiAlpha));
                 DrawRectangleLinesEx(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_DISABLED)), guiAlpha));
@@ -216,30 +224,30 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 
             // TODO: Draw full file info line: icon+name | size | type | modTime
 
-            GuiDrawText(files[startIndex + i].name, GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_DISABLED)), guiAlpha));
+            GuiDrawText(files[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_DISABLED)), guiAlpha));
         } else {
             if ((startIndex + i) == itemSelected) {
                 // Draw item selected
                 DrawRectangleRec(itemBounds, Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_PRESSED)), guiAlpha));
                 DrawRectangleLinesEx(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_PRESSED)), guiAlpha));
 
-                GuiDrawText(files[startIndex + i].name, GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_PRESSED)), guiAlpha));
+                GuiDrawText(files[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_PRESSED)), guiAlpha));
             } else if ((startIndex + i) == itemFocused) {
                 // Draw item focused
                 DrawRectangleRec(itemBounds, Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_FOCUSED)), guiAlpha));
                 DrawRectangleLinesEx(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_FOCUSED)), guiAlpha));
 
-                GuiDrawText(files[startIndex + i].name, GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_FOCUSED)), guiAlpha));
+                GuiDrawText(files[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_FOCUSED)), guiAlpha));
             }
             else
             {
                 // Draw item normal
-                GuiDrawText(files[startIndex + i].name, GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_NORMAL)), guiAlpha));
+                GuiDrawText(files[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_NORMAL)), guiAlpha));
             }
         }
 
         // Update item rectangle y position for next item
-        itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
+        itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
     }
 
     if (useScrollBar) {
@@ -277,7 +285,7 @@ function GuiListViewFiles(bounds, files, count, focus=[], scrollIndex=[], active
 // Read files in new path
 function ReloadDirectoryFiles(state) {
 
-    state.dirFiles = LoadDirectoryFilesEx(state.dirPathText, (state.filterExt[0] == '\0')? null : state.filterExt, false);
+    state.dirFiles = LoadDirectoryFilesEx(state.dirPathText, (state.filterExt.length==0)? null : state.filterExt, false);
     state.itemFocused = 0;
 
     // Reset dirFilesIcons memory
@@ -300,6 +308,7 @@ function ReloadDirectoryFiles(state) {
             }
         } else {
             // Path is a directory, add a directory icon
+            if(state.dirFiles[i].endsWith(PATH_SEPERATOR))state.dirFiles[i]=state.dirFiles[i].substring(0,state.dirFiles[i].length-1);
             dirFilesIcons[i] = TextFormat("#1#%s", GetFileName(state.dirFiles[i]));
         }
     }
@@ -353,12 +362,12 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
 
         // Load current directory files
         if (state.dirFiles == null) ReloadDirectoryFiles(state);
-        console.log(JSON.stringify([dirFilesIcons]));
         //----------------------------------------------------------------------------------------
 
         // Draw window and controls
         //----------------------------------------------------------------------------------------
         state.windowActive = !GuiWindowBox(state.windowBounds, "#198# Select File Dialog");
+
 
         // Draw previous directory button + logic
         if (GuiButton(new Rectangle( state.windowBounds.x + state.windowBounds.width - 48, state.windowBounds.y + 24 + 12, 40, 24 ), "< ..")) {
@@ -369,8 +378,8 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
             ReloadDirectoryFiles(state);
 
             state.filesListActive = -1;
-            memset(state.fileNameText, 0, 1024);
-            memset(state.fileNameTextCopy, 0, 1024);
+            state.fileNameText=" ".repeat(1024);
+            state.fileNameTextCopy=state.fileNameText;
         }
 
         // Draw current directory text box info + path editing logic
@@ -389,6 +398,7 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
             state.dirPathEditMode = !state.dirPathEditMode;
         }
 
+
         // List view elements are aligned left
         let prevTextAlignment = GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT);
         let prevElementsHeight = GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
@@ -397,14 +407,13 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
         if(USE_CUSTOM_LISTVIEW_FILEINFO){
             let itemFocused = state.itemFocused;
             let filesListScrollIndex = state.filesListScrollIndex
-            state.filesListActive = GuiListViewFiles(new Rectangle( state.position.x + 8, state.position.y + 48 + 20, state.windowBounds.width - 16, state.windowBounds.height - 60 - 16 - 68 ), fileInfo, state.dirFiles.length, itemFocused, filesListScrollIndex, state.filesListActive);
+            state.filesListActive = GuiListViewFiles(new Rectangle( state.position.x + 8, state.position.y + 48 + 20, state.windowBounds.width - 16, state.windowBounds.height - 60 - 16 - 68 ),dirFilesIcons , state.dirFiles.length, itemFocused, filesListScrollIndex, state.filesListActive);
         }else{
             let filesListScrollIndex = [state.filesListScrollIndex];
             let filesListActive = [state.filesListActive];
             let itemFocused = [state.itemFocused];
-            console.log(JSON.stringify([dirFilesIcons]));
             GuiListViewEx(new Rectangle( state.windowBounds.x + 8, state.windowBounds.y + 48 + 20, state.windowBounds.width - 16, state.windowBounds.height - 60 - 16 - 68 ),
-            [dirFilesIcons], state.dirFiles.length, filesListScrollIndex, filesListActive, itemFocused);
+            dirFilesIcons, state.dirFiles.length, filesListScrollIndex, filesListActive, itemFocused);
             state.filesListScrollIndex = filesListScrollIndex[0];
             state.filesListActive = filesListActive[0];
             state.itemFocused = itemFocused[0];
@@ -420,7 +429,7 @@ export function GuiWindowFileDialog( state, USE_CUSTOM_LISTVIEW_FILEINFO = false
 
             if (DirectoryExists(TextFormat("%s/%s", state.dirPathText, state.fileNameText))) {
                 if (TextIsEqual(state.fileNameText, "..")) state.dirPathText= GetPrevDirectoryPath(state.dirPathText);
-                else state.dirPathText= TextFormat("%s/%s", (state.dirPathText != "/")? "" : state.dirPathText, state.fileNameText);
+                else state.dirPathText= TextFormat("%s/%s", (state.dirPathText == "/")? "" : state.dirPathText, state.fileNameText);
 
                 state.dirPathTextCopy= state.dirPathText;
 

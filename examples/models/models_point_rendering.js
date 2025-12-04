@@ -27,7 +27,7 @@ function GenMeshPoints(numPoints){
     mesh.triangleCount=1;
     mesh.vertexCount = numPoints;
     mesh.vertices = new Float32Array(numPoints*3);
-    mesh.colors = new Uint8Array(numPoints*4);
+    mesh.colors = new Uint16Array(numPoints*4);
 
     // https://en.wikipedia.org/wiki/Spherical_coordinate_system
     for (let i = 0; i < numPoints; i++){

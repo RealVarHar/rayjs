@@ -27,7 +27,7 @@ import {BeginDrawing, ClearBackground,
 
     let valueBoxValue = [0];
     let valueBoxEditMode = false;
-    let valueBoxTextValue = "";
+    let valueBoxTextValue = "1";
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -45,7 +45,6 @@ import {BeginDrawing, ClearBackground,
 
             ClearBackground(GetColor(rg.GuiGetStyle(rg.DEFAULT, rg.BACKGROUND_COLOR)));
 
-        // @ts-ignore
             if (rg.GuiValueBoxFloat(new Rectangle( 25, 175, 125, 30 ), null, valueBoxTextValue, valueBoxValue, valueBoxEditMode)) {
                 valueBoxEditMode = !valueBoxEditMode;
                 

@@ -115,16 +115,16 @@ import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
     let dropdownBox001Active = [0];
     let dropDown001EditMode = false;
 
-    let spinner001Value = 0;
+    let spinner001Value = [0];
     let spinnerEditMode = false;
 
-    let valueBox002Value = 0;
+    let valueBox002Value = [0];
     let valueBoxEditMode = false;
 
-    let textBoxText = "Text box";
+    let textBoxText = ["Text box"];
     let textBoxEditMode = false;
 
-    let textBoxMultiText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\nThisisastringlongerthanexpectedwithoutspacestotestcharbreaksforthosecases,checkingifworkingasexpected.\n\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+    let textBoxMultiText = ["Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\nThisisastringlongerthanexpectedwithoutspacestotestcharbreaksforthosecases,checkingifworkingasexpected.\n\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."];
     let textBoxMultiEditMode = false;
 
     let listViewScrollIndex = [0];
@@ -249,12 +249,11 @@ import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
             if (GuiSpinner(new Rectangle( 25, 135, 125, 30 ), null, spinner001Value, 0, 100, spinnerEditMode)) spinnerEditMode = !spinnerEditMode;
             if (GuiValueBox(new Rectangle( 25, 175, 125, 30 ), null, valueBox002Value, 0, 100, valueBoxEditMode)) valueBoxEditMode = !valueBoxEditMode;
             GuiSetStyle(TEXTBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+            //TODO: GuiTextBox should alloc additional padding to allow character insertion
             if (GuiTextBox(new Rectangle( 25, 215, 125, 30 ), textBoxText, 64, textBoxEditMode)) textBoxEditMode = !textBoxEditMode;
-
             GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
             if (GuiButton(new Rectangle( 25, 255, 125, 30 ), GuiIconText(ICON_FILE_SAVE, "Save File"))) showTextInputBox = true;
-
             GuiGroupBox(new Rectangle( 25, 310, 125, 150 ), "STATES");
             //GuiLock();
             GuiSetState(STATE_NORMAL);  if (GuiButton(new Rectangle( 30, 320, 115, 30 ), "NORMAL")) { }
@@ -265,7 +264,6 @@ import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
             //GuiUnlock();
 
             GuiComboBox(new Rectangle( 25, 480, 125, 30 ), "default;Jungle;Lavanda;Dark;Bluish;Cyber;Terminal;Candy;Cherry;Ashes;Enefete;Sunny;Amber", visualStyleActive);
-
             // NOTE: GuiDropdownBox must draw after any other control that can be covered on unfolding
             GuiUnlock();
             GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 4);
@@ -275,7 +273,6 @@ import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
             GuiSetStyle(DROPDOWNBOX, TEXT_PADDING, 0);
 
             if (GuiDropdownBox(new Rectangle( 25, 25, 125, 30 ), "ONE;TWO;THREE", dropdownBox000Active, dropDown000EditMode)) dropDown000EditMode = !dropDown000EditMode;
-
             // Second GUI column
             //GuiSetStyle(LISTVIEW, LIST_ITEMS_BORDER_NORMAL, 1);
             GuiListView(new Rectangle( 165, 25, 140, 124 ), "Charmander;Bulbasaur;#18#Squirtel;Pikachu;Eevee;Pidgey", listViewScrollIndex, listViewActive);
@@ -288,7 +285,6 @@ import {GuiLoadStyleAmber}    from "../styles/_style_amber.js";
             GuiSetStyle(SLIDER, SLIDER_PADDING, 2);
             GuiToggleSlider(new Rectangle( 165, 480, 140, 30 ), "ON;OFF", toggleSliderActive);
             GuiSetStyle(SLIDER, SLIDER_PADDING, 0);
-
             // Third GUI column
             GuiPanel(new Rectangle( 320, 25, 225, 140 ), "Panel Info");
             GuiColorPicker(new Rectangle( 320, 185, 196, 192 ), null, colorPickerValue);

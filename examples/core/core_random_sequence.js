@@ -67,13 +67,13 @@ function ShuffleColorRectSequence(rectangles, rectCount) {
         let r2 = rectangles[seq[i1]];
 
         // Swap only the color and height
-        let tmp = r1;
+        let tmp = {c:r1.c,height:r1.r.height,y:r1.r.y};
         r1.c = r2.c;
         r1.r.height = r2.r.height;
         r1.r.y = r2.r.y;
         r2.c = tmp.c;
-        r2.r.height = tmp.r.height;
-        r2.r.y = tmp.r.y;
+        r2.r.height = tmp.height;
+        r2.r.y = tmp.y;
     }
 }
 function DrawTextCenterKeyHelp( key, text, posX, posY, fontSize, color ) {

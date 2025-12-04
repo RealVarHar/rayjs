@@ -538,6 +538,7 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
         jsc={'free':'jsc_free','malloc':'jsc_malloc','calloc':'jsc_calloc','realloc':'jsc_realloc'};
     }
     topctx.declare(toptype,topname);
+    let hasptr=Array.isArray(topjsType[0])&&topjsType[0].includes('ptr|1');
     let paths=[{ctx:topctx,src:topsrc,jsType:topjsType,name:topname,type:toptype}];
     while(paths.length>0){
         let currentPath=paths.pop();
@@ -584,6 +585,7 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                     });
                     break;
                 case "char":
+                    //Warning! by default an array of chars is possible, if a string was meant instead, it will throw Sigsev, currently, there is no way to hold the users hand on that
                     ctx.elsif(`JS_IsString(${src})`,(fn)=>{
                         fn.call('JS_ToCString',['ctx', src],{type:"char *",name:'js_' + tmpname});
                         fn.declare("char", name, `js_${tmpname}[0](char)`);
@@ -644,15 +646,16 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                     break;
                 case "null":
                     ctx.elsif(`JS_IsNull(${src}) || JS_IsUndefined(${src})`,(fn)=>{
+                        if(hasptr)fn.assign('isptr[0]',true);
                         fn.declare(type,name,'NULL');
                     });
                     break;
                 case "string":
                     ctx.elsif(`JS_IsString(${src})`,(fn)=>{
+                        let tmp_name=fn.allocVariable('js_'+name);
                         if(flags.noContextAlloc){
                             //The static memory version
                             let size_name=fn.allocVariable(`size_${name}`);
-                            let tmp_name=fn.allocVariable('js_'+name);
                             fn.declare('int64_t',size_name);
                             fn.call('JS_ToCStringLen',['ctx', size_name,src],{name:tmp_name,type:"char *"});
                             let tmp2_name=fn.allocVariable('js2_'+name);
@@ -662,13 +665,15 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                             fn.assign(name,tmp2_name);
                             fn.call('JS_FreeCString',['ctx',tmp_name]);
                         }else{
-                            fn.call('JS_ToCStringLen',['ctx', 'NULL',src],{name:name,type:"char *"});
-                            fn.call('memoryStore',['JS_FreeCString', name]);
+                            fn.call('JS_ToCStringLen',['ctx', 'NULL',src],{name:tmp_name,type:"char *"});
+                            fn.call('memoryStore',['JS_FreeCString', tmp_name]);
+                            fn.assign(name,tmp_name)
                             flags.dynamicAlloc=true;
                         }
                     });
                     break;
                 case "arr":
+                    //TODO: correctly handle optional functionality, should be: ptr+rectangle,ptr+simpletype,[rectangle,simpletype]
                     //There is an issue with known sizes, if size must be 2 but it can be 2*16 (simpletype)
                     //Then 2 separate checks must happen:
                     //1) is it 2 withour simpletype
@@ -754,9 +759,8 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                                     paths.push({ctx:fn3,src:subsrc,jsType:nextType.jsType,name:subname,type:nextType.ctype});
                                 }
                                 if(nextType.type=='obj' && nextType.len==1 ){
-                                    foreach(fn2,undefined);
-                                }else
-                                if(nextType.len!=1){
+                                    foreach(fn2,undefined)
+                                }else if(nextType.len!=1){
                                     fn2.call(jsc.malloc,['ctx',`${size_name} * sizeof(${nextType.ctype})`],{type,name});
                                     if(!nextType.convert){
                                         fn2.for(0,size_name,foreach);
@@ -770,11 +774,12 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                                             fn3.add('int',iter,nextType.convert.fields.length-1);
                                         });
                                     }
+                                    fn2.call('memoryStore',[jsc.free, `${name}`]);
                                 }else{
                                     fn2.call(jsc.malloc,['ctx',`sizeof(${nextType.ctype})`],{type,name});
-                                    foreach(fn2,0);
+                                    fn2.section(fn3=>foreach(fn3,0));
+                                    fn2.call('memoryStore',[jsc.free, `${name}`]);
                                 }
-                                fn2.call('memoryStore',[jsc.free, name]);
                                 flags.dynamicAlloc=true;
                             }
                             if(validTypes.length>1){
@@ -808,19 +813,17 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                         if(currentTypeLen==1)fn.assign('isptr[0]',true);
                         let requiresMalloc=false;
                         for(let i=0;i<currentPath.jsType[1].length;i++){
-                            let newjsType=currentPath.jsType.slice(1).map((a,j)=>{if(j==0)return [a[i]];return a;});
                             let nextType=currentPath.jsType[1][i];
-                            if(typeof(nextType)=='object' && nextType.type=='type' && nextType.subtype=='struct' && nextType.props.bound_name){
-                                paths.push({ctx:fn,src:src,jsType:newjsType,name:name,type:subtype});
-                            }else{
+                            if( !(typeof(nextType)=='object' && nextType.type=='type' && nextType.subtype=='struct' && nextType.props.bound_name) ){
                                 requiresMalloc=true;
-                                let subname=`${name}[0]`;
-                                paths.push({ctx:fn,src:src,jsType:newjsType,name:subname,type:subtype});
                             }
                         }
+                        let newjsType=currentPath.jsType.slice(1);
+                        let subname=`${name}[0]`;
+                        paths.push({ctx:fn,src:src,jsType:newjsType,name:subname,type:subtype});
                         if(requiresMalloc){
                             fn.call(jsc.malloc,['ctx',`sizeof(${subtype})`],{type,name});//if we are on top, malloc can be skipped
-                            fn.call('memoryStore',[jsc.free, name]);
+                            fn.call('memoryStore',[jsc.free, `${name}`]);
                             flags.dynamicAlloc=true;
                         }
                     });
@@ -872,14 +875,15 @@ export function jsToC(topctx,topjsType,toptype,topname,topsrc,flags={},variables
                         //check if struct or function
                         if(typeof(currentType)=='object' && currentType.type=='type'){
                             if( currentType.subtype=='struct' && currentType.props.bound_name ){
+                                const ptrname=name.endsWith('[0]')?name.substring(0,name.length-3):name;//Allow replacing pointers to not re-allocate
                                 ctx.elsif(`JS_GetClassID(${src}) == ${currentType.props.bound_name}`,(fn)=>{
                                     let class_id=currentType.props.bound_name;
                                     if(class_id.startsWith('js_')&&class_id!='js_ArrayProxy_class_id'){
                                         let tmpshadow=fn.allocVariable('tmpshadow');
                                         fn.call('JS_GetOpaque',[src,class_id],{type:'opaqueShadow *',name:tmpshadow});
-                                        fn.declare(type,name,`${tmpshadow}[0].ptr`);
+                                        fn.declare(type,ptrname,`${tmpshadow}[0].ptr`);
                                     }else{
-                                        fn.call('JS_GetOpaque',[src,class_id],{type:type,name});
+                                        fn.call('JS_GetOpaque',[src,class_id],{type:type,ptrname});
                                     }
                                 });
                             }else

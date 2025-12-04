@@ -317,8 +317,9 @@
 			int64_t size_ret;
 			ret =(void  *)JS_GetArrayBuffer(ctx,(size_t  *)&size_ret,src);
 		}else if(JS_IsString(src)){
-			ret =(void  *)JS_ToCStringLen(ctx,NULL,src);
-			memoryStore(JS_FreeCString,ret);
+			char * js_ret=(char  *)JS_ToCStringLen(ctx,NULL,src);
+			memoryStore(JS_FreeCString,(void  *)js_ret);
+			ret=(void  *)js_ret;
 		}else if(JS_GetTypedArrayType(src)!=-1){
 			size_t offset_ret;
 			size_t size_ret;
@@ -3040,12 +3041,13 @@
 		bool error=(bool)0;
 		unsigned int size=js_getunsignedint(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		void * data=js_getvoid_arr(ctx,argv[1],&error);
+		void * data=js_getvoid_arrnull(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
 		int usageHint=js_getint(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
 		int returnVal=rlLoadShaderBuffer(size,(const void  *)data,usageHint);
 		JSValue ret=JS_NewInt32(ctx,(int32_t)((long)returnVal));
+		memoryClear(ctx);
 		return ret;
 	}
 	

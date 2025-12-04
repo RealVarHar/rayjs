@@ -635,7 +635,7 @@ function main() {
         jsReturns: "string[]",
         body: (gen,header) => {
             header.jsToC(gen,"const char *", "basePath", "argv[0]");
-            header.jsToC(gen,"const char *", "filter", "argv[1]");
+            header.jsToC(gen,"const char *", "filter", "argv[1]",{allowNull:true});
             header.jsToC(gen,"bool", "scanSubdirs", "argv[2]");
             createFileList(gen, "LoadDirectoryFilesEx", "UnloadDirectoryFiles", ["basePath", "filter", "scanSubdirs"]);
             gen.call('memoryClear',['ctx']);
@@ -841,7 +841,7 @@ function main() {
                                 });
                             }break;
                             case "'c'":{
-                                header.jsToC(ctx,'int','a','argv[c]');
+                                header.jsToC(ctx,'char','a','argv[c]');
                                 ctx.if(['firsth==lasth',''],(ctx)=>{
                                     ctx.call('asnprintf',['ctx','char_ptr','char_ptrlen','subformat','n','w','p','(int)a'],{type:'char *',name:'char_ptr'});
                                 },(ctx)=>{
@@ -919,6 +919,8 @@ function main() {
     att.binding = { after: gen => gen.call("UnloadRandomSequence", ['returnVal']) };
     att = modules['rlgl'].getFunction("rlReadScreenPixels");
     att.returnSizeVars = ['width*height*4'];
+    att = modules['rlgl'].getFunction("rlLoadShaderBuffer");
+    att.args[1].binding.allowNull=true;
     att = modules['raylib'].getFunction("LoadModelAnimations");
     att.returnSizeVars = ['animCount[0]'];
     function detectPointer(fn){//A compressed way to separate pointers from arrays with the advantage of being somewhat generic
@@ -952,6 +954,9 @@ function main() {
     }
     att = modules['raygui'].getFunction('GuiTextBox').args[1];
     att.type = att.type + ' &';
+    att = modules['raygui'].getFunction('GuiValueBoxFloat').args[1];
+    att.type = att.type + ' &';
+    att.binding.allowNull=true;
     cb = modules['raylib'].getStruct('AudioStream').fields;
     att = cb.find(field=>field.name=='buffer');
     att.type = att.type.replace(" *"," &");
@@ -971,15 +976,29 @@ function main() {
     modules['raygui'].getFunction('GuiSpinner').args[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiValueBox').args[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiColorPicker').args[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiSlider').args[1].binding.allowNull=true;
+    att=modules['raygui'].getFunction('GuiSlider');
+    att.args[1].binding.allowNull=true;//textleft
+    att.args[2].binding.allowNull=true;//textright
     att = modules['raygui'].getFunction('GuiSliderBar');
     att.args[1].binding.allowNull=true;
     att.args[2].binding.allowNull=true;
+    att = modules['raygui'].getFunction('GuiDrawText');
+    att.args[0].binding.allowNull=true;
     modules['raygui'].getFunction('GuiProgressBar').args[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiScrollPanel').args[1].binding.allowNull=true;
-    modules['raygui'].getFunction('GuiGrid').args[1].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiIconText').args[1].binding.allowNull=true;
+    att=modules['raygui'].getFunction('GuiScrollPanel');
+    att.args[1].binding.allowNull=true;
+    att.args[4].binding.allowNull=true;
+    att=modules['raygui'].getFunction('GuiStatusBar');
+    att.args[1].binding.allowNull=true;
+    att=modules['raygui'].getFunction('GuiPanel');
+    att.args[1].binding.allowNull=true;
+    att=modules['raygui'].getFunction('GuiGrid');
+    att.args.find(a=>a.name=="text").binding.allowNull=true;
+    att.args.find(a=>a.name=="mouseCell").binding.allowNull=true;
     modules['raygui'].getFunction('GuiColorBarAlpha').args[1].binding.allowNull=true;
     modules['raygui'].getFunction('GuiTextInputBox').args[6].binding.allowNull=true;
+    modules['raygui'].getFunction('GuiListViewEx').args[1].binding.allowNull=true;
     modules['raylib'].getFunction('LoadAutomationEventList').args[0].binding.allowNull=true;
     modules['raygui'].functions.push({
         returnType:'float', name:'GuiGetAlpha', args:[], props:{}, binding:{body:(gen,header)=>{

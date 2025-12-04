@@ -210,10 +210,13 @@ export class RayJsHeader {
      * @param src {string} Name of variable to get result from
      * @param (sizeVars) {(string|int)[]} Variables describing
      */
-    jsToC(ctx,returnType,returnName,src,flags={}){
+    jsToC(ctx,returnType,returnName,src,flags={},variables){
         //a basic implementation is to call quickjs ctojs
         //rather than inline eneration:
         //check if fnMap already has the function to reuse
+        if(variables==undefined){
+            variables=ctx.getVariables();
+        }
         if(flags.sizeVars==undefined)flags.sizeVars=[];
         returnType=returnType.replaceAll('const ','');
         if(returnType=='void &'){
@@ -224,7 +227,7 @@ export class RayJsHeader {
             return;
         }
         let pos=0;
-        let jsType=ctojsType(ctx.getVariables(), returnType);
+        let jsType=ctojsType(variables, returnType);
         let functionName='';
         let returnType_ptr='';
         while(pos!==false){
@@ -256,9 +259,19 @@ export class RayJsHeader {
             functionName+='_arg'+flags.sizeVars.length;
         }
         if(flags.noContextAlloc&&jsType.length>1)functionName+='nc';
-        if(flags.allowNull && !jsType[0].includes('null')){
-            functionName+='null';
-            jsType[0].push('null');
+        if(flags.allowNull){
+            let changed=false;
+            for(let i=0;i<jsType.length-1;i++){
+                if(!jsType[i].includes('null')){
+                    jsType[i].push('null');
+                    changed=true;
+                }
+            }
+            if(jsType.length==1&&jsType[0].includes('buffer')&&!jsType[0].includes('null')){
+                jsType[0].push('null');
+                changed=true;
+            }
+            if(changed)functionName+='null';
         }
 
         if(this.shared.fnMap[functionName]==undefined){
@@ -390,9 +403,6 @@ export class RayJsHeader {
                     allocLen+=this.paramAllocLen(param);
                     //cleans parameters initialized before an error
                     //TODO: reorder parameters to limit amount of code generated in cleanup
-                    if(param.binding.typeCast!=undefined){
-                        fun.declare(param.type.replaceAll('&','*'),param.name);
-                    }
                     let type=param.binding.typeCast||param.type;
                     let type0=type.split(' ');
                     let typeProperties=variables[type0[0]];
@@ -411,8 +421,11 @@ export class RayJsHeader {
                         let mode=capture.find(a=>a!='');//mode==[set|attach|detach]
                         jsToCallback(fun,typeProperties,param.name,"argv[" + i + "]",mode,param.binding);
                     }else{
+                        if(param.binding.typeCast!=undefined){
+                            fun.declare(param.type.replaceAll('&','*'),param.name);
+                        }
                         let ctype=param.binding.typeCast||param.type.replace('const ','');
-                        this.jsToC(fun,ctype,param.name,"argv[" + i + "]",flags);
+                        this.jsToC(fun,ctype,param.name,"argv[" + i + "]",flags,variables);
                         dynamicAlloc=dynamicAlloc||flags.dynamicAlloc;
                     }
                 }
@@ -469,8 +482,11 @@ export class RayJsHeader {
                             fun.if(`${arg.name}_isptr==0`,(newfn)=>{fn2=newfn;});
                         }
                         //fn2.call('JS_GetPropertyUint32',['ctx',`argv[${i}]`,0],{type:'JSValue',name:ptrsrc});
-                        let type=arg.type.substring(0,arg.type.length-2);
+                        let type=arg.type.substring(0,arg.type.length-2).replace('const ','');
                         if(type.endsWith('*')&&type!='char *'){
+                            if(arg.binding.sizeVars==undefined){
+                                throw new Error(`sizeVars are now required, at: ${jName}`);
+                            }
                             let sizeVar=arg.binding.sizeVars.shift();
                             sizeVar=resolveSizeVar(fn2,sizeVar,fn2.allocVariable('size'+i));
                             fn2.for(0,sizeVar,(fn3,iter)=>{
@@ -629,7 +645,7 @@ export class RayJsHeader {
             fun.call('JS_GetOpaque2',['ctx', 'this_val', classId],{type:`opaqueShadow *`,name:"shadow"});
             fun.declare(`${structName} *`,'ptr','shadow[0].ptr');
             //fun.call('JS_GetOpaque2',['ctx', 'this_val', classId],{type:`${structName} *`,name:"ptr"});
-            if(field.type.endsWith(']') || field.type.endsWith('*')){
+            if(field.type.endsWith(']') || ( field.type.endsWith('*') && field.type!='char *' ) ){
                 fun.declare('JSValue','anchor')
                 fun.if(['JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)',''],(fn2)=>{
                     fn2.assign('anchor','this_val');

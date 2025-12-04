@@ -58,7 +58,7 @@ static const int trailer_size = TRAILER_SIZE;
 
 //glad and glfw3 required for lightmapper
 #include <external/glad.h>
-#include <glfw/include/GLFW/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include "rayjs_base.c"
 #include "rayjs_base.h"

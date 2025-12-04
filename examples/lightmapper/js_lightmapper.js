@@ -29,7 +29,7 @@ InitWindow(1024,768,"Test");
 
 const scene = {}
 
-scene.raylib_model = LoadModel("../assets/models/gazebo.obj");
+scene.raylib_model = LoadModel("../../assets/models/gazebo.obj");
 
 // Demonstration how to merge models into a single mesh
 // let m = loadModel("../assets/models/untitled_no_lm.obj");

@@ -28,6 +28,7 @@ import {BLANK, BeginDrawing,
     RED,
     SHADER_UNIFORM_VEC2,
     SetShaderValue,
+    SetTargetFPS,
     UnloadImage, UnloadShader, UnloadTexture, Vector2, WHITE, WindowShouldClose } from 'rayjs:raylib';
 import * as rg from 'rayjs:rlgl';
 
@@ -45,15 +46,15 @@ class GolUpdateSSBO{
             this.count=0;
         }
         if(commands == undefined){
-            this.commands=new Array(this.count);
-            for(let i=0; i<this.count;i++){
+            this.commands=new Array(count);
+            for(let i=0; i<count;i++){
                 this.commands[i]={x:0,y:0,w:0,enabled:0};
             }
         }
     }
     getBuffer(){
         //we happen to use only uint, otherwise, use DataView
-        let bufferArray = new Uint32Array(this.count*4 + 1);
+        let bufferArray = new Uint32Array(MAX_BUFFERED_TRANSFERTS*4 + 1);
         bufferArray[0] = this.count;
 
         for(let i=0; i<this.count;i++){
@@ -92,25 +93,24 @@ class GolUpdateSSBO{
     // Initialization
     //--------------------------------------------------------------------------------------
     InitWindow(GOL_WIDTH, GOL_WIDTH, "raylib [rlgl] example - compute shader - game of life");
+    SetTargetFPS(60);
 
-    const resolution = new Vector2( GOL_WIDTH, GOL_WIDTH );
+    const resolution = new Vector2( GOL_WIDTH, GOL_WIDTH );//{x = 768, y = 768}
     let brushSize = 8;
 
     // Game of Life logic compute shader
     let golLogicCode = LoadFileText("resources/shaders/glsl430/gol.glsl");
-    let golLogicShader = rg.rlCompileShader(golLogicCode, rg.RL_COMPUTE_SHADER);
-    let golLogicProgram = rg.rlLoadComputeShaderProgram(golLogicShader);
-    //UnloadFileText(golLogicCode); //Automatically called
+    let golLogicShader = rg.rlCompileShader(golLogicCode, rg.RL_COMPUTE_SHADER);//"#version 430\n\n// Game of Life logic shader\n\n#define GOL_
+    let golLogicProgram = rg.rlLoadComputeShaderProgram(golLogicShader);//(4)
 
     // Game of Life logic render shader
     let golRenderShader = LoadShader(null, "resources/shaders/glsl430/gol_render.glsl");
-    let resUniformLoc = GetShaderLocation(golRenderShader, "resolution");
+    let resUniformLoc = GetShaderLocation(golRenderShader, "resolution");//{id = 7, locs = 0x200000808c0} where locs is [0,1,-1,-1,-1,3...0@50...0@500]
 
     // Game of Life transfert shader (CPU<->GPU download and upload)
     let golTransfertCode = LoadFileText("resources/shaders/glsl430/gol_transfert.glsl");
-    let golTransfertShader = rg.rlCompileShader(golTransfertCode, rg.RL_COMPUTE_SHADER);
-    let golTransfertProgram = rg.rlLoadComputeShaderProgram(golTransfertShader);
-    LoadFileText(golTransfertCode);
+    let golTransfertShader = rg.rlCompileShader(golTransfertCode, rg.RL_COMPUTE_SHADER); //"#version 430\n\n// Game of life transfert shader\n\n#define GOL_WIDTH 768\n\n// Game Of Life Update Command\n// NOTE: matches the structure defined on main p
+    let golTransfertProgram = rg.rlLoadComputeShaderProgram(golTransfertShader); //(6)
 
     // Load shader storage buffer object (SSBO), id returned
     let ssboA = rg.rlLoadShaderBuffer(GOL_WIDTH*GOL_WIDTH*Uint32Array.BYTES_PER_ELEMENT, null, rg.RL_DYNAMIC_COPY);
@@ -121,7 +121,7 @@ class GolUpdateSSBO{
     // Create a white texture of the size of the window to update
     // each pixel of the window using the fragment shader: golRenderShader
     let whiteImage = GenImageColor(GOL_WIDTH, GOL_WIDTH, WHITE);
-    let whiteTex = LoadTextureFromImage(whiteImage);
+    let whiteTex = LoadTextureFromImage(whiteImage);//{data = 0x20001c00200, width = 768, height = 768, mipmaps = 1, format = 7}
     UnloadImage(whiteImage);
     //--------------------------------------------------------------------------------------
 
@@ -154,9 +154,9 @@ class GolUpdateSSBO{
             transfertBuffer.count = 0;
         } else {
             // Process game of life logic
-            rg.rlEnableShader(golLogicProgram);
-            rg.rlBindShaderBuffer(ssboA, 1);
-            rg.rlBindShaderBuffer(ssboB, 2);
+            rg.rlEnableShader(golLogicProgram);//(5)
+            rg.rlBindShaderBuffer(ssboA, 1);//6
+            rg.rlBindShaderBuffer(ssboB, 2);//7
             rg.rlComputeShaderDispatch(GOL_WIDTH/16, GOL_WIDTH/16, 1);
             rg.rlDisableShader();
 

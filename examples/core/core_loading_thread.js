@@ -90,7 +90,7 @@ const sharedProgress = new Int32Array(sharedProgressBuffer); // We will simply i
             switch (state) {
                 case STATE_WAITING: DrawText("PRESS ENTER to START LOADING DATA", 150, 170, 20, DARKGRAY); break;
                 case STATE_LOADING: {
-                    DrawRectangle(150, 200, dataLoaded, 60, SKYBLUE);
+                    DrawRectangle(150, 200, dataLoaded/2, 60, SKYBLUE);
                     if ((framesCounter/15)%2) DrawText("LOADING DATA...", 240, 210, 40, DARKBLUE);
 
                 } break;

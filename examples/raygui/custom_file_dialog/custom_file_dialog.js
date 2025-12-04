@@ -20,7 +20,7 @@ for (const key in rg) { globalThis[key] = rg[key] };
 import {
     BeginDrawing, BLACK, ClearBackground, CloseWindow, DrawRectangleLines, DrawText, DrawTexture, EndDrawing, GetColor, GetScreenHeight, GetScreenWidth, GetWorkingDirectory, GRAY, InitWindow, IsFileExtension, LoadTexture, Rectangle, SetExitKey, SetTargetFPS, TextFormat, Texture, UnloadTexture, WHITE, WindowShouldClose
 } from "rayjs:raylib";
-import {InitGuiWindowFileDialog, GuiWindowFileDialog} from "./gui_window_file_dialog.js";
+import {InitGuiWindowFileDialog, GuiWindowFileDialog} from "./_gui_window_file_dialog.js";
 import {
     BACKGROUND_COLOR, DEFAULT, GuiButton, GuiGetStyle, GuiIconText, GuiLock, GuiUnlock, ICON_FILE_OPEN
 } from "rayjs:raygui";

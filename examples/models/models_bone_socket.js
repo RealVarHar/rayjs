@@ -61,18 +61,18 @@ const BONE_SOCKET_HAND_L = 2;
     // indices of bones for sockets
     let boneSocketIndex = [ -1, -1, -1 ];
 
-    // search bones for sockets 
+    // search bones for sockets
     for (let i = 0; i < characterModel.boneCount; i++) {
         if (characterModel.bones[i].name == "socket_hat") {
             boneSocketIndex[BONE_SOCKET_HAT] = i;
             continue;
         }
-        
+
         if (characterModel.bones[i].name == "socket_hand_R") {
             boneSocketIndex[BONE_SOCKET_HAND_R] = i;
             continue;
         }
-        
+
         if (characterModel.bones[i].name == "socket_hand_L") {
             boneSocketIndex[BONE_SOCKET_HAND_L] = i;
             continue;
@@ -132,7 +132,7 @@ const BONE_SOCKET_HAND_L = 2;
                     let transform = anim.framePoses[animCurrentFrame][boneSocketIndex[i]];
                     let inRotation = characterModel.bindPose[boneSocketIndex[i]].rotation;
                     let outRotation = transform.rotation;
-                    
+
                     // Calculate socket rotation (angle between bone in initial pose and same bone in current animation frame)
                     let rotate = rm.QuaternionMultiply(outRotation, rm.QuaternionInvert(inRotation));
                     let matrixTransform = rm.QuaternionToMatrix(rotate);
@@ -140,7 +140,7 @@ const BONE_SOCKET_HAND_L = 2;
                     matrixTransform = rm.MatrixMultiply(matrixTransform, rm.MatrixTranslate(transform.translation.x, transform.translation.y, transform.translation.z));
                     // Transform the socket using the transform of the character (angle and translate)
                     matrixTransform = rm.MatrixMultiply(matrixTransform, characterModel.transform);
-                    
+
                     // Draw mesh at socket position with socket angle rotation
                     DrawMesh(equipModel[i].meshes[0], equipModel[i].materials[1], matrixTransform);
                 }

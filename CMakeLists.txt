@@ -40,9 +40,6 @@ include(CheckCCompilerFlag)
 include(GNUInstallDirs)
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON)
-set(CMAKE_C_STANDARD 11)
 
 option(RAYJS_USE_MIMALLOC "Use mimalloc as the memory allocator" OFF)
 #if(RAYJS_USE_MIMALLOC)
@@ -83,10 +80,12 @@ if(RAYJS_USE_MIMALLOC)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mimalloc.h" mimalloc.h)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/stb_mimalloc.h" stb_mimalloc.h)
 	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/mimalloc_gui.h" mimalloc_gui.h)
+	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/variables/m3d_malloc.h" m3d_malloc.h)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/CMakeLists.txt ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/CMakeLists.txt @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/raylib.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/raylib.h @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/stb_truetype.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external/stb_truetype.h @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raygui/src/raygui.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raygui/src/raygui.h @ONLY)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/overrides/raylib/src/external/m3d.h ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external/m3d.h @ONLY)
 endif()
 target_include_directories(quickjs PRIVATE ${quickjs_sources_root})
 target_link_libraries(quickjs)
@@ -99,19 +98,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 message("=== Configure raylib ===")
+add_definitions(-DGRAPHICS_API_OPENGL_43)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib EXCLUDE_FROM_ALL)
-#target_link_libraries(raylib PUBLIC mimalloc)
 
 message("=== Bind files together ===")
 file(GLOB files src/*.c)
 add_executable(${CMAKE_PROJECT_NAME} ${files})
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raygui/src)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/shaders)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/examples/others)
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib/src/external/glfw/include)
 set_target_properties(${CMAKE_PROJECT_NAME}
     PROPERTIES
-    COMPILE_DEFINITIONS GRAPHICS_API_OPENGL_33=1
+    COMPILE_DEFINITIONS GRAPHICS_API_OPENGL_43=1
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${quickjs_sources_root})
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE include)

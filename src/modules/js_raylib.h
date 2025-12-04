@@ -1799,7 +1799,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(jsc_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_rAudioBuffer_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_rAudioBuffer_class_id);
 				ret =(rAudioBuffer  *)tmpshadow[0].ptr;
@@ -1832,7 +1831,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(jsc_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_rAudioProcessor_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_rAudioProcessor_class_id);
 				ret =(rAudioProcessor  *)tmpshadow[0].ptr;
@@ -2086,8 +2084,9 @@
 			size_ret -=offset_ret;
 			JS_FreeValuePtr(ctx,&da_ret);
 		}else if(JS_IsString(src)){
-			ret =(char  *)JS_ToCStringLen(ctx,NULL,src);
-			memoryStore(JS_FreeCString,(void  *)ret);
+			char * js_ret=(char  *)JS_ToCStringLen(ctx,NULL,src);
+			memoryStore(JS_FreeCString,(void  *)js_ret);
+			ret=js_ret;
 		}else{
 			JS_ThrowTypeError(ctx,(const char  *)"src does not match type char *");
 			error[0]=(bool)1;
@@ -2466,7 +2465,6 @@
 			ret =(int  *)js_malloc(ctx,sizeof(int));
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_IsNumber(src0)){
 				int32_t long_ret0;
 				JS_ToInt32(ctx,&long_ret0,src0);
@@ -2476,6 +2474,7 @@
 				error[0]=(bool)1;
 				return NULL;
 			}
+			memoryStore(js_free,(void  *)ret);
 		}else if(JS_IsNumber(src)){
 			isptr[0]=(bool)true;
 			ret =(int  *)js_malloc(ctx,sizeof(int));
@@ -2660,8 +2659,9 @@
 			size_ret -=offset_ret;
 			JS_FreeValuePtr(ctx,&da_ret);
 		}else if(JS_IsString(src)){
-			ret =(char  *)JS_ToCStringLen(ctx,NULL,src);
-			memoryStore(JS_FreeCString,(void  *)ret);
+			char * js_ret=(char  *)JS_ToCStringLen(ctx,NULL,src);
+			memoryStore(JS_FreeCString,(void  *)js_ret);
+			ret=js_ret;
 		}else if(JS_IsNull(src)||JS_IsUndefined(src)){
 			ret =NULL;
 		}else{
@@ -2680,7 +2680,6 @@
 			ret =(float  *)js_malloc(ctx,sizeof(float));
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_IsNumber(src0)){
 				double double_ret0;
 				JS_ToFloat64(ctx,&double_ret0,src0);
@@ -2690,6 +2689,7 @@
 				error[0]=(bool)1;
 				return NULL;
 			}
+			memoryStore(js_free,(void  *)ret);
 		}else if(JS_IsNumber(src)){
 			isptr[0]=(bool)true;
 			ret =(float  *)js_malloc(ctx,sizeof(float));
@@ -2717,7 +2717,6 @@
 			int64_t size_ret=(int64_t)2;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Vector2_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Vector2_class_id);
 				ret =(Vector2  *)tmpshadow[0].ptr;
@@ -2773,7 +2772,6 @@
 			int64_t size_ret=(int64_t)3;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Vector3_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Vector3_class_id);
 				ret =(Vector3  *)tmpshadow[0].ptr;
@@ -2829,7 +2827,6 @@
 			int64_t size_ret=(int64_t)4;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Vector4_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Vector4_class_id);
 				ret =(Vector4  *)tmpshadow[0].ptr;
@@ -3027,7 +3024,6 @@
 			ret =(unsigned int  *)js_malloc(ctx,sizeof(unsigned int));
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_IsNumber(src0)){
 				uint32_t long_ret0;
 				JS_ToUint32(ctx,&long_ret0,src0);
@@ -3037,6 +3033,7 @@
 				error[0]=(bool)1;
 				return NULL;
 			}
+			memoryStore(js_free,(void  *)ret);
 		}else if(JS_IsNumber(src)){
 			isptr[0]=(bool)true;
 			ret =(unsigned int  *)js_malloc(ctx,sizeof(unsigned int));
@@ -3664,7 +3661,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Camera3D_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Camera3D_class_id);
 				ret =(Camera  *)tmpshadow[0].ptr;
@@ -3794,7 +3790,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Image_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Image_class_id);
 				ret =(Image  *)tmpshadow[0].ptr;
@@ -3979,7 +3974,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Texture_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Texture_class_id);
 				ret =(Texture2D  *)tmpshadow[0].ptr;
@@ -4278,8 +4272,9 @@
 					src0 =JS_GetPropertyUint32(ctx,src,(uint32_t)i);
 					JS_FreeValue(ctx,src0);
 					if(JS_IsString(src0)){
-						ret[i] =(char  *)JS_ToCStringLen(ctx,NULL,src0);
-						memoryStore(JS_FreeCString,(void  *)ret[i]);
+						char * js_reti=(char  *)JS_ToCStringLen(ctx,NULL,src0);
+						memoryStore(JS_FreeCString,(void  *)js_reti);
+						ret[i]=js_reti;
 					}else{
 						JS_ThrowTypeError(ctx,(const char  *)"src0 does not match type char * *");
 						error[0]=(bool)1;
@@ -4495,7 +4490,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Mesh_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Mesh_class_id);
 				ret =(Mesh  *)tmpshadow[0].ptr;
@@ -4625,7 +4619,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Material_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Material_class_id);
 				ret =(Material  *)tmpshadow[0].ptr;
@@ -4658,7 +4651,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Model_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Model_class_id);
 				ret =(Model  *)tmpshadow[0].ptr;
@@ -4743,7 +4735,6 @@
 			int64_t size_ret=(int64_t)1;
 			JSValue src0=JS_GetPropertyUint32(ctx,src,(uint32_t)0);
 			JS_FreeValue(ctx,src0);
-			memoryStore(js_free,(void  *)ret);
 			if(JS_GetClassID(src0)==js_Wave_class_id){
 				opaqueShadow * tmpshadow=(opaqueShadow  *)JS_GetOpaque(src0,js_Wave_class_id);
 				ret =(Wave  *)tmpshadow[0].ptr;
@@ -9156,13 +9147,8 @@
 	static JSValue js_BoneInfo_get_name(JSContext * ctx,JSValue this_val){
 		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_BoneInfo_class_id);
 		BoneInfo * ptr=(BoneInfo  *)shadow[0].ptr;
-		JSValue anchor;
-		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
-			anchor=this_val;
-		}else{
-			anchor=shadow[0].anchor;
-		}
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_BoneInfo_name_values,.keys = js_BoneInfo_name_keys,.get = js_BoneInfo_name_get,.set = js_BoneInfo_name_set,.has = js_BoneInfo_name_has});
+		char * name=ptr[0].name;
+		JSValue ret=JS_NewString(ctx,(const char  *)name);
 		return ret;
 	}
 	
@@ -10260,13 +10246,8 @@
 	static JSValue js_ModelAnimation_get_name(JSContext * ctx,JSValue this_val){
 		opaqueShadow * shadow=(opaqueShadow  *)JS_GetOpaque2(ctx,this_val,js_ModelAnimation_class_id);
 		ModelAnimation * ptr=(ModelAnimation  *)shadow[0].ptr;
-		JSValue anchor;
-		if(JS_IsUndefined(shadow[0].anchor)||JS_IsNull(shadow[0].anchor)){
-			anchor=this_val;
-		}else{
-			anchor=shadow[0].anchor;
-		}
-		JSValue ret=js_NewArrayProxy(ctx,(ArrayProxy_class){.anchor = anchor,.opaque = ptr,.values = js_ModelAnimation_name_values,.keys = js_ModelAnimation_name_keys,.get = js_ModelAnimation_name_get,.set = js_ModelAnimation_name_set,.has = js_ModelAnimation_name_has});
+		char * name=ptr[0].name;
+		JSValue ret=JS_NewString(ctx,(const char  *)name);
 		return ret;
 	}
 	
@@ -15972,7 +15953,7 @@
 		bool error=(bool)0;
 		char * basePath=js_getchar_arr(ctx,argv[0],&error);
 		if(error==1)return JS_EXCEPTION;
-		char * filter=js_getchar_arr(ctx,argv[1],&error);
+		char * filter=js_getchar_arrnull(ctx,argv[1],&error);
 		if(error==1)return JS_EXCEPTION;
 		bool scanSubdirs=js_getbool(ctx,argv[2],&error);
 		if(error==1)return JS_EXCEPTION;
@@ -20457,7 +20438,7 @@
 						char_ptr =asnprintf(ctx,char_ptr,&char_ptrlen,(const char  *)subformat,n,w,p,(long double)a);
 					}
 				}else if(har=='c'){
-					int a=js_getint(ctx,argv[c],&error);
+					char a=js_getchar(ctx,argv[c],&error);
 					if(error==1)return JS_EXCEPTION;
 					if(firsth==lasth){
 						char_ptr =asnprintf(ctx,char_ptr,&char_ptrlen,(const char  *)subformat,n,w,p,(int)a);
